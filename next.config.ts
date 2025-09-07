@@ -1,8 +1,18 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
+  
+  // Webpack configuration to resolve toPascalCase function
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '_shared_src_utils_js': path.resolve(__dirname, 'src/shared/src/utils.ts'),
+    };
+    return config;
+  },
   
   // PWA Configuration
   async headers() {

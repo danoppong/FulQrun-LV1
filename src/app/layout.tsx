@@ -5,6 +5,7 @@ import HydrationFix from "@/components/HydrationFix";
 import Navigation from "@/components/Navigation";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import ThemeProvider from "@/components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -105,14 +106,18 @@ export default function RootLayout({
         <HydrationFix />
         <ServiceWorkerRegistration />
         <ErrorBoundary>
-          <div className="lg:pl-64">
+          <ThemeProvider>
             <Navigation />
-            <main className="py-6">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                {children}
-              </div>
-            </main>
-          </div>
+            <div className="lg:pl-72">
+              <main className="pt-20 lg:pt-8 py-8 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                  <div className="animate-fade-in">
+                    {children}
+                  </div>
+                </div>
+              </main>
+            </div>
+          </ThemeProvider>
         </ErrorBoundary>
       </body>
     </html>

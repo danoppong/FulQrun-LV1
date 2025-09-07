@@ -137,16 +137,16 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <div className="bg-white shadow">
+      <div className="bg-white/80 backdrop-blur-xl shadow-lg border-b border-gray-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex justify-between items-center py-8">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                 {userRole.replace('_', ' ').toUpperCase()} Dashboard
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mt-2">
                 {permissions.canViewTeamData ? 'Team & Regional View' : 'Personal View'}
               </p>
             </div>
@@ -158,8 +158,10 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
               {permissions.canCustomizeDashboard && (
                 <button
                   onClick={() => setIsEditMode(!isEditMode)}
-                  className={`px-4 py-2 rounded-md ${
-                    isEditMode ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'
+                  className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 ${
+                    isEditMode 
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
+                      : 'bg-white/80 text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm'
                   }`}
                 >
                   {isEditMode ? 'Save Layout' : 'Customize'}
@@ -167,7 +169,7 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
               )}
               <button
                 onClick={() => supabase.auth.signOut()}
-                className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700"
+                className="bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-6 rounded-xl hover:from-red-600 hover:to-pink-600 shadow-lg transform hover:scale-105 transition-all duration-200"
               >
                 Sign Out
               </button>
@@ -176,11 +178,11 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Widget Grid */}
-          <div className="grid grid-cols-12 gap-4 auto-rows-min">
-            {getRoleSpecificWidgets().map((widget) => (
+          <div className="grid grid-cols-12 gap-6 auto-rows-min">
+            {getRoleSpecificWidgets().map((widget, index) => (
               <div
                 key={widget.id}
                 className={`${
@@ -195,18 +197,19 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
                   widget.position.h === 4 ? 'row-span-4' : 'row-span-2'
                 } ${
                   isEditMode ? 'cursor-move' : ''
-                }`}
+                } animate-fade-in`}
+                style={{ animationDelay: `${index * 100}ms` }}
                 draggable={isEditMode}
                 onDragStart={() => setDraggedWidget(widget.id)}
                 onDragEnd={() => setDraggedWidget(null)}
               >
-                <div className="bg-white rounded-lg shadow p-4 h-full">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">{widget.title}</h3>
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-gray-200/50 p-6 h-full transition-all duration-300 group">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900">{widget.title}</h3>
                     {isEditMode && (
                       <button
                         onClick={() => removeWidget(widget.id)}
-                        className="text-red-500 hover:text-red-700"
+                        className="opacity-0 group-hover:opacity-100 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
                       >
                         ×
                       </button>
@@ -220,18 +223,18 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
 
           {/* Add Widget Panel */}
           {isEditMode && (
-            <div className="mt-8 bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Add Widgets</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="mt-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-8 animate-fade-in">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Add Widgets</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
                 {Object.entries(WIDGET_TEMPLATES).map(([type, template]) => (
                   <button
                     key={type}
                     onClick={() => addWidget(type as WidgetType)}
-                    className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:shadow-md transition-all"
+                    className="flex flex-col items-center p-6 border-2 border-gray-200 rounded-2xl hover:border-blue-500 hover:shadow-lg transition-all duration-200 transform hover:scale-105 bg-white/50 hover:bg-white/80"
                   >
-                    <span className="text-2xl mb-2">{template.icon}</span>
-                    <span className="text-sm font-medium text-gray-900">{template.name}</span>
-                    <span className="text-xs text-gray-500 text-center">{template.description}</span>
+                    <span className="text-3xl mb-3">{template.icon}</span>
+                    <span className="text-sm font-semibold text-gray-900 mb-1">{template.name}</span>
+                    <span className="text-xs text-gray-500 text-center leading-relaxed">{template.description}</span>
                   </button>
                 ))}
               </div>

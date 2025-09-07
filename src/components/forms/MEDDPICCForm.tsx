@@ -111,30 +111,30 @@ export default function MEDDPICCForm({ initialData, onSave, loading = false }: M
   }
 
   return (
-    <div className="bg-white shadow sm:rounded-lg">
+    <div className="bg-card shadow sm:rounded-lg border border-border">
       <div className="px-4 py-5 sm:p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
+            <h3 className="text-lg leading-6 font-medium text-card-foreground">
               MEDDPICC Qualification
             </h3>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-muted-foreground">
               Complete the MEDDPICC framework to qualify your opportunity
             </p>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-indigo-600">
+            <div className="text-2xl font-bold text-primary">
               {completionPercentage}%
             </div>
-            <div className="text-sm text-gray-500">Complete</div>
+            <div className="text-sm text-muted-foreground">Complete</div>
           </div>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-6">
-          <div className="bg-gray-200 rounded-full h-2">
+          <div className="bg-muted rounded-full h-2">
             <div 
-              className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${completionPercentage}%` }}
             />
           </div>
@@ -150,23 +150,23 @@ export default function MEDDPICCForm({ initialData, onSave, loading = false }: M
                 <div key={field.key} className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <span className="text-2xl">{field.icon}</span>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-foreground">
                       {field.label}
                       {isCompleted && <span className="text-green-500 ml-1">✓</span>}
                     </label>
                   </div>
-                  <p className="text-xs text-gray-500">{field.description}</p>
+                  <p className="text-xs text-muted-foreground">{field.description}</p>
                   <div>
                     <textarea
                       {...register(field.key)}
                       rows={3}
-                      className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border rounded-md ${
-                        isCompleted ? 'border-green-300 bg-green-50' : 'border-gray-300'
+                      className={`shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border rounded-md bg-background text-foreground px-3 py-2 ${
+                        isCompleted ? 'border-green-300 bg-green-50' : 'border-input'
                       }`}
                       placeholder={field.placeholder}
                     />
                     {errors[field.key] && (
-                      <p className="mt-1 text-sm text-red-600">{errors[field.key]?.message}</p>
+                      <p className="mt-1 text-sm text-destructive">{errors[field.key]?.message}</p>
                     )}
                   </div>
                 </div>
@@ -175,16 +175,16 @@ export default function MEDDPICCForm({ initialData, onSave, loading = false }: M
           </div>
 
           {/* Summary */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">MEDDPICC Summary</h4>
+          <div className="bg-muted rounded-lg p-4">
+            <h4 className="text-sm font-medium text-foreground mb-2">MEDDPICC Summary</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500">Completed Fields:</span>
-                <span className="ml-2 font-medium">{completedCount}/{totalFields}</span>
+                <span className="text-muted-foreground">Completed Fields:</span>
+                <span className="ml-2 font-medium text-foreground">{completedCount}/{totalFields}</span>
               </div>
               <div>
-                <span className="text-gray-500">Completion:</span>
-                <span className="ml-2 font-medium">{completionPercentage}%</span>
+                <span className="text-muted-foreground">Completion:</span>
+                <span className="ml-2 font-medium text-foreground">{completionPercentage}%</span>
               </div>
             </div>
             {completionPercentage >= 75 && (
@@ -203,7 +203,7 @@ export default function MEDDPICCForm({ initialData, onSave, loading = false }: M
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
             >
               {loading ? 'Saving...' : 'Save MEDDPICC Data'}
             </button>

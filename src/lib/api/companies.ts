@@ -10,6 +10,7 @@ export interface CompanyWithStats extends Company {
   contact_count?: number
   opportunity_count?: number
   total_deal_value?: number
+  opportunities?: Array<{ deal_value: number | null }>
 }
 
 export class CompanyAPI {
@@ -23,11 +24,21 @@ export class CompanyAPI {
           *,
           contact_count:contacts(count),
           opportunity_count:opportunities(count),
-          total_deal_value:opportunities(sum(deal_value))
+          opportunities(deal_value)
         `)
         .order('created_at', { ascending: false })
 
-      return { data, error: error ? normalizeError(error) : null }
+      if (error) {
+        return { data: null, error: normalizeError(error) }
+      }
+
+      // Calculate total_deal_value in the application layer
+      const companiesWithStats = data?.map(company => ({
+        ...company,
+        total_deal_value: company.opportunities?.reduce((sum, opp) => sum + (opp.deal_value || 0), 0) || 0
+      })) || []
+
+      return { data: companiesWithStats, error: null }
     } catch (error) {
       return { data: null, error: normalizeError(error) }
     }
@@ -41,12 +52,22 @@ export class CompanyAPI {
           *,
           contact_count:contacts(count),
           opportunity_count:opportunities(count),
-          total_deal_value:opportunities(sum(deal_value))
+          opportunities(deal_value)
         `)
         .eq('id', id)
         .single()
 
-      return { data, error: error ? normalizeError(error) : null }
+      if (error) {
+        return { data: null, error: normalizeError(error) }
+      }
+
+      // Calculate total_deal_value in the application layer
+      const companyWithStats = {
+        ...data,
+        total_deal_value: data.opportunities?.reduce((sum, opp) => sum + (opp.deal_value || 0), 0) || 0
+      }
+
+      return { data: companyWithStats, error: null }
     } catch (error) {
       return { data: null, error: normalizeError(error) }
     }
@@ -123,12 +144,22 @@ export class CompanyAPI {
           *,
           contact_count:contacts(count),
           opportunity_count:opportunities(count),
-          total_deal_value:opportunities(sum(deal_value))
+          opportunities(deal_value)
         `)
         .or(`name.ilike.%${query}%,domain.ilike.%${query}%,industry.ilike.%${query}%`)
         .order('created_at', { ascending: false })
 
-      return { data, error: error ? normalizeError(error) : null }
+      if (error) {
+        return { data: null, error: normalizeError(error) }
+      }
+
+      // Calculate total_deal_value in the application layer
+      const companiesWithStats = data?.map(company => ({
+        ...company,
+        total_deal_value: company.opportunities?.reduce((sum, opp) => sum + (opp.deal_value || 0), 0) || 0
+      })) || []
+
+      return { data: companiesWithStats, error: null }
     } catch (error) {
       return { data: null, error: normalizeError(error) }
     }

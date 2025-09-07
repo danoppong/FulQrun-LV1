@@ -19,6 +19,24 @@ export interface SupabaseError extends ApiError {
 
 // Helper function to normalize errors
 export function normalizeError(error: unknown): ApiError {
+  // Handle network errors specifically
+  if (error instanceof TypeError && error.message === 'Failed to fetch') {
+    return {
+      message: 'Network connection failed. Please check your internet connection and try again.',
+      code: 'NETWORK_ERROR',
+      details: 'The application could not connect to the server. This may be due to network issues or server unavailability.'
+    }
+  }
+
+  // Handle fetch errors
+  if (error instanceof Error && error.message.includes('fetch')) {
+    return {
+      message: 'Connection error. Please try again later.',
+      code: 'CONNECTION_ERROR',
+      details: error.message
+    }
+  }
+
   if (error && typeof error === 'object' && 'message' in error) {
     return {
       message: (error as any).message || 'Unknown error',

@@ -1,11 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { CheckCircle, ExternalLink, AlertCircle } from 'lucide-react'
 
 export default function QuickBooksSetup() {
   const [isConnected, setIsConnected] = useState(false)
@@ -25,58 +20,51 @@ export default function QuickBooksSetup() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <img 
-            src="https://quickbooks.intuit.com/content/dam/intuit/quickbooks/logos/quickbooks-logo.svg" 
-            alt="QuickBooks" 
-            className="h-6 w-6"
-          />
-          QuickBooks Integration
-        </CardTitle>
-        <CardDescription>
-          Connect your QuickBooks account to sync customer and financial data
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+      <div className="mb-4">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">QuickBooks Integration</h3>
+        <p className="text-gray-600">Connect your QuickBooks account to sync customer and financial data</p>
+      </div>
+      
+      <div className="space-y-4">
         {!isConnected ? (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-amber-600">
-              <AlertCircle className="h-4 w-4" />
+              <span>⚠️</span>
               <span>QuickBooks integration is currently in development</span>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="company-id">Company ID (Optional)</Label>
-              <Input 
+              <label htmlFor="company-id" className="block text-sm font-medium text-gray-700">Company ID (Optional)</label>
+              <input 
                 id="company-id" 
                 placeholder="Enter your QuickBooks Company ID"
                 disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
               />
             </div>
-            <Button 
+            <button 
               onClick={handleConnect} 
               disabled={isConnecting}
-              className="w-full"
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {isConnecting ? 'Connecting...' : 'Connect to QuickBooks'}
-            </Button>
+            </button>
             <p className="text-xs text-gray-500">
               This feature will be available in a future update. 
               <a 
                 href="https://developer.intuit.com/app/developer/qbo/docs/get-started" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="ml-1 text-blue-600 hover:underline inline-flex items-center gap-1"
+                className="ml-1 text-blue-600 hover:underline"
               >
-                Learn more <ExternalLink className="h-3 w-3" />
+                Learn more →
               </a>
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-4 w-4" />
+              <span>✅</span>
               <span>Connected to QuickBooks</span>
             </div>
             <div className="text-sm text-gray-600">
@@ -84,16 +72,15 @@ export default function QuickBooksSetup() {
               <p>• Invoice tracking available</p>
               <p>• Payment status updates</p>
             </div>
-            <Button 
-              variant="outline" 
+            <button 
               onClick={handleDisconnect}
-              className="w-full"
+              className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
             >
               Disconnect
-            </Button>
+            </button>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
