@@ -26,27 +26,12 @@ const DashboardContent = () => {
   const [userBusinessUnit, setUserBusinessUnit] = useState<string>('Enterprise')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const router = useRouter()
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const loadUserData = async () => {
       try {
-        
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        
-        if (sessionError) {
-          setError(`Session error: ${sessionError.message}`)
-          setLoading(false)
-          return
-        }
-        
-        if (!session) {
-          router.push('/auth/login')
-          return
-        }
-        
-        
+        // Get current user (AuthWrapper already verified authentication)
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
         if (userError) {
@@ -91,8 +76,8 @@ const DashboardContent = () => {
       }
     }
     
-    checkAuth()
-  }, [router, supabase])
+    loadUserData()
+  }, [supabase])
 
   if (loading) {
     return (

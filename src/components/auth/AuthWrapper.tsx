@@ -27,7 +27,7 @@ export default function AuthWrapper({
         const { data: { user }, error } = await supabase.auth.getUser()
         
         if (error) {
-          console.error('Auth check error:', error)
+          // Auth check error - redirect if required
           if (requireAuth) {
             router.push(redirectTo)
             return
@@ -36,7 +36,7 @@ export default function AuthWrapper({
         
         setUser(user)
       } catch (err) {
-        console.error('Unexpected auth error:', err)
+        // Unexpected auth error - redirect if required
         if (requireAuth) {
           router.push(redirectTo)
           return
