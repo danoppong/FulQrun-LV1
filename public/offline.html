@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FulQrun - Offline</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #374151;
+    }
+    
+    .container {
+      max-width: 500px;
+      margin: 20px;
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      text-align: center;
+    }
+    
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.8;
+    }
+    
+    h1 {
+      color: #4f46e5;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    
+    h2 {
+      color: #6b7280;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    
+    p {
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 32px;
+      font-size: 1rem;
+    }
+    
+    .button {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin: 8px;
+    }
+    
+    .button:hover {
+      background: #4338ca;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    }
+    
+    .button.secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    .button.secondary:hover {
+      background: #e5e7eb;
+    }
+    
+    .features {
+      margin-top: 32px;
+      text-align: left;
+    }
+    
+    .feature {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+    
+    .feature-icon {
+      margin-right: 8px;
+      font-size: 1.2rem;
+    }
+    
+    @media (max-width: 640px) {
+      .container {
+        margin: 10px;
+        padding: 30px 20px;
+      }
+      
+      h1 {
+        font-size: 1.75rem;
+      }
+      
+      .button {
+        width: 100%;
+        margin: 4px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📱</div>
+    <h1>FulQrun</h1>
+    <h2>You're Offline</h2>
+    <p>
+      It looks like you're not connected to the internet. Don't worry - FulQrun is designed to work offline! 
+      You can still access your cached data and continue working.
+    </p>
+    
+    <div class="features">
+      <div class="feature">
+        <span class="feature-icon">📊</span>
+        View cached dashboard data
+      </div>
+      <div class="feature">
+        <span class="feature-icon">👥</span>
+        Browse contacts and companies
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🎯</span>
+        Review leads and opportunities
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🔄</span>
+        Changes will sync when online
+      </div>
+    </div>
+    
+    <div>
+      <button class="button" onclick="window.location.reload()">
+        Try Again
+      </button>
+      <button class="button secondary" onclick="window.location.href = '/dashboard'">
+        Go to Dashboard
+      </button>
+    </div>
+  </div>
+  
+  <script>
+    // Check online status and update UI
+    function updateOnlineStatus() {
+      if (navigator.onLine) {
+        window.location.reload();
+      }
+    }
+    
+    // Listen for online event
+    window.addEventListener('online', updateOnlineStatus);
+    
+    // Check connection periodically
+    setInterval(() => {
+      if (navigator.onLine) {
+        updateOnlineStatus();
+      }
+    }, 5000);
+  </script>
+</body>
+</html>
