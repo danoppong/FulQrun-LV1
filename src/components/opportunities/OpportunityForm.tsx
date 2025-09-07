@@ -22,12 +22,13 @@ type OpportunityFormData = z.infer<typeof opportunitySchema>
 
 interface OpportunityFormProps {
   opportunity?: OpportunityWithDetails
+  opportunityId?: string
   mode: 'create' | 'edit'
 }
 
 // PEAK stages moved to PEAKForm component
 
-export default function OpportunityForm({ opportunity, mode }: OpportunityFormProps) {
+export default function OpportunityForm({ opportunity, opportunityId, mode }: OpportunityFormProps) {
   const router = useRouter()
   const [contacts, setContacts] = useState<ContactWithCompany[]>([])
   const [companies, setCompanies] = useState<CompanyWithStats[]>([])
@@ -54,7 +55,9 @@ export default function OpportunityForm({ opportunity, mode }: OpportunityFormPr
     register,
     handleSubmit,
     formState: { errors },
-    watch
+    watch,
+    setValue,
+    reset
   } = useForm<OpportunityFormData>({
     resolver: zodResolver(opportunitySchema),
     defaultValues: opportunity ? {
@@ -69,7 +72,56 @@ export default function OpportunityForm({ opportunity, mode }: OpportunityFormPr
   useEffect(() => {
     loadContacts()
     loadCompanies()
-  }, [])
+    if (mode === 'edit' && opportunityId && !opportunity) {
+      loadOpportunity()
+    }
+  }, [mode, opportunityId, opportunity])
+
+  const loadOpportunity = async () => {
+    if (!opportunityId) return
+    
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const { data, error } = await opportunityAPI.getOpportunity(opportunityId)
+      
+      if (error) {
+        setError(error.message || 'Failed to load opportunity')
+      } else if (data) {
+        // Reset the main form with loaded data
+        reset({
+          name: data.name,
+          contact_id: data.contact_id || '',
+          company_id: data.company_id || ''
+        })
+        
+        // Update PEAK data
+        setPeakData({
+          peak_stage: data.peak_stage || 'prospecting' as const,
+          deal_value: data.deal_value || undefined,
+          probability: data.probability || undefined,
+          close_date: data.close_date || ''
+        })
+        
+        // Update MEDDPICC data
+        setMeddpiccData({
+          metrics: data.metrics || '',
+          economic_buyer: data.economic_buyer || '',
+          decision_criteria: data.decision_criteria || '',
+          decision_process: data.decision_process || '',
+          paper_process: data.paper_process || '',
+          identify_pain: data.identify_pain || '',
+          champion: data.champion || '',
+          competition: data.competition || ''
+        })
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const loadContacts = async () => {
     try {
@@ -99,10 +151,44 @@ export default function OpportunityForm({ opportunity, mode }: OpportunityFormPr
 
   const handlePeakSave = async (data: any) => {
     setPeakData(data)
+    
+    // If we're editing an existing opportunity, save PEAK data immediately
+    if (mode === 'edit' && opportunityId) {
+      try {
+        const { error } = await opportunityAPI.updateOpportunity(opportunityId, data)
+        if (error) {
+          setError(error.message || 'Failed to save PEAK data')
+        }
+      } catch (err) {
+        setError('Failed to save PEAK data')
+      }
+    }
+  }
+
+  const handlePeakSuccess = () => {
+    // Clear any existing errors when save is successful
+    setError(null)
   }
 
   const handleMeddpiccSave = async (data: any) => {
     setMeddpiccData(data)
+    
+    // If we're editing an existing opportunity, save MEDDPICC data immediately
+    if (mode === 'edit' && opportunityId) {
+      try {
+        const { error } = await opportunityAPI.updateMEDDPICC(opportunityId, data)
+        if (error) {
+          setError(error.message || 'Failed to save MEDDPICC data')
+        }
+      } catch (err) {
+        setError('Failed to save MEDDPICC data')
+      }
+    }
+  }
+
+  const handleMeddpiccSuccess = () => {
+    // Clear any existing errors when save is successful
+    setError(null)
   }
 
   const onSubmit = async (data: OpportunityFormData) => {
@@ -232,6 +318,7 @@ export default function OpportunityForm({ opportunity, mode }: OpportunityFormPr
               <PEAKForm
                 initialData={peakData}
                 onSave={handlePeakSave}
+                onSuccess={handlePeakSuccess}
                 loading={loading}
               />
             </ErrorBoundary>
@@ -241,6 +328,7 @@ export default function OpportunityForm({ opportunity, mode }: OpportunityFormPr
               <MEDDPICCForm
                 initialData={meddpiccData}
                 onSave={handleMeddpiccSave}
+                onSuccess={handleMeddpiccSuccess}
                 loading={loading}
               />
             </ErrorBoundary>

@@ -32,9 +32,11 @@ export class CompanyAPI {
         return { data: null, error: normalizeError(error) }
       }
 
-      // Calculate total_deal_value in the application layer
+      // Calculate total_deal_value in the application layer and fix count objects
       const companiesWithStats = data?.map(company => ({
         ...company,
+        contact_count: typeof company.contact_count === 'number' ? company.contact_count : (company.contact_count?.count || 0),
+        opportunity_count: typeof company.opportunity_count === 'number' ? company.opportunity_count : (company.opportunity_count?.count || 0),
         total_deal_value: company.opportunities?.reduce((sum, opp) => sum + (opp.deal_value || 0), 0) || 0
       })) || []
 
@@ -153,9 +155,11 @@ export class CompanyAPI {
         return { data: null, error: normalizeError(error) }
       }
 
-      // Calculate total_deal_value in the application layer
+      // Calculate total_deal_value in the application layer and fix count objects
       const companiesWithStats = data?.map(company => ({
         ...company,
+        contact_count: typeof company.contact_count === 'number' ? company.contact_count : (company.contact_count?.count || 0),
+        opportunity_count: typeof company.opportunity_count === 'number' ? company.opportunity_count : (company.opportunity_count?.count || 0),
         total_deal_value: company.opportunities?.reduce((sum, opp) => sum + (opp.deal_value || 0), 0) || 0
       })) || []
 

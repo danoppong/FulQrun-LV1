@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -18,6 +18,7 @@ interface PEAKFormProps {
   initialData?: PEAKFormData
   onSave: (data: PEAKFormData) => Promise<void>
   loading?: boolean
+  onSuccess?: () => void
 }
 
 const peakStages = [
@@ -51,8 +52,9 @@ const peakStages = [
   }
 ]
 
-export default function PEAKForm({ initialData, onSave, loading = false }: PEAKFormProps) {
+export default function PEAKForm({ initialData, onSave, loading = false, onSuccess }: PEAKFormProps) {
   const [selectedStage, setSelectedStage] = useState(initialData?.peak_stage || 'prospecting')
+  const [saved, setSaved] = useState(false)
 
   const {
     register,
@@ -72,6 +74,17 @@ export default function PEAKForm({ initialData, onSave, loading = false }: PEAKF
 
   const watchedValues = watch()
 
+  // Update form when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setSelectedStage(initialData.peak_stage || 'prospecting')
+      setValue('peak_stage', initialData.peak_stage || 'prospecting')
+      setValue('deal_value', initialData.deal_value)
+      setValue('probability', initialData.probability)
+      setValue('close_date', initialData.close_date || '')
+    }
+  }, [initialData, setValue])
+
   const handleStageSelect = (stage: string) => {
     setSelectedStage(stage)
     setValue('peak_stage', stage as any)
@@ -79,6 +92,12 @@ export default function PEAKForm({ initialData, onSave, loading = false }: PEAKF
 
   const onSubmit = async (data: PEAKFormData) => {
     await onSave(data)
+    setSaved(true)
+    if (onSuccess) {
+      onSuccess()
+    }
+    // Reset saved state after 3 seconds
+    setTimeout(() => setSaved(false), 3000)
   }
 
   const getStageRecommendations = (stage: string) => {
@@ -128,7 +147,7 @@ export default function PEAKForm({ initialData, onSave, loading = false }: PEAKF
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-6">
+        <div className="mt-6 space-y-6">
           {/* Stage Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -278,14 +297,19 @@ export default function PEAKForm({ initialData, onSave, loading = false }: PEAKF
 
           <div className="flex justify-end">
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit(onSubmit)}
               disabled={loading}
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${
+                saved 
+                  ? 'text-white bg-green-600 hover:bg-green-700 focus:ring-green-500' 
+                  : 'text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
+              }`}
             >
-              {loading ? 'Saving...' : 'Save PEAK Stage'}
+              {loading ? 'Saving...' : saved ? '✓ Saved!' : 'Save PEAK Stage'}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )

@@ -69,7 +69,7 @@ export default function CompanyList({ searchQuery = '' }: CompanyListProps) {
       <div className="sm:flex sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">Companies</h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             Manage your company database and track business relationships
           </p>
         </div>
@@ -130,7 +130,7 @@ export default function CompanyList({ searchQuery = '' }: CompanyListProps) {
           {companies.map((company, index) => (
             <div 
               key={company.id} 
-              className="group bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-2xl border border-gray-200/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-1"
+              className="group bg-card/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-2xl border border-border/50 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="p-6">
@@ -140,10 +140,10 @@ export default function CompanyList({ searchQuery = '' }: CompanyListProps) {
                       <BuildingOfficeIcon className="h-6 w-6 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 truncate">
+                      <h3 className="text-lg font-semibold text-card-foreground truncate">
                         {company.name}
                       </h3>
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-sm text-muted-foreground truncate">
                         {company.industry || 'No industry specified'}
                       </p>
                     </div>
@@ -169,15 +169,15 @@ export default function CompanyList({ searchQuery = '' }: CompanyListProps) {
                 <div className="space-y-3">
                   {company.domain && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Website</span>
-                      <span className="font-medium text-gray-900 truncate max-w-32">
+                      <span className="text-muted-foreground">Website</span>
+                      <span className="font-medium text-foreground truncate max-w-32">
                         {company.domain}
                       </span>
                     </div>
                   )}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Company Size</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-muted-foreground">Company Size</span>
+                    <span className="font-medium text-foreground">
                       {company.size || 'Not specified'}
                     </span>
                   </div>
@@ -189,11 +189,21 @@ export default function CompanyList({ searchQuery = '' }: CompanyListProps) {
                   <div className="flex space-x-6 text-sm">
                     <div className="flex items-center space-x-1">
                       <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                      <span className="text-gray-600">{company.contact_count || 0} contacts</span>
+                      <span className="text-muted-foreground">
+                        {typeof company.contact_count === 'number' 
+                          ? company.contact_count 
+                          : (company.contact_count?.count || 0)
+                        } contacts
+                      </span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                      <span className="text-gray-600">{company.opportunity_count || 0} opportunities</span>
+                      <span className="text-muted-foreground">
+                        {typeof company.opportunity_count === 'number' 
+                          ? company.opportunity_count 
+                          : (company.opportunity_count?.count || 0)
+                        } opportunities
+                      </span>
                     </div>
                   </div>
                   {company.total_deal_value && company.total_deal_value > 0 && (

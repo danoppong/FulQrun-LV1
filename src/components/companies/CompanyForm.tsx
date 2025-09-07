@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
 import { useForm } from 'react-hook-form'
@@ -19,6 +19,7 @@ type CompanyFormData = z.infer<typeof companySchema>
 
 interface CompanyFormProps {
   company?: CompanyWithStats
+  companyId?: string
   mode: 'create' | 'edit'
 }
 
@@ -43,7 +44,7 @@ const sizeOptions = [
   '1000+ employees'
 ]
 
-export default function CompanyForm({ company, mode }: CompanyFormProps) {
+export default function CompanyForm({ company, companyId, mode }: CompanyFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -52,6 +53,7 @@ export default function CompanyForm({ company, mode }: CompanyFormProps) {
     register,
     handleSubmit,
     formState: { errors },
+    setValue
   } = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
     defaultValues: company ? {
@@ -62,6 +64,38 @@ export default function CompanyForm({ company, mode }: CompanyFormProps) {
       address: company.address || '',
     } : {}
   })
+
+  useEffect(() => {
+    if (mode === 'edit' && companyId && !company) {
+      loadCompany()
+    }
+  }, [mode, companyId, company])
+
+  const loadCompany = async () => {
+    if (!companyId) return
+    
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const { data, error } = await companyAPI.getCompany(companyId)
+      
+      if (error) {
+        setError(error.message || 'Failed to load company')
+      } else if (data) {
+        // Update form with loaded data
+        setValue('name', data.name)
+        setValue('domain', data.domain || '')
+        setValue('industry', data.industry || '')
+        setValue('size', data.size || '')
+        setValue('address', data.address || '')
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const onSubmit = async (data: CompanyFormData) => {
     setLoading(true)

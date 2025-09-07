@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -22,6 +22,7 @@ interface MEDDPICCFormProps {
   initialData?: MEDDPICCFormData
   onSave: (data: MEDDPICCFormData) => Promise<void>
   loading?: boolean
+  onSuccess?: () => void
 }
 
 const meddpiccFields = [
@@ -83,20 +84,34 @@ const meddpiccFields = [
   }
 ]
 
-export default function MEDDPICCForm({ initialData, onSave, loading = false }: MEDDPICCFormProps) {
+export default function MEDDPICCForm({ initialData, onSave, loading = false, onSuccess }: MEDDPICCFormProps) {
   const [completedFields, setCompletedFields] = useState<Set<string>>(new Set())
+  const [saved, setSaved] = useState(false)
 
   const {
     register,
     handleSubmit,
     watch,
-    formState: { errors }
+    formState: { errors },
+    setValue
   } = useForm<MEDDPICCFormData>({
     resolver: zodResolver(meddpiccSchema),
     defaultValues: initialData || {}
   })
 
   const watchedValues = watch()
+
+  // Update form when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      Object.keys(initialData).forEach(key => {
+        const value = initialData[key as keyof MEDDPICCFormData]
+        if (value !== undefined) {
+          setValue(key as keyof MEDDPICCFormData, value)
+        }
+      })
+    }
+  }, [initialData, setValue])
 
   // Calculate completion percentage
   const totalFields = meddpiccFields.length
@@ -108,6 +123,12 @@ export default function MEDDPICCForm({ initialData, onSave, loading = false }: M
 
   const onSubmit = async (data: MEDDPICCFormData) => {
     await onSave(data)
+    setSaved(true)
+    if (onSuccess) {
+      onSuccess()
+    }
+    // Reset saved state after 3 seconds
+    setTimeout(() => setSaved(false), 3000)
   }
 
   return (
@@ -140,7 +161,7 @@ export default function MEDDPICCForm({ initialData, onSave, loading = false }: M
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <div className="space-y-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             {meddpiccFields.map((field) => {
               const value = watchedValues[field.key]
@@ -201,14 +222,19 @@ export default function MEDDPICCForm({ initialData, onSave, loading = false }: M
 
           <div className="flex justify-end">
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit(onSubmit)}
               disabled={loading}
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+              className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${
+                saved 
+                  ? 'text-white bg-green-600 hover:bg-green-700 focus:ring-green-500' 
+                  : 'text-primary-foreground bg-primary hover:bg-primary/90 focus:ring-primary'
+              }`}
             >
-              {loading ? 'Saving...' : 'Save MEDDPICC Data'}
+              {loading ? 'Saving...' : saved ? '✓ Saved!' : 'Save MEDDPICC Data'}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )

@@ -50,27 +50,27 @@ export default function PipelineChart() {
         const chartData = [
           {
             stage: 'Prospecting',
-            count: summaryData.byStage.prospecting.count,
-            value: summaryData.byStage.prospecting.value,
-            weightedValue: summaryData.byStage.prospecting.weightedValue
+            count: typeof summaryData.byStage.prospecting.count === 'number' ? summaryData.byStage.prospecting.count : 0,
+            value: typeof summaryData.byStage.prospecting.value === 'number' ? summaryData.byStage.prospecting.value : 0,
+            weightedValue: typeof summaryData.byStage.prospecting.weightedValue === 'number' ? summaryData.byStage.prospecting.weightedValue : 0
           },
           {
             stage: 'Engaging',
-            count: summaryData.byStage.engaging.count,
-            value: summaryData.byStage.engaging.value,
-            weightedValue: summaryData.byStage.engaging.weightedValue
+            count: typeof summaryData.byStage.engaging.count === 'number' ? summaryData.byStage.engaging.count : 0,
+            value: typeof summaryData.byStage.engaging.value === 'number' ? summaryData.byStage.engaging.value : 0,
+            weightedValue: typeof summaryData.byStage.engaging.weightedValue === 'number' ? summaryData.byStage.engaging.weightedValue : 0
           },
           {
             stage: 'Advancing',
-            count: summaryData.byStage.advancing.count,
-            value: summaryData.byStage.advancing.value,
-            weightedValue: summaryData.byStage.advancing.weightedValue
+            count: typeof summaryData.byStage.advancing.count === 'number' ? summaryData.byStage.advancing.count : 0,
+            value: typeof summaryData.byStage.advancing.value === 'number' ? summaryData.byStage.advancing.value : 0,
+            weightedValue: typeof summaryData.byStage.advancing.weightedValue === 'number' ? summaryData.byStage.advancing.weightedValue : 0
           },
           {
             stage: 'Key Decision',
-            count: summaryData.byStage.key_decision.count,
-            value: summaryData.byStage.key_decision.value,
-            weightedValue: summaryData.byStage.key_decision.weightedValue
+            count: typeof summaryData.byStage.key_decision.count === 'number' ? summaryData.byStage.key_decision.count : 0,
+            value: typeof summaryData.byStage.key_decision.value === 'number' ? summaryData.byStage.key_decision.value : 0,
+            weightedValue: typeof summaryData.byStage.key_decision.weightedValue === 'number' ? summaryData.byStage.key_decision.weightedValue : 0
           }
         ]
         
@@ -186,7 +186,7 @@ export default function PipelineChart() {
                     Total Opportunities
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {data.reduce((sum, item) => sum + item.count, 0)}
+                    {data.reduce((sum, item) => sum + (typeof item.count === 'number' ? item.count : 0), 0)}
                   </dd>
                 </dl>
               </div>
@@ -282,7 +282,7 @@ export default function PipelineChart() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.count}
+                      {typeof item.count === 'number' ? item.count : 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(item.value)}
@@ -291,7 +291,7 @@ export default function PipelineChart() {
                       {formatCurrency(item.weightedValue)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.count > 0 ? formatCurrency(item.value / item.count) : '$0'}
+                      {typeof item.count === 'number' && item.count > 0 ? formatCurrency(item.value / item.count) : '$0'}
                     </td>
                   </tr>
                 ))}

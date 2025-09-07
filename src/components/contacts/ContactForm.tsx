@@ -21,10 +21,11 @@ type ContactFormData = z.infer<typeof contactSchema>
 
 interface ContactFormProps {
   contact?: ContactWithCompany
+  contactId?: string
   mode: 'create' | 'edit'
 }
 
-export default function ContactForm({ contact, mode }: ContactFormProps) {
+export default function ContactForm({ contact, contactId, mode }: ContactFormProps) {
   const router = useRouter()
   const [companies, setCompanies] = useState<CompanyWithStats[]>([])
   const [loading, setLoading] = useState(false)
@@ -34,7 +35,8 @@ export default function ContactForm({ contact, mode }: ContactFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    setValue
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
     defaultValues: contact ? {
@@ -49,7 +51,37 @@ export default function ContactForm({ contact, mode }: ContactFormProps) {
 
   useEffect(() => {
     loadCompanies()
-  }, [])
+    if (mode === 'edit' && contactId && !contact) {
+      loadContact()
+    }
+  }, [mode, contactId, contact])
+
+  const loadContact = async () => {
+    if (!contactId) return
+    
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const { data, error } = await contactAPI.getContact(contactId)
+      
+      if (error) {
+        setError(error.message || 'Failed to load contact')
+      } else if (data) {
+        // Update form with loaded data
+        setValue('first_name', data.first_name)
+        setValue('last_name', data.last_name)
+        setValue('email', data.email || '')
+        setValue('phone', data.phone || '')
+        setValue('title', data.title || '')
+        setValue('company_id', data.company_id || '')
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const loadCompanies = async () => {
     try {

@@ -290,15 +290,20 @@ const TeamPerformanceWidget = ({ widget }: { widget: DashboardWidget }) => (
 
 const PipelineOverviewWidget = ({ widget }: { widget: DashboardWidget }) => (
   <div className="space-y-3">
-    {widget.data?.stages?.map((stage: any, index: number) => (
-      <div key={index} className="flex items-center justify-between">
-        <div className="font-medium text-gray-900">{stage.name}</div>
-        <div className="text-right">
-          <div className="text-sm text-gray-500">{stage.count} deals</div>
-          <div className="font-medium text-gray-900">${stage.value.toLocaleString()}</div>
+    {widget.data?.stages?.map((stage: any, index: number) => {
+      const count = typeof stage.count === 'number' ? stage.count : 0
+      const value = typeof stage.value === 'number' ? stage.value : 0
+      
+      return (
+        <div key={index} className="flex items-center justify-between">
+          <div className="font-medium text-gray-900">{stage.name || 'Unknown Stage'}</div>
+          <div className="text-right">
+            <div className="text-sm text-gray-500">{count} deals</div>
+            <div className="font-medium text-gray-900">${value.toLocaleString()}</div>
+          </div>
         </div>
-      </div>
-    ))}
+      )
+    })}
   </div>
 )
 

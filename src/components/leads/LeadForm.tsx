@@ -21,6 +21,7 @@ type LeadFormData = z.infer<typeof leadSchema>
 
 interface LeadFormProps {
   lead?: LeadWithScore
+  leadId?: string
   mode: 'create' | 'edit'
 }
 
@@ -43,7 +44,7 @@ const statusOptions = [
   { value: 'converted', label: 'Converted' }
 ]
 
-export default function LeadForm({ lead, mode }: LeadFormProps) {
+export default function LeadForm({ lead, leadId, mode }: LeadFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -52,7 +53,8 @@ export default function LeadForm({ lead, mode }: LeadFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-    watch
+    watch,
+    setValue
   } = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema),
     defaultValues: lead ? {
@@ -69,6 +71,40 @@ export default function LeadForm({ lead, mode }: LeadFormProps) {
   })
 
   const watchedValues = watch()
+
+  useEffect(() => {
+    if (mode === 'edit' && leadId && !lead) {
+      loadLead()
+    }
+  }, [mode, leadId, lead])
+
+  const loadLead = async () => {
+    if (!leadId) return
+    
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const { data, error } = await leadAPI.getLead(leadId)
+      
+      if (error) {
+        setError(error.message || 'Failed to load lead')
+      } else if (data) {
+        // Update form with loaded data
+        setValue('first_name', data.first_name)
+        setValue('last_name', data.last_name)
+        setValue('email', data.email || '')
+        setValue('phone', data.phone || '')
+        setValue('company', data.company || '')
+        setValue('source', data.source || '')
+        setValue('status', data.status)
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const onSubmit = async (data: LeadFormData) => {
     setLoading(true)
