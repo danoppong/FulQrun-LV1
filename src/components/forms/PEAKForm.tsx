@@ -138,13 +138,23 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
   return (
     <div className="bg-white shadow sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-lg leading-6 font-medium text-gray-900">
-          PEAK Stage Management
-        </h3>
-        <div className="mt-2 max-w-xl text-sm text-gray-500">
-          <p>
-            Track your opportunity through the PEAK methodology stages.
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              PEAK Stage Management
+            </h3>
+            <div className="mt-2 max-w-xl text-sm text-gray-500">
+              <p>
+                Track your opportunity through the PEAK methodology stages.
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-indigo-600">
+              {peakStages.find(s => s.value === selectedStage)?.icon}
+            </div>
+            <div className="text-sm text-gray-500">Current Stage</div>
+          </div>
         </div>
 
         <div className="mt-6 space-y-6">

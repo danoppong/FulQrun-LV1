@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import HydrationFix from "@/components/HydrationFix";
-import Navigation from "@/components/Navigation";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
-import ThemeProvider from "@/components/ThemeProvider";
+// import HydrationFix from "@/components/HydrationFix";
+// import Navigation from "@/components/Navigation";
+// import { ErrorBoundary } from "@/components/ErrorBoundary";
+// import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+// import ThemeProvider from "@/components/ThemeProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -100,25 +95,14 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} font-sans antialiased`}
         suppressHydrationWarning={true}
       >
-        <HydrationFix />
-        <ServiceWorkerRegistration />
-        <ErrorBoundary>
-          <ThemeProvider>
-            <Navigation />
-            <div className="lg:pl-72">
-              <main className="pt-20 lg:pt-8 py-8 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                  <div className="animate-fade-in">
-                    {children}
-                  </div>
-                </div>
-              </main>
-            </div>
-          </ThemeProvider>
-        </ErrorBoundary>
+        <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </div>
+        </main>
       </body>
     </html>
   );
