@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas16" width="16" height="16"></canvas>
+    <canvas id="canvas32" width="32" height="32"></canvas>
+    <canvas id="canvas144" width="144" height="144"></canvas>
+    
+    <script>
+        function createIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Diamond shape
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.moveTo(size/2, size/4);
+            ctx.lineTo(size*3/4, size/2);
+            ctx.lineTo(size/2, size*3/4);
+            ctx.lineTo(size/4, size/2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Download
+            const link = document.createElement('a');
+            link.download = `icon-${size}x${size}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Generate icons
+        createIcon('canvas16', 16);
+        createIcon('canvas32', 32);
+        createIcon('canvas144', 144);
+    </script>
+</body>
+</html>

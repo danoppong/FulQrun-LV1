@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@/lib/auth'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import AuthDebug from '@/components/AuthDebug'
 
 const LoginPage = () => {
   const [email, setEmail] = useState('')
@@ -15,7 +14,6 @@ const LoginPage = () => {
   const supabase = createClientComponentClient()
   const searchParams = useSearchParams()
   
-  // Get redirect URL from search params (this is safe for SSR)
   const redirectUrl = searchParams.get('redirect') || '/dashboard'
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -23,13 +21,11 @@ const LoginPage = () => {
     setLoading(true)
     setError('')
 
-
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-
 
       if (error) {
         setError(`Login failed: ${error.message}`)
@@ -44,75 +40,14 @@ const LoginPage = () => {
     }
   }
 
-  const handleMicrosoftLogin = async () => {
-    setLoading(true)
-    setError('')
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'azure',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-
-      if (error) {
-        setError(error.message)
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleForceSessionRefresh = async () => {
-    setLoading(true)
-    setError('')
-
-    try {
-      
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError) {
-        setError(`Session error: ${sessionError.message}`)
-        return
-      }
-      
-      if (!session) {
-        setError('No session found. Please log in first.')
-        return
-      }
-      
-      
-      // Force refresh the session
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
-      if (userError) {
-        setError(`User error: ${userError.message}`)
-        return
-      }
-      
-      
-      // Force a full page refresh to establish server-side session
-      window.location.href = '/dashboard'
-      
-    } catch (err) {
-      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
+      <div className="absolute inset-0 opacity-40 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C92AC%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
       
       <div className="relative max-w-md w-full">
         {/* Main Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8 space-y-8">
+        <div className="bg-white bg-opacity-80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white border-opacity-20 p-8 space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">
             <div className="flex justify-center">
@@ -151,7 +86,7 @@ const LoginPage = () => {
                     type="email"
                     autoComplete="email"
                     required
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white bg-opacity-50"
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -175,7 +110,7 @@ const LoginPage = () => {
                     type="password"
                     autoComplete="current-password"
                     required
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white bg-opacity-50"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -185,7 +120,7 @@ const LoginPage = () => {
             </div>
 
             {error && (
-              <div className="rounded-xl bg-red-50 border border-red-200 p-4 animate-in slide-in-from-top-2 duration-200">
+              <div className="rounded-xl bg-red-50 border border-red-200 p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -219,34 +154,6 @@ const LoginPage = () => {
               </button>
             </div>
 
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">Or continue with</span>
-              </div>
-            </div>
-
-            {/* Microsoft Login */}
-            <div>
-              <button
-                type="button"
-                onClick={handleMicrosoftLogin}
-                disabled={loading}
-                className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-md"
-              >
-                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zM24 11.4H12.6V0H24v11.4z"
-                  />
-                </svg>
-                Microsoft
-              </button>
-            </div>
-
             {/* Sign Up Link */}
             <div className="text-center">
               <p className="text-sm text-gray-600">
@@ -260,28 +167,6 @@ const LoginPage = () => {
               </p>
             </div>
           </form>
-        </div>
-
-        {/* Debug Section - Collapsible */}
-        <div className="mt-6">
-          <details className="group">
-            <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700 transition-colors duration-200">
-              🔧 Debug Tools
-            </summary>
-            <div className="mt-4 space-y-4">
-              <button
-                type="button"
-                onClick={handleForceSessionRefresh}
-                disabled={loading}
-                className="w-full inline-flex justify-center py-2 px-4 border border-yellow-300 rounded-lg shadow-sm bg-yellow-50 text-sm font-medium text-yellow-700 hover:bg-yellow-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
-                🔄 Force Session Refresh
-              </button>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <AuthDebug />
-              </div>
-            </div>
-          </details>
         </div>
       </div>
     </div>
