@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { opportunityAPI, OpportunityWithDetails, MEDDPICCData } from '@/lib/api/opportunities'
+import { activityAPI, ActivityWithDetails, ActivityFormData } from '@/lib/api/activities'
 import Link from 'next/link'
 import PEAKForm from '@/components/forms/PEAKForm'
 import MEDDPICCForm from '@/components/forms/MEDDPICCForm'
+import ActivityForm from '@/components/forms/ActivityForm'
+import ActivityList from '@/components/activities/ActivityList'
 
 interface OpportunityViewProps {
   opportunityId: string
@@ -21,6 +24,8 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [saving, setSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showActivityForm, setShowActivityForm] = useState(false)
+  const [editingActivity, setEditingActivity] = useState<ActivityWithDetails | null>(null)
 
   useEffect(() => {
     loadOpportunity()
@@ -104,6 +109,73 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleActivitySave = async (data: ActivityFormData) => {
+    if (!opportunity) return
+    
+    setSaving(true)
+    try {
+      console.log('Saving activity data:', data)
+      
+      if (editingActivity) {
+        // Update existing activity
+        const { data: updatedActivity, error } = await activityAPI.updateActivity(editingActivity.id, data)
+        
+        if (error) {
+          console.error('Error updating activity:', error)
+          setError(error.message || 'Failed to update activity')
+          setSuccessMessage(null)
+        } else {
+          console.log('Activity updated successfully:', updatedActivity)
+          setSuccessMessage('Activity updated successfully!')
+          setError(null)
+          setShowActivityForm(false)
+          setEditingActivity(null)
+          // Clear success message after 3 seconds
+          setTimeout(() => setSuccessMessage(null), 3000)
+        }
+      } else {
+        // Create new activity
+        const { data: newActivity, error } = await activityAPI.createActivity({
+          ...data,
+          opportunity_id: opportunity.id
+        })
+        
+        if (error) {
+          console.error('Error creating activity:', error)
+          setError(error.message || 'Failed to create activity')
+          setSuccessMessage(null)
+        } else {
+          console.log('Activity created successfully:', newActivity)
+          setSuccessMessage('Activity created successfully!')
+          setError(null)
+          setShowActivityForm(false)
+          // Clear success message after 3 seconds
+          setTimeout(() => setSuccessMessage(null), 3000)
+        }
+      }
+    } catch (err) {
+      console.error('Error saving activity:', err)
+      setError('An unexpected error occurred while saving activity')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleNewActivity = () => {
+    setEditingActivity(null)
+    setShowActivityForm(true)
+  }
+
+  const handleEditActivity = (activity: ActivityWithDetails) => {
+    setEditingActivity(activity)
+    setShowActivityForm(true)
+  }
+
+  const handleCancelActivity = () => {
+    setShowActivityForm(false)
+    setEditingActivity(null)
   }
 
   const getStageColor = (stage: string) => {
@@ -517,25 +589,50 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
         )}
 
         {activeTab === 'activities' && (
-          <div className="bg-white shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Activities</h3>
-              <div className="mt-4 text-center py-8">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No activities</h3>
-                <p className="mt-1 text-sm text-gray-500">Get started by creating a new activity.</p>
-                <div className="mt-6">
-                  <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                    <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    New Activity
-                  </button>
-                </div>
+          <div className="space-y-6">
+            {/* Activities Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Activities</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Track all interactions and tasks related to this opportunity
+                </p>
               </div>
+              <button
+                onClick={handleNewActivity}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                New Activity
+              </button>
             </div>
+
+            {/* Activity Form */}
+            {showActivityForm && (
+              <ActivityForm
+                opportunityId={opportunity.id}
+                initialData={editingActivity ? {
+                  type: editingActivity.type as any,
+                  subject: editingActivity.subject,
+                  description: editingActivity.description || undefined,
+                  contact_id: editingActivity.contact_id || undefined,
+                  status: editingActivity.status as any,
+                  priority: editingActivity.priority as any,
+                  due_date: editingActivity.due_date || undefined
+                } : undefined}
+                onSave={handleActivitySave}
+                onCancel={handleCancelActivity}
+                loading={saving}
+              />
+            )}
+
+            {/* Activity List */}
+            <ActivityList
+              opportunityId={opportunity.id}
+              onEdit={handleEditActivity}
+            />
           </div>
         )}
 

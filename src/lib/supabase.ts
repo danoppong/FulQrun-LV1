@@ -270,6 +270,9 @@ export interface Database {
           description: string | null
           contact_id: string | null
           opportunity_id: string | null
+          due_date: string | null
+          status: 'pending' | 'completed' | 'cancelled'
+          priority: 'low' | 'medium' | 'high'
           organization_id: string
           created_by: string
           created_at: string
@@ -282,6 +285,9 @@ export interface Database {
           description?: string | null
           contact_id?: string | null
           opportunity_id?: string | null
+          due_date?: string | null
+          status?: 'pending' | 'completed' | 'cancelled'
+          priority?: 'low' | 'medium' | 'high'
           organization_id: string
           created_by: string
           created_at?: string
@@ -294,6 +300,9 @@ export interface Database {
           description?: string | null
           contact_id?: string | null
           opportunity_id?: string | null
+          due_date?: string | null
+          status?: 'pending' | 'completed' | 'cancelled'
+          priority?: 'low' | 'medium' | 'high'
           organization_id?: string
           created_by?: string
           created_at?: string
