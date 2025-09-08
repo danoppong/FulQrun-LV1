@@ -231,12 +231,12 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-white shadow sm:rounded-lg">
+      <div className="bg-card shadow sm:rounded-lg border border-border">
         <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
+          <h3 className="text-lg leading-6 font-medium text-card-foreground">
             {mode === 'create' ? 'Create New Opportunity' : 'Edit Opportunity'}
           </h3>
-          <div className="mt-2 max-w-xl text-sm text-gray-500">
+          <div className="mt-2 max-w-xl text-sm text-muted-foreground">
             <p>
               {mode === 'create' 
                 ? 'Add a new opportunity to your sales pipeline.' 
@@ -247,38 +247,38 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-6">
             {error && (
-              <div className="rounded-md bg-red-50 p-4">
-                <div className="text-sm text-red-700">{error}</div>
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-4">
+                <div className="text-sm text-destructive">{error}</div>
               </div>
             )}
 
             <div className="space-y-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="name" className="block text-sm font-medium text-foreground">
                   Opportunity Name *
                 </label>
                 <div className="mt-1">
                   <input
                     type="text"
                     {...register('name')}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                     placeholder="e.g., Enterprise Software License"
                   />
                   {errors.name && (
-                    <p className="mt-2 text-sm text-red-600">{errors.name.message}</p>
+                    <p className="mt-2 text-sm text-destructive">{errors.name.message}</p>
                   )}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="contact_id" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="contact_id" className="block text-sm font-medium text-foreground">
                     Contact
                   </label>
                   <div className="mt-1">
                     <select
                       {...register('contact_id')}
-                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                     >
                       <option value="">Select a contact</option>
                       {contacts.map((contact) => (
@@ -292,13 +292,13 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
                 </div>
 
                 <div>
-                  <label htmlFor="company_id" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="company_id" className="block text-sm font-medium text-foreground">
                     Company
                   </label>
                   <div className="mt-1">
                     <select
                       {...register('company_id')}
-                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                     >
                       <option value="">Select a company</option>
                       {companies.map((company) => (
@@ -337,14 +337,14 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="bg-background py-2 px-4 border border-border rounded-md shadow-sm text-sm font-medium text-foreground hover:bg-muted"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
               >
                 {loading ? 'Saving...' : mode === 'create' ? 'Create Opportunity' : 'Update Opportunity'}
               </button>

@@ -130,12 +130,12 @@ export default function ContactForm({ contact, contactId, mode }: ContactFormPro
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-white shadow sm:rounded-lg">
+      <div className="bg-card shadow sm:rounded-lg border border-border">
         <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
+          <h3 className="text-lg leading-6 font-medium text-card-foreground">
             {mode === 'create' ? 'Create New Contact' : 'Edit Contact'}
           </h3>
-          <div className="mt-2 max-w-xl text-sm text-gray-500">
+          <div className="mt-2 max-w-xl text-sm text-muted-foreground">
             <p>
               {mode === 'create' 
                 ? 'Add a new contact to your database.' 
@@ -146,94 +146,94 @@ export default function ContactForm({ contact, contactId, mode }: ContactFormPro
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-6">
             {error && (
-              <div className="rounded-md bg-red-50 p-4">
-                <div className="text-sm text-red-700">{error}</div>
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-4">
+                <div className="text-sm text-destructive">{error}</div>
               </div>
             )}
 
             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="first_name" className="block text-sm font-medium text-foreground">
                   First Name *
                 </label>
                 <div className="mt-1">
                   <input
                     type="text"
                     {...register('first_name')}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                   />
                   {errors.first_name && (
-                    <p className="mt-2 text-sm text-red-600">{errors.first_name.message}</p>
+                    <p className="mt-2 text-sm text-destructive">{errors.first_name.message}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="last_name" className="block text-sm font-medium text-foreground">
                   Last Name *
                 </label>
                 <div className="mt-1">
                   <input
                     type="text"
                     {...register('last_name')}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                   />
                   {errors.last_name && (
-                    <p className="mt-2 text-sm text-red-600">{errors.last_name.message}</p>
+                    <p className="mt-2 text-sm text-destructive">{errors.last_name.message}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-foreground">
                   Email
                 </label>
                 <div className="mt-1">
                   <input
                     type="email"
                     {...register('email')}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                   />
                   {errors.email && (
-                    <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
+                    <p className="mt-2 text-sm text-destructive">{errors.email.message}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="phone" className="block text-sm font-medium text-foreground">
                   Phone
                 </label>
                 <div className="mt-1">
                   <input
                     type="tel"
                     {...register('phone')}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="title" className="block text-sm font-medium text-foreground">
                   Job Title
                 </label>
                 <div className="mt-1">
                   <input
                     type="text"
                     {...register('title')}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="company_id" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="company_id" className="block text-sm font-medium text-foreground">
                   Company
                 </label>
                 <div className="mt-1">
                   <select
                     {...register('company_id')}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                   >
                     <option value="">Select a company</option>
                     {companies.map((company) => (
@@ -250,14 +250,14 @@ export default function ContactForm({ contact, contactId, mode }: ContactFormPro
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="bg-background py-2 px-4 border border-border rounded-md shadow-sm text-sm font-medium text-foreground hover:bg-muted"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
               >
                 {loading ? 'Saving...' : mode === 'create' ? 'Create Contact' : 'Update Contact'}
               </button>

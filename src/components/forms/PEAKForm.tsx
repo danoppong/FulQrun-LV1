@@ -136,31 +136,31 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
   }
 
   return (
-    <div className="bg-white shadow sm:rounded-lg">
+    <div className="bg-card shadow sm:rounded-lg border border-border">
       <div className="px-4 py-5 sm:p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
+            <h3 className="text-lg leading-6 font-medium text-card-foreground">
               PEAK Stage Management
             </h3>
-            <div className="mt-2 max-w-xl text-sm text-gray-500">
+            <div className="mt-2 max-w-xl text-sm text-muted-foreground">
               <p>
                 Track your opportunity through the PEAK methodology stages.
               </p>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-indigo-600">
+            <div className="text-2xl font-bold text-primary">
               {peakStages.find(s => s.value === selectedStage)?.icon}
             </div>
-            <div className="text-sm text-gray-500">Current Stage</div>
+            <div className="text-sm text-muted-foreground">Current Stage</div>
           </div>
         </div>
 
         <div className="mt-6 space-y-6">
           {/* Stage Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-foreground mb-3">
               Current PEAK Stage
             </label>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -169,8 +169,8 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
                   key={stage.value}
                   className={`relative rounded-lg p-4 border-2 cursor-pointer transition-all ${
                     selectedStage === stage.value
-                      ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-muted-foreground'
                   }`}
                   onClick={() => handleStageSelect(stage.value)}
                 >
@@ -179,18 +179,18 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
                       <span className="text-2xl">{stage.icon}</span>
                     </div>
                     <div className="ml-3">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-foreground">
                         {stage.label}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         {stage.description}
                       </div>
                     </div>
                   </div>
                   {selectedStage === stage.value && (
                     <div className="absolute top-2 right-2">
-                      <div className="w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
-                        <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                        <svg className="w-2 h-2 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
@@ -201,27 +201,27 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
             </div>
             <input type="hidden" {...register('peak_stage')} />
             {errors.peak_stage && (
-              <p className="mt-2 text-sm text-red-600">{errors.peak_stage.message}</p>
+              <p className="mt-2 text-sm text-destructive">{errors.peak_stage.message}</p>
             )}
           </div>
 
           {/* Stage Details */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">
+          <div className="bg-muted rounded-lg p-4">
+            <h4 className="text-sm font-medium text-foreground mb-2">
               {peakStages.find(s => s.value === selectedStage)?.label} Stage
             </h4>
-            <p className="text-sm text-gray-600 mb-3">
+            <p className="text-sm text-muted-foreground mb-3">
               {peakStages.find(s => s.value === selectedStage)?.description}
             </p>
             
             <div className="space-y-2">
-              <h5 className="text-xs font-medium text-gray-700 uppercase tracking-wide">
+              <h5 className="text-xs font-medium text-foreground uppercase tracking-wide">
                 Recommended Actions
               </h5>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <ul className="text-sm text-muted-foreground space-y-1">
                 {getStageRecommendations(selectedStage).map((action, index) => (
                   <li key={index} className="flex items-start">
-                    <span className="text-indigo-500 mr-2">•</span>
+                    <span className="text-primary mr-2">•</span>
                     {action}
                   </li>
                 ))}
@@ -232,7 +232,7 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
           {/* Deal Information */}
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="deal_value" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="deal_value" className="block text-sm font-medium text-foreground">
                 Deal Value ($)
               </label>
               <div className="mt-1">
@@ -241,17 +241,17 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
                   step="0.01"
                   min="0"
                   {...register('deal_value', { valueAsNumber: true })}
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                   placeholder="50000"
                 />
                 {errors.deal_value && (
-                  <p className="mt-2 text-sm text-red-600">{errors.deal_value.message}</p>
+                  <p className="mt-2 text-sm text-destructive">{errors.deal_value.message}</p>
                 )}
               </div>
             </div>
 
             <div>
-              <label htmlFor="probability" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="probability" className="block text-sm font-medium text-foreground">
                 Probability (%)
               </label>
               <div className="mt-1">
@@ -260,31 +260,31 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
                   min="0"
                   max="100"
                   {...register('probability', { valueAsNumber: true })}
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                   placeholder="75"
                 />
                 {errors.probability && (
-                  <p className="mt-2 text-sm text-red-600">{errors.probability.message}</p>
+                  <p className="mt-2 text-sm text-destructive">{errors.probability.message}</p>
                 )}
               </div>
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="close_date" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="close_date" className="block text-sm font-medium text-foreground">
                 Expected Close Date
               </label>
               <div className="mt-1">
                 <input
                   type="date"
                   {...register('close_date')}
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                 />
               </div>
             </div>
           </div>
 
           {/* Stage Progress Indicator */}
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+          <div className="bg-primary/10 border border-primary/20 rounded-md p-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <span className="text-2xl">
@@ -292,10 +292,10 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
                 </span>
               </div>
               <div className="ml-3">
-                <h4 className="text-sm font-medium text-blue-900">
+                <h4 className="text-sm font-medium text-primary">
                   Current Stage: {peakStages.find(s => s.value === selectedStage)?.label}
                 </h4>
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-primary/80">
                   {selectedStage === 'prospecting' && 'Focus on qualification and initial contact'}
                   {selectedStage === 'engaging' && 'Build relationships and understand needs'}
                   {selectedStage === 'advancing' && 'Present solutions and negotiate terms'}
@@ -313,7 +313,7 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
               className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${
                 saved 
                   ? 'text-white bg-green-600 hover:bg-green-700 focus:ring-green-500' 
-                  : 'text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
+                  : 'text-primary-foreground bg-primary hover:bg-primary/90 focus:ring-primary'
               }`}
             >
               {loading ? 'Saving...' : saved ? '✓ Saved!' : 'Save PEAK Stage'}

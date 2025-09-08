@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-// import HydrationFix from "@/components/HydrationFix";
-// import Navigation from "@/components/Navigation";
-// import { ErrorBoundary } from "@/components/ErrorBoundary";
-// import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
-// import ThemeProvider from "@/components/ThemeProvider";
+import ClientLayout from "@/components/ClientLayout";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -98,11 +94,9 @@ export default function RootLayout({
         className={`${inter.variable} font-sans antialiased`}
         suppressHydrationWarning={true}
       >
-        <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-            {children}
-          </div>
-        </main>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );
