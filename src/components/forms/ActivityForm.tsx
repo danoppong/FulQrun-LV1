@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { activityAPI, ActivityFormData } from '@/lib/api/activities'
-import { contactAPI } from '@/lib/api/contacts'
+import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
 
 const activitySchema = z.object({
   type: z.enum(['email', 'call', 'meeting', 'task']),
@@ -56,8 +56,9 @@ export default function ActivityForm({
   onCancel, 
   loading = false 
 }: ActivityFormProps) {
-  const [contacts, setContacts] = useState<any[]>([])
+  const [contacts, setContacts] = useState<ContactWithCompany[]>([])
   const [loadingContacts, setLoadingContacts] = useState(false)
+  const [contactsError, setContactsError] = useState<string | null>(null)
 
   const {
     register,
@@ -78,7 +79,6 @@ export default function ActivityForm({
   })
 
   const watchedType = watch('type')
-  const watchedContactId = watch('contact_id')
 
   // Load contacts for the opportunity
   useEffect(() => {
@@ -89,12 +89,18 @@ export default function ActivityForm({
 
   const loadContacts = async () => {
     setLoadingContacts(true)
+    setContactsError(null)
     try {
-      const { data } = await contactAPI.getContacts()
-      if (data) {
+      const { data, error } = await contactAPI.getContacts()
+      if (error) {
+        setContactsError(error.message || 'Failed to load contacts')
+        console.error('Error loading contacts:', error)
+      } else if (data) {
         setContacts(data)
       }
     } catch (error) {
+      const errorMessage = 'An unexpected error occurred while loading contacts'
+      setContactsError(errorMessage)
       console.error('Error loading contacts:', error)
     } finally {
       setLoadingContacts(false)
@@ -195,11 +201,27 @@ export default function ActivityForm({
           </div>
 
           {/* Contact Selection */}
-          {contacts.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Related Contact
-              </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Related Contact
+            </label>
+            {loadingContacts ? (
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                <span className="text-sm text-gray-500">Loading contacts...</span>
+              </div>
+            ) : contactsError ? (
+              <div className="rounded-md bg-red-50 p-3">
+                <div className="text-sm text-red-700">{contactsError}</div>
+                <button
+                  type="button"
+                  onClick={loadContacts}
+                  className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+                >
+                  Try again
+                </button>
+              </div>
+            ) : contacts.length > 0 ? (
               <select
                 {...register('contact_id')}
                 className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 px-3 py-2"
@@ -211,8 +233,10 @@ export default function ActivityForm({
                   </option>
                 ))}
               </select>
-            </div>
-          )}
+            ) : (
+              <div className="text-sm text-gray-500">No contacts available</div>
+            )}
+          </div>
 
           {/* Priority and Status */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -1,6 +1,7 @@
 import { createClientComponentClient } from '@/lib/auth'
 import { Database } from '@/lib/supabase'
 import { leadScoringEngine, LeadData, LeadScore } from '@/lib/scoring/leadScoring'
+import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors'
 
 type Lead = Database['public']['Tables']['leads']['Row']
 type LeadInsert = Database['public']['Tables']['leads']['Insert']
@@ -10,10 +11,27 @@ export interface LeadWithScore extends Lead {
   score_breakdown?: LeadScore
 }
 
+export interface LeadStats {
+  total: number
+  byStatus: {
+    new: number
+    contacted: number
+    qualified: number
+    converted: number
+    closed: number
+  }
+  byScore: {
+    hot: number
+    warm: number
+    cool: number
+    cold: number
+  }
+}
+
 export class LeadAPI {
   private supabase = createClientComponentClient()
 
-  async getLeads(): Promise<{ data: LeadWithScore[] | null; error: any }> {
+  async getLeads(): Promise<ApiResponse<LeadWithScore[]>> {
     try {
       const { data, error } = await this.supabase
         .from('leads')
@@ -21,7 +39,7 @@ export class LeadAPI {
         .order('created_at', { ascending: false })
 
       if (error) {
-        return { data: null, error }
+        return { data: null, error: normalizeError(error) }
       }
 
       // Calculate scores for each lead
@@ -45,11 +63,11 @@ export class LeadAPI {
 
       return { data: leadsWithScores, error: null }
     } catch (error) {
-      return { data: null, error }
+      return { data: null, error: normalizeError(error) }
     }
   }
 
-  async getLead(id: string): Promise<{ data: LeadWithScore | null; error: any }> {
+  async getLead(id: string): Promise<ApiResponse<LeadWithScore>> {
     try {
       const { data, error } = await this.supabase
         .from('leads')
@@ -58,7 +76,7 @@ export class LeadAPI {
         .single()
 
       if (error) {
-        return { data: null, error }
+        return { data: null, error: normalizeError(error) }
       }
 
       // Calculate score for the lead
@@ -72,20 +90,19 @@ export class LeadAPI {
       }
       
       const scoreBreakdown = leadScoringEngine.calculateScore(leadData)
-
-      return { 
-        data: {
-          ...data,
-          score_breakdown: scoreBreakdown
-        }, 
-        error: null 
+      
+      const leadWithScore: LeadWithScore = {
+        ...data,
+        score_breakdown: scoreBreakdown
       }
+
+      return { data: leadWithScore, error: null }
     } catch (error) {
-      return { data: null, error }
+      return { data: null, error: normalizeError(error) }
     }
   }
 
-  async createLead(lead: Omit<LeadInsert, 'organization_id' | 'created_by' | 'score'>): Promise<{ data: Lead | null; error: any }> {
+  async createLead(lead: Omit<LeadInsert, 'organization_id' | 'created_by' | 'score'>): Promise<ApiResponse<Lead>> {
     try {
       // Get current user and organization
       const { data: { user } } = await this.supabase.auth.getUser()
@@ -108,13 +125,14 @@ export class LeadAPI {
       const leadData: LeadData = {
         first_name: lead.first_name,
         last_name: lead.last_name,
-        email: lead.email || undefined,
-        phone: lead.phone || undefined,
-        company: lead.company || undefined,
-        source: lead.source || undefined
+        email: lead.email,
+        phone: lead.phone,
+        company: lead.company,
+        source: lead.source
       }
       
-      const scoreBreakdown = leadScoringEngine.calculateScore(leadData)
+      const scoreResult = leadScoringEngine.calculateScore(leadData)
+      const score = scoreResult.totalScore
 
       const { data, error } = await this.supabase
         .from('leads')
@@ -122,22 +140,21 @@ export class LeadAPI {
           ...lead,
           organization_id: profile.organization_id,
           created_by: user.id,
-          score: scoreBreakdown.totalScore
+          score
         })
         .select()
         .single()
 
-      return { data, error }
+      return { data, error: error ? normalizeError(error) : null }
     } catch (error) {
-      return { data: null, error }
+      return { data: null, error: normalizeError(error) }
     }
   }
 
-  async updateLead(id: string, updates: LeadUpdate): Promise<{ data: Lead | null; error: any }> {
+  async updateLead(id: string, updates: LeadUpdate): Promise<ApiResponse<Lead>> {
     try {
-      // If updating fields that affect scoring, recalculate score
+      // If updating lead data that affects scoring, recalculate score
       if (updates.first_name || updates.last_name || updates.email || updates.phone || updates.company || updates.source) {
-        // Get current lead data
         const { data: currentLead } = await this.supabase
           .from('leads')
           .select('*')
@@ -148,14 +165,14 @@ export class LeadAPI {
           const leadData: LeadData = {
             first_name: updates.first_name || currentLead.first_name,
             last_name: updates.last_name || currentLead.last_name,
-            email: updates.email !== undefined ? updates.email : currentLead.email,
-            phone: updates.phone !== undefined ? updates.phone : currentLead.phone,
-            company: updates.company !== undefined ? updates.company : currentLead.company,
-            source: updates.source !== undefined ? updates.source : currentLead.source
+            email: updates.email || currentLead.email,
+            phone: updates.phone || currentLead.phone,
+            company: updates.company || currentLead.company,
+            source: updates.source || currentLead.source
           }
           
-          const scoreBreakdown = leadScoringEngine.calculateScore(leadData)
-          updates.score = scoreBreakdown.totalScore
+          const scoreResult = leadScoringEngine.calculateScore(leadData)
+          updates.score = scoreResult.totalScore
         }
       }
 
@@ -166,26 +183,26 @@ export class LeadAPI {
         .select()
         .single()
 
-      return { data, error }
+      return { data, error: error ? normalizeError(error) : null }
     } catch (error) {
-      return { data: null, error }
+      return { data: null, error: normalizeError(error) }
     }
   }
 
-  async deleteLead(id: string): Promise<{ error: any }> {
+  async deleteLead(id: string): Promise<{ error: ApiError | null }> {
     try {
       const { error } = await this.supabase
         .from('leads')
         .delete()
         .eq('id', id)
 
-      return { error }
+      return { error: error ? normalizeError(error) : null }
     } catch (error) {
-      return { error }
+      return { error: normalizeError(error) }
     }
   }
 
-  async searchLeads(query: string): Promise<{ data: LeadWithScore[] | null; error: any }> {
+  async searchLeads(query: string): Promise<ApiResponse<LeadWithScore[]>> {
     try {
       const { data, error } = await this.supabase
         .from('leads')
@@ -194,7 +211,7 @@ export class LeadAPI {
         .order('created_at', { ascending: false })
 
       if (error) {
-        return { data: null, error }
+        return { data: null, error: normalizeError(error) }
       }
 
       // Calculate scores for each lead
@@ -218,7 +235,7 @@ export class LeadAPI {
 
       return { data: leadsWithScores, error: null }
     } catch (error) {
-      return { data: null, error }
+      return { data: null, error: normalizeError(error) }
     }
   }
 
@@ -226,13 +243,19 @@ export class LeadAPI {
     name: string
     deal_value?: number
     probability?: number
-    close_date?: string
-  }): Promise<{ data: any; error: any }> {
+    contact_id?: string
+    company_id?: string
+  }): Promise<ApiResponse<{ lead: Lead; opportunity: any }>> {
     try {
-      // Get lead data
-      const { data: lead, error: leadError } = await this.getLead(leadId)
+      // Get the lead
+      const { data: lead, error: leadError } = await this.supabase
+        .from('leads')
+        .select('*')
+        .eq('id', leadId)
+        .single()
+
       if (leadError || !lead) {
-        return { data: null, error: leadError || { message: 'Lead not found' } }
+        return { data: null, error: leadError ? normalizeError(leadError) : { message: 'Lead not found' } }
       }
 
       // Get current user and organization
@@ -241,7 +264,6 @@ export class LeadAPI {
         return { data: null, error: { message: 'User not authenticated' } }
       }
 
-      // Get user profile to get organization_id
       const { data: profile } = await this.supabase
         .from('users')
         .select('organization_id')
@@ -259,33 +281,89 @@ export class LeadAPI {
           name: opportunityData.name,
           deal_value: opportunityData.deal_value,
           probability: opportunityData.probability,
-          close_date: opportunityData.close_date,
+          contact_id: opportunityData.contact_id,
+          company_id: opportunityData.company_id,
           organization_id: profile.organization_id,
-          created_by: user.id
+          created_by: user.id,
+          peak_stage: 'prospecting'
         })
         .select()
         .single()
 
       if (oppError) {
-        return { data: null, error: oppError }
+        return { data: null, error: normalizeError(oppError) }
       }
 
       // Update lead status to converted
-      const { error: updateError } = await this.updateLead(leadId, { 
-        status: 'converted' 
-      })
+      const { error: updateError } = await this.supabase
+        .from('leads')
+        .update({ status: 'converted' })
+        .eq('id', leadId)
 
       if (updateError) {
-        console.warn('Failed to update lead status:', updateError)
+        // Handle lead status update error
       }
 
-      return { data: opportunity, error: null }
+      return { data: { lead, opportunity }, error: null }
     } catch (error) {
-      return { data: null, error }
+      return { data: null, error: normalizeError(error) }
     }
   }
 
-  async getLeadsByStatus(status: string): Promise<{ data: LeadWithScore[] | null; error: any }> {
+  async getLeadStats(): Promise<ApiResponse<LeadStats>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('leads')
+        .select('status, score')
+
+      if (error) {
+        return { data: null, error: normalizeError(error) }
+      }
+
+      const stats: LeadStats = {
+        total: data?.length || 0,
+        byStatus: {
+          new: 0,
+          contacted: 0,
+          qualified: 0,
+          converted: 0,
+          closed: 0
+        },
+        byScore: {
+          hot: 0,
+          warm: 0,
+          cool: 0,
+          cold: 0
+        }
+      }
+
+      data?.forEach(lead => {
+        // Count by status
+        const status = lead.status as keyof typeof stats.byStatus
+        if (stats.byStatus[status] !== undefined) {
+          stats.byStatus[status]++
+        }
+
+        // Count by score
+        const score = lead.score || 0
+        if (score >= 80) {
+          stats.byScore.hot++
+        } else if (score >= 60) {
+          stats.byScore.warm++
+        } else if (score >= 40) {
+          stats.byScore.cool++
+        } else {
+          stats.byScore.cold++
+        }
+      })
+
+      return { data: stats, error: null }
+    } catch (error) {
+      return { data: null, error: normalizeError(error) }
+    }
+  }
+
+  async getLeadsByStatus(status: string): Promise<ApiResponse<LeadWithScore[]>> {
     try {
       const { data, error } = await this.supabase
         .from('leads')
@@ -294,7 +372,7 @@ export class LeadAPI {
         .order('created_at', { ascending: false })
 
       if (error) {
-        return { data: null, error }
+        return { data: null, error: normalizeError(error) }
       }
 
       // Calculate scores for each lead
@@ -318,7 +396,7 @@ export class LeadAPI {
 
       return { data: leadsWithScores, error: null }
     } catch (error) {
-      return { data: null, error }
+      return { data: null, error: normalizeError(error) }
     }
   }
 }

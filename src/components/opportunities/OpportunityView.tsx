@@ -178,6 +178,18 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
     setEditingActivity(null)
   }
 
+  const convertActivityToFormData = (activity: ActivityWithDetails): Partial<ActivityFormData> => {
+    return {
+      type: activity.type as 'email' | 'call' | 'meeting' | 'task',
+      subject: activity.subject,
+      description: activity.description || undefined,
+      contact_id: activity.contact_id || undefined,
+      status: activity.status as 'pending' | 'completed' | 'cancelled',
+      priority: activity.priority as 'low' | 'medium' | 'high',
+      due_date: activity.due_date || undefined
+    }
+  }
+
   const getStageColor = (stage: string) => {
     switch (stage) {
       case 'prospecting': return 'bg-blue-100 text-blue-800'
@@ -613,15 +625,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
             {showActivityForm && (
               <ActivityForm
                 opportunityId={opportunity.id}
-                initialData={editingActivity ? {
-                  type: editingActivity.type as any,
-                  subject: editingActivity.subject,
-                  description: editingActivity.description || undefined,
-                  contact_id: editingActivity.contact_id || undefined,
-                  status: editingActivity.status as any,
-                  priority: editingActivity.priority as any,
-                  due_date: editingActivity.due_date || undefined
-                } : undefined}
+                initialData={editingActivity ? convertActivityToFormData(editingActivity) : undefined}
                 onSave={handleActivitySave}
                 onCancel={handleCancelActivity}
                 loading={saving}
