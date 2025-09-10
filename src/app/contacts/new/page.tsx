@@ -1,5 +1,9 @@
 import ContactForm from '@/components/contacts/ContactForm'
 
-export default function NewContactPage() {
-  return <ContactForm mode="create" />
+interface NewContactPageProps {
+  searchParams: { opportunityId?: string }
+}
+
+export default function NewContactPage({ searchParams }: NewContactPageProps) {
+  return <ContactForm mode="create" opportunityId={searchParams.opportunityId} />
 }

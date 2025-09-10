@@ -1,10 +1,27 @@
 import { createClient } from '@supabase/supabase-js'
 import { supabaseConfig } from '@/lib/config'
 
-export const supabase = createClient(
-  supabaseConfig.url || 'https://placeholder.supabase.co', 
-  supabaseConfig.anonKey || 'placeholder_key'
-)
+// Singleton client instance to prevent multiple GoTrueClient instances
+let supabaseInstance: any = null
+
+export const supabase = (() => {
+  if (supabaseInstance) {
+    return supabaseInstance
+  }
+  
+  supabaseInstance = createClient(
+    supabaseConfig.url || 'https://placeholder.supabase.co', 
+    supabaseConfig.anonKey || 'placeholder_key'
+  )
+  
+  return supabaseInstance
+})()
+
+// Server-side client for API routes
+export const createServerClient = () => {
+  // Always return the real client, but it will fail gracefully if not configured
+  return createClient(supabaseConfig.url!, supabaseConfig.anonKey!)
+}
 
 // Export a flag to check if Supabase is properly configured
 export const isSupabaseConfigured = supabaseConfig.isConfigured
@@ -43,6 +60,7 @@ export interface Database {
           full_name: string | null
           role: 'rep' | 'manager' | 'admin'
           organization_id: string
+          learning_progress: Record<string, any>
           created_at: string
           updated_at: string
         }
@@ -52,6 +70,7 @@ export interface Database {
           full_name?: string | null
           role?: 'rep' | 'manager' | 'admin'
           organization_id: string
+          learning_progress?: Record<string, any>
           created_at?: string
           updated_at?: string
         }
@@ -61,6 +80,7 @@ export interface Database {
           full_name?: string | null
           role?: 'rep' | 'manager' | 'admin'
           organization_id?: string
+          learning_progress?: Record<string, any>
           created_at?: string
           updated_at?: string
         }
@@ -155,6 +175,7 @@ export interface Database {
           source: string | null
           status: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted'
           score: number
+          ai_score: number
           organization_id: string
           created_by: string
           created_at: string
@@ -170,6 +191,7 @@ export interface Database {
           source?: string | null
           status?: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted'
           score?: number
+          ai_score?: number
           organization_id: string
           created_by: string
           created_at?: string
@@ -185,6 +207,7 @@ export interface Database {
           source?: string | null
           status?: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted'
           score?: number
+          ai_score?: number
           organization_id?: string
           created_by?: string
           created_at?: string
@@ -210,6 +233,9 @@ export interface Database {
           deal_value: number | null
           probability: number | null
           close_date: string | null
+          pipeline_config_id: string | null
+          ai_risk_score: number
+          ai_next_action: string | null
           organization_id: string
           created_by: string
           created_at: string
@@ -233,6 +259,9 @@ export interface Database {
           deal_value?: number | null
           probability?: number | null
           close_date?: string | null
+          pipeline_config_id?: string | null
+          ai_risk_score?: number
+          ai_next_action?: string | null
           organization_id: string
           created_by: string
           created_at?: string
@@ -256,6 +285,9 @@ export interface Database {
           deal_value?: number | null
           probability?: number | null
           close_date?: string | null
+          pipeline_config_id?: string | null
+          ai_risk_score?: number
+          ai_next_action?: string | null
           organization_id?: string
           created_by?: string
           created_at?: string
@@ -340,6 +372,391 @@ export interface Database {
           is_active?: boolean
           organization_id?: string
           created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      pipeline_configurations: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          stages: Record<string, any>[]
+          branch_specific: boolean
+          role_specific: boolean
+          branch_name: string | null
+          role_name: string | null
+          is_default: boolean
+          organization_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          stages?: Record<string, any>[]
+          branch_specific?: boolean
+          role_specific?: boolean
+          branch_name?: string | null
+          role_name?: string | null
+          is_default?: boolean
+          organization_id: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          stages?: Record<string, any>[]
+          branch_specific?: boolean
+          role_specific?: boolean
+          branch_name?: string | null
+          role_name?: string | null
+          is_default?: boolean
+          organization_id?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      workflow_automations: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          trigger_type: 'stage_change' | 'field_update' | 'time_based' | 'manual'
+          trigger_conditions: Record<string, any>
+          actions: Record<string, any>[]
+          is_active: boolean
+          branch_specific: boolean
+          role_specific: boolean
+          branch_name: string | null
+          role_name: string | null
+          organization_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          trigger_type: 'stage_change' | 'field_update' | 'time_based' | 'manual'
+          trigger_conditions?: Record<string, any>
+          actions?: Record<string, any>[]
+          is_active?: boolean
+          branch_specific?: boolean
+          role_specific?: boolean
+          branch_name?: string | null
+          role_name?: string | null
+          organization_id: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          trigger_type?: 'stage_change' | 'field_update' | 'time_based' | 'manual'
+          trigger_conditions?: Record<string, any>
+          actions?: Record<string, any>[]
+          is_active?: boolean
+          branch_specific?: boolean
+          role_specific?: boolean
+          branch_name?: string | null
+          role_name?: string | null
+          organization_id?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      ai_insights: {
+        Row: {
+          id: string
+          type: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance'
+          entity_type: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization'
+          entity_id: string
+          insight_data: Record<string, any>
+          confidence_score: number | null
+          model_version: string | null
+          organization_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          type: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance'
+          entity_type: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization'
+          entity_id: string
+          insight_data?: Record<string, any>
+          confidence_score?: number | null
+          model_version?: string | null
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          type?: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance'
+          entity_type?: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization'
+          entity_id?: string
+          insight_data?: Record<string, any>
+          confidence_score?: number | null
+          model_version?: string | null
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      learning_modules: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          content: string
+          module_type: 'video' | 'article' | 'quiz' | 'interactive' | 'micro_learning'
+          duration_minutes: number | null
+          difficulty_level: 'beginner' | 'intermediate' | 'advanced'
+          tags: string[]
+          prerequisites: string[]
+          certification_required: boolean
+          is_active: boolean
+          organization_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          content: string
+          module_type: 'video' | 'article' | 'quiz' | 'interactive' | 'micro_learning'
+          duration_minutes?: number | null
+          difficulty_level?: 'beginner' | 'intermediate' | 'advanced'
+          tags?: string[]
+          prerequisites?: string[]
+          certification_required?: boolean
+          is_active?: boolean
+          organization_id: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          content?: string
+          module_type?: 'video' | 'article' | 'quiz' | 'interactive' | 'micro_learning'
+          duration_minutes?: number | null
+          difficulty_level?: 'beginner' | 'intermediate' | 'advanced'
+          tags?: string[]
+          prerequisites?: string[]
+          certification_required?: boolean
+          is_active?: boolean
+          organization_id?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      integration_connections: {
+        Row: {
+          id: string
+          integration_type: 'slack' | 'docusign' | 'stripe' | 'gong' | 'sharepoint' | 'salesforce' | 'hubspot'
+          name: string
+          config: Record<string, any>
+          credentials: Record<string, any>
+          is_active: boolean
+          last_sync_at: string | null
+          sync_status: 'pending' | 'success' | 'error' | 'disabled'
+          error_message: string | null
+          organization_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          integration_type: 'slack' | 'docusign' | 'stripe' | 'gong' | 'sharepoint' | 'salesforce' | 'hubspot'
+          name: string
+          config?: Record<string, any>
+          credentials?: Record<string, any>
+          is_active?: boolean
+          last_sync_at?: string | null
+          sync_status?: 'pending' | 'success' | 'error' | 'disabled'
+          error_message?: string | null
+          organization_id: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          integration_type?: 'slack' | 'docusign' | 'stripe' | 'gong' | 'sharepoint' | 'salesforce' | 'hubspot'
+          name?: string
+          config?: Record<string, any>
+          credentials?: Record<string, any>
+          is_active?: boolean
+          last_sync_at?: string | null
+          sync_status?: 'pending' | 'success' | 'error' | 'disabled'
+          error_message?: string | null
+          organization_id?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      performance_metrics: {
+        Row: {
+          id: string
+          user_id: string
+          metric_type: 'clarity' | 'score' | 'teach' | 'problem' | 'value' | 'overall'
+          metric_name: string
+          metric_value: number
+          target_value: number | null
+          period_start: string
+          period_end: string
+          calculation_method: string | null
+          raw_data: Record<string, any>
+          organization_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          metric_type: 'clarity' | 'score' | 'teach' | 'problem' | 'value' | 'overall'
+          metric_name: string
+          metric_value: number
+          target_value?: number | null
+          period_start: string
+          period_end: string
+          calculation_method?: string | null
+          raw_data?: Record<string, any>
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          metric_type?: 'clarity' | 'score' | 'teach' | 'problem' | 'value' | 'overall'
+          metric_name?: string
+          metric_value?: number
+          target_value?: number | null
+          period_start?: string
+          period_end?: string
+          calculation_method?: string | null
+          raw_data?: Record<string, any>
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_learning_progress: {
+        Row: {
+          id: string
+          user_id: string
+          module_id: string
+          status: 'not_started' | 'in_progress' | 'completed' | 'certified'
+          progress_percentage: number
+          time_spent_minutes: number
+          last_accessed_at: string | null
+          completed_at: string | null
+          certification_date: string | null
+          quiz_scores: Record<string, any>
+          organization_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          module_id: string
+          status?: 'not_started' | 'in_progress' | 'completed' | 'certified'
+          progress_percentage?: number
+          time_spent_minutes?: number
+          last_accessed_at?: string | null
+          completed_at?: string | null
+          certification_date?: string | null
+          quiz_scores?: Record<string, any>
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          module_id?: string
+          status?: 'not_started' | 'in_progress' | 'completed' | 'certified'
+          progress_percentage?: number
+          time_spent_minutes?: number
+          last_accessed_at?: string | null
+          completed_at?: string | null
+          certification_date?: string | null
+          quiz_scores?: Record<string, any>
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      sharepoint_documents: {
+        Row: {
+          id: string
+          opportunity_id: string | null
+          stage_name: string
+          document_name: string
+          document_type: string
+          sharepoint_url: string
+          local_path: string | null
+          file_size: number | null
+          is_required: boolean
+          is_completed: boolean
+          uploaded_by: string | null
+          uploaded_at: string | null
+          organization_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          opportunity_id?: string | null
+          stage_name: string
+          document_name: string
+          document_type: string
+          sharepoint_url: string
+          local_path?: string | null
+          file_size?: number | null
+          is_required?: boolean
+          is_completed?: boolean
+          uploaded_by?: string | null
+          uploaded_at?: string | null
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          opportunity_id?: string | null
+          stage_name?: string
+          document_name?: string
+          document_type?: string
+          sharepoint_url?: string
+          local_path?: string | null
+          file_size?: number | null
+          is_required?: boolean
+          is_completed?: boolean
+          uploaded_by?: string | null
+          uploaded_at?: string | null
+          organization_id?: string
           created_at?: string
           updated_at?: string
         }

@@ -15,7 +15,13 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
-  SparklesIcon
+  SparklesIcon,
+  CogIcon,
+  AcademicCapIcon,
+  ChartPieIcon,
+  PuzzlePieceIcon,
+  LightBulbIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
 
 const navigation = [
@@ -25,6 +31,17 @@ const navigation = [
   { name: 'Leads', href: '/leads', icon: UserPlusIcon },
   { name: 'Opportunities', href: '/opportunities', icon: ChartBarIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
+]
+
+// Phase 2 features navigation
+const phase2Navigation = [
+  { name: 'Pipeline Config', href: '/pipeline', icon: CogIcon, badge: 'NEW' },
+  { name: 'AI Insights', href: '/ai-insights', icon: LightBulbIcon, badge: 'AI' },
+  { name: 'PEAK Process', href: '/peak', icon: DocumentTextIcon, badge: 'PEAK' },
+  { name: 'Performance', href: '/performance', icon: ChartPieIcon, badge: 'CSTPV' },
+  { name: 'Integrations', href: '/integrations', icon: PuzzlePieceIcon, badge: 'HUB' },
+  { name: 'Learning', href: '/learning', icon: AcademicCapIcon, badge: 'LMS' },
+  { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, badge: 'BI' },
 ]
 
 export default function Navigation() {
@@ -64,6 +81,7 @@ export default function Navigation() {
             </button>
           </div>
           <nav className="flex-1 space-y-2 px-4 py-6">
+            {/* Core Navigation */}
             {navigation.map((item) => {
               const isActive = pathname === item.href
               return (
@@ -83,6 +101,50 @@ export default function Navigation() {
                     }`}
                   />
                   {item.name}
+                </Link>
+              )
+            })}
+            
+            {/* Phase 2 Features Separator */}
+            <div className="pt-4">
+              <div className="flex items-center px-4 py-2">
+                <div className="flex-1 border-t border-border/30"></div>
+                <span className="px-3 text-xs font-semibold text-muted-foreground bg-card rounded-full">Phase 2 Features</span>
+                <div className="flex-1 border-t border-border/30"></div>
+              </div>
+            </div>
+            
+            {/* Phase 2 Navigation */}
+            {phase2Navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`group flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:shadow-md'
+                  }`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <div className="flex items-center">
+                    <item.icon
+                      className={`mr-3 h-5 w-5 flex-shrink-0 transition-colors ${
+                        isActive ? 'text-white' : 'text-muted-foreground group-hover:text-foreground'
+                      }`}
+                    />
+                    {item.name}
+                  </div>
+                  {item.badge && (
+                    <span className={`px-2 py-1 text-xs font-bold rounded-full ${
+                      isActive 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               )
             })}
@@ -111,6 +173,7 @@ export default function Navigation() {
             </div>
           </div>
           <nav className="flex-1 space-y-2 px-4 py-6">
+            {/* Core Navigation */}
             {navigation.map((item) => {
               const isActive = pathname === item.href
               return (
@@ -129,6 +192,49 @@ export default function Navigation() {
                     }`}
                   />
                   {item.name}
+                </Link>
+              )
+            })}
+            
+            {/* Phase 2 Features Separator */}
+            <div className="pt-4">
+              <div className="flex items-center px-4 py-2">
+                <div className="flex-1 border-t border-border/30"></div>
+                <span className="px-3 text-xs font-semibold text-muted-foreground bg-card rounded-full">Phase 2 Features</span>
+                <div className="flex-1 border-t border-border/30"></div>
+              </div>
+            </div>
+            
+            {/* Phase 2 Navigation */}
+            {phase2Navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`group flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:shadow-md'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <item.icon
+                      className={`mr-3 h-5 w-5 flex-shrink-0 transition-colors ${
+                        isActive ? 'text-white' : 'text-muted-foreground group-hover:text-foreground'
+                      }`}
+                    />
+                    {item.name}
+                  </div>
+                  {item.badge && (
+                    <span className={`px-2 py-1 text-xs font-bold rounded-full ${
+                      isActive 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               )
             })}

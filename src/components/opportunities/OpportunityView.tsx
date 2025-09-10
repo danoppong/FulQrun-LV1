@@ -190,6 +190,29 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
     }
   }
 
+  const handleRemovePrimaryContact = async () => {
+    if (!confirm('Are you sure you want to remove the primary contact from this opportunity?')) return
+    
+    try {
+      const { error } = await opportunityAPI.updateOpportunity(opportunityId, {
+        contact_id: null
+      })
+      
+      if (error) {
+        console.error('Error removing primary contact:', error)
+        setError(error.message || 'Failed to remove primary contact')
+      } else {
+        // Reload opportunity data
+        loadOpportunity()
+        setSuccessMessage('Primary contact removed successfully!')
+        setTimeout(() => setSuccessMessage(null), 3000)
+      }
+    } catch (err) {
+      console.error('Error removing primary contact:', err)
+      setError('An unexpected error occurred while removing primary contact')
+    }
+  }
+
   const getStageColor = (stage: string) => {
     switch (stage) {
       case 'prospecting': return 'bg-blue-100 text-blue-800'
@@ -643,22 +666,80 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
         {activeTab === 'contacts' && (
           <div className="bg-white shadow sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Contacts</h3>
-              <div className="mt-4 text-center py-8">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No contacts</h3>
-                <p className="mt-1 text-sm text-gray-500">Get started by adding contacts to this opportunity.</p>
-                <div className="mt-6">
-                  <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                    <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Add Contact
-                  </button>
-                </div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Contacts</h3>
+                <Link
+                  href={`/contacts/new?opportunityId=${opportunityId}`}
+                  className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add Contact
+                </Link>
               </div>
+              
+              {opportunity?.contact ? (
+                <div className="space-y-4">
+                  {/* Primary Contact */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-white font-medium text-sm">
+                              {opportunity.contact.first_name[0]}{opportunity.contact.last_name[0]}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <h4 className="text-sm font-medium text-gray-900">
+                              {opportunity.contact.first_name} {opportunity.contact.last_name}
+                            </h4>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Primary Contact
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {opportunity.contact.title && `${opportunity.contact.title} • `}
+                            {opportunity.contact.email}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Link
+                          href={`/contacts/${opportunity.contact.id}`}
+                          className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                        >
+                          View
+                        </Link>
+                        <button
+                          onClick={handleRemovePrimaryContact}
+                          className="text-red-600 hover:text-red-900 text-sm font-medium"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Additional contacts would go here in the future */}
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-500">
+                      Additional contacts can be linked to this opportunity
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No contacts</h3>
+                  <p className="mt-1 text-sm text-gray-500">Get started by adding contacts to this opportunity.</p>
+                </div>
+              )}
             </div>
           </div>
         )}

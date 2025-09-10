@@ -11,6 +11,11 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Add missing columns if they don't exist
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS manager_id UUID REFERENCES user_profiles(id);
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS region TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS business_unit TEXT;
+
 -- Create user_dashboard_layouts table for custom dashboard layouts
 CREATE TABLE IF NOT EXISTS user_dashboard_layouts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -30,87 +35,75 @@ CREATE TABLE IF NOT EXISTS team_members (
   UNIQUE(manager_id, member_id)
 );
 
--- Insert sample user profiles with different roles
-INSERT INTO user_profiles (user_id, name, role, region, business_unit) VALUES
-  ('00000000-0000-0000-0000-000000000001', 'John Smith', 'salesman', 'North America', 'Enterprise'),
-  ('00000000-0000-0000-0000-000000000002', 'Sarah Johnson', 'sales_manager', 'North America', 'Enterprise'),
-  ('00000000-0000-0000-0000-000000000003', 'Mike Davis', 'regional_sales_director', 'North America', 'Enterprise'),
-  ('00000000-0000-0000-0000-000000000004', 'Lisa Chen', 'global_sales_lead', 'Global', 'Enterprise'),
-  ('00000000-0000-0000-0000-000000000005', 'Robert Wilson', 'business_unit_head', 'Global', 'Enterprise');
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_role ON user_profiles(role);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_manager_id ON user_profiles(manager_id);
+CREATE INDEX IF NOT EXISTS idx_user_dashboard_layouts_user_id ON user_dashboard_layouts(user_id);
+CREATE INDEX IF NOT EXISTS idx_team_members_manager_id ON team_members(manager_id);
+CREATE INDEX IF NOT EXISTS idx_team_members_member_id ON team_members(member_id);
 
--- Set up hierarchical relationships
-UPDATE user_profiles SET manager_id = '00000000-0000-0000-0000-000000000002' WHERE user_id = '00000000-0000-0000-0000-000000000001';
-UPDATE user_profiles SET manager_id = '00000000-0000-0000-0000-000000000003' WHERE user_id = '00000000-0000-0000-0000-000000000002';
-UPDATE user_profiles SET manager_id = '00000000-0000-0000-0000-000000000004' WHERE user_id = '00000000-0000-0000-0000-000000000003';
-UPDATE user_profiles SET manager_id = '00000000-0000-0000-0000-000000000005' WHERE user_id = '00000000-0000-0000-0000-000000000004';
-
--- Insert team member relationships
-INSERT INTO team_members (manager_id, member_id) VALUES
-  ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001'),
-  ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000002'),
-  ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000003'),
-  ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000004');
-
--- Enable RLS
+-- Enable Row Level Security
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_dashboard_layouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies for user_profiles
-CREATE POLICY "Users can view their own profile" ON user_profiles
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own profile" ON user_profiles
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Managers can view their team members" ON user_profiles
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM team_members tm
-      WHERE tm.manager_id = user_profiles.id
-      AND tm.member_id = (
-        SELECT id FROM user_profiles WHERE user_id = auth.uid()
-      )
-    )
-  );
-
--- Create RLS policies for user_dashboard_layouts
-CREATE POLICY "Users can manage their own dashboard layout" ON user_dashboard_layouts
-  FOR ALL USING (auth.uid() = user_id);
-
--- Create RLS policies for team_members
-CREATE POLICY "Users can view their team relationships" ON team_members
-  FOR SELECT USING (
-    manager_id = (SELECT id FROM user_profiles WHERE user_id = auth.uid())
-    OR member_id = (SELECT id FROM user_profiles WHERE user_id = auth.uid())
-  );
-
--- Create function to get user's role
-CREATE OR REPLACE FUNCTION get_user_role(user_uuid UUID)
-RETURNS TEXT AS $$
+-- Create RLS policies
+DO $$ 
 BEGIN
-  RETURN (
-    SELECT role FROM user_profiles 
-    WHERE user_id = user_uuid
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+    -- User profiles policies
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'user_profiles' AND policyname = 'Users can view their own profile') THEN
+        CREATE POLICY "Users can view their own profile" ON user_profiles
+            FOR SELECT USING (user_id = auth.uid());
+    END IF;
 
--- Create function to get user's team members
-CREATE OR REPLACE FUNCTION get_team_members(user_uuid UUID)
-RETURNS TABLE(member_id UUID, name TEXT, role TEXT, email TEXT) AS $$
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'user_profiles' AND policyname = 'Users can update their own profile') THEN
+        CREATE POLICY "Users can update their own profile" ON user_profiles
+            FOR UPDATE USING (user_id = auth.uid());
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'user_profiles' AND policyname = 'Users can insert their own profile') THEN
+        CREATE POLICY "Users can insert their own profile" ON user_profiles
+            FOR INSERT WITH CHECK (user_id = auth.uid());
+    END IF;
+
+    -- Dashboard layouts policies
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'user_dashboard_layouts' AND policyname = 'Users can view their own dashboard layout') THEN
+        CREATE POLICY "Users can view their own dashboard layout" ON user_dashboard_layouts
+            FOR SELECT USING (user_id = auth.uid());
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'user_dashboard_layouts' AND policyname = 'Users can update their own dashboard layout') THEN
+        CREATE POLICY "Users can update their own dashboard layout" ON user_dashboard_layouts
+            FOR UPDATE USING (user_id = auth.uid());
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'user_dashboard_layouts' AND policyname = 'Users can insert their own dashboard layout') THEN
+        CREATE POLICY "Users can insert their own dashboard layout" ON user_dashboard_layouts
+            FOR INSERT WITH CHECK (user_id = auth.uid());
+    END IF;
+
+    -- Team members policies
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'team_members' AND policyname = 'Users can view team members') THEN
+        CREATE POLICY "Users can view team members" ON team_members
+            FOR SELECT USING (manager_id IN (
+                SELECT id FROM user_profiles WHERE user_id = auth.uid()
+            ) OR member_id IN (
+                SELECT id FROM user_profiles WHERE user_id = auth.uid()
+            ));
+    END IF;
+END $$;
+
+-- Add updated_at triggers
+DO $$ 
 BEGIN
-  RETURN QUERY
-  SELECT 
-    up.id as member_id,
-    up.name,
-    up.role,
-    au.email
-  FROM user_profiles up
-  JOIN auth.users au ON au.id = up.user_id
-  JOIN team_members tm ON tm.member_id = up.id
-  WHERE tm.manager_id = (
-    SELECT id FROM user_profiles WHERE user_id = user_uuid
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_user_profiles_updated_at') THEN
+        CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON user_profiles
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_user_dashboard_layouts_updated_at') THEN
+        CREATE TRIGGER update_user_dashboard_layouts_updated_at BEFORE UPDATE ON user_dashboard_layouts
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;

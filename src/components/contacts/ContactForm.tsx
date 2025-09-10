@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
 import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
+import { opportunityAPI } from '@/lib/api/opportunities'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -23,9 +24,10 @@ interface ContactFormProps {
   contact?: ContactWithCompany
   contactId?: string
   mode: 'create' | 'edit'
+  opportunityId?: string
 }
 
-export default function ContactForm({ contact, contactId, mode }: ContactFormProps) {
+export default function ContactForm({ contact, contactId, mode, opportunityId }: ContactFormProps) {
   const router = useRouter()
   const [companies, setCompanies] = useState<CompanyWithStats[]>([])
   const [loading, setLoading] = useState(false)
@@ -112,6 +114,13 @@ export default function ContactForm({ contact, contactId, mode }: ContactFormPro
       let result
       if (mode === 'create') {
         result = await contactAPI.createContact(contactData)
+        
+        // If contact was created successfully and we have an opportunity ID, link them
+        if (result?.data && opportunityId) {
+          await opportunityAPI.updateOpportunity(opportunityId, {
+            contact_id: result.data.id
+          })
+        }
       } else if (contact) {
         result = await contactAPI.updateContact(contact.id, contactData)
       }
@@ -119,7 +128,12 @@ export default function ContactForm({ contact, contactId, mode }: ContactFormPro
       if (result?.error) {
         setError(result.error.message || 'Failed to save contact')
       } else {
-        router.push('/contacts')
+        // Redirect back to the opportunity if we came from there, otherwise to contacts
+        if (opportunityId) {
+          router.push(`/opportunities/${opportunityId}`)
+        } else {
+          router.push('/contacts')
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred')

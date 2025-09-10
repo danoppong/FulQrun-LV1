@@ -12,3 +12,6 @@ export const supabaseConfig = {
   anonKey: supabaseAnonKey,
   isConfigured: isSupabaseConfigured
 }
+
+// Default organization ID for development (valid UUID format)
+export const DEFAULT_ORGANIZATION_ID = '00000000-0000-0000-0000-000000000001'
