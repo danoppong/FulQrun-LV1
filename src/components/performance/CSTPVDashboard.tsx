@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { PerformanceAPI, CSTPVScore, PerformanceTrend, PerformanceBenchmark } from '@/lib/api/performance'
 import { ClarityMetrics } from './ClarityMetrics'
 import { ScoreMetrics } from './ScoreMetrics'
@@ -30,9 +30,9 @@ export function CSTPVDashboard({
 
   useEffect(() => {
     loadPerformanceData()
-  }, [userId, organizationId, periodStart, periodEnd])
+  }, [loadPerformanceData])
 
-  const loadPerformanceData = async () => {
+  const loadPerformanceData = useCallback(async () => {
     try {
       setIsLoading(true)
       
@@ -50,21 +50,21 @@ export function CSTPVDashboard({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [userId, organizationId, periodStart, periodEnd])
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = useCallback((score: number) => {
     if (score >= 80) return 'text-green-600'
     if (score >= 60) return 'text-yellow-600'
     if (score >= 40) return 'text-orange-600'
     return 'text-red-600'
-  }
+  }, [])
 
-  const getScoreBgColor = (score: number) => {
+  const getScoreBgColor = useCallback((score: number) => {
     if (score >= 80) return 'bg-green-100'
     if (score >= 60) return 'bg-yellow-100'
     if (score >= 40) return 'bg-orange-100'
     return 'bg-red-100'
-  }
+  }, [])
 
   if (isLoading) {
     return (

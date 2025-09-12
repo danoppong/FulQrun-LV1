@@ -198,7 +198,6 @@ export class NextActionsEngine {
 
       return this.prioritizeActions(mergedActions)
     } catch (error) {
-      console.error('AI next actions failed, falling back to rule-based:', error)
       return this.generateRuleBasedActions(opportunityContext)
     }
   }
@@ -462,7 +461,6 @@ export class NextActionsEngine {
     actions: NextAction[]
   ): Promise<void> {
     // This would typically update the opportunity record in the database
-    console.log(`Updating opportunity ${opportunityId} with ${actions.length} next actions`)
   }
 
   /**
@@ -493,7 +491,6 @@ export class NextActionsEngine {
           actions
         })
       } catch (error) {
-        console.error(`Failed to generate actions for opportunity ${opportunity.id}:`, error)
         // Add fallback actions
         const fallbackActions = this.generateRuleBasedActions(opportunity)
         results.push({

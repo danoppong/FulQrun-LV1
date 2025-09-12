@@ -68,7 +68,6 @@ export default function ActivityList({ opportunityId, onEdit, onDelete }: Activi
       const { error } = await activityAPI.deleteActivity(activityId)
       if (error) {
         setDeleteError(error.message || 'Failed to delete activity')
-        console.error('Error deleting activity:', error)
       } else {
         setActivities(activities.filter(a => a.id !== activityId))
         if (onDelete) onDelete(activityId)
@@ -76,7 +75,6 @@ export default function ActivityList({ opportunityId, onEdit, onDelete }: Activi
     } catch (err) {
       const errorMessage = 'An unexpected error occurred while deleting activity'
       setDeleteError(errorMessage)
-      console.error('Error deleting activity:', err)
     } finally {
       setDeletingId(null)
     }

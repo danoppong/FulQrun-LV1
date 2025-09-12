@@ -1,10 +1,30 @@
 import { IntegrationConnectionData } from '@/lib/api/integrations'
 
+export interface SlackBlock {
+  type: string
+  text?: {
+    type: string
+    text: string
+  }
+  elements?: SlackBlock[]
+}
+
+export interface SlackAttachment {
+  color?: string
+  title?: string
+  text?: string
+  fields?: Array<{
+    title: string
+    value: string
+    short: boolean
+  }>
+}
+
 export interface SlackMessage {
   channel: string
   text: string
-  blocks?: any[]
-  attachments?: any[]
+  blocks?: SlackBlock[]
+  attachments?: SlackAttachment[]
   thread_ts?: string
 }
 
@@ -47,8 +67,79 @@ export interface SlackNotification {
   message: string
   channel: string
   user_id?: string
-  data: any
+  data: Record<string, unknown>
   sent_at: string
+}
+
+interface SlackChannelResponse {
+  id: string
+  name: string
+  is_private: boolean
+  is_member: boolean
+  topic?: {
+    value: string
+  }
+  purpose?: {
+    value: string
+  }
+  num_members?: number
+}
+
+interface SlackUserResponse {
+  id: string
+  name: string
+  real_name: string
+  deleted: boolean
+  is_bot: boolean
+  profile: {
+    email: string
+    display_name: string
+    image_24: string
+    image_32: string
+    image_48: string
+    image_72: string
+    image_192: string
+  }
+}
+
+interface SlackTeamResponse {
+  id: string
+  name: string
+  domain: string
+}
+
+interface OpportunityData {
+  id: string
+  name: string
+  deal_value: number
+  probability: number
+  close_date: string
+  stage: string
+}
+
+interface LeadData {
+  id: string
+  first_name: string
+  last_name: string
+  company: string
+  email: string
+  score: number
+}
+
+interface MeetingData {
+  id: string
+  subject: string
+  start_time: string
+  end_time: string
+  attendees: string[]
+}
+
+interface TaskData {
+  id: string
+  subject: string
+  due_date: string
+  priority: string
+  status: string
 }
 
 export class SlackIntegration {
@@ -84,7 +175,6 @@ export class SlackIntegration {
 
       return { success: true }
     } catch (error) {
-      console.error('Slack sendMessage error:', error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to send message'
@@ -110,7 +200,7 @@ export class SlackIntegration {
         throw new Error(data.error || 'Failed to fetch channels')
       }
 
-      return data.channels.map((channel: any) => ({
+      return data.channels.map((channel: SlackChannelResponse) => ({
         id: channel.id,
         name: channel.name,
         is_private: channel.is_private,
@@ -120,7 +210,6 @@ export class SlackIntegration {
         num_members: channel.num_members
       }))
     } catch (error) {
-      console.error('Slack getChannels error:', error)
       throw new Error('Failed to fetch Slack channels')
     }
   }
@@ -144,8 +233,8 @@ export class SlackIntegration {
       }
 
       return data.members
-        .filter((user: any) => !user.deleted && !user.is_bot)
-        .map((user: any) => ({
+        .filter((user: SlackUserResponse) => !user.deleted && !user.is_bot)
+        .map((user: SlackUserResponse) => ({
           id: user.id,
           name: user.name,
           real_name: user.real_name,
@@ -155,7 +244,6 @@ export class SlackIntegration {
           is_bot: user.is_bot
         }))
     } catch (error) {
-      console.error('Slack getUsers error:', error)
       throw new Error('Failed to fetch Slack users')
     }
   }
@@ -163,7 +251,7 @@ export class SlackIntegration {
   /**
    * Send opportunity update notification
    */
-  async sendOpportunityUpdate(opportunity: any, channel: string): Promise<{ success: boolean; error?: string }> {
+  async sendOpportunityUpdate(opportunity: OpportunityData, channel: string): Promise<{ success: boolean; error?: string }> {
     const blocks = [
       {
         type: 'header',
@@ -226,7 +314,7 @@ export class SlackIntegration {
   /**
    * Send lead assignment notification
    */
-  async sendLeadAssignment(lead: any, assignee: string, channel: string): Promise<{ success: boolean; error?: string }> {
+  async sendLeadAssignment(lead: LeadData, assignee: string, channel: string): Promise<{ success: boolean; error?: string }> {
     const blocks = [
       {
         type: 'header',
@@ -289,7 +377,7 @@ export class SlackIntegration {
   /**
    * Send meeting reminder
    */
-  async sendMeetingReminder(meeting: any, channel: string): Promise<{ success: boolean; error?: string }> {
+  async sendMeetingReminder(meeting: MeetingData, channel: string): Promise<{ success: boolean; error?: string }> {
     const blocks = [
       {
         type: 'header',
@@ -352,7 +440,7 @@ export class SlackIntegration {
   /**
    * Send deal closed notification
    */
-  async sendDealClosed(opportunity: any, channel: string): Promise<{ success: boolean; error?: string }> {
+  async sendDealClosed(opportunity: OpportunityData, channel: string): Promise<{ success: boolean; error?: string }> {
     const blocks = [
       {
         type: 'header',
@@ -415,7 +503,7 @@ export class SlackIntegration {
   /**
    * Send task due reminder
    */
-  async sendTaskDueReminder(task: any, channel: string): Promise<{ success: boolean; error?: string }> {
+  async sendTaskDueReminder(task: TaskData, channel: string): Promise<{ success: boolean; error?: string }> {
     const blocks = [
       {
         type: 'header',
@@ -506,7 +594,6 @@ export class SlackIntegration {
 
       return data.messages
     } catch (error) {
-      console.error('Slack getChannelHistory error:', error)
       throw new Error('Failed to fetch channel history')
     }
   }
@@ -514,7 +601,7 @@ export class SlackIntegration {
   /**
    * Test the connection
    */
-  async testConnection(): Promise<{ success: boolean; error?: string; team?: any }> {
+  async testConnection(): Promise<{ success: boolean; error?: string; team?: SlackTeamResponse }> {
     try {
       const response = await fetch(`${this.baseUrl}/auth.test`, {
         headers: {
@@ -541,7 +628,6 @@ export class SlackIntegration {
         }
       }
     } catch (error) {
-      console.error('Slack testConnection error:', error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Connection test failed'

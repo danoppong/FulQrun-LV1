@@ -15,7 +15,6 @@ export default function ServiceWorkerRegistration() {
         scope: '/'
       })
 
-      console.log('Service Worker registered successfully:', registration)
 
       // Handle updates
       registration.addEventListener('updatefound', () => {
@@ -35,12 +34,10 @@ export default function ServiceWorkerRegistration() {
       // Handle service worker messages
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'CACHE_UPDATED') {
-          console.log('Cache updated:', event.data.payload)
         }
       })
 
     } catch (error) {
-      console.error('Service Worker registration failed:', error)
     }
   }
 
@@ -93,9 +90,7 @@ export function usePWAInstallPrompt() {
     const { outcome } = await deferredPrompt.userChoice
     
     if (outcome === 'accepted') {
-      console.log('PWA installed successfully')
     } else {
-      console.log('PWA installation declined')
     }
     
     setDeferredPrompt(null)

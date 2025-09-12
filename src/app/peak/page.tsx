@@ -32,7 +32,6 @@ export default function PEAKProcessPage() {
         setCurrentStage(opportunity.stage || 'prospecting')
       }
     } catch (error) {
-      console.error('Failed to load opportunity data:', error)
     }
   }
 
@@ -53,7 +52,6 @@ export default function PEAKProcessPage() {
         throw new Error('Failed to update opportunity stage')
       }
     } catch (error) {
-      console.error('Failed to update stage:', error)
     }
   }
 

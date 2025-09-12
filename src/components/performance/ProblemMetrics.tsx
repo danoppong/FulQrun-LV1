@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { PerformanceAPI } from '@/lib/api/performance'
 
 interface ProblemMetricsProps {
@@ -10,7 +10,7 @@ interface ProblemMetricsProps {
   periodEnd?: string
 }
 
-export function ProblemMetrics({ 
+const ProblemMetrics = memo(function ProblemMetrics({ 
   userId, 
   organizationId, 
   periodStart, 
@@ -20,11 +20,7 @@ export function ProblemMetrics({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadProblemMetrics()
-  }, [userId, organizationId, periodStart, periodEnd])
-
-  const loadProblemMetrics = async () => {
+  const loadProblemMetrics = useCallback(async () => {
     try {
       setIsLoading(true)
       const data = await PerformanceAPI.getUserMetrics(userId, periodStart, periodEnd)
@@ -35,7 +31,11 @@ export function ProblemMetrics({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [userId, periodStart, periodEnd])
+
+  useEffect(() => {
+    loadProblemMetrics()
+  }, [loadProblemMetrics])
 
   if (isLoading) {
     return <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
@@ -110,4 +110,6 @@ export function ProblemMetrics({
       </div>
     </div>
   )
-}
+})
+
+export { ProblemMetrics }

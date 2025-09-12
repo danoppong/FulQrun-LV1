@@ -61,7 +61,6 @@ export default function MicrosoftSetup() {
         }
       }
     } catch (error) {
-      console.error('Error checking configuration:', error)
     }
   }
 

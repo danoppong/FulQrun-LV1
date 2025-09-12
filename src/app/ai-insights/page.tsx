@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@/lib/auth'
+import { AuthClientService } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import AuthWrapper from '@/components/auth/AuthWrapper'
 
@@ -16,7 +16,7 @@ export default function AIInsightsPage() {
 function AIInsightsContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClientComponentClient()
+  const supabase = AuthClientService.getClient()
   const router = useRouter()
 
   useEffect(() => {
@@ -29,7 +29,6 @@ function AIInsightsContent() {
         }
         setUser(user)
       } catch (error) {
-        console.error('Error loading user:', error)
         router.push('/auth/login')
       } finally {
         setLoading(false)

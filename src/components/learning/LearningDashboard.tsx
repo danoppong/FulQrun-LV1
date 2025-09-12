@@ -55,7 +55,6 @@ export function LearningDashboard({ userId, organizationId }: LearningDashboardP
         setProgress(progressData)
       }
     } catch (error) {
-      console.error('Failed to load learning data:', error)
     } finally {
       setIsLoading(false)
     }

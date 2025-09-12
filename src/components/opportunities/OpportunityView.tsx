@@ -55,7 +55,6 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
     
     setSaving(true)
     try {
-      console.log('Saving PEAK data:', data)
       const { data: updatedOpportunity, error } = await opportunityAPI.updateOpportunity(opportunity.id, {
         peak_stage: data.peak_stage,
         deal_value: data.deal_value,
@@ -64,11 +63,9 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
       })
       
       if (error) {
-        console.error('Error saving PEAK data:', error)
         setError(error.message || 'Failed to save PEAK data')
         setSuccessMessage(null)
       } else {
-        console.log('PEAK data saved successfully:', updatedOpportunity)
         setSuccessMessage('PEAK data saved successfully!')
         setError(null)
         await loadOpportunity()
@@ -76,7 +73,6 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
         setTimeout(() => setSuccessMessage(null), 3000)
       }
     } catch (err) {
-      console.error('Error saving PEAK data:', err)
       setError('An unexpected error occurred while saving PEAK data')
     } finally {
       setSaving(false)
@@ -88,15 +84,12 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
     
     setSaving(true)
     try {
-      console.log('Saving MEDDPICC data:', data)
       const { data: updatedOpportunity, error } = await opportunityAPI.updateMEDDPICC(opportunity.id, data)
       
       if (error) {
-        console.error('Error saving MEDDPICC data:', error)
         setError(error.message || 'Failed to save MEDDPICC data')
         setSuccessMessage(null)
       } else {
-        console.log('MEDDPICC data saved successfully:', updatedOpportunity)
         setSuccessMessage('MEDDPICC data saved successfully!')
         setError(null)
         await loadOpportunity()
@@ -104,7 +97,6 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
         setTimeout(() => setSuccessMessage(null), 3000)
       }
     } catch (err) {
-      console.error('Error saving MEDDPICC data:', err)
       setError('An unexpected error occurred while saving MEDDPICC data')
     } finally {
       setSaving(false)
@@ -116,18 +108,15 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
     
     setSaving(true)
     try {
-      console.log('Saving activity data:', data)
       
       if (editingActivity) {
         // Update existing activity
         const { data: updatedActivity, error } = await activityAPI.updateActivity(editingActivity.id, data)
         
         if (error) {
-          console.error('Error updating activity:', error)
           setError(error.message || 'Failed to update activity')
           setSuccessMessage(null)
         } else {
-          console.log('Activity updated successfully:', updatedActivity)
           setSuccessMessage('Activity updated successfully!')
           setError(null)
           setShowActivityForm(false)
@@ -143,11 +132,9 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
         })
         
         if (error) {
-          console.error('Error creating activity:', error)
           setError(error.message || 'Failed to create activity')
           setSuccessMessage(null)
         } else {
-          console.log('Activity created successfully:', newActivity)
           setSuccessMessage('Activity created successfully!')
           setError(null)
           setShowActivityForm(false)
@@ -156,7 +143,6 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
         }
       }
     } catch (err) {
-      console.error('Error saving activity:', err)
       setError('An unexpected error occurred while saving activity')
     } finally {
       setSaving(false)
@@ -199,7 +185,6 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
       })
       
       if (error) {
-        console.error('Error removing primary contact:', error)
         setError(error.message || 'Failed to remove primary contact')
       } else {
         // Reload opportunity data
@@ -208,7 +193,6 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
         setTimeout(() => setSuccessMessage(null), 3000)
       }
     } catch (err) {
-      console.error('Error removing primary contact:', err)
       setError('An unexpected error occurred while removing primary contact')
     }
   }
@@ -617,7 +601,6 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
             onSave={handleMEDDPICCSave}
             loading={saving}
             onSuccess={() => {
-              console.log('MEDDPICC form success callback triggered')
               loadOpportunity()
             }}
           />

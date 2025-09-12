@@ -33,7 +33,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Slack connection deactivated successfully'
     })
   } catch (error) {
-    console.error('Slack disconnect error:', error)
     return NextResponse.json(
       { error: 'Failed to deactivate Slack connection' },
       { status: 500 }

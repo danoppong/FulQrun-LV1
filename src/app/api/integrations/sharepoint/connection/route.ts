@@ -47,7 +47,6 @@ export async function GET(request: NextRequest) {
       updated_at: connection.updated_at
     })
   } catch (error) {
-    console.error('SharePoint connection error:', error)
     return NextResponse.json(
       { error: 'Failed to get SharePoint connection' },
       { status: 500 }
@@ -125,7 +124,6 @@ export async function POST(request: NextRequest) {
       })
     }
   } catch (error) {
-    console.error('SharePoint connection error:', error)
     return NextResponse.json(
       { error: 'Failed to save SharePoint connection' },
       { status: 500 }
@@ -165,7 +163,6 @@ export async function DELETE(request: NextRequest) {
       message: 'SharePoint connection deactivated successfully'
     })
   } catch (error) {
-    console.error('SharePoint connection error:', error)
     return NextResponse.json(
       { error: 'Failed to deactivate SharePoint connection' },
       { status: 500 }

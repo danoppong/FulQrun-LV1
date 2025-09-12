@@ -116,11 +116,6 @@ export class EmailSyncService {
     // 2. Link to contacts if email addresses match
     // 3. Link to opportunities if subject/body contains opportunity references
     // 4. Store email metadata
-    
-      subject: email.subject,
-      from: email.from.emailAddress.address,
-      receivedDateTime: email.receivedDateTime
-    })
 
     // Mock implementation for MVP
     const activity: EmailActivity = {

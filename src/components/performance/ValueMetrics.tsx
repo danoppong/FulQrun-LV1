@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, memo } from 'react'
 import { PerformanceAPI } from '@/lib/api/performance'
 
 interface ValueMetricsProps {
@@ -10,7 +10,7 @@ interface ValueMetricsProps {
   periodEnd?: string
 }
 
-export function ValueMetrics({ 
+const ValueMetrics = memo(function ValueMetrics({ 
   userId, 
   organizationId, 
   periodStart, 
@@ -110,4 +110,6 @@ export function ValueMetrics({
       </div>
     </div>
   )
-}
+})
+
+export { ValueMetrics }

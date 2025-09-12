@@ -2,25 +2,126 @@ import { createClient } from '@supabase/supabase-js'
 import { supabaseConfig } from '@/lib/config'
 
 // Singleton client instance to prevent multiple GoTrueClient instances
-let supabaseInstance: any = null
+let supabaseInstance: ReturnType<typeof createClient> | null = null
 
 export const supabase = (() => {
   if (supabaseInstance) {
     return supabaseInstance
   }
   
-  supabaseInstance = createClient(
-    supabaseConfig.url || 'https://placeholder.supabase.co', 
-    supabaseConfig.anonKey || 'placeholder_key'
-  )
+  // Only create client if Supabase is configured
+  if (supabaseConfig.isConfigured) {
+    supabaseInstance = createClient(
+      supabaseConfig.url!, 
+      supabaseConfig.anonKey!
+    )
+  } else {
+    // Return a mock client if not configured
+    supabaseInstance = {
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: null }),
+        signInWithPassword: async () => ({ 
+          data: { user: null }, 
+          error: { message: 'Supabase not configured' } 
+        }),
+        signUp: async () => ({ 
+          data: { user: null }, 
+          error: { message: 'Supabase not configured' } 
+        }),
+        signOut: async () => ({ error: null }),
+        signInWithOAuth: async () => ({ 
+          error: { message: 'Supabase not configured' } 
+        })
+      },
+      from: (table: string) => ({
+        select: () => ({
+          eq: () => ({
+            single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
+          }),
+          order: () => ({
+            single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
+          })
+        }),
+        insert: (data: any) => {
+          const result = { data: null, error: { message: 'Supabase not configured' } }
+          const promise = Promise.resolve(result)
+          return Object.assign(promise, {
+            select: () => ({
+              single: async () => result
+            })
+          })
+        },
+        update: () => ({
+          eq: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
+            })
+          })
+        }),
+        delete: () => ({
+          eq: async () => ({ error: { message: 'Supabase not configured' } })
+        })
+      })
+    } as any
+  }
   
   return supabaseInstance
 })()
 
 // Server-side client for API routes
 export const createServerClient = () => {
-  // Always return the real client, but it will fail gracefully if not configured
-  return createClient(supabaseConfig.url!, supabaseConfig.anonKey!)
+  // Only create client if Supabase is configured
+  if (supabaseConfig.isConfigured) {
+    return createClient(supabaseConfig.url!, supabaseConfig.anonKey!)
+  } else {
+    // Return a mock client if not configured
+    return {
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: null }),
+        signInWithPassword: async () => ({ 
+          data: { user: null }, 
+          error: { message: 'Supabase not configured' } 
+        }),
+        signUp: async () => ({ 
+          data: { user: null }, 
+          error: { message: 'Supabase not configured' } 
+        }),
+        signOut: async () => ({ error: null }),
+        signInWithOAuth: async () => ({ 
+          error: { message: 'Supabase not configured' } 
+        })
+      },
+      from: (table: string) => ({
+        select: () => ({
+          eq: () => ({
+            single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
+          }),
+          order: () => ({
+            single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
+          })
+        }),
+        insert: (data: any) => {
+          const result = { data: null, error: { message: 'Supabase not configured' } }
+          const promise = Promise.resolve(result)
+          return Object.assign(promise, {
+            select: () => ({
+              single: async () => result
+            })
+          })
+        },
+        update: () => ({
+          eq: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
+            })
+          })
+        }),
+        delete: () => ({
+          eq: async () => ({ error: { message: 'Supabase not configured' } })
+        })
+      })
+    } as any
+  }
 }
 
 // Export a flag to check if Supabase is properly configured

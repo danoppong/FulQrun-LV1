@@ -48,7 +48,6 @@ export default function TestDatabasePage() {
           .limit(1);
         
         if (error) {
-          console.error(`Error accessing ${tableName}:`, error);
           errorMessages[tableName] = error.message;
           if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
             testResults[tableName] = 'missing';

@@ -36,6 +36,29 @@ export interface SharePointUploadResult {
   error?: string
 }
 
+interface SharePointSiteResponse {
+  id: string
+  displayName: string
+  webUrl: string
+  description?: string
+  lastModifiedDateTime: string
+}
+
+interface SharePointItemResponse {
+  id: string
+  name: string
+  webUrl: string
+  lastModifiedDateTime: string
+  createdBy?: {
+    user: {
+      displayName: string
+    }
+  }
+  size?: number
+  downloadUrl?: string
+  thumbnailUrl?: string
+}
+
 export class SharePointIntegration {
   private accessToken: string
   private baseUrl: string = 'https://graph.microsoft.com/v1.0'
@@ -61,7 +84,7 @@ export class SharePointIntegration {
       }
 
       const data = await response.json()
-      return data.value.map((site: any) => ({
+      return data.value.map((site: SharePointSiteResponse) => ({
         id: site.id,
         displayName: site.displayName,
         webUrl: site.webUrl,
@@ -69,7 +92,6 @@ export class SharePointIntegration {
         lastModified: site.lastModifiedDateTime
       }))
     } catch (error) {
-      console.error('SharePoint getSites error:', error)
       throw new Error('Failed to fetch SharePoint sites')
     }
   }
@@ -95,7 +117,7 @@ export class SharePointIntegration {
       }
 
       const data = await response.json()
-      return data.value.map((item: any) => ({
+      return data.value.map((item: SharePointItemResponse) => ({
         id: item.id,
         name: item.name,
         url: item.webUrl,
@@ -104,7 +126,6 @@ export class SharePointIntegration {
         lastModified: item.lastModifiedDateTime
       }))
     } catch (error) {
-      console.error('SharePoint getFolders error:', error)
       throw new Error('Failed to fetch SharePoint folders')
     }
   }
@@ -130,7 +151,7 @@ export class SharePointIntegration {
       }
 
       const data = await response.json()
-      return data.value.map((item: any) => ({
+      return data.value.map((item: SharePointItemResponse) => ({
         id: item.id,
         name: item.name,
         url: item.webUrl,
@@ -142,7 +163,6 @@ export class SharePointIntegration {
         thumbnailUrl: item.thumbnails?.[0]?.medium?.url
       }))
     } catch (error) {
-      console.error('SharePoint getDocuments error:', error)
       throw new Error('Failed to fetch SharePoint documents')
     }
   }
@@ -183,7 +203,6 @@ export class SharePointIntegration {
         lastModified: data.lastModifiedDateTime
       }
     } catch (error) {
-      console.error('SharePoint createFolder error:', error)
       throw new Error('Failed to create SharePoint folder')
     }
   }
@@ -224,7 +243,6 @@ export class SharePointIntegration {
         url: data.webUrl
       }
     } catch (error) {
-      console.error('SharePoint uploadDocument error:', error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to upload document'
@@ -252,7 +270,6 @@ export class SharePointIntegration {
 
       return await response.arrayBuffer()
     } catch (error) {
-      console.error('SharePoint downloadDocument error:', error)
       throw new Error('Failed to download SharePoint document')
     }
   }
@@ -274,7 +291,6 @@ export class SharePointIntegration {
 
       return response.ok
     } catch (error) {
-      console.error('SharePoint deleteDocument error:', error)
       return false
     }
   }
@@ -299,7 +315,7 @@ export class SharePointIntegration {
       }
 
       const data = await response.json()
-      return data.value.map((item: any) => ({
+      return data.value.map((item: SharePointItemResponse) => ({
         id: item.id,
         name: item.name,
         url: item.webUrl,
@@ -311,7 +327,6 @@ export class SharePointIntegration {
         thumbnailUrl: item.thumbnails?.[0]?.medium?.url
       }))
     } catch (error) {
-      console.error('SharePoint searchDocuments error:', error)
       throw new Error('Failed to search SharePoint documents')
     }
   }
@@ -348,7 +363,6 @@ export class SharePointIntegration {
         thumbnailUrl: data.thumbnails?.[0]?.medium?.url
       }
     } catch (error) {
-      console.error('SharePoint getDocumentMetadata error:', error)
       throw new Error('Failed to get document metadata')
     }
   }
@@ -396,7 +410,6 @@ export class SharePointIntegration {
         folders
       }
     } catch (error) {
-      console.error('SharePoint createPEAKFolderStructure error:', error)
       return {
         success: false,
         folders: {},
@@ -424,7 +437,6 @@ export class SharePointIntegration {
       
       return documents
     } catch (error) {
-      console.error('SharePoint getPEAKDocuments error:', error)
       throw new Error('Failed to get PEAK process documents')
     }
   }
@@ -444,7 +456,6 @@ export class SharePointIntegration {
       const folderPath = `/Opportunities/${opportunityId}/${stage}`
       return await this.uploadDocument(siteId, folderPath, documentName, fileContent, contentType)
     } catch (error) {
-      console.error('SharePoint uploadPEAKDocument error:', error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to upload PEAK document'

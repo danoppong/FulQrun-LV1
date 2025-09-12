@@ -57,7 +57,6 @@ const ForceLoginPage = () => {
         }, 2000)
         
       } catch (error) {
-        console.error('❌ Force login error:', error)
         setStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
         setDebugInfo(prev => ({ ...prev, error: error instanceof Error ? error.message : 'Unknown error' }))
       }

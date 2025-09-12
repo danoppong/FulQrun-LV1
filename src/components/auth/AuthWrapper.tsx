@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@/lib/auth'
+import { AuthClientService } from '@/lib/auth-client'
 import { User } from '@supabase/supabase-js'
 
 interface AuthWrapperProps {
@@ -19,7 +19,7 @@ export default function AuthWrapper({
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = AuthClientService.getClient()
 
   useEffect(() => {
     const checkAuth = async () => {

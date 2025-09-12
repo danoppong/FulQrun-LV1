@@ -62,7 +62,6 @@ export function PEAKWorkflow({
 
       setStages(mockProgress)
     } catch (error) {
-      console.error('Failed to load stage progress:', error)
     }
   }
 
@@ -109,7 +108,6 @@ export function PEAKWorkflow({
                  peakStages.findIndex(s => s.id === stage.stage) === peakStages.findIndex(s => s.id === toStage) ? 0 : stage.progress
       })))
     } catch (error) {
-      console.error('Failed to advance stage:', error)
     }
   }
 

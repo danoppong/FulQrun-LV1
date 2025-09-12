@@ -37,7 +37,6 @@ export class AIInsightsEngine {
         organizationId: context.organizationId
       })
     } catch (error) {
-      console.error('Lead scoring error:', error)
       throw new Error('Failed to generate lead scoring insight')
     }
   }
@@ -70,7 +69,6 @@ export class AIInsightsEngine {
         organizationId: context.organizationId
       })
     } catch (error) {
-      console.error('Deal risk assessment error:', error)
       throw new Error('Failed to generate deal risk assessment')
     }
   }
@@ -101,7 +99,6 @@ export class AIInsightsEngine {
         organizationId: context.organizationId
       })
     } catch (error) {
-      console.error('Next actions error:', error)
       throw new Error('Failed to generate next action recommendations')
     }
   }
@@ -132,7 +129,6 @@ export class AIInsightsEngine {
         organizationId
       })
     } catch (error) {
-      console.error('Forecasting error:', error)
       throw new Error('Failed to generate sales forecast')
     }
   }
@@ -164,7 +160,6 @@ export class AIInsightsEngine {
         organizationId: context.organizationId
       })
     } catch (error) {
-      console.error('Performance insights error:', error)
       throw new Error('Failed to generate performance insights')
     }
   }
@@ -215,7 +210,6 @@ export class AIInsightsEngine {
     }
 
     if (errors.length > 0) {
-      console.warn(`Batch processing completed with ${errors.length} errors`)
     }
 
     return results
@@ -262,7 +256,6 @@ export class AIInsightsEngine {
           const leadScoring = await this.generateLeadScoring(entityId, entityData, context)
           results.push(leadScoring)
         } catch (error) {
-          console.error('Failed to refresh lead scoring:', error)
         }
         break
 
@@ -274,7 +267,6 @@ export class AIInsightsEngine {
           ])
           results.push(dealRisk, nextActions)
         } catch (error) {
-          console.error('Failed to refresh opportunity insights:', error)
         }
         break
 
@@ -283,7 +275,6 @@ export class AIInsightsEngine {
           const performance = await this.generatePerformanceInsights(entityId, entityData, context)
           results.push(performance)
         } catch (error) {
-          console.error('Failed to refresh performance insights:', error)
         }
         break
 
@@ -292,7 +283,6 @@ export class AIInsightsEngine {
           const forecasting = await this.generateForecasting(context.organizationId, entityData, context)
           results.push(forecasting)
         } catch (error) {
-          console.error('Failed to refresh forecasting:', error)
         }
         break
     }

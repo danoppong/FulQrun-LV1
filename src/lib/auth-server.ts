@@ -40,7 +40,7 @@ export const createServerComponentClient = () => {
   
   const cookieStore = cookies()
   
-  return createServerClient(supabaseConfig.url!, supabaseConfig.anonKey!, {
+  return createServerClient(supabaseConfig.url || 'https://placeholder.supabase.co', supabaseConfig.anonKey || 'placeholder_key', {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value
@@ -75,7 +75,7 @@ export const createMiddlewareClient = (request: NextRequest) => {
     },
   })
 
-  const supabase = createServerClient(supabaseConfig.url!, supabaseConfig.anonKey!, {
+  const supabase = createServerClient(supabaseConfig.url || 'https://placeholder.supabase.co', supabaseConfig.anonKey || 'placeholder_key', {
     cookies: {
       get(name: string) {
         return request.cookies.get(name)?.value

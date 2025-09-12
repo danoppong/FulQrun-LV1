@@ -370,7 +370,6 @@ export class WorkflowAutomationAPI {
     triggerData: Record<string, any>
   ): Promise<void> {
     // Implementation would integrate with email service
-    console.log('Executing send email action:', action.config)
   }
 
   /**
@@ -383,7 +382,6 @@ export class WorkflowAutomationAPI {
     triggerData: Record<string, any>
   ): Promise<void> {
     // Implementation would create a task in the activities table
-    console.log('Executing create task action:', action.config)
   }
 
   /**
@@ -396,7 +394,6 @@ export class WorkflowAutomationAPI {
     triggerData: Record<string, any>
   ): Promise<void> {
     // Implementation would update the specified field in the entity
-    console.log('Executing update field action:', action.config)
   }
 
   /**
@@ -409,7 +406,6 @@ export class WorkflowAutomationAPI {
     triggerData: Record<string, any>
   ): Promise<void> {
     // Implementation would send notification via Slack, email, or in-app
-    console.log('Executing send notification action:', action.config)
   }
 
   /**
@@ -422,7 +418,6 @@ export class WorkflowAutomationAPI {
     triggerData: Record<string, any>
   ): Promise<void> {
     // Implementation would create an activity record
-    console.log('Executing create activity action:', action.config)
   }
 
   /**
@@ -435,7 +430,6 @@ export class WorkflowAutomationAPI {
     triggerData: Record<string, any>
   ): Promise<void> {
     // Implementation would assign a user to the entity
-    console.log('Executing assign user action:', action.config)
   }
 
   /**
@@ -448,7 +442,6 @@ export class WorkflowAutomationAPI {
     triggerData: Record<string, any>
   ): Promise<void> {
     // Implementation would make HTTP request to webhook URL
-    console.log('Executing webhook action:', action.config)
   }
 
   /**

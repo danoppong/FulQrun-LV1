@@ -105,7 +105,6 @@ export class LeadScoringEngine {
         recommendations: insightData.recommendations || []
       }
     } catch (error) {
-      console.error('AI lead scoring failed, falling back to rule-based:', error)
       const ruleBased = this.calculateRuleBasedScore(leadData)
       return {
         ...ruleBased,
@@ -374,7 +373,6 @@ export class LeadScoringEngine {
   ): Promise<void> {
     // This would typically update the lead record in the database
     // Implementation depends on your data access layer
-    console.log(`Updating lead ${leadId} with score ${score}, confidence ${confidence}`)
   }
 
   /**
@@ -419,7 +417,6 @@ export class LeadScoringEngine {
 
         results.push(scoringResult)
       } catch (error) {
-        console.error(`Failed to score lead ${lead.id}:`, error)
         // Add fallback scoring
         const fallback = this.calculateRuleBasedScore(lead)
         results.push({

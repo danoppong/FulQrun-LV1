@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@/lib/auth'
+import { AuthClientService } from '@/lib/auth-client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -11,7 +11,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = AuthClientService.getClient()
   const searchParams = useSearchParams()
   
   const redirectUrl = searchParams.get('redirect') || '/dashboard'

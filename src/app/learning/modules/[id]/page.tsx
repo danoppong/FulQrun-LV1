@@ -10,12 +10,10 @@ export default function LearningModulePage() {
   const [userId] = useState('user-123') // This would come from auth context
 
   const handleProgressUpdate = (moduleId: string, progress: number) => {
-    console.log('Progress updated:', moduleId, progress)
     // Handle progress update
   }
 
   const handleModuleComplete = (moduleId: string) => {
-    console.log('Module completed:', moduleId)
     // Handle module completion
   }
 

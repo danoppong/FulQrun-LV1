@@ -45,13 +45,11 @@ export default function ContactList({ opportunityId, onEdit, onDelete }: Contact
     try {
       const { error } = await contactAPI.deleteContact(contactId)
       if (error) {
-        console.error('Error deleting contact:', error)
       } else {
         setContacts(contacts.filter(c => c.id !== contactId))
         if (onDelete) onDelete(contactId)
       }
     } catch (err) {
-      console.error('Error deleting contact:', err)
     }
   }
 

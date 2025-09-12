@@ -122,19 +122,15 @@ export default function MEDDPICCForm({ initialData, onSave, loading = false, onS
   const completionPercentage = Math.round((completedCount / totalFields) * 100)
 
   const onSubmit = async (data: MEDDPICCFormData) => {
-    console.log('MEDDPICC form onSubmit called with data:', data)
     try {
       await onSave(data)
-      console.log('MEDDPICC form onSave completed successfully')
       setSaved(true)
       if (onSuccess) {
-        console.log('MEDDPICC form calling onSuccess callback')
         onSuccess()
       }
       // Reset saved state after 3 seconds
       setTimeout(() => setSaved(false), 3000)
     } catch (error) {
-      console.error('MEDDPICC form onSave failed:', error)
     }
   }
 

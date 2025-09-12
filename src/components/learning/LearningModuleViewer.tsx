@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import DOMPurify from 'dompurify'
 import { LearningModule, UserLearningProgress } from '@/lib/api/learning'
 
 interface LearningModuleViewerProps {
@@ -93,7 +94,6 @@ export function LearningModuleViewer({
         }
       }
     } catch (error) {
-      console.error('Failed to update progress:', error)
     }
   }
 
@@ -203,7 +203,12 @@ export function LearningModuleViewer({
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">{currentLesson.title}</h2>
           <div className="prose max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: currentLesson.content }} />
+            <div dangerouslySetInnerHTML={{ 
+              __html: DOMPurify.sanitize(currentLesson.content, {
+                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre'],
+                ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id']
+              })
+            }} />
           </div>
         </div>
 

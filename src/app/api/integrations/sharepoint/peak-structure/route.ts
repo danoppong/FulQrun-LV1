@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
       message: 'PEAK folder structure created successfully'
     })
   } catch (error) {
-    console.error('SharePoint PEAK structure error:', error)
     return NextResponse.json(
       { error: 'Failed to create PEAK structure' },
       { status: 500 }

@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(sites)
   } catch (error) {
-    console.error('SharePoint sites error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch SharePoint sites' },
       { status: 500 }

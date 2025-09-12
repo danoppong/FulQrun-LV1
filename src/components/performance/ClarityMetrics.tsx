@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, memo } from 'react'
 import { PerformanceAPI } from '@/lib/api/performance'
 
 interface ClarityMetricsProps {
@@ -10,7 +10,7 @@ interface ClarityMetricsProps {
   periodEnd?: string
 }
 
-export function ClarityMetrics({ 
+const ClarityMetrics = memo(function ClarityMetrics({ 
   userId, 
   organizationId, 
   periodStart, 
@@ -201,4 +201,6 @@ export function ClarityMetrics({
       </div>
     </div>
   )
-}
+})
+
+export { ClarityMetrics }

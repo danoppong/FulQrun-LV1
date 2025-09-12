@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
+import { validateSearchParams, analyticsDashboardSchema, checkRateLimit } from '@/lib/validation'
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const organizationId = searchParams.get('organizationId')
-    const userId = searchParams.get('userId')
-    const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate')
-
-    if (!organizationId || !startDate || !endDate) {
+    // Rate limiting
+    const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    if (!checkRateLimit(`analytics:${clientIP}`, 60, 60000)) {
       return NextResponse.json(
-        { error: 'Organization ID, start date, and end date are required' },
-        { status: 400 }
+        { error: 'Rate limit exceeded' },
+        { status: 429 }
       )
     }
+
+    const { searchParams } = new URL(request.url)
+    
+    // Validate input parameters
+    const { organizationId, userId, startDate, endDate } = validateSearchParams(
+      analyticsDashboardSchema,
+      searchParams
+    )
 
     const supabase = createServerClient()
 
@@ -51,25 +56,25 @@ export async function GET(request: NextRequest) {
       .lte('created_at', endDate)
 
     // Calculate metrics
-    const currentRevenue = revenueData?.reduce((sum, opp) => sum + (opp.value || 0), 0) || 0
+    const currentRevenue = revenueData?.reduce((sum: number, opp: any) => sum + (opp.value || 0), 0) || 0
     const targetRevenue = 1000000 // This would come from organization settings
     const revenueGrowth = 15.2 // This would be calculated based on previous period
 
     const totalOpportunities = opportunitiesData?.length || 0
-    const wonOpportunities = opportunitiesData?.filter(opp => opp.stage === 'closed_won').length || 0
-    const lostOpportunities = opportunitiesData?.filter(opp => opp.stage === 'closed_lost').length || 0
+    const wonOpportunities = opportunitiesData?.filter((opp: any) => opp.stage === 'closed_won').length || 0
+    const lostOpportunities = opportunitiesData?.filter((opp: any) => opp.stage === 'closed_lost').length || 0
     const inProgressOpportunities = totalOpportunities - wonOpportunities - lostOpportunities
     const conversionRate = totalOpportunities > 0 ? (wonOpportunities / totalOpportunities) * 100 : 0
 
     const totalLeads = leadsData?.length || 0
-    const qualifiedLeads = leadsData?.filter(lead => lead.ai_score && lead.ai_score > 70).length || 0
-    const convertedLeads = leadsData?.filter(lead => lead.status === 'converted').length || 0
+    const qualifiedLeads = leadsData?.filter((lead: any) => lead.ai_score && lead.ai_score > 70).length || 0
+    const convertedLeads = leadsData?.filter((lead: any) => lead.status === 'converted').length || 0
     const leadConversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0
 
-    const calls = activitiesData?.filter(act => act.type === 'call').length || 0
-    const emails = activitiesData?.filter(act => act.type === 'email').length || 0
-    const meetings = activitiesData?.filter(act => act.type === 'meeting').length || 0
-    const tasks = activitiesData?.filter(act => act.type === 'task').length || 0
+    const calls = activitiesData?.filter((act: any) => act.type === 'call').length || 0
+    const emails = activitiesData?.filter((act: any) => act.type === 'email').length || 0
+    const meetings = activitiesData?.filter((act: any) => act.type === 'meeting').length || 0
+    const tasks = activitiesData?.filter((act: any) => act.type === 'task').length || 0
 
     const avgDealSize = wonOpportunities > 0 ? currentRevenue / wonOpportunities : 0
     const salesCycle = 45 // This would be calculated based on actual data
@@ -112,7 +117,16 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(analyticsData)
   } catch (error) {
-    console.error('Analytics dashboard error:', error)
+    console.error('Analytics API error:', error)
+    
+    // Handle validation errors
+    if (error instanceof Error && error.message.startsWith('Validation error:')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Failed to fetch analytics data' },
       { status: 500 }

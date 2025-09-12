@@ -121,7 +121,6 @@ export class DealRiskEngine {
         mitigationStrategies: insightData.mitigationStrategies || []
       }
     } catch (error) {
-      console.error('AI deal risk assessment failed, falling back to rule-based:', error)
       const ruleBased = this.calculateRuleBasedRisk(opportunityData)
       return {
         ...ruleBased,
@@ -419,7 +418,6 @@ export class DealRiskEngine {
     confidence: number
   ): Promise<void> {
     // This would typically update the opportunity record in the database
-    console.log(`Updating opportunity ${opportunityId} with risk score ${riskScore}, confidence ${confidence}`)
   }
 
   /**
@@ -467,7 +465,6 @@ export class DealRiskEngine {
 
         results.push(riskResult)
       } catch (error) {
-        console.error(`Failed to assess risk for opportunity ${opportunity.id}:`, error)
         // Add fallback assessment
         const fallback = this.calculateRuleBasedRisk(opportunity)
         results.push({

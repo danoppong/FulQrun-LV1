@@ -1,5 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
+import { usePerformanceTracking } from '@/hooks/usePerformanceTracking'
 import { createClientComponentClient } from '@/lib/auth'
 import { 
   SalesmanKPIs, 
@@ -15,12 +16,20 @@ interface SalesmanDashboardProps {
   userName: string
 }
 
-const SalesmanDashboard = ({ userId, userName }: SalesmanDashboardProps) => {
+const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: SalesmanDashboardProps) {
   const [salesmanData, setSalesmanData] = useState<SalesmanKPIs>(SAMPLE_SALESMAN_DATA)
   const [widgets, setWidgets] = useState<PerformanceWidget[]>(DEFAULT_SALESMAN_WIDGETS)
   const [isEditMode, setIsEditMode] = useState(false)
   const [draggedWidget, setDraggedWidget] = useState<string | null>(null)
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<'weekly' | 'monthly' | 'quarterly' | 'yearly'>('monthly')
+
+  // Performance tracking
+  const { recordCustomMetric } = usePerformanceTracking({
+    componentName: 'SalesmanDashboard',
+    trackRenders: true,
+    trackProps: true,
+    props: { userId, userName }
+  })
   const [storageMethod, setStorageMethod] = useState<'database' | 'localStorage' | 'unknown'>('unknown')
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastSyncAttempt, setLastSyncAttempt] = useState<Date | null>(null)
@@ -625,6 +634,6 @@ const SalesmanDashboard = ({ userId, userName }: SalesmanDashboardProps) => {
       </div>
     </div>
   )
-}
+})
 
 export default SalesmanDashboard

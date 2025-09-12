@@ -203,7 +203,6 @@ export function StageDocuments({
       setUploadFile(null)
       setSelectedRequirement(null)
     } catch (error) {
-      console.error('Upload failed:', error)
     }
   }
 

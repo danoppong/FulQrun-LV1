@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(folders)
   } catch (error) {
-    console.error('SharePoint folders error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch SharePoint folders' },
       { status: 500 }
@@ -88,7 +87,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(folder)
   } catch (error) {
-    console.error('SharePoint create folder error:', error)
     return NextResponse.json(
       { error: 'Failed to create folder' },
       { status: 500 }

@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { supabaseConfig } from '@/lib/config'
 
 // Singleton client instance to prevent multiple GoTrueClient instances
-let clientInstance: any = null
+let clientInstance: ReturnType<typeof createClient> | null = null
 
 export const createClientComponentClient = () => {
   // Always return singleton instance to prevent multiple GoTrueClient instances
@@ -12,16 +12,20 @@ export const createClientComponentClient = () => {
   
   // Create and cache the client instance with error handling
   try {
-    clientInstance = createClient(supabaseConfig.url!, supabaseConfig.anonKey!, {
-      auth: {
-        persistSession: true,
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    })
+    // Only create client if we have valid URLs
+    if (supabaseConfig.url && supabaseConfig.anonKey && supabaseConfig.url !== '' && supabaseConfig.anonKey !== '') {
+      clientInstance = createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+        auth: {
+          persistSession: true,
+          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      })
+    } else {
+      throw new Error('Supabase configuration missing')
+    }
   } catch (error) {
-    console.error('Failed to create Supabase client:', error)
     // Return mock client if creation fails
     clientInstance = {
       auth: {

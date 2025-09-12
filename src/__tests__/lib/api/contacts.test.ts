@@ -42,13 +42,12 @@ jest.mock('@/lib/auth', () => ({
         })),
       })),
       delete: jest.fn(() => ({
-        eq: jest.fn().mockResolvedValue({ 
-          error: null 
+        eq: jest.fn().mockResolvedValue({
+          error: null
         }),
       })),
     })),
-  })),
-}))
+  }))
 
 describe('ContactAPI', () => {
   let contactAPI: ContactAPI

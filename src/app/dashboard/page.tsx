@@ -1,5 +1,5 @@
 'use client'
-import { createClientComponentClient } from '@/lib/auth'
+import { AuthClientService } from '@/lib/auth-client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -26,7 +26,8 @@ const DashboardContent = () => {
   const [userBusinessUnit, setUserBusinessUnit] = useState<string>('Enterprise')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const supabase = createClientComponentClient()
+  const router = useRouter()
+  const supabase = AuthClientService.getClient()
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -46,10 +47,10 @@ const DashboardContent = () => {
         }
         
         setUser(user)
-        setUserName(user.email)
+        setUserName(user.email || 'User')
         
         // Load user role from database or user metadata
-        const { data: userProfile } = await supabase
+        const { data: userProfile } = await (supabase as any)
           .from('user_profiles')
           .select('role, region, business_unit, name')
           .eq('user_id', user.id)

@@ -54,7 +54,6 @@ export class OpenAIClient {
         usage: response.usage
       }
     } catch (error) {
-      console.error('OpenAI API error:', error)
       throw new Error('Failed to generate AI insight')
     }
   }

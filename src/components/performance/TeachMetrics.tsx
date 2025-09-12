@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, memo } from 'react'
 import { PerformanceAPI } from '@/lib/api/performance'
 
 interface TeachMetricsProps {
@@ -10,7 +10,7 @@ interface TeachMetricsProps {
   periodEnd?: string
 }
 
-export function TeachMetrics({ 
+const TeachMetrics = memo(function TeachMetrics({ 
   userId, 
   organizationId, 
   periodStart, 
@@ -110,4 +110,6 @@ export function TeachMetrics({
       </div>
     </div>
   )
-}
+})
+
+export { TeachMetrics }

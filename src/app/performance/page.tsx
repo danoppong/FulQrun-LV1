@@ -36,7 +36,6 @@ function PerformanceContent() {
         }
         setUser(user)
       } catch (error) {
-        console.error('Error loading user:', error)
         router.push('/auth/login')
       } finally {
         setLoading(false)

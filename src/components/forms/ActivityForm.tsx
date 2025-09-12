@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -48,7 +48,7 @@ const statusOptions = [
   { value: 'cancelled', label: 'Cancelled', color: 'text-gray-600 bg-gray-100' },
 ]
 
-export default function ActivityForm({ 
+const ActivityForm = memo(function ActivityForm({ 
   opportunityId, 
   contactId, 
   initialData, 
@@ -94,14 +94,12 @@ export default function ActivityForm({
       const { data, error } = await contactAPI.getContacts()
       if (error) {
         setContactsError(error.message || 'Failed to load contacts')
-        console.error('Error loading contacts:', error)
       } else if (data) {
         setContacts(data)
       }
     } catch (error) {
       const errorMessage = 'An unexpected error occurred while loading contacts'
       setContactsError(errorMessage)
-      console.error('Error loading contacts:', error)
     } finally {
       setLoadingContacts(false)
     }
@@ -111,7 +109,6 @@ export default function ActivityForm({
     try {
       await onSave(data)
     } catch (error) {
-      console.error('Error saving activity:', error)
     }
   }
 
@@ -322,4 +319,6 @@ export default function ActivityForm({
       </div>
     </div>
   )
-}
+})
+
+export default ActivityForm

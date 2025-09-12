@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import React from 'react'
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -25,7 +26,7 @@ jest.mock('next/image', () => ({
   __esModule: true,
   default: (props) => {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img {...props} />
+    return require('react').createElement('img', props)
   },
 }))
 
@@ -64,7 +65,7 @@ jest.mock('@/lib/auth', () => ({
         eq: jest.fn().mockResolvedValue({ error: null }),
       })),
     })),
-  })),
+  })
 }))
 
 // Mock environment variables

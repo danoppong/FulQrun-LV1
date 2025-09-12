@@ -15,7 +15,7 @@ export interface PerformanceMetricData {
   periodStart: string
   periodEnd: string
   calculationMethod: string | null
-  rawData: Record<string, any>
+  rawData: Record<string, unknown>
   organizationId: string
   createdAt: string
   updatedAt: string

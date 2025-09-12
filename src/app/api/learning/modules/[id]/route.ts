@@ -30,7 +30,6 @@ export async function GET(
 
     return NextResponse.json(module)
   } catch (error) {
-    console.error('Learning module fetch error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch learning module' },
       { status: 500 }

@@ -7,12 +7,10 @@ export default function IntegrationsPage() {
   const [organizationId] = useState('org-123') // This would come from auth context
 
   const handleIntegrationConnect = (integration: any) => {
-    console.log('Integration connected:', integration)
     // Handle integration connection
   }
 
   const handleIntegrationDisconnect = (integrationId: string) => {
-    console.log('Integration disconnected:', integrationId)
     // Handle integration disconnection
   }
 

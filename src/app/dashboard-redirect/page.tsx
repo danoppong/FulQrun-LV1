@@ -1,5 +1,5 @@
 'use client'
-import { createClientComponentClient } from '@/lib/auth'
+import { AuthClientService } from '@/lib/auth-client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -7,7 +7,7 @@ const DashboardRedirectPage = () => {
   const [status, setStatus] = useState('Initializing...')
   const [debugInfo, setDebugInfo] = useState<any>({})
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = AuthClientService.getClient()
 
   useEffect(() => {
     setStatus('Page loaded, starting auth check...')
@@ -18,7 +18,7 @@ const DashboardRedirectPage = () => {
         
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
-        setDebugInfo({ session: !!session, sessionError: sessionError?.message })
+        setDebugInfo((prev: any) => ({ ...prev, session: !!session, sessionError: sessionError?.message }))
         
         if (sessionError) {
           setStatus(`Session error: ${sessionError.message}`)
@@ -36,7 +36,7 @@ const DashboardRedirectPage = () => {
         // Force a session refresh
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
-        setDebugInfo(prev => ({ ...prev, user: !!user, userError: userError?.message }))
+        setDebugInfo((prev: any) => ({ ...prev, user: !!user, userError: userError?.message }))
         
         if (userError) {
           setStatus(`User error: ${userError.message}`)
@@ -58,7 +58,7 @@ const DashboardRedirectPage = () => {
         
       } catch (error) {
         setStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
-        setDebugInfo(prev => ({ ...prev, error: error instanceof Error ? error.message : 'Unknown error' }))
+        setDebugInfo((prev: any) => ({ ...prev, error: error instanceof Error ? error.message : 'Unknown error' }))
       }
     }
     

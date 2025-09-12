@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@/lib/auth'
+import { AuthClientService } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import AuthDebug from '@/components/AuthDebug'
@@ -14,7 +14,7 @@ const SignupPage = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = AuthClientService.getClient()
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,7 +24,7 @@ const SignupPage = () => {
 
     try {
       // First, create the organization
-      const { data: organization, error: orgError } = await supabase
+      const { data: organization, error: orgError } = await (supabase as any)
         .from('organizations')
         .insert({
           name: organizationName,
@@ -55,7 +55,7 @@ const SignupPage = () => {
 
       if (authData.user) {
         // Create user profile
-        const { error: profileError } = await supabase
+        const { error: profileError } = await (supabase as any)
           .from('users')
           .insert({
             id: authData.user.id,

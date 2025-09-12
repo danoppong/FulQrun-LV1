@@ -298,7 +298,6 @@ export class MicrosoftGraphAPI {
         errors: 0
       }
     } catch (error) {
-      console.error('Error syncing contacts:', error)
       return {
         imported: 0,
         updated: 0,
@@ -330,7 +329,6 @@ export class MicrosoftGraphAPI {
         errors: 0
       }
     } catch (error) {
-      console.error('Error syncing events:', error)
       return {
         imported: 0,
         updated: 0,
@@ -362,7 +360,6 @@ export class MicrosoftGraphAPI {
         errors: 0
       }
     } catch (error) {
-      console.error('Error syncing emails:', error)
       return {
         imported: 0,
         updated: 0,

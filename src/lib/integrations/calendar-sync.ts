@@ -117,11 +117,6 @@ export class CalendarSyncService {
     // 2. Link to contacts if attendees match contact emails
     // 3. Link to opportunities if subject/description contains opportunity references
     // 4. Store event metadata
-    
-      subject: event.subject,
-      startDateTime: event.start.dateTime,
-      attendees: event.attendees?.length || 0
-    })
 
     // Mock implementation for MVP
     const activity: CalendarActivity = {

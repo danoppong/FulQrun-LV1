@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@/lib/auth'
+import { AuthClientService } from '@/lib/auth-client'
 import { supabaseConfig } from '@/lib/config'
 
 export default function DebugAuthPage() {
   const [authState, setAuthState] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClientComponentClient()
+  const supabase = AuthClientService.getClient()
 
   useEffect(() => {
     const checkAuth = async () => {
