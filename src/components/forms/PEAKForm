@@ -86,7 +86,7 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
   }, [initialData, setValue])
 
   const handleStageSelect = (stage: string) => {
-    setSelectedStage(stage)
+    setSelectedStage(stage as 'prospecting' | 'engaging' | 'advancing' | 'key_decision')
     setValue('peak_stage', stage as any)
   }
 

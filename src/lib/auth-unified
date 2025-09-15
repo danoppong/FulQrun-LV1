@@ -47,7 +47,7 @@ export class AuthService {
     }
 
     try {
-      this.clientInstance = createClient<Database>(
+      this.clientInstance = createClient(
         supabaseConfig.url!,
         supabaseConfig.anonKey!,
         {
@@ -167,6 +167,7 @@ export class AuthService {
    */
   static async getCurrentUser(): Promise<AuthUser | null> {
     const supabase = this.getClient()
+    if (!supabase) return null
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error || !user) {
@@ -180,7 +181,7 @@ export class AuthService {
       .eq('id', user.id)
       .single()
 
-    return { ...user, profile }
+    return { ...user, profile: profile || undefined } as AuthUser
   }
 
   /**
@@ -188,6 +189,7 @@ export class AuthService {
    */
   static async getCurrentUserServer(): Promise<AuthUser | null> {
     const supabase = this.getServerClient()
+    if (!supabase) return null
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error || !user) {
@@ -201,7 +203,7 @@ export class AuthService {
       .eq('id', user.id)
       .single()
 
-    return { ...user, profile }
+    return { ...user, profile: profile || undefined } as AuthUser
   }
 
   /**
@@ -239,6 +241,7 @@ export class AuthService {
     if (!user?.profile) return null
 
     const supabase = this.getClient()
+    if (!supabase) return null
     const { data: organization } = await supabase
       .from('organizations')
       .select('*')

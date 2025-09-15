@@ -43,7 +43,7 @@ export class LeadAPI {
       }
 
       // Calculate scores for each lead
-      const leadsWithScores = data?.map(lead => {
+      const leadsWithScores = data?.map((lead: any) => {
         const leadData: LeadData = {
           first_name: lead.first_name,
           last_name: lead.last_name,
@@ -215,7 +215,7 @@ export class LeadAPI {
       }
 
       // Calculate scores for each lead
-      const leadsWithScores = data?.map(lead => {
+      const leadsWithScores = data?.map((lead: any) => {
         const leadData: LeadData = {
           first_name: lead.first_name,
           last_name: lead.last_name,
@@ -337,7 +337,7 @@ export class LeadAPI {
         }
       }
 
-      data?.forEach(lead => {
+      data?.forEach((lead: any) => {
         // Count by status
         const status = lead.status as keyof typeof stats.byStatus
         if (stats.byStatus[status] !== undefined) {
@@ -376,7 +376,7 @@ export class LeadAPI {
       }
 
       // Calculate scores for each lead
-      const leadsWithScores = data?.map(lead => {
+      const leadsWithScores = data?.map((lead: any) => {
         const leadData: LeadData = {
           first_name: lead.first_name,
           last_name: lead.last_name,

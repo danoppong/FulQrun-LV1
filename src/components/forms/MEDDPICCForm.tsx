@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { opportunityAPI } from '@/lib/api/opportunities'
 
 const meddpiccSchema = z.object({
   metrics: z.string().optional(),
@@ -19,231 +20,197 @@ const meddpiccSchema = z.object({
 type MEDDPICCFormData = z.infer<typeof meddpiccSchema>
 
 interface MEDDPICCFormProps {
-  initialData?: MEDDPICCFormData
-  onSave: (data: MEDDPICCFormData) => Promise<void>
-  loading?: boolean
+  initialData?: Partial<MEDDPICCFormData>
+  onSave?: (data: MEDDPICCFormData) => void
   onSuccess?: () => void
+  loading?: boolean
 }
 
-const meddpiccFields = [
-  {
-    key: 'metrics' as keyof MEDDPICCFormData,
-    label: 'Metrics',
-    description: 'Quantify the business impact and value proposition',
-    placeholder: 'e.g., Reduce costs by 30%, increase efficiency by 50%',
-    icon: '📊'
-  },
-  {
-    key: 'economic_buyer' as keyof MEDDPICCFormData,
-    label: 'Economic Buyer',
-    description: 'Identify the decision maker with budget authority',
-    placeholder: 'e.g., CFO, VP of Operations, Director of IT',
-    icon: '💰'
-  },
-  {
-    key: 'decision_criteria' as keyof MEDDPICCFormData,
-    label: 'Decision Criteria',
-    description: 'Understand the evaluation process and criteria',
-    placeholder: 'e.g., ROI > 200%, implementation < 6 months, security compliance',
-    icon: '📋'
-  },
-  {
-    key: 'decision_process' as keyof MEDDPICCFormData,
-    label: 'Decision Process',
-    description: 'Map the approval workflow and decision timeline',
-    placeholder: 'e.g., Technical evaluation → Budget approval → Legal review → Final decision',
-    icon: '🔄'
-  },
-  {
-    key: 'paper_process' as keyof MEDDPICCFormData,
-    label: 'Paper Process',
-    description: 'Document requirements and procurement process',
-    placeholder: 'e.g., RFP process, vendor evaluation, contract negotiation',
-    icon: '📄'
-  },
-  {
-    key: 'identify_pain' as keyof MEDDPICCFormData,
-    label: 'Identify Pain',
-    description: 'Understand pain points and business challenges',
-    placeholder: 'e.g., Current system is slow, manual processes, high maintenance costs',
-    icon: '😰'
-  },
-  {
-    key: 'champion' as keyof MEDDPICCFormData,
-    label: 'Champion',
-    description: 'Find internal advocate and supporter',
-    placeholder: 'e.g., Sarah Johnson (IT Director), Mike Chen (Operations Manager)',
-    icon: '🏆'
-  },
-  {
-    key: 'competition' as keyof MEDDPICCFormData,
-    label: 'Competition',
-    description: 'Assess competitive landscape and positioning',
-    placeholder: 'e.g., Competitor A (strong on price), Competitor B (better features)',
-    icon: '⚔️'
-  }
-]
-
-export default function MEDDPICCForm({ initialData, onSave, loading = false, onSuccess }: MEDDPICCFormProps) {
-  const [completedFields, setCompletedFields] = useState<Set<string>>(new Set())
-  const [saved, setSaved] = useState(false)
-
+export default function MEDDPICCForm({ 
+  initialData = {}, 
+  onSave, 
+  onSuccess, 
+  loading = false 
+}: MEDDPICCFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
-    setValue
+    reset
   } = useForm<MEDDPICCFormData>({
     resolver: zodResolver(meddpiccSchema),
-    defaultValues: initialData || {}
+    defaultValues: initialData
   })
 
-  const watchedValues = watch()
-
-  // Update form when initialData changes
   useEffect(() => {
     if (initialData) {
-      Object.keys(initialData).forEach(key => {
-        const value = initialData[key as keyof MEDDPICCFormData]
-        if (value !== undefined) {
-          setValue(key as keyof MEDDPICCFormData, value)
-        }
-      })
+      reset(initialData)
     }
-  }, [initialData, setValue])
-
-  // Calculate completion percentage
-  const totalFields = meddpiccFields.length
-  const completedCount = meddpiccFields.filter(field => {
-    const value = watchedValues[field.key]
-    return value && value.trim() !== ''
-  }).length
-  const completionPercentage = Math.round((completedCount / totalFields) * 100)
+  }, [initialData, reset])
 
   const onSubmit = async (data: MEDDPICCFormData) => {
+    setIsSubmitting(true)
     try {
-      await onSave(data)
-      setSaved(true)
+      if (onSave) {
+        onSave(data)
+      }
       if (onSuccess) {
         onSuccess()
       }
-      // Reset saved state after 3 seconds
-      setTimeout(() => setSaved(false), 3000)
     } catch (error) {
+      console.error('Error saving MEDDPICC data:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="bg-white shadow sm:rounded-lg border border-gray-200">
-      <div className="px-4 py-5 sm:p-6">
-        <div className="flex items-center justify-between mb-6">
+    <div className="bg-white shadow rounded-lg p-6">
+      <h3 className="text-lg font-medium text-gray-900 mb-4">MEDDPICC Qualification</h3>
+      
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              MEDDPICC Qualification
-            </h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Complete the MEDDPICC framework to qualify your opportunity
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-indigo-600">
-              {completionPercentage}%
-            </div>
-            <div className="text-sm text-gray-500">Complete</div>
-            {completionPercentage >= 75 && (
-              <div className="text-xs text-green-600 font-medium mt-1">
-                🎉 Well Qualified
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${completionPercentage}%` }}
+            <label htmlFor="metrics" className="block text-sm font-medium text-gray-700">
+              Metrics
+            </label>
+            <textarea
+              {...register('metrics')}
+              id="metrics"
+              rows={3}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+              placeholder="What metrics will be used to measure success?"
             />
-          </div>
-        </div>
-
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            {meddpiccFields.map((field) => {
-              const value = watchedValues[field.key]
-              const isCompleted = value && value.trim() !== ''
-              
-              return (
-                <div key={field.key} className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">{field.icon}</span>
-                    <label className="block text-sm font-medium text-gray-700">
-                      {field.label}
-                      {isCompleted && <span className="text-green-500 ml-1">✓</span>}
-                    </label>
-                  </div>
-                  <p className="text-xs text-gray-500">{field.description}</p>
-                  <div>
-                    <textarea
-                      {...register(field.key)}
-                      rows={3}
-                      className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border rounded-md bg-white text-gray-900 px-3 py-2 ${
-                        isCompleted ? 'border-green-300 bg-green-50' : 'border-gray-300'
-                      }`}
-                      placeholder={field.placeholder}
-                    />
-                    {errors[field.key] && (
-                      <p className="mt-1 text-sm text-red-600">{errors[field.key]?.message}</p>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Summary */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">MEDDPICC Summary</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">Completed Fields:</span>
-                <span className="ml-2 font-medium text-gray-900">{completedCount}/{totalFields}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Completion:</span>
-                <span className="ml-2 font-medium text-gray-900">{completionPercentage}%</span>
-              </div>
-            </div>
-            {completionPercentage >= 75 && (
-              <div className="mt-2 text-sm text-green-600 font-medium">
-                🎉 Great job! This opportunity is well-qualified.
-              </div>
-            )}
-            {completionPercentage < 25 && (
-              <div className="mt-2 text-sm text-yellow-600 font-medium">
-                ⚠️ Consider gathering more qualification information.
-              </div>
+            {errors.metrics && (
+              <p className="mt-1 text-sm text-red-600">{errors.metrics.message}</p>
             )}
           </div>
 
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleSubmit(onSubmit)}
-              disabled={loading}
-              className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${
-                saved 
-                  ? 'text-white bg-green-600 hover:bg-green-700 focus:ring-green-500' 
-                  : 'text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
-              }`}
-            >
-              {loading ? 'Saving...' : saved ? '✓ Saved!' : 'Save MEDDPICC Data'}
-            </button>
+          <div>
+            <label htmlFor="economic_buyer" className="block text-sm font-medium text-gray-700">
+              Economic Buyer
+            </label>
+            <textarea
+              {...register('economic_buyer')}
+              id="economic_buyer"
+              rows={3}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+              placeholder="Who has the budget authority?"
+            />
+            {errors.economic_buyer && (
+              <p className="mt-1 text-sm text-red-600">{errors.economic_buyer.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="decision_criteria" className="block text-sm font-medium text-gray-700">
+              Decision Criteria
+            </label>
+            <textarea
+              {...register('decision_criteria')}
+              id="decision_criteria"
+              rows={3}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+              placeholder="What criteria will be used to make the decision?"
+            />
+            {errors.decision_criteria && (
+              <p className="mt-1 text-sm text-red-600">{errors.decision_criteria.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="decision_process" className="block text-sm font-medium text-gray-700">
+              Decision Process
+            </label>
+            <textarea
+              {...register('decision_process')}
+              id="decision_process"
+              rows={3}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+              placeholder="How will the decision be made?"
+            />
+            {errors.decision_process && (
+              <p className="mt-1 text-sm text-red-600">{errors.decision_process.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="paper_process" className="block text-sm font-medium text-gray-700">
+              Paper Process
+            </label>
+            <textarea
+              {...register('paper_process')}
+              id="paper_process"
+              rows={3}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+              placeholder="What paperwork/approvals are required?"
+            />
+            {errors.paper_process && (
+              <p className="mt-1 text-sm text-red-600">{errors.paper_process.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="identify_pain" className="block text-sm font-medium text-gray-700">
+              Identify Pain
+            </label>
+            <textarea
+              {...register('identify_pain')}
+              id="identify_pain"
+              rows={3}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+              placeholder="What pain points are we solving?"
+            />
+            {errors.identify_pain && (
+              <p className="mt-1 text-sm text-red-600">{errors.identify_pain.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="champion" className="block text-sm font-medium text-gray-700">
+              Champion
+            </label>
+            <textarea
+              {...register('champion')}
+              id="champion"
+              rows={3}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+              placeholder="Who is our internal advocate?"
+            />
+            {errors.champion && (
+              <p className="mt-1 text-sm text-red-600">{errors.champion.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="competition" className="block text-sm font-medium text-gray-700">
+              Competition
+            </label>
+            <textarea
+              {...register('competition')}
+              id="competition"
+              rows={3}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+              placeholder="Who are we competing against?"
+            />
+            {errors.competition && (
+              <p className="mt-1 text-sm text-red-600">{errors.competition.message}</p>
+            )}
           </div>
         </div>
-      </div>
+
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={loading || isSubmitting}
+            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+          >
+            {isSubmitting ? 'Saving...' : 'Save MEDDPICC'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, memo } from 'react'
-import { PerformanceAPI } from '@/lib/api/performance'
+import { performanceAPI } from '@/lib/api/performance'
 
 interface ScoreMetricsProps {
   userId: string
@@ -27,8 +27,11 @@ const ScoreMetrics = memo(function ScoreMetrics({
   const loadScoreMetrics = async () => {
     try {
       setIsLoading(true)
-      const data = await PerformanceAPI.getUserMetrics(userId, periodStart, periodEnd)
-      const scoreMetrics = data.filter(m => m.metricType === 'score')
+      const { data, error } = await performanceAPI.getPerformanceMetrics(userId, periodStart)
+      if (error) {
+        throw new Error(error.message)
+      }
+      const scoreMetrics = data?.filter(m => m.metric_type === 'score') || []
       setMetrics(scoreMetrics)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load score metrics')

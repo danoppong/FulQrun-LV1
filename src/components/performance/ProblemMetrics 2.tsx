@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useMemo, useCallback, memo } from 'react'
-import { performanceAPI } from '@/lib/api/performance'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { PerformanceAPI } from '@/lib/api/performance'
 
 interface ProblemMetricsProps {
   userId: string
@@ -10,7 +10,7 @@ interface ProblemMetricsProps {
   periodEnd?: string
 }
 
-const ProblemMetrics = memo(function ProblemMetrics({ 
+export function ProblemMetrics({ 
   userId, 
   organizationId, 
   periodStart, 
@@ -23,11 +23,8 @@ const ProblemMetrics = memo(function ProblemMetrics({
   const loadProblemMetrics = useCallback(async () => {
     try {
       setIsLoading(true)
-      const { data, error } = await performanceAPI.getPerformanceMetrics(userId, periodStart)
-      if (error) {
-        throw new Error(error.message)
-      }
-      const problemMetrics = data?.filter(m => m.metric_type === 'problem') || []
+      const data = await PerformanceAPI.getUserMetrics(userId, periodStart, periodEnd)
+      const problemMetrics = data.filter(m => m.metricType === 'problem')
       setMetrics(problemMetrics)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load problem metrics')
@@ -113,6 +110,4 @@ const ProblemMetrics = memo(function ProblemMetrics({
       </div>
     </div>
   )
-})
-
-export { ProblemMetrics }
+}

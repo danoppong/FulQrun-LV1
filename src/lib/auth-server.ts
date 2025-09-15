@@ -8,7 +8,8 @@ export const createServerComponentClient = () => {
   if (!supabaseConfig.isConfigured) {
     return {
       auth: {
-        getUser: async () => ({ data: { user: null }, error: null })
+        getUser: async () => ({ data: { user: null }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null })
       },
       from: (table: string) => ({
         select: () => ({
@@ -45,10 +46,10 @@ export const createServerComponentClient = () => {
       get(name: string) {
         return cookieStore.get(name)?.value
       },
-      set(name: string, value: string, options: CookieOptions) {
+      set(name: string, value: string, options: any) {
         cookieStore.set({ name, value, ...options })
       },
-      remove(name: string, options: CookieOptions) {
+      remove(name: string, options: any) {
         cookieStore.set({ name, value: '', ...options })
       },
     },
@@ -80,7 +81,7 @@ export const createMiddlewareClient = (request: NextRequest) => {
       get(name: string) {
         return request.cookies.get(name)?.value
       },
-      set(name: string, value: string, options: CookieOptions) {
+      set(name: string, value: string, options: any) {
         request.cookies.set({
           name,
           value,
@@ -97,7 +98,7 @@ export const createMiddlewareClient = (request: NextRequest) => {
           ...options,
         })
       },
-      remove(name: string, options: CookieOptions) {
+      remove(name: string, options: any) {
         request.cookies.set({
           name,
           value: '',

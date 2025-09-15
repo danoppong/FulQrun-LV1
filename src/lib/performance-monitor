@@ -128,7 +128,7 @@ class PerformanceMonitor {
       return new Promise((resolve) => {
         const observer = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            resolve(entry.processingStart - entry.startTime)
+            resolve((entry as any).processingStart - entry.startTime)
           }
         })
         observer.observe({ entryTypes: ['first-input'] })

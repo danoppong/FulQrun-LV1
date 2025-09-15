@@ -175,18 +175,18 @@ export class LeadScoringEngine {
       case 'equals':
         return fieldValue === rule.value
       case 'contains':
-        return fieldValue && typeof fieldValue === 'string' && 
-               fieldValue.toLowerCase().includes(rule.value?.toLowerCase() || '')
+        return !!(fieldValue && typeof fieldValue === 'string' && 
+               fieldValue.toLowerCase().includes(rule.value?.toLowerCase() || ''))
       case 'starts_with':
-        return fieldValue && typeof fieldValue === 'string' && 
-               fieldValue.toLowerCase().startsWith(rule.value?.toLowerCase() || '')
+        return !!(fieldValue && typeof fieldValue === 'string' && 
+               fieldValue.toLowerCase().startsWith(rule.value?.toLowerCase() || ''))
       case 'ends_with':
-        return fieldValue && typeof fieldValue === 'string' && 
-               fieldValue.toLowerCase().endsWith(rule.value?.toLowerCase() || '')
+        return !!(fieldValue && typeof fieldValue === 'string' && 
+               fieldValue.toLowerCase().endsWith(rule.value?.toLowerCase() || ''))
       case 'is_empty':
         return !fieldValue || fieldValue === ''
       case 'is_not_empty':
-        return fieldValue && fieldValue !== ''
+        return !!(fieldValue && fieldValue !== '')
       default:
         return false
     }

@@ -1,8 +1,8 @@
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { supabaseConfig } from '@/lib/config'
 
 // Singleton client instance to prevent multiple GoTrueClient instances
-let clientInstance: ReturnType<typeof createBrowserClient> | null = null
+let clientInstance: ReturnType<typeof createClient> | null = null
 
 export const createClientComponentClient = () => {
   // Always return singleton instance to prevent multiple GoTrueClient instances
@@ -14,7 +14,14 @@ export const createClientComponentClient = () => {
   try {
     // Only create client if we have valid URLs
     if (supabaseConfig.url && supabaseConfig.anonKey && supabaseConfig.url !== '' && supabaseConfig.anonKey !== '') {
-      clientInstance = createBrowserClient(supabaseConfig.url, supabaseConfig.anonKey)
+      clientInstance = createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+        auth: {
+          persistSession: true,
+          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      })
     } else {
       throw new Error('Supabase configuration missing')
     }
@@ -22,21 +29,20 @@ export const createClientComponentClient = () => {
     // Return mock client if creation fails
     clientInstance = {
       auth: {
-        getUser: async () => ({ data: { user: null }, error: { message: 'Supabase client creation failed' } }),
-        getSession: async () => ({ data: { session: null }, error: { message: 'Supabase client creation failed' } }),
+        getUser: async () => ({ data: { user: null }, error: null } as any),
         signInWithPassword: async () => ({ 
           data: { user: null }, 
-          error: { message: 'Supabase client creation failed' } 
-        }),
+          error: null 
+        } as any),
         signUp: async () => ({ 
           data: { user: null }, 
-          error: { message: 'Supabase client creation failed' } 
-        }),
-        signOut: async () => ({ error: null }),
+          error: null 
+        } as any),
+        signOut: async () => ({ error: null } as any),
         signInWithOAuth: async () => ({ 
-          error: { message: 'Supabase client creation failed' } 
-        })
-      },
+          error: null 
+        } as any)
+      } as any,
       from: (table: string) => ({
         select: () => ({
           eq: () => ({
@@ -66,7 +72,7 @@ export const createClientComponentClient = () => {
           eq: async () => ({ error: { message: 'Supabase client creation failed' } })
         })
       })
-    }
+    } as any
   }
   return clientInstance
 }

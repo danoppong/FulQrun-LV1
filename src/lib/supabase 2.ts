@@ -1,9 +1,8 @@
-import { createBrowserClient, createServerClient as createSupabaseServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { supabaseConfig } from '@/lib/config'
 
 // Singleton client instance to prevent multiple GoTrueClient instances
-let supabaseInstance: ReturnType<typeof createBrowserClient> | null = null
+let supabaseInstance: ReturnType<typeof createClient> | null = null
 
 export const supabase = (() => {
   if (supabaseInstance) {
@@ -12,7 +11,7 @@ export const supabase = (() => {
   
   // Only create client if Supabase is configured
   if (supabaseConfig.isConfigured) {
-    supabaseInstance = createBrowserClient(
+    supabaseInstance = createClient(
       supabaseConfig.url!, 
       supabaseConfig.anonKey!
     )
@@ -21,7 +20,6 @@ export const supabase = (() => {
     supabaseInstance = {
       auth: {
         getUser: async () => ({ data: { user: null }, error: null }),
-        getSession: async () => ({ data: { session: null }, error: null }),
         signInWithPassword: async () => ({ 
           data: { user: null }, 
           error: { message: 'Supabase not configured' } 
@@ -74,26 +72,12 @@ export const supabase = (() => {
 export const createServerClient = () => {
   // Only create client if Supabase is configured
   if (supabaseConfig.isConfigured) {
-    const cookieStore = cookies()
-    return createSupabaseServerClient(supabaseConfig.url!, supabaseConfig.anonKey!, {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name: string, options: any) {
-          cookieStore.set({ name, value: '', ...options })
-        },
-      },
-    })
+    return createClient(supabaseConfig.url!, supabaseConfig.anonKey!)
   } else {
     // Return a mock client if not configured
     return {
       auth: {
         getUser: async () => ({ data: { user: null }, error: null }),
-        getSession: async () => ({ data: { session: null }, error: null }),
         signInWithPassword: async () => ({ 
           data: { user: null }, 
           error: { message: 'Supabase not configured' } 

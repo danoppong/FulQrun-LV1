@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, memo } from 'react'
-import { performanceAPI } from '@/lib/api/performance'
+import React, { useState, useEffect } from 'react'
+import { PerformanceAPI } from '@/lib/api/performance'
 
 interface TeachMetricsProps {
   userId: string
@@ -10,7 +10,7 @@ interface TeachMetricsProps {
   periodEnd?: string
 }
 
-const TeachMetrics = memo(function TeachMetrics({ 
+export function TeachMetrics({ 
   userId, 
   organizationId, 
   periodStart, 
@@ -27,11 +27,8 @@ const TeachMetrics = memo(function TeachMetrics({
   const loadTeachMetrics = async () => {
     try {
       setIsLoading(true)
-      const { data, error } = await performanceAPI.getPerformanceMetrics(userId, periodStart)
-      if (error) {
-        throw new Error(error.message)
-      }
-      const teachMetrics = data?.filter(m => m.metric_type === 'teach') || []
+      const data = await PerformanceAPI.getUserMetrics(userId, periodStart, periodEnd)
+      const teachMetrics = data.filter(m => m.metricType === 'teach')
       setMetrics(teachMetrics)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load teach metrics')
@@ -113,6 +110,4 @@ const TeachMetrics = memo(function TeachMetrics({
       </div>
     </div>
   )
-})
-
-export { TeachMetrics }
+}

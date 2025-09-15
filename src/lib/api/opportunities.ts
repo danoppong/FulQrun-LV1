@@ -234,7 +234,7 @@ export class OpportunityAPI {
         }
       }
 
-      data?.forEach(opp => {
+      data?.forEach((opp: any) => {
         const value = opp.deal_value || 0
         const probability = opp.probability || 0
         const weightedValue = value * (probability / 100)

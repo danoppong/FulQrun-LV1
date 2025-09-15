@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, memo } from 'react'
-import { performanceAPI } from '@/lib/api/performance'
+import React, { useState, useEffect } from 'react'
+import { PerformanceAPI } from '@/lib/api/performance'
 
 interface ValueMetricsProps {
   userId: string
@@ -10,7 +10,7 @@ interface ValueMetricsProps {
   periodEnd?: string
 }
 
-const ValueMetrics = memo(function ValueMetrics({ 
+export function ValueMetrics({ 
   userId, 
   organizationId, 
   periodStart, 
@@ -27,11 +27,8 @@ const ValueMetrics = memo(function ValueMetrics({
   const loadValueMetrics = async () => {
     try {
       setIsLoading(true)
-      const { data, error } = await performanceAPI.getPerformanceMetrics(userId, periodStart)
-      if (error) {
-        throw new Error(error.message)
-      }
-      const valueMetrics = data?.filter(m => m.metric_type === 'value') || []
+      const data = await PerformanceAPI.getUserMetrics(userId, periodStart, periodEnd)
+      const valueMetrics = data.filter(m => m.metricType === 'value')
       setMetrics(valueMetrics)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load value metrics')
@@ -113,6 +110,4 @@ const ValueMetrics = memo(function ValueMetrics({
       </div>
     </div>
   )
-})
-
-export { ValueMetrics }
+}

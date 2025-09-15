@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { UserRole, getUserPermissions, canUserAccessLevel } from '@/lib/roles'
 import { DashboardWidget, WidgetType, DEFAULT_WIDGETS, WIDGET_TEMPLATES } from '@/lib/dashboard-widgets'
+import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData } from '@/lib/types/dashboard'
 import { createClientComponentClient } from '@/lib/auth'
 import RoleSelector from '@/components/RoleSelector'
 
@@ -247,14 +248,17 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
 }
 
 // Widget Components
-const KPICardWidget = ({ widget }: { widget: DashboardWidget }) => (
-  <div className="text-center">
-    <div className="text-3xl font-bold text-gray-900">{widget.data?.value}</div>
-    <div className={`text-sm ${widget.data?.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-      {widget.data?.change}
+const KPICardWidget = ({ widget }: { widget: DashboardWidget }) => {
+  const kpiData = widget.data as KPICardData | undefined
+  return (
+    <div className="text-center">
+      <div className="text-3xl font-bold text-gray-900">{kpiData?.value}</div>
+      <div className={`text-sm ${kpiData?.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+        {kpiData?.change}
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 const SalesChartWidget = ({ widget }: { widget: DashboardWidget }) => (
   <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
@@ -266,9 +270,11 @@ const SalesChartWidget = ({ widget }: { widget: DashboardWidget }) => (
   </div>
 )
 
-const TeamPerformanceWidget = ({ widget }: { widget: DashboardWidget }) => (
-  <div className="space-y-3">
-    {widget.data?.teamMembers?.map((member: any, index: number) => (
+const TeamPerformanceWidget = ({ widget }: { widget: DashboardWidget }) => {
+  const teamData = widget.data as TeamPerformanceData | undefined
+  return (
+    <div className="space-y-3">
+      {teamData?.teamMembers?.map((member: any, index: number) => (
       <div key={index} className="flex items-center justify-between">
         <div>
           <div className="font-medium text-gray-900">{member.name}</div>
@@ -285,12 +291,15 @@ const TeamPerformanceWidget = ({ widget }: { widget: DashboardWidget }) => (
         </div>
       </div>
     ))}
-  </div>
-)
+    </div>
+  )
+}
 
-const PipelineOverviewWidget = ({ widget }: { widget: DashboardWidget }) => (
-  <div className="space-y-3">
-    {widget.data?.stages?.map((stage: any, index: number) => {
+const PipelineOverviewWidget = ({ widget }: { widget: DashboardWidget }) => {
+  const pipelineData = widget.data as PipelineOverviewData | undefined
+  return (
+    <div className="space-y-3">
+      {pipelineData?.stages?.map((stage: any, index: number) => {
       const count = typeof stage.count === 'number' ? stage.count : 0
       const value = typeof stage.value === 'number' ? stage.value : 0
       
@@ -304,12 +313,15 @@ const PipelineOverviewWidget = ({ widget }: { widget: DashboardWidget }) => (
         </div>
       )
     })}
-  </div>
-)
+    </div>
+  )
+}
 
-const RecentActivityWidget = ({ widget }: { widget: DashboardWidget }) => (
-  <div className="space-y-2">
-    {widget.data?.activities?.map((activity: any, index: number) => (
+const RecentActivityWidget = ({ widget }: { widget: DashboardWidget }) => {
+  const activityData = widget.data as RecentActivityData | undefined
+  return (
+    <div className="space-y-2">
+      {activityData?.activities?.map((activity: any, index: number) => (
       <div key={index} className="flex items-start space-x-3">
         <div className="w-2 h-2 bg-indigo-600 rounded-full mt-2"></div>
         <div className="flex-1">
@@ -318,12 +330,15 @@ const RecentActivityWidget = ({ widget }: { widget: DashboardWidget }) => (
         </div>
       </div>
     ))}
-  </div>
-)
+    </div>
+  )
+}
 
-const MEDDPICCScoringWidget = ({ widget }: { widget: DashboardWidget }) => (
-  <div className="space-y-3">
-    {widget.data?.opportunities?.map((opp: any, index: number) => (
+const MEDDPICCScoringWidget = ({ widget }: { widget: DashboardWidget }) => {
+  const meddpiccData = widget.data as MEDDPICCScoringData | undefined
+  return (
+    <div className="space-y-3">
+      {meddpiccData?.opportunities?.map((opp: any, index: number) => (
       <div key={index} className="flex items-center justify-between">
         <div className="font-medium text-gray-900">{opp.name}</div>
         <div className="text-right">
@@ -336,7 +351,8 @@ const MEDDPICCScoringWidget = ({ widget }: { widget: DashboardWidget }) => (
         </div>
       </div>
     ))}
-  </div>
-)
+    </div>
+  )
+}
 
 export default RoleBasedDashboard

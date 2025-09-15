@@ -190,18 +190,18 @@ export default function CompanyList({ searchQuery = '' }: CompanyListProps) {
                     <div className="flex items-center space-x-1">
                       <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                       <span className="text-muted-foreground">
-                        {typeof company.contact_count === 'number' 
+                        {(typeof company.contact_count === 'number' 
                           ? company.contact_count 
-                          : (company.contact_count?.count || 0)
+                          : (company.contact_count as any)?.count || 0)
                         } contacts
                       </span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <div className="w-2 h-2 rounded-full bg-purple-500"></div>
                       <span className="text-muted-foreground">
-                        {typeof company.opportunity_count === 'number' 
+                        {(typeof company.opportunity_count === 'number' 
                           ? company.opportunity_count 
-                          : (company.opportunity_count?.count || 0)
+                          : (company.opportunity_count as any)?.count || 0)
                         } opportunities
                       </span>
                     </div>

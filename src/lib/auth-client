@@ -5,7 +5,7 @@ import { Database } from '@/lib/supabase'
 // Types for better type safety
 export type AuthUser = {
   id: string
-  email: string
+  email: string | undefined
   profile?: {
     id: string
     email: string
@@ -33,7 +33,7 @@ export class AuthClientService {
    * Uses singleton pattern to prevent multiple instances
    * Always returns a valid client (never null)
    */
-  static getClient(): ReturnType<typeof createClient> {
+  static getClient(): any {
     if (this.clientInstance) {
       return this.clientInstance
     }
@@ -45,7 +45,7 @@ export class AuthClientService {
     }
 
     try {
-      this.clientInstance = createClient<Database>(
+      this.clientInstance = createClient(
         supabaseConfig.url!,
         supabaseConfig.anonKey!,
         {
@@ -83,7 +83,7 @@ export class AuthClientService {
       .eq('id', user.id)
       .single()
 
-    return { ...user, profile }
+    return { ...user, profile: profile || undefined } as AuthUser
   }
 
   /**
@@ -133,7 +133,7 @@ export class AuthClientService {
   /**
    * Create mock client for development/testing
    */
-  private static createMockClient(): ReturnType<typeof createClient> {
+  private static createMockClient(): any {
     return {
       auth: {
         getUser: async () => ({ 
@@ -185,7 +185,7 @@ export class AuthClientService {
           eq: async () => ({ error: { message: 'Database not configured' } })
         })
       })
-    } as ReturnType<typeof createClient>
+    } as unknown as any
   }
 }
 
