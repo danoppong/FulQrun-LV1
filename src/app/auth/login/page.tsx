@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { AuthClientService } from '@/lib/auth-client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-const LoginPage = () => {
+const LoginForm = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -170,6 +170,18 @@ const LoginPage = () => {
         </div>
       </div>
     </div>
+  )
+}
+
+const LoginPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="animate-pulse text-gray-500">Loading...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
 

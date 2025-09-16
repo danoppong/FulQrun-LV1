@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { PEAKWorkflow } from '@/components/peak/PEAKWorkflow'
 import { SharePointRepository } from '@/components/peak/SharePointRepository'
 import { SharePointDocument } from '@/lib/integrations/sharepoint'
 
-export default function PEAKProcessPage() {
+const PEAKProcessContent = () => {
   const searchParams = useSearchParams()
   const opportunityId = searchParams.get('opportunityId') || ''
   const opportunityName = searchParams.get('opportunityName') || 'Sample Opportunity'
@@ -224,5 +224,17 @@ export default function PEAKProcessPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function PEAKProcessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-pulse text-gray-500">Loading...</div>
+      </div>
+    }>
+      <PEAKProcessContent />
+    </Suspense>
   )
 }
