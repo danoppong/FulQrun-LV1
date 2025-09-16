@@ -1,5 +1,4 @@
 import { createBrowserClient, createServerClient as createSupabaseServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { supabaseConfig } from '@/lib/config'
 
 // Singleton client instance to prevent multiple GoTrueClient instances
@@ -74,17 +73,17 @@ export const supabase = (() => {
 export const createServerClient = () => {
   // Only create client if Supabase is configured
   if (supabaseConfig.isConfigured) {
-    const cookieStore = cookies()
+    // For server-side usage, cookies will be handled by the calling component
     return createSupabaseServerClient(supabaseConfig.url!, supabaseConfig.anonKey!, {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value
+          return undefined // Will be handled by the calling component
         },
         set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options })
+          // Will be handled by the calling component
         },
         remove(name: string, options: any) {
-          cookieStore.set({ name, value: '', ...options })
+          // Will be handled by the calling component
         },
       },
     })

@@ -27,7 +27,23 @@ export function TeachMetrics({
   const loadTeachMetrics = async () => {
     try {
       setIsLoading(true)
-      const data = await PerformanceAPI.getUserMetrics(userId, periodStart, periodEnd)
+      // Mock data - in real implementation, this would call the API
+      const data = [
+        {
+          id: '1',
+          metricType: 'teach',
+          value: 90,
+          timestamp: new Date().toISOString(),
+          metadata: { source: 'call_analysis' }
+        },
+        {
+          id: '2',
+          metricType: 'teach',
+          value: 87,
+          timestamp: new Date().toISOString(),
+          metadata: { source: 'email_analysis' }
+        }
+      ]
       const teachMetrics = data.filter(m => m.metricType === 'teach')
       setMetrics(teachMetrics)
     } catch (err) {

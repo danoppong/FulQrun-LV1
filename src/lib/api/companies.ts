@@ -14,7 +14,9 @@ export interface CompanyWithStats extends Company {
 }
 
 export class CompanyAPI {
-  private supabase = createClientComponentClient()
+  private get supabase() {
+    return createClientComponentClient()
+  }
 
   async getCompanies(): Promise<ApiResponse<CompanyWithStats[]>> {
     try {

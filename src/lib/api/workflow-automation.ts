@@ -246,7 +246,7 @@ export class WorkflowAutomationAPI {
       
       // Execute actions
       for (const action of workflow.actions) {
-        await this.executeAction(action, entityType, entityId, triggerData)
+        await this.executeAction(action as WorkflowAction, entityType, entityId, triggerData)
         
         // Apply delay if specified
         if (action.delay && action.delay > 0) {

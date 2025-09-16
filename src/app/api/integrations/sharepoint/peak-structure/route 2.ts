@@ -50,16 +50,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Store folder structure in database
-    const folderRecords = Object.entries(result.folders).map(([key, folderId]) => ({
+    if (result.folders) {
+      const folderRecords = Object.entries(result.folders).map(([key, folderId]) => ({
       opportunity_id: opportunityId,
       folder_key: key,
       folder_id: folderId,
       created_at: new Date().toISOString()
     }))
 
-    await supabase
-      .from('sharepoint_documents')
-      .upsert(folderRecords, { onConflict: 'opportunity_id,folder_key' })
+      await supabase
+        .from('sharepoint_documents')
+        .upsert(folderRecords, { onConflict: 'opportunity_id,folder_key' })
+    }
 
     return NextResponse.json({
       success: true,

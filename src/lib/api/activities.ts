@@ -37,7 +37,9 @@ export interface ActivityFormData {
 }
 
 export class ActivityAPI {
-  private supabase = createClientComponentClient()
+  private get supabase() {
+    return createClientComponentClient()
+  }
 
   async getActivities(opportunityId?: string): Promise<ApiResponse<ActivityWithDetails[]>> {
     try {

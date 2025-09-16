@@ -382,12 +382,12 @@ export default function PipelineChart() {
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Pie
-                data={data}
+                data={data as any}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ stage, count, percent }) => 
-                  count > 0 ? `${stage}: ${count} (${(percent * 100).toFixed(0)}%)` : ''
+                label={({ stage, count, percent }: any) => 
+                  (count as number) > 0 ? `${stage}: ${count} (${((percent as number) * 100).toFixed(0)}%)` : ''
                 }
                 outerRadius={100}
                 fill="#8884d8"

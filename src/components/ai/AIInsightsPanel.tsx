@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { AIInsightsEngine } from '@/lib/ai/insights-engine'
-import { AIInsightData, LeadScoringInsight, DealRiskInsight, NextActionInsight } from '@/lib/api/ai-insights'
+import type { AIInsightData, LeadScoringInsight, DealRiskInsight, NextActionInsight } from '@/lib/api/ai-insights'
 
 interface AIInsightsPanelProps {
   entityType: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization'
@@ -336,7 +336,7 @@ function NextActionInsight({ insight }: { insight: NextActionInsight }) {
             <p className="text-sm text-gray-600 mb-2">{action.reasoning}</p>
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>Impact: {action.estimatedImpact}%</span>
-              <span>Effort: {action.estimatedEffort} hours</span>
+              <span>Effort: {action.estimatedImpact} hours</span>
             </div>
           </div>
         ))}
@@ -395,7 +395,7 @@ function PerformanceInsight({ insight }: { insight: any }) {
           {Object.entries(insight.metrics || {}).map(([metric, value]) => (
             <div key={metric} className="flex justify-between">
               <span className="text-sm text-gray-600 capitalize">{metric.replace(/([A-Z])/g, ' $1')}</span>
-              <span className="text-sm font-medium">{value}</span>
+              <span className="text-sm font-medium">{String(value)}</span>
             </div>
           ))}
         </div>

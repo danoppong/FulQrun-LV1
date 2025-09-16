@@ -23,7 +23,13 @@ export class AIInsightsEngine {
       const insightData: LeadScoringInsight = {
         score: insight.score,
         confidence: insight.confidence,
-        factors: insight.factors,
+        factors: insight.factors as {
+          source: number
+          companySize: number
+          industry: number
+          engagement: number
+          demographics: number
+        },
         recommendations: insight.recommendations
       }
 
@@ -55,7 +61,13 @@ export class AIInsightsEngine {
       const insightData: DealRiskInsight = {
         riskScore: assessment.riskScore,
         confidence: assessment.confidence,
-        riskFactors: assessment.riskFactors,
+        riskFactors: assessment.riskFactors as {
+          stage: number
+          meddpiccScore: number
+          timeline: number
+          value: number
+          competition: number
+        },
         mitigationStrategies: assessment.mitigationStrategies
       }
 
@@ -147,7 +159,11 @@ export class AIInsightsEngine {
       const insightData: PerformanceInsight = {
         metrics: performanceData.metrics,
         recommendations: insights.recommendations,
-        benchmarks: context.benchmarks || {}
+        benchmarks: (context.benchmarks || {}) as {
+          industry: number
+          organization: number
+          personal: number
+        }
       }
 
       return await AIInsightsAPI.createInsight({
@@ -223,7 +239,7 @@ export class AIInsightsEngine {
     entityId: string,
     organizationId: string
   ): Promise<AIInsightData[]> {
-    return await AIInsightsAPI.getInsights(entityType, entityId, organizationId)
+    return await AIInsightsAPI.getInsights(entityType as any, entityId as any, organizationId as any)
   }
 
   /**

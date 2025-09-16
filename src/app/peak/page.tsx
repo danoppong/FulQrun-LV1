@@ -62,6 +62,10 @@ export default function PEAKProcessPage() {
     }))
   }
 
+  const handleDocumentUploadWrapper = (document: SharePointDocument) => {
+    handleDocumentUpload(currentStage, document)
+  }
+
   const handleDocumentDelete = (documentId: string) => {
     setDocuments(prev => {
       const updated = { ...prev }
@@ -75,7 +79,7 @@ export default function PEAKProcessPage() {
   const handleDocumentOpen = (document: SharePointDocument) => {
     setSelectedDocument(document)
     // Open document in new tab
-    window.open(document.webUrl, '_blank')
+    window.open(document.sharepoint_url, '_blank')
   }
 
   const handleDocumentSelect = (document: SharePointDocument) => {
@@ -167,7 +171,7 @@ export default function PEAKProcessPage() {
             opportunityName={opportunityName}
             organizationId={organizationId}
             onDocumentSelect={handleDocumentSelect}
-            onDocumentUpload={handleDocumentUpload}
+            onDocumentUpload={handleDocumentUploadWrapper}
           />
         )}
       </div>
@@ -190,16 +194,16 @@ export default function PEAKProcessPage() {
             
             <div className="space-y-4">
               <div>
-                <h4 className="text-md font-medium text-gray-900">{selectedDocument.name}</h4>
+                <h4 className="text-md font-medium text-gray-900">{selectedDocument.document_name}</h4>
                 <p className="text-sm text-gray-600">
-                  {Math.round(selectedDocument.size / 1024)} KB • 
-                  Last modified: {new Date(selectedDocument.lastModified).toLocaleDateString()}
+                  {Math.round((selectedDocument.file_size || 0) / 1024)} KB • 
+                  Last modified: {selectedDocument.uploaded_at ? new Date(selectedDocument.uploaded_at).toLocaleDateString() : 'Unknown'}
                 </p>
               </div>
               
               <div className="flex items-center space-x-4">
                 <a
-                  href={selectedDocument.downloadUrl}
+                  href={selectedDocument.sharepoint_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -207,7 +211,7 @@ export default function PEAKProcessPage() {
                   Download
                 </a>
                 <a
-                  href={selectedDocument.webUrl}
+                  href={selectedDocument.sharepoint_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"

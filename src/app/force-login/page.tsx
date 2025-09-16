@@ -36,7 +36,7 @@ const ForceLoginPage = () => {
         // Force refresh the session
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
-        setDebugInfo(prev => ({ ...prev, user: !!user, userError: userError?.message }))
+        setDebugInfo((prev: any) => ({ ...prev, user: !!user, userError: userError?.message }))
         
         if (userError) {
           setStatus(`User error: ${userError.message}`)
@@ -58,7 +58,7 @@ const ForceLoginPage = () => {
         
       } catch (error) {
         setStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
-        setDebugInfo(prev => ({ ...prev, error: error instanceof Error ? error.message : 'Unknown error' }))
+        setDebugInfo((prev: any) => ({ ...prev, error: error instanceof Error ? error.message : 'Unknown error' }))
       }
     }
     

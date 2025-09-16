@@ -23,9 +23,10 @@ interface ContactFormProps {
   contact?: ContactWithCompany
   contactId?: string
   mode: 'create' | 'edit'
+  opportunityId?: string
 }
 
-export default function ContactForm({ contact, contactId, mode }: ContactFormProps) {
+export default function ContactForm({ contact, contactId, mode, opportunityId }: ContactFormProps) {
   const [loading, setLoading] = useState(false)
   const [companies, setCompanies] = useState<any[]>([])
   const router = useRouter()

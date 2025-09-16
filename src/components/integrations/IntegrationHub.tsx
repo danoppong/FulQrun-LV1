@@ -87,7 +87,7 @@ export function IntegrationHub({
           const connected = connectedIntegrations.find((ci: any) => ci.integration_type === integration.type)
           return {
             ...integration,
-            status: connected ? 'connected' : 'disconnected'
+            status: (connected ? 'connected' : 'disconnected') as 'connected' | 'disconnected'
           }
         })
         setIntegrations(updatedIntegrations)

@@ -106,6 +106,7 @@ interface SlackTeamResponse {
   id: string
   name: string
   domain: string
+  url?: string
 }
 
 interface OpportunityData {
@@ -239,9 +240,9 @@ export class SlackIntegration {
           name: user.name,
           real_name: user.real_name,
           profile: user.profile,
-          is_admin: user.is_admin,
-          is_owner: user.is_owner,
-          is_bot: user.is_bot
+          is_admin: (user as any).is_admin || false,
+          is_owner: (user as any).is_owner || false,
+          is_bot: (user as any).is_bot || false
         }))
     } catch (error) {
       throw new Error('Failed to fetch Slack users')
@@ -269,7 +270,7 @@ export class SlackIntegration {
           },
           {
             type: 'mrkdwn',
-            text: `*Value:* $${opportunity.value?.toLocaleString() || 'N/A'}`
+            text: `*Value:* $${(opportunity as any).value?.toLocaleString() || 'N/A'}`
           },
           {
             type: 'mrkdwn',
@@ -285,7 +286,7 @@ export class SlackIntegration {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Company:* ${opportunity.company_name || 'N/A'}\n*Contact:* ${opportunity.contact_name || 'N/A'}`
+          text: `*Company:* ${(opportunity as any).company_name || 'N/A'}\n*Contact:* ${(opportunity as any).contact_name || 'N/A'}`
         }
       },
       {
@@ -328,19 +329,19 @@ export class SlackIntegration {
         fields: [
           {
             type: 'mrkdwn',
-            text: `*Lead:* ${lead.name}`
+            text: `*Lead:* ${(lead as any).name || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Company:* ${lead.company_name || 'N/A'}`
+            text: `*Company:* ${(lead as any).company_name || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Email:* ${lead.email || 'N/A'}`
+            text: `*Email:* ${(lead as any).email || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Phone:* ${lead.phone || 'N/A'}`
+            text: `*Phone:* ${(lead as any).phone || 'N/A'}`
           }
         ]
       },
@@ -348,7 +349,7 @@ export class SlackIntegration {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Assigned to:* <@${assignee}>\n*Source:* ${lead.source || 'N/A'}\n*Score:* ${lead.ai_score || 'N/A'}`
+          text: `*Assigned to:* <@${assignee}>\n*Source:* ${(lead as any).source || 'N/A'}\n*Score:* ${(lead as any).ai_score || 'N/A'}`
         }
       },
       {
@@ -369,7 +370,7 @@ export class SlackIntegration {
 
     return await this.sendMessage({
       channel,
-      text: `New Lead Assignment: ${lead.name}`,
+      text: `New Lead Assignment: ${(lead as any).name || 'N/A'}`,
       blocks
     })
   }
@@ -391,19 +392,19 @@ export class SlackIntegration {
         fields: [
           {
             type: 'mrkdwn',
-            text: `*Meeting:* ${meeting.title}`
+            text: `*Meeting:* ${(meeting as any).title || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Time:* ${new Date(meeting.start_time).toLocaleString()}`
+            text: `*Time:* ${new Date((meeting as any).start_time).toLocaleString()}`
           },
           {
             type: 'mrkdwn',
-            text: `*Duration:* ${meeting.duration || 30} minutes`
+            text: `*Duration:* ${(meeting as any).duration || 30} minutes`
           },
           {
             type: 'mrkdwn',
-            text: `*Type:* ${meeting.type || 'Meeting'}`
+            text: `*Type:* ${(meeting as any).type || 'Meeting'}`
           }
         ]
       },
@@ -411,7 +412,7 @@ export class SlackIntegration {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Description:* ${meeting.description || 'No description'}\n*Location:* ${meeting.location || 'TBD'}`
+          text: `*Description:* ${(meeting as any).description || 'No description'}\n*Location:* ${(meeting as any).location || 'TBD'}`
         }
       },
       {
@@ -423,7 +424,7 @@ export class SlackIntegration {
               type: 'plain_text',
               text: 'Join Meeting'
             },
-            url: meeting.meeting_url || '#',
+            url: (meeting as any).meeting_url || '#',
             style: 'primary'
           }
         ]
@@ -432,7 +433,7 @@ export class SlackIntegration {
 
     return await this.sendMessage({
       channel,
-      text: `Meeting Reminder: ${meeting.title}`,
+      text: `Meeting Reminder: ${(meeting as any).title || 'N/A'}`,
       blocks
     })
   }
@@ -458,15 +459,15 @@ export class SlackIntegration {
           },
           {
             type: 'mrkdwn',
-            text: `*Value:* $${opportunity.value?.toLocaleString() || 'N/A'}`
+            text: `*Value:* $${(opportunity as any).value?.toLocaleString() || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Company:* ${opportunity.company_name || 'N/A'}`
+            text: `*Company:* ${(opportunity as any).company_name || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Closed by:* ${opportunity.owner_name || 'N/A'}`
+            text: `*Closed by:* ${(opportunity as any).owner_name || 'N/A'}`
           }
         ]
       },
@@ -517,19 +518,19 @@ export class SlackIntegration {
         fields: [
           {
             type: 'mrkdwn',
-            text: `*Task:* ${task.title}`
+            text: `*Task:* ${(task as any).title || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Due:* ${new Date(task.due_date).toLocaleString()}`
+            text: `*Due:* ${new Date((task as any).due_date).toLocaleString()}`
           },
           {
             type: 'mrkdwn',
-            text: `*Priority:* ${task.priority || 'Medium'}`
+            text: `*Priority:* ${(task as any).priority || 'Medium'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Status:* ${task.status || 'Pending'}`
+            text: `*Status:* ${(task as any).status || 'Pending'}`
           }
         ]
       },
@@ -537,7 +538,7 @@ export class SlackIntegration {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Description:* ${task.description || 'No description'}\n*Assigned to:* ${task.assigned_to || 'Unassigned'}`
+          text: `*Description:* ${(task as any).description || 'No description'}\n*Assigned to:* ${(task as any).assigned_to || 'Unassigned'}`
         }
       },
       {
@@ -558,7 +559,7 @@ export class SlackIntegration {
 
     return await this.sendMessage({
       channel,
-      text: `Task Due Soon: ${task.title}`,
+      text: `Task Due Soon: ${(task as any).title || 'N/A'}`,
       blocks
     })
   }
@@ -624,7 +625,8 @@ export class SlackIntegration {
         team: {
           id: data.team_id,
           name: data.team,
-          url: data.url
+          domain: (data as any).domain || '',
+          url: data.url || ''
         }
       }
     } catch (error) {

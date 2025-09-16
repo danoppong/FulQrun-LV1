@@ -176,12 +176,12 @@ export function StageEditor({
         <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <h4 className="text-md font-medium text-gray-900 mb-4">Add New Stage</h4>
           <StageForm
-            stage={newStage}
+            stage={{...newStage, id: '', order: 0}}
             onChange={setNewStage}
-            onAddRequirement={(req) => handleAddRequirement(newStage, req)}
-            onRemoveRequirement={(index) => handleRemoveRequirement(newStage, index)}
-            onAddTransition={(trans) => handleAddTransition(newStage, trans)}
-            onRemoveTransition={(index) => handleRemoveTransition(newStage, index)}
+            onAddRequirement={(req) => handleAddRequirement({...newStage, id: '', order: 0}, req)}
+            onRemoveRequirement={(index) => handleRemoveRequirement({...newStage, id: '', order: 0}, index)}
+            onAddTransition={(trans) => handleAddTransition({...newStage, id: '', order: 0}, trans)}
+            onRemoveTransition={(index) => handleRemoveTransition({...newStage, id: '', order: 0}, index)}
             colorOptions={colorOptions}
           />
           <div className="flex justify-end space-x-3 mt-4">

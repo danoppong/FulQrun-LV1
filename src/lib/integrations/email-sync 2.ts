@@ -126,8 +126,8 @@ export class EmailSyncService {
       organization_id: organizationId,
       created_by: userId,
       email_data: {
-        from: email.from.emailAddress.address,
-        to: email.toRecipients.map(r => r.emailAddress.address),
+        from: (email as any).from?.emailAddress?.address || '',
+        to: (email as any).toRecipients?.map((r: any) => r.emailAddress?.address) || [],
         receivedDateTime: email.receivedDateTime,
         isRead: email.isRead,
         body: email.body.content,

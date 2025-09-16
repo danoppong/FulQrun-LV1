@@ -33,7 +33,9 @@ export interface PerformanceSummary {
 }
 
 export class PerformanceAPI {
-  private supabase = createClientComponentClient()
+  private get supabase() {
+    return createClientComponentClient()
+  }
 
   async getPerformanceMetrics(userId: string, period?: string): Promise<ApiResponse<PerformanceMetric[]>> {
     try {

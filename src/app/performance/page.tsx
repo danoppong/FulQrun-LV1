@@ -18,7 +18,7 @@ export default function PerformancePage() {
 function PerformanceContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [selectedPeriod, setSelectedPeriod] = useState<'current' | 'last_month' | 'last_quarter' | 'last_year'>('current')
+  const [selectedPeriod, setSelectedPeriod] = useState<'current' | 'last_month' | 'last_quarter' | 'last_year' | 'custom'>('current')
   const [customPeriod, setCustomPeriod] = useState<{
     start: string
     end: string

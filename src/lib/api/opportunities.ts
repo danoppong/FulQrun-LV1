@@ -45,7 +45,9 @@ export interface MEDDPICCData {
 }
 
 export class OpportunityAPI {
-  private supabase = createClientComponentClient()
+  private get supabase() {
+    return createClientComponentClient()
+  }
 
   async getOpportunities(): Promise<ApiResponse<OpportunityWithDetails[]>> {
     try {

@@ -1,7 +1,19 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { SharePointIntegration, SharePointDocument, SharePointFolder, SharePointSite } from '@/lib/integrations/sharepoint'
+import { SharePointIntegration, SharePointDocument } from '@/lib/integrations/sharepoint'
+
+interface SharePointFolder {
+  id: string
+  name: string
+  path: string
+}
+
+interface SharePointSite {
+  id: string
+  name: string
+  url: string
+}
 import { IntegrationConnectionData } from '@/lib/api/integrations'
 
 interface SharePointRepositoryProps {
@@ -42,8 +54,8 @@ export function SharePointRepository({
         throw new Error('SharePoint not connected')
       }
 
-      const connection: IntegrationConnectionData = await response.json()
-      const accessToken = connection.credentials.access_token
+      const connection: any = await response.json()
+      const accessToken = connection.credentials?.access_token
       
       if (!accessToken) {
         throw new Error('SharePoint access token not available')
@@ -74,7 +86,7 @@ export function SharePointRepository({
 
       const [foldersData, documentsData] = await Promise.all([
         sharepoint.getFolders(siteId, path),
-        sharepoint.getDocuments(siteId, path)
+        sharepoint.getDocumentsFromSite(siteId, path)
       ])
 
       setFolders(foldersData)
@@ -108,11 +120,12 @@ export function SharePointRepository({
       setIsLoading(true)
       setError(null)
 
-      const result = await sharepoint.uploadDocument(
+      const fileBuffer = await uploadFile.arrayBuffer()
+      const result = await sharepoint.uploadDocumentToSite(
         selectedSite.id,
         currentPath,
         uploadFile.name,
-        uploadFile,
+        fileBuffer,
         uploadFile.type
       )
 
@@ -222,7 +235,7 @@ export function SharePointRepository({
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {sites.map(site => (
-            <option key={site.id} value={site.id}>{site.displayName}</option>
+            <option key={site.id} value={site.id}>{site.name}</option>
           ))}
         </select>
       </div>
@@ -298,7 +311,7 @@ export function SharePointRepository({
                         </svg>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">{folder.name}</p>
-                          <p className="text-xs text-gray-500">{folder.childCount} items</p>
+                          <p className="text-xs text-gray-500">Folder</p>
                         </div>
                       </div>
                     </div>
@@ -325,14 +338,14 @@ export function SharePointRepository({
                           </svg>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{document.name}</p>
+                          <p className="text-sm font-medium text-gray-900 truncate">{document.document_name}</p>
                           <p className="text-xs text-gray-500">
-                            {Math.round(document.size / 1024)} KB • {new Date(document.lastModified).toLocaleDateString()}
+                            {Math.round((document.file_size || 0) / 1024)} KB • {document.uploaded_at ? new Date(document.uploaded_at).toLocaleDateString() : 'Unknown'}
                           </p>
                         </div>
                         <div className="flex items-center space-x-2">
                           <a
-                            href={document.downloadUrl}
+                            href={document.sharepoint_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}

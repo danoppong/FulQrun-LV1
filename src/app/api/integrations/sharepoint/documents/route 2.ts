@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       documents = await sharepoint.getPEAKDocuments(siteId, opportunityId)
     } else {
       // Get documents from specific folder
-      documents = await sharepoint.getDocuments(siteId, folderPath)
+      documents = await sharepoint.getDocumentsFromSite(siteId, folderPath)
     }
 
     // Store document references in database
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     // Upload document
     const fileBuffer = await file.arrayBuffer()
-    const result = await sharepoint.uploadDocument(
+    const result = await sharepoint.uploadDocumentToSite(
       siteId,
       folderPath,
       file.name,

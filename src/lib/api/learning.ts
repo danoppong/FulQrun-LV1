@@ -218,6 +218,7 @@ export class LearningAPI {
   static async updateUserProgress(
     userId: string,
     moduleId: string,
+    organizationId: string,
     progress: Partial<Omit<UserProgressData, 'id' | 'userId' | 'moduleId' | 'organizationId' | 'createdAt' | 'updatedAt'>>
   ): Promise<UserProgressData> {
     const updateData: UserLearningProgressUpdate = {
@@ -236,7 +237,7 @@ export class LearningAPI {
         user_id: userId,
         module_id: moduleId,
         ...updateData,
-        organization_id: progress.organizationId || '', // This should be passed in
+        organization_id: organizationId, // Use the passed organizationId
       })
       .select()
       .single()
@@ -256,12 +257,11 @@ export class LearningAPI {
     moduleId: string,
     organizationId: string
   ): Promise<UserProgressData> {
-    return this.updateUserProgress(userId, moduleId, {
+    return this.updateUserProgress(userId, moduleId, organizationId, {
       status: 'in_progress',
       progressPercentage: 0,
       timeSpentMinutes: 0,
       lastAccessedAt: new Date().toISOString(),
-      organizationId,
     })
   }
 
@@ -274,13 +274,12 @@ export class LearningAPI {
     organizationId: string,
     quizScores?: Record<string, any>
   ): Promise<UserProgressData> {
-    return this.updateUserProgress(userId, moduleId, {
+    return this.updateUserProgress(userId, moduleId, organizationId, {
       status: 'completed',
       progressPercentage: 100,
       completedAt: new Date().toISOString(),
       lastAccessedAt: new Date().toISOString(),
       quizScores: quizScores || {},
-      organizationId,
     })
   }
 
@@ -292,10 +291,9 @@ export class LearningAPI {
     moduleId: string,
     organizationId: string
   ): Promise<UserProgressData> {
-    return this.updateUserProgress(userId, moduleId, {
+    return this.updateUserProgress(userId, moduleId, organizationId, {
       status: 'certified',
       certificationDate: new Date().toISOString(),
-      organizationId,
     })
   }
 

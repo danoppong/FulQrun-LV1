@@ -153,8 +153,8 @@ export function StageDocuments({
     // Mark requirements as completed if documents exist
     const updatedReqs = stageReqs.map(req => {
       const matchingDoc = documents.find(doc => 
-        doc.name.toLowerCase().includes(req.name.toLowerCase()) ||
-        doc.name.toLowerCase().includes(req.id.toLowerCase())
+        doc.document_name.toLowerCase().includes(req.name.toLowerCase()) ||
+        doc.document_name.toLowerCase().includes(req.id.toLowerCase())
       )
       
       return {
@@ -181,13 +181,20 @@ export function StageDocuments({
       // Simulate upload - in real implementation, this would call the SharePoint API
       const mockDocument: SharePointDocument = {
         id: `doc_${Date.now()}`,
-        name: uploadFile.name,
-        url: `https://sharepoint.com/documents/${uploadFile.name}`,
-        size: uploadFile.size,
-        lastModified: new Date().toISOString(),
-        createdBy: 'Current User',
-        webUrl: `https://sharepoint.com/documents/${uploadFile.name}`,
-        downloadUrl: `https://sharepoint.com/download/${uploadFile.name}`
+        opportunity_id: opportunityId,
+        stage_name: stage,
+        document_name: uploadFile.name,
+        document_type: uploadFile.type,
+        sharepoint_url: `https://sharepoint.com/documents/${uploadFile.name}`,
+        local_path: null,
+        file_size: uploadFile.size,
+        is_required: false,
+        is_completed: true,
+        uploaded_by: 'current-user',
+        uploaded_at: new Date().toISOString(),
+        organization_id: 'mock-org',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
 
       onDocumentUpload(stage, mockDocument)

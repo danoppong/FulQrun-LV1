@@ -29,7 +29,9 @@ export interface LeadStats {
 }
 
 export class LeadAPI {
-  private supabase = createClientComponentClient()
+  private get supabase() {
+    return createClientComponentClient()
+  }
 
   async getLeads(): Promise<ApiResponse<LeadWithScore[]>> {
     try {

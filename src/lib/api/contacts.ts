@@ -16,7 +16,9 @@ export interface ContactWithCompany extends Contact {
 }
 
 export class ContactAPI {
-  private supabase = createClientComponentClient()
+  private get supabase() {
+    return createClientComponentClient()
+  }
 
   async getContacts(): Promise<ApiResponse<ContactWithCompany[]>> {
     try {

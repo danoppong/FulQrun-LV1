@@ -4,7 +4,7 @@ import { useState, useEffect, memo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { activityAPI, ActivityFormData } from '@/lib/api/activities'
+import { activityAPI } from '@/lib/api/activities'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
 
 const activitySchema = z.object({

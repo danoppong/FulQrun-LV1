@@ -23,7 +23,23 @@ export function ProblemMetrics({
   const loadProblemMetrics = useCallback(async () => {
     try {
       setIsLoading(true)
-      const data = await PerformanceAPI.getUserMetrics(userId, periodStart, periodEnd)
+      // Mock data - in real implementation, this would call the API
+      const data = [
+        {
+          id: '1',
+          metricType: 'problem',
+          value: 78,
+          timestamp: new Date().toISOString(),
+          metadata: { source: 'call_analysis' }
+        },
+        {
+          id: '2',
+          metricType: 'problem',
+          value: 85,
+          timestamp: new Date().toISOString(),
+          metadata: { source: 'email_analysis' }
+        }
+      ]
       const problemMetrics = data.filter(m => m.metricType === 'problem')
       setMetrics(problemMetrics)
     } catch (err) {
