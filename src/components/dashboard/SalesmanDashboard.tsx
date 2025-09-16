@@ -76,8 +76,9 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         .eq('user_id', userId)
         .single()
 
-      if (error) {
-        throw error
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 is "not found" - ignore it, try localStorage
+        console.warn('Dashboard layout loading error:', error)
       }
 
       if (data?.widgets) {
@@ -127,6 +128,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         })
 
       if (dbError) {
+        console.warn('Dashboard layout saving error:', dbError)
         throw dbError
       }
 
@@ -173,6 +175,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
 
       if (dbError) {
         // Sync attempt failed, database still unavailable
+        console.warn('Dashboard layout sync error:', dbError)
         setIsSyncing(false)
         return
       }

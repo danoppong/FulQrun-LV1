@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import PEAKForm from '@/components/forms/PEAKForm'
 import MEDDPICCForm from '@/components/forms/MEDDPICCForm'
+import { MEDDPICCDashboard, MEDDPICCPEAKIntegration } from '@/components/meddpicc'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 const opportunitySchema = z.object({
@@ -50,6 +51,8 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     champion: opportunity?.champion || '',
     competition: opportunity?.competition || ''
   })
+  const [showComprehensiveMEDDPICC, setShowComprehensiveMEDDPICC] = useState(false)
+  const [meddpiccAssessment, setMeddpiccAssessment] = useState(null)
 
   const {
     register,
@@ -158,6 +161,11 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
         const { error } = await opportunityAPI.updateOpportunity(opportunityId, data)
         if (error) {
           setError(error.message || 'Failed to save PEAK data')
+        } else {
+          // Trigger a custom event to notify other components that PEAK data was updated
+          window.dispatchEvent(new CustomEvent('peakUpdated', { 
+            detail: { opportunityId, data } 
+          }))
         }
       } catch (err) {
         setError('Failed to save PEAK data')
@@ -179,6 +187,11 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
         const { error } = await opportunityAPI.updateMEDDPICC(opportunityId, data)
         if (error) {
           setError(error.message || 'Failed to save MEDDPICC data')
+        } else {
+          // Trigger a custom event to notify other components that MEDDPICC data was updated
+          window.dispatchEvent(new CustomEvent('meddpiccUpdated', { 
+            detail: { opportunityId, data } 
+          }))
         }
       } catch (err) {
         setError('Failed to save MEDDPICC data')
@@ -209,16 +222,16 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
       let result
       if (mode === 'create') {
         result = await opportunityAPI.createOpportunity(opportunityData)
-      } else if (opportunity) {
-        result = await opportunityAPI.updateOpportunity(opportunity.id, opportunityData)
+      } else if (opportunityId) {
+        result = await opportunityAPI.updateOpportunity(opportunityId, opportunityData)
       }
 
       if (result?.error) {
         setError(result.error.message || 'Failed to save opportunity')
       } else {
         // Save MEDDPICC data separately
-        if (opportunity) {
-          await opportunityAPI.updateMEDDPICC(opportunity.id, meddpiccData)
+        if (opportunityId) {
+          await opportunityAPI.updateMEDDPICC(opportunityId, meddpiccData)
         }
         router.push('/opportunities')
       }
@@ -230,13 +243,13 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="w-full">
       <div className="bg-card shadow sm:rounded-lg border border-border">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-card-foreground">
             {mode === 'create' ? 'Create New Opportunity' : 'Edit Opportunity'}
           </h3>
-          <div className="mt-2 max-w-xl text-sm text-muted-foreground">
+          <div className="mt-2 text-sm text-muted-foreground">
             <p>
               {mode === 'create' 
                 ? 'Add a new opportunity to your sales pipeline.' 
@@ -325,12 +338,76 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
 
             {/* MEDDPICC Qualification */}
             <ErrorBoundary>
-              <MEDDPICCForm
-                initialData={meddpiccData}
-                onSave={handleMeddpiccSave}
-                onSuccess={handleMeddpiccSuccess}
-                loading={loading}
-              />
+              {showComprehensiveMEDDPICC ? (
+                <div className="space-y-6">
+                  {/* Toggle Button */}
+                  <div className="bg-white shadow rounded-lg p-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium text-gray-900">MEDDPICC Qualification - Comprehensive View</h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowComprehensiveMEDDPICC(false)}
+                        className="text-sm text-primary hover:text-primary/80"
+                      >
+                        Switch to Simple View
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* MEDDPICC Dashboard */}
+                  <MEDDPICCDashboard
+                    opportunityId={opportunityId || ''}
+                    assessment={meddpiccAssessment}
+                  />
+                  
+                  {/* PEAK Integration */}
+                  <MEDDPICCPEAKIntegration
+                    opportunityId={opportunityId || ''}
+                    currentPEAKStage={peakData.peak_stage}
+                    assessment={meddpiccAssessment}
+                    onStageAdvance={async (fromStage, toStage) => {
+                      try {
+                        await opportunityAPI.updatePeakStage(opportunityId!, toStage as any)
+                        setPeakData(prev => ({ ...prev, peak_stage: toStage as any }))
+                      } catch (error) {
+                        console.error('Error advancing stage:', error)
+                      }
+                    }}
+                  />
+                  
+                  {/* Comprehensive MEDDPICC Form */}
+                  <MEDDPICCForm
+                    opportunityId={opportunityId}
+                    initialData={meddpiccData}
+                    onSave={handleMeddpiccSave}
+                    onSuccess={handleMeddpiccSuccess}
+                    loading={loading}
+                    useComprehensiveView={true}
+                  />
+                </div>
+              ) : (
+                <div className="bg-white shadow rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">MEDDPICC Qualification</h3>
+                    <div className="flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowComprehensiveMEDDPICC(!showComprehensiveMEDDPICC)}
+                        className="text-sm text-primary hover:text-primary/80"
+                      >
+                        {showComprehensiveMEDDPICC ? 'Simple View' : 'Comprehensive View'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <MEDDPICCForm
+                    initialData={meddpiccData}
+                    onSave={handleMeddpiccSave}
+                    onSuccess={handleMeddpiccSuccess}
+                    loading={loading}
+                  />
+                </div>
+              )}
             </ErrorBoundary>
 
             <div className="flex justify-end space-x-3">

@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { opportunityAPI } from '@/lib/api/opportunities'
+import { MEDDPICCQualification } from '@/components/meddpicc'
+import { MEDDPICCResponse, MEDDPICCAssessment } from '@/lib/meddpicc'
 
 const meddpiccSchema = z.object({
   metrics: z.string().optional(),
@@ -20,19 +22,24 @@ const meddpiccSchema = z.object({
 type MEDDPICCFormData = z.infer<typeof meddpiccSchema>
 
 interface MEDDPICCFormProps {
+  opportunityId?: string
   initialData?: Partial<MEDDPICCFormData>
   onSave?: (data: MEDDPICCFormData) => void
   onSuccess?: () => void
   loading?: boolean
+  useComprehensiveView?: boolean
 }
 
 export default function MEDDPICCForm({ 
+  opportunityId,
   initialData = {}, 
   onSave, 
   onSuccess, 
-  loading = false 
+  loading = false,
+  useComprehensiveView = false
 }: MEDDPICCFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [assessment, setAssessment] = useState<MEDDPICCAssessment | null>(null)
   
   const {
     register,
@@ -66,11 +73,127 @@ export default function MEDDPICCForm({
     }
   }
 
+  const handleAssessmentSave = (newAssessment: MEDDPICCAssessment) => {
+    setAssessment(newAssessment)
+    // Convert assessment to legacy format for backward compatibility
+    const legacyData: MEDDPICCFormData = {
+      metrics: newAssessment.responses.find(r => r.pillarId === 'metrics' && r.questionId === 'current_cost')?.answer as string || '',
+      economic_buyer: newAssessment.responses.find(r => r.pillarId === 'economicBuyer' && r.questionId === 'budget_authority')?.answer as string || '',
+      decision_criteria: newAssessment.responses.find(r => r.pillarId === 'decisionCriteria' && r.questionId === 'key_criteria')?.answer as string || '',
+      decision_process: newAssessment.responses.find(r => r.pillarId === 'decisionProcess' && r.questionId === 'process_steps')?.answer as string || '',
+      paper_process: newAssessment.responses.find(r => r.pillarId === 'paperProcess' && r.questionId === 'documentation')?.answer as string || '',
+      identify_pain: newAssessment.responses.find(r => r.pillarId === 'identifyPain' && r.questionId === 'biggest_challenge')?.answer as string || '',
+      champion: newAssessment.responses.find(r => r.pillarId === 'champion' && r.questionId === 'champion_identity')?.answer as string || '',
+      competition: newAssessment.responses.find(r => r.pillarId === 'competition' && r.questionId === 'competitors')?.answer as string || ''
+    }
+    
+    if (onSave) {
+      onSave(legacyData)
+    }
+    if (onSuccess) {
+      onSuccess()
+    }
+  }
+
+  // Convert simple MEDDPICC data to comprehensive format
+  const convertToComprehensiveFormat = (simpleData: any): MEDDPICCResponse[] => {
+    const responses: MEDDPICCResponse[] = []
+    
+    // Convert each field to the comprehensive format
+    if (simpleData.metrics) {
+      responses.push({
+        pillarId: 'metrics',
+        questionId: 'current_cost',
+        answer: simpleData.metrics,
+        points: Math.min(10, Math.floor(simpleData.metrics.length / 10))
+      })
+    }
+    
+    if (simpleData.economic_buyer) {
+      responses.push({
+        pillarId: 'economicBuyer',
+        questionId: 'budget_authority',
+        answer: simpleData.economic_buyer,
+        points: Math.min(10, Math.floor(simpleData.economic_buyer.length / 10))
+      })
+    }
+    
+    if (simpleData.decision_criteria) {
+      responses.push({
+        pillarId: 'decisionCriteria',
+        questionId: 'key_criteria',
+        answer: simpleData.decision_criteria,
+        points: Math.min(10, Math.floor(simpleData.decision_criteria.length / 10))
+      })
+    }
+    
+    if (simpleData.decision_process) {
+      responses.push({
+        pillarId: 'decisionProcess',
+        questionId: 'process_steps',
+        answer: simpleData.decision_process,
+        points: Math.min(10, Math.floor(simpleData.decision_process.length / 10))
+      })
+    }
+    
+    if (simpleData.paper_process) {
+      responses.push({
+        pillarId: 'paperProcess',
+        questionId: 'documentation',
+        answer: simpleData.paper_process,
+        points: Math.min(10, Math.floor(simpleData.paper_process.length / 10))
+      })
+    }
+    
+    if (simpleData.identify_pain) {
+      responses.push({
+        pillarId: 'identifyPain',
+        questionId: 'biggest_challenge',
+        answer: simpleData.identify_pain,
+        points: Math.min(10, Math.floor(simpleData.identify_pain.length / 10))
+      })
+    }
+    
+    if (simpleData.champion) {
+      responses.push({
+        pillarId: 'champion',
+        questionId: 'champion_identity',
+        answer: simpleData.champion,
+        points: Math.min(10, Math.floor(simpleData.champion.length / 10))
+      })
+    }
+    
+    if (simpleData.competition) {
+      responses.push({
+        pillarId: 'competition',
+        questionId: 'competitors',
+        answer: simpleData.competition,
+        points: Math.min(10, Math.floor(simpleData.competition.length / 10))
+      })
+    }
+    
+    return responses
+  }
+
+  // Use comprehensive view if requested and opportunityId is provided
+  if (useComprehensiveView && opportunityId) {
+    return (
+      <MEDDPICCQualification
+        opportunityId={opportunityId}
+        initialData={convertToComprehensiveFormat(initialData)}
+        onSave={handleAssessmentSave}
+        onStageGateReady={(gate, isReady) => {
+          console.log(`Stage gate ${gate} is ${isReady ? 'ready' : 'not ready'}`)
+        }}
+      />
+    )
+  }
+
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <h3 className="text-lg font-medium text-gray-900 mb-4">MEDDPICC Qualification</h3>
       
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="metrics" className="block text-sm font-medium text-gray-700">
@@ -203,14 +326,15 @@ export default function MEDDPICCForm({
 
         <div className="flex justify-end">
           <button
-            type="submit"
+            type="button"
+            onClick={handleSubmit(onSubmit)}
             disabled={loading || isSubmitting}
             className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
           >
             {isSubmitting ? 'Saving...' : 'Save MEDDPICC'}
           </button>
         </div>
-      </form>
+      </div>
     </div>
   )
 }

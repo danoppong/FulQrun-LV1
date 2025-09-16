@@ -35,9 +35,13 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
 
       if (data && !error) {
         setWidgets(data.widgets || DEFAULT_WIDGETS)
+      } else if (error && error.code !== 'PGRST116') {
+        // PGRST116 is "not found" - ignore it, use default widgets
+        console.warn('Dashboard layout loading error:', error)
       }
     } catch (error) {
-      // Handle dashboard layout loading error
+      // Handle dashboard layout loading error - use default widgets
+      console.warn('Dashboard layout loading error:', error)
     }
   }
 
@@ -52,10 +56,10 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
         })
 
       if (error) {
-        // Handle dashboard layout saving error
+        console.warn('Dashboard layout saving error:', error)
       }
     } catch (error) {
-      // Handle dashboard layout saving error
+      console.warn('Dashboard layout saving error:', error)
     }
   }
 

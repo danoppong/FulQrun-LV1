@@ -51,22 +51,16 @@ const DashboardContent = () => {
         
         // Load user role from database or user metadata
         const { data: userProfile } = await (supabase as any)
-          .from('user_profiles')
-          .select('role, region, business_unit, name')
-          .eq('user_id', user.id)
+          .from('users')
+          .select('role, full_name')
+          .eq('id', user.id)
           .single()
         
         if (userProfile?.role) {
           setUserRole(userProfile.role as UserRole)
         }
-        if (userProfile?.region) {
-          setUserRegion(userProfile.region)
-        }
-        if (userProfile?.business_unit) {
-          setUserBusinessUnit(userProfile.business_unit)
-        }
-        if (userProfile?.name) {
-          setUserName(userProfile.name)
+        if (userProfile?.full_name) {
+          setUserName(userProfile.full_name)
         }
         
         setLoading(false)
