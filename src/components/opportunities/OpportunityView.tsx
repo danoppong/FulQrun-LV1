@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -16,6 +17,9 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
   const [error, setError] = useState<string | null>(null)
   const [meddpiccScore, setMeddpiccScore] = useState<number>(0)
   const router = useRouter()
+
+  // Debug logging
+  console.log('OpportunityView rendered with opportunityId:', opportunityId)
 
   // Function to get MEDDPICC score for an opportunity using the unified service
   const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<void> => {
@@ -169,12 +173,17 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
               </div>
             </div>
             <div className="flex space-x-3">
-              <button
-                onClick={() => router.push(`/opportunities/${opportunityId}/edit`)}
+              <Link
+                href={`/opportunities/${opportunityId}/edit`}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                onClick={() => {
+                  console.log('Link clicked, opportunityId:', opportunityId)
+                  console.log('Navigating to:', `/opportunities/${opportunityId}/edit`)
+                }}
+                style={{ cursor: 'pointer' }}
               >
                 Edit
-              </button>
+              </Link>
               <button
                 onClick={fetchOpportunity}
                 disabled={loading}

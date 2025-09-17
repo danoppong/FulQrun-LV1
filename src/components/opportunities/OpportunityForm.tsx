@@ -35,6 +35,9 @@ interface OpportunityFormProps {
 export default function OpportunityForm({ opportunity, opportunityId, mode }: OpportunityFormProps) {
   const router = useRouter()
   const { handleError, handleLoadingError, handleAsyncOperation } = useErrorHandler()
+  
+  // Debug logging
+  console.log('OpportunityForm rendered with:', { opportunity, opportunityId, mode })
   const [contacts, setContacts] = useState<ContactWithCompany[]>([])
   const [companies, setCompanies] = useState<CompanyWithStats[]>([])
   const [loading, setLoading] = useState(false)

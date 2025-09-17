@@ -8,6 +8,7 @@ interface OpportunityViewPageProps {
 }
 
 export default function OpportunityViewPage({ params }: OpportunityViewPageProps) {
+  console.log('OpportunityViewPage rendered with params:', params)
   return (
     <AuthWrapper>
       <OpportunityView opportunityId={params.id} />
