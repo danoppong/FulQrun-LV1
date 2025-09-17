@@ -9,6 +9,8 @@ ALTER TABLE user_dashboard_layouts DISABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can access their own dashboard layouts" ON user_dashboard_layouts;
 DROP POLICY IF EXISTS "Users can view their own profile" ON user_profiles;
 DROP POLICY IF EXISTS "Users can view organization user profiles" ON user_profiles;
+DROP POLICY IF EXISTS "Authenticated users can view user profiles" ON user_profiles;
+DROP POLICY IF EXISTS "Authenticated users can view dashboard layouts" ON user_dashboard_layouts;
 
 -- Re-enable RLS
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
