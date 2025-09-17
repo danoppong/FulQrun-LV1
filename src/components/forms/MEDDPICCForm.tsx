@@ -82,15 +82,15 @@ export default function MEDDPICCForm({
     try {
       // Get current form data
       const formData = {
-        metrics: document.getElementById('metrics')?.value || '',
-        economic_buyer: document.getElementById('economic_buyer')?.value || '',
-        decision_criteria: document.getElementById('decision_criteria')?.value || '',
-        decision_process: document.getElementById('decision_process')?.value || '',
-        paper_process: document.getElementById('paper_process')?.value || '',
-        identify_pain: document.getElementById('identify_pain')?.value || '',
-        implicate_pain: document.getElementById('implicate_pain')?.value || '',
-        champion: document.getElementById('champion')?.value || '',
-        competition: document.getElementById('competition')?.value || ''
+        metrics: (document.getElementById('metrics') as HTMLTextAreaElement)?.value || '',
+        economic_buyer: (document.getElementById('economic_buyer') as HTMLTextAreaElement)?.value || '',
+        decision_criteria: (document.getElementById('decision_criteria') as HTMLTextAreaElement)?.value || '',
+        decision_process: (document.getElementById('decision_process') as HTMLTextAreaElement)?.value || '',
+        paper_process: (document.getElementById('paper_process') as HTMLTextAreaElement)?.value || '',
+        identify_pain: (document.getElementById('identify_pain') as HTMLTextAreaElement)?.value || '',
+        implicate_pain: (document.getElementById('implicate_pain') as HTMLTextAreaElement)?.value || '',
+        champion: (document.getElementById('champion') as HTMLTextAreaElement)?.value || '',
+        competition: (document.getElementById('competition') as HTMLTextAreaElement)?.value || ''
       }
 
       // Convert form data to MEDDPICC responses
