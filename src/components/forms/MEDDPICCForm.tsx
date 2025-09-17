@@ -16,6 +16,7 @@ const meddpiccSchema = z.object({
   decision_process: z.string().optional(),
   paper_process: z.string().optional(),
   identify_pain: z.string().optional(),
+  implicate_pain: z.string().optional(),
   champion: z.string().optional(),
   competition: z.string().optional(),
 })
@@ -87,6 +88,7 @@ export default function MEDDPICCForm({
         decision_process: document.getElementById('decision_process')?.value || '',
         paper_process: document.getElementById('paper_process')?.value || '',
         identify_pain: document.getElementById('identify_pain')?.value || '',
+        implicate_pain: document.getElementById('implicate_pain')?.value || '',
         champion: document.getElementById('champion')?.value || '',
         competition: document.getElementById('competition')?.value || ''
       }
@@ -141,6 +143,7 @@ export default function MEDDPICCForm({
       decision_process: combinePillarResponses(newAssessment.responses, 'decisionProcess'),
       paper_process: combinePillarResponses(newAssessment.responses, 'paperProcess'),
       identify_pain: combinePillarResponses(newAssessment.responses, 'identifyPain'),
+      implicate_pain: combinePillarResponses(newAssessment.responses, 'implicatePain'),
       champion: combinePillarResponses(newAssessment.responses, 'champion'),
       competition: combinePillarResponses(newAssessment.responses, 'competition')
     }
@@ -197,6 +200,7 @@ export default function MEDDPICCForm({
       'decision_process': 'decisionProcess',
       'paper_process': 'paperProcess',
       'identify_pain': 'identifyPain',
+      'implicate_pain': 'implicatePain',
       'champion': 'champion',
       'competition': 'competition'
     }
@@ -388,6 +392,22 @@ export default function MEDDPICCForm({
             />
             {errors.identify_pain && (
               <p className="mt-1 text-sm text-red-600">{errors.identify_pain.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="implicate_pain" className="block text-sm font-medium text-gray-700">
+              Implicate Pain
+            </label>
+            <textarea
+              {...register('implicate_pain')}
+              id="implicate_pain"
+              rows={3}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+              placeholder="How can we help them understand the full impact of their pain?"
+            />
+            {errors.implicate_pain && (
+              <p className="mt-1 text-sm text-red-600">{errors.implicate_pain.message}</p>
             )}
           </div>
 

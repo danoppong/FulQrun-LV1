@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -83,6 +83,7 @@ export default function MEDDPICCQualification({
       'decision_process': 'decisionProcess',
       'paper_process': 'paperProcess',
       'identify_pain': 'identifyPain',
+      'implicate_pain': 'implicatePain',
       'champion': 'champion',
       'competition': 'competition'
     }
@@ -152,20 +153,33 @@ export default function MEDDPICCQualification({
     return responses
   }
 
-  useEffect(() => {
-    // Calculate assessment whenever responses change
+  // Memoize the stage gate notification to prevent infinite loops
+  const notifyStageGateReadiness = useCallback((assessment: MEDDPICCAssessment) => {
+    if (onStageGateReady) {
+      Object.entries(assessment.stageGateReadiness).forEach(([gate, isReady]) => {
+        onStageGateReady(gate, isReady)
+      })
+    }
+  }, [onStageGateReady])
+
+  // Memoize the assessment calculation to prevent unnecessary re-calculations
+  const assessment = useMemo(() => {
     if (responses.length > 0) {
-      const assessment = calculateMEDDPICCScore(responses)
+      return calculateMEDDPICCScore(responses)
+    }
+    return null
+  }, [responses])
+
+  useEffect(() => {
+    if (assessment) {
       setCurrentAssessment(assessment)
       
       // Notify parent about stage gate readiness (only when assessment changes)
-      if (onStageGateReady && currentAssessment?.overallScore !== assessment.overallScore) {
-        Object.entries(assessment.stageGateReadiness).forEach(([gate, isReady]) => {
-          onStageGateReady(gate, isReady)
-        })
+      if (currentAssessment?.overallScore !== assessment.overallScore) {
+        notifyStageGateReadiness(assessment)
       }
     }
-  }, [responses]) // Removed onStageGateReady from dependencies to prevent infinite loops
+  }, [assessment, currentAssessment?.overallScore, notifyStageGateReadiness])
 
   const togglePillar = (pillarId: string) => {
     setExpandedPillars(prev => {
@@ -206,6 +220,7 @@ export default function MEDDPICCQualification({
           decision_process: combinePillarResponses(responses, 'decisionProcess'),
           paper_process: combinePillarResponses(responses, 'paperProcess'),
           identify_pain: combinePillarResponses(responses, 'identifyPain'),
+          implicate_pain: combinePillarResponses(responses, 'implicatePain'),
           champion: combinePillarResponses(responses, 'champion'),
           competition: combinePillarResponses(responses, 'competition')
         }
@@ -283,7 +298,7 @@ export default function MEDDPICCQualification({
       .join('\n\n')
   }
 
-  const getPillarProgress = (pillarId: string): number => {
+  const getPillarProgress = useCallback((pillarId: string): number => {
     const pillarResponses = responses.filter(r => r.pillarId === pillarId)
     
     // Safety check for MEDDPICC_CONFIG
@@ -297,7 +312,7 @@ export default function MEDDPICCQualification({
     const totalQuestions = pillar.questions.length
     const answeredQuestions = pillarResponses.length
     return Math.round((answeredQuestions / totalQuestions) * 100)
-  }
+  }, [responses])
 
   const renderQuestion = (pillarId: string, question: any) => {
     const currentResponse = responses.find(r => r.pillarId === pillarId && r.questionId === question.id)

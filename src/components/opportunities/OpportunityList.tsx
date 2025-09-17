@@ -30,8 +30,8 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
   // Function to get MEDDPICC score for an opportunity using the unified service
   const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<number> => {
     try {
-      // Use the unified scoring service with fallback to database score
-      const scoreResult = await meddpiccScoringService.getScoreWithFallback(opportunity.id, opportunity)
+      // Use the optimized scoring service with opportunity data
+      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity)
       return scoreResult.score
     } catch (error) {
       console.error('Error getting MEDDPICC score:', error)
@@ -60,17 +60,25 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
         const opportunitiesData = result.data || []
         setOpportunities(opportunitiesData)
         
-        // Calculate MEDDPICC scores for all opportunities
+        // Calculate MEDDPICC scores for all opportunities (optimized)
         const scores: Record<string, number> = {}
-        for (const opportunity of opportunitiesData) {
+        
+        // Use Promise.all for parallel processing instead of sequential
+        const scorePromises = opportunitiesData.map(async (opportunity) => {
           try {
             const score = await getOpportunityMEDDPICCScore(opportunity)
-            scores[opportunity.id] = score
+            return { id: opportunity.id, score }
           } catch (error) {
             console.error(`Error calculating score for ${opportunity.id}:`, error)
-            scores[opportunity.id] = opportunity.meddpicc_score || 0
+            return { id: opportunity.id, score: opportunity.meddpicc_score || 0 }
           }
-        }
+        })
+        
+        const scoreResults = await Promise.all(scorePromises)
+        scoreResults.forEach(({ id, score }) => {
+          scores[id] = score
+        })
+        
         setMeddpiccScores(scores)
       }
     } catch (err) {
@@ -84,22 +92,6 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
     loadOpportunities(searchTerm, selectedStage)
   }, [searchTerm, selectedStage])
 
-  // Listen for MEDDPICC score updates
-  useEffect(() => {
-    const handleScoreUpdate = (event: CustomEvent) => {
-      const { opportunityId, score } = event.detail
-      setMeddpiccScores(prev => ({
-        ...prev,
-        [opportunityId]: score
-      }))
-    }
-
-    window.addEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
-    
-    return () => {
-      window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
-    }
-  }, [])
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this opportunity?')) return

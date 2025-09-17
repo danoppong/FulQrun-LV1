@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
+import { opportunityAPI, OpportunityWithDetails, OpportunityFormData } from '@/lib/api/opportunities'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
 import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
 import { useForm } from 'react-hook-form'
@@ -13,6 +13,8 @@ import MEDDPICCForm from '@/components/forms/MEDDPICCForm'
 import { MEDDPICCDashboard, MEDDPICCPEAKIntegration } from '@/components/meddpicc'
 import { MEDDPICCAssessment } from '@/lib/meddpicc'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { MEDDPICCErrorBoundary } from '@/components/error-boundaries/MEDDPICCErrorBoundary'
+import { useErrorHandler } from '@/lib/utils/error-handling'
 
 const opportunitySchema = z.object({
   name: z.string().min(1, 'Opportunity name is required'),
@@ -32,6 +34,7 @@ interface OpportunityFormProps {
 
 export default function OpportunityForm({ opportunity, opportunityId, mode }: OpportunityFormProps) {
   const router = useRouter()
+  const { handleError, handleLoadingError, handleAsyncOperation } = useErrorHandler()
   const [contacts, setContacts] = useState<ContactWithCompany[]>([])
   const [companies, setCompanies] = useState<CompanyWithStats[]>([])
   const [loading, setLoading] = useState(false)
@@ -52,6 +55,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     decision_process: opportunity?.decision_process || '',
     paper_process: opportunity?.paper_process || '',
     identify_pain: opportunity?.identify_pain || '',
+    implicate_pain: opportunity?.implicate_pain || '',
     champion: opportunity?.champion || '',
     competition: opportunity?.competition || ''
   })
@@ -87,15 +91,18 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   const loadOpportunity = async () => {
     if (!opportunityId) return
     
-    setLoading(true)
-    setError(null)
-    
-    try {
-      const { data, error } = await opportunityAPI.getOpportunity(opportunityId)
-      
-      if (error) {
-        setError(error.message || 'Failed to load opportunity')
-      } else if (data) {
+    const result = await handleAsyncOperation(
+      async () => {
+        const { data, error } = await opportunityAPI.getOpportunity(opportunityId)
+        
+        if (error) {
+          throw new Error(error.message || 'Failed to load opportunity')
+        }
+        
+        if (!data) {
+          throw new Error('Opportunity not found')
+        }
+        
         // Reset the main form with loaded data
         reset({
           name: data.name,
@@ -119,27 +126,28 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
           decision_process: data.decision_process || '',
           paper_process: data.paper_process || '',
           identify_pain: data.identify_pain || '',
+          implicate_pain: data.implicate_pain || '',
           champion: data.champion || '',
           competition: data.competition || ''
         })
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
-    }
+        
+        return data
+      },
+      setError,
+      setLoading
+    )
   }
 
   const loadContacts = async () => {
     try {
       const { data, error } = await contactAPI.getContacts()
       if (error) {
-        // Handle contact loading error
+        console.warn('Failed to load contacts:', error.message)
       } else {
         setContacts(data || [])
       }
     } catch (err) {
-      // Handle contact loading error
+      console.warn('Error loading contacts:', err)
     }
   }
 
@@ -147,12 +155,12 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     try {
       const { data, error } = await companyAPI.getCompanies()
       if (error) {
-        // Handle company loading error
+        console.warn('Failed to load companies:', error.message)
       } else {
         setCompanies(data || [])
       }
     } catch (err) {
-      // Handle company loading error
+      console.warn('Error loading companies:', err)
     }
   }
 
@@ -250,64 +258,64 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   }
 
   const onSubmit = async (data: OpportunityFormData) => {
-    setLoading(true)
-    setError(null)
-    setValidationErrors([])
+    const result = await handleAsyncOperation(
+      async () => {
+        // Prepare comprehensive opportunity data
+        const opportunityData = {
+          ...data,
+          contact_id: data.contact_id || null,
+          company_id: data.company_id || null,
+          // Include PEAK data
+          peak_stage: peakData.peak_stage,
+          deal_value: peakData.deal_value || null,
+          probability: peakData.probability || null,
+          close_date: peakData.close_date || null,
+          // Include MEDDPICC data
+          metrics: meddpiccData.metrics || null,
+          economic_buyer: meddpiccData.economic_buyer || null,
+          decision_criteria: meddpiccData.decision_criteria || null,
+          decision_process: meddpiccData.decision_process || null,
+          paper_process: meddpiccData.paper_process || null,
+          identify_pain: meddpiccData.identify_pain || null,
+          implicate_pain: meddpiccData.implicate_pain || null,
+          champion: meddpiccData.champion || null,
+          competition: meddpiccData.competition || null,
+        }
 
-    try {
-      // Prepare comprehensive opportunity data
-      const opportunityData = {
-        ...data,
-        contact_id: data.contact_id || null,
-        company_id: data.company_id || null,
-        // Include PEAK data
-        peak_stage: peakData.peak_stage,
-        deal_value: peakData.deal_value || null,
-        probability: peakData.probability || null,
-        close_date: peakData.close_date || null,
-        // Include MEDDPICC data
-        metrics: meddpiccData.metrics || null,
-        economic_buyer: meddpiccData.economic_buyer || null,
-        decision_criteria: meddpiccData.decision_criteria || null,
-        decision_process: meddpiccData.decision_process || null,
-        paper_process: meddpiccData.paper_process || null,
-        identify_pain: meddpiccData.identify_pain || null,
-        champion: meddpiccData.champion || null,
-        competition: meddpiccData.competition || null,
-      }
+        // Validate data
+        const validationErrors = validateOpportunityData(opportunityData)
+        if (validationErrors.length > 0) {
+          setValidationErrors(validationErrors)
+          throw new Error('Validation failed')
+        }
 
-      // Validate data
-      const validationErrors = validateOpportunityData(opportunityData)
-      if (validationErrors.length > 0) {
-        setValidationErrors(validationErrors)
-        setLoading(false)
-        return
-      }
+        console.log('Saving opportunity with data:', opportunityData)
 
-      console.log('Saving opportunity with data:', opportunityData)
+        let result
+        if (mode === 'create') {
+          result = await opportunityAPI.createOpportunity(opportunityData)
+        } else if (opportunityId) {
+          // For updates, save all data in one call
+          result = await opportunityAPI.updateOpportunity(opportunityId, opportunityData)
+        }
 
-      let result
-      if (mode === 'create') {
-        result = await opportunityAPI.createOpportunity(opportunityData)
-      } else if (opportunityId) {
-        // For updates, save all data in one call
-        result = await opportunityAPI.updateOpportunity(opportunityId, opportunityData)
-      }
+        if (result?.error) {
+          throw new Error(result.error.message || 'Failed to save opportunity')
+        }
 
-      if (result?.error) {
-        setError(result.error.message || 'Failed to save opportunity')
-        console.error('Opportunity save error:', result.error)
-      } else {
         console.log('Opportunity saved successfully')
         setLastSaved(new Date())
         setIsDirty(false)
         router.push('/opportunities')
-      }
-    } catch (err) {
-      console.error('Unexpected error saving opportunity:', err)
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
+        
+        return result
+      },
+      setError,
+      setLoading
+    )
+
+    if (result) {
+      setValidationErrors([])
     }
   }
 
@@ -458,7 +466,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
             </ErrorBoundary>
 
             {/* MEDDPICC Qualification */}
-            <ErrorBoundary>
+            <MEDDPICCErrorBoundary>
               {showComprehensiveMEDDPICC ? (
                 <div className="space-y-6">
                   {/* Toggle Button */}
@@ -529,7 +537,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
                   />
                 </div>
               )}
-            </ErrorBoundary>
+            </MEDDPICCErrorBoundary>
 
             <div className="flex justify-end space-x-3">
               <button

@@ -344,6 +344,7 @@ export interface Database {
           decision_process: string | null
           paper_process: string | null
           identify_pain: string | null
+          implicate_pain: string | null
           champion: string | null
           competition: string | null
           deal_value: number | null
@@ -370,6 +371,7 @@ export interface Database {
           decision_process?: string | null
           paper_process?: string | null
           identify_pain?: string | null
+          implicate_pain?: string | null
           champion?: string | null
           competition?: string | null
           deal_value?: number | null
@@ -396,6 +398,7 @@ export interface Database {
           decision_process?: string | null
           paper_process?: string | null
           identify_pain?: string | null
+          implicate_pain?: string | null
           champion?: string | null
           competition?: string | null
           deal_value?: number | null

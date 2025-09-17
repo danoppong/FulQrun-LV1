@@ -17,41 +17,36 @@ export interface MEDDPICCScoreResult {
 }
 
 export class MEDDPICCScoringService {
-  private static instance: MEDDPICCScoringService
   private scoreCache: Map<string, MEDDPICCScoreResult> = new Map()
 
-  private constructor() {}
-
-  static getInstance(): MEDDPICCScoringService {
-    if (!MEDDPICCScoringService.instance) {
-      MEDDPICCScoringService.instance = new MEDDPICCScoringService()
-    }
-    return MEDDPICCScoringService.instance
-  }
+  constructor() {}
 
   /**
    * Get MEDDPICC score for an opportunity
    * This is the single source of truth for all MEDDPICC scores
    */
-  async getOpportunityScore(opportunityId: string): Promise<MEDDPICCScoreResult> {
+  async getOpportunityScore(opportunityId: string, opportunity?: any): Promise<MEDDPICCScoreResult> {
     try {
-      // First, try to get the opportunity data
-      const opportunityResult = await opportunityAPI.getOpportunity(opportunityId)
-      
-      if (!opportunityResult.data) {
-        throw new Error('Opportunity not found')
-      }
-
-      const opportunity = opportunityResult.data
-
       // Check if we have a cached score that's recent (within 5 minutes)
       const cached = this.scoreCache.get(opportunityId)
       if (cached && this.isScoreRecent(cached.lastCalculated)) {
         return cached
       }
 
+      let opportunityData = opportunity
+
+      // Only fetch opportunity data if not provided
+      if (!opportunityData) {
+        const opportunityResult = await opportunityAPI.getOpportunity(opportunityId)
+        
+        if (!opportunityResult.data) {
+          throw new Error('Opportunity not found')
+        }
+        opportunityData = opportunityResult.data
+      }
+
       // Calculate the score using our unified algorithm
-      const scoreResult = await this.calculateScoreFromOpportunity(opportunity)
+      const scoreResult = await this.calculateScoreFromOpportunity(opportunityData)
       
       // Cache the result
       this.scoreCache.set(opportunityId, scoreResult)
@@ -107,6 +102,7 @@ export class MEDDPICCScoringService {
       'decision_process': 'decisionProcess',
       'paper_process': 'paperProcess',
       'identify_pain': 'identifyPain',
+      'implicate_pain': 'implicatePain',
       'champion': 'champion',
       'competition': 'competition'
     }
@@ -155,9 +151,6 @@ export class MEDDPICCScoringService {
       
       this.scoreCache.set(opportunityId, scoreResult)
       
-      // Broadcast the score update to all components
-      this.broadcastScoreUpdate(opportunityId, assessment.overallScore)
-      
       console.log(`Updated MEDDPICC score for opportunity ${opportunityId}: ${assessment.overallScore}%`)
     } catch (error) {
       console.error('Error updating MEDDPICC score:', error)
@@ -172,17 +165,6 @@ export class MEDDPICCScoringService {
     this.scoreCache.delete(opportunityId)
   }
 
-  /**
-   * Broadcast score update to all components
-   * This ensures all screens refresh their scores when data changes
-   */
-  broadcastScoreUpdate(opportunityId: string, score: number): void {
-    // Dispatch a custom event that components can listen to
-    const event = new CustomEvent('meddpicc-score-updated', {
-      detail: { opportunityId, score }
-    })
-    window.dispatchEvent(event)
-  }
 
   /**
    * Check if a cached score is recent enough to use
@@ -234,5 +216,5 @@ export class MEDDPICCScoringService {
   }
 }
 
-// Export singleton instance
-export const meddpiccScoringService = MEDDPICCScoringService.getInstance()
+// Export instance
+export const meddpiccScoringService = new MEDDPICCScoringService()
