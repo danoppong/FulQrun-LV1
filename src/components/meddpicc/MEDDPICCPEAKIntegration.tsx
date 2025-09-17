@@ -40,6 +40,9 @@ export default function MEDDPICCPEAKIntegration({
   }, [assessment])
 
   const getStageGateInfo = (fromStage: string, toStage: string) => {
+    if (!MEDDPICC_CONFIG || !MEDDPICC_CONFIG.integrations || !MEDDPICC_CONFIG.integrations.peakPipeline || !MEDDPICC_CONFIG.integrations.peakPipeline.stageGates) {
+      return null
+    }
     return MEDDPICC_CONFIG.integrations.peakPipeline.stageGates.find(
       gate => gate.from === fromStage && gate.to === toStage
     )

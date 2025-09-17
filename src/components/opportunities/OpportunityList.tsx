@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
+import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 import Link from 'next/link'
 import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline'
 
@@ -24,6 +25,20 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState(searchQuery)
   const [selectedStage, setSelectedStage] = useState(stageFilter)
+  const [meddpiccScores, setMeddpiccScores] = useState<Record<string, number>>({})
+
+  // Function to get MEDDPICC score for an opportunity using the unified service
+  const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<number> => {
+    try {
+      // Use the unified scoring service with fallback to database score
+      const scoreResult = await meddpiccScoringService.getScoreWithFallback(opportunity.id, opportunity)
+      return scoreResult.score
+    } catch (error) {
+      console.error('Error getting MEDDPICC score:', error)
+      // Fallback to database score if available
+      return opportunity.meddpicc_score || 0
+    }
+  }
 
   const loadOpportunities = async (query: string = '', stage: string = '') => {
     setLoading(true)
@@ -42,7 +57,21 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
       if (result.error) {
         setError(result.error.message || 'Failed to load opportunities')
       } else {
-        setOpportunities(result.data || [])
+        const opportunitiesData = result.data || []
+        setOpportunities(opportunitiesData)
+        
+        // Calculate MEDDPICC scores for all opportunities
+        const scores: Record<string, number> = {}
+        for (const opportunity of opportunitiesData) {
+          try {
+            const score = await getOpportunityMEDDPICCScore(opportunity)
+            scores[opportunity.id] = score
+          } catch (error) {
+            console.error(`Error calculating score for ${opportunity.id}:`, error)
+            scores[opportunity.id] = opportunity.meddpicc_score || 0
+          }
+        }
+        setMeddpiccScores(scores)
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -54,6 +83,23 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
   useEffect(() => {
     loadOpportunities(searchTerm, selectedStage)
   }, [searchTerm, selectedStage])
+
+  // Listen for MEDDPICC score updates
+  useEffect(() => {
+    const handleScoreUpdate = (event: CustomEvent) => {
+      const { opportunityId, score } = event.detail
+      setMeddpiccScores(prev => ({
+        ...prev,
+        [opportunityId]: score
+      }))
+    }
+
+    window.addEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
+    
+    return () => {
+      window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
+    }
+  }, [])
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this opportunity?')) return
@@ -251,7 +297,7 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
                           {/* MEDDPICC Score */}
                           <div className="text-right">
                             <div className="text-sm font-medium text-gray-900">
-                              MEDDPICC: {opportunity.meddpicc_score}%
+                              MEDDPICC: {meddpiccScores[opportunity.id] || opportunity.meddpicc_score || 0}%
                             </div>
                             <div className="text-xs text-gray-500">
                               Qualification

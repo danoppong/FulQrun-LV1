@@ -701,6 +701,10 @@ video {
   grid-column: span 9 / span 9;
 }
 
+.col-span-full {
+  grid-column: 1 / -1;
+}
+
 .row-span-2 {
   grid-row: span 2 / span 2;
 }
@@ -1124,6 +1128,14 @@ video {
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+.list-inside {
+  list-style-position: inside;
+}
+
+.list-disc {
+  list-style-type: disc;
 }
 
 .appearance-none {
@@ -3422,6 +3434,10 @@ body {
 }
 
 @media (min-width: 768px) {
+  .md\:col-span-2 {
+    grid-column: span 2 / span 2;
+  }
+
   .md\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

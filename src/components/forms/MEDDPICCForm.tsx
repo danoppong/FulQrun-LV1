@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { opportunityAPI } from '@/lib/api/opportunities'
 import { MEDDPICCQualification } from '@/components/meddpicc'
-import { MEDDPICCResponse, MEDDPICCAssessment } from '@/lib/meddpicc'
+import { MEDDPICCResponse, MEDDPICCAssessment, MEDDPICC_CONFIG, calculateMEDDPICCScore } from '@/lib/meddpicc'
+import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 
 const meddpiccSchema = z.object({
   metrics: z.string().optional(),
@@ -40,6 +41,8 @@ export default function MEDDPICCForm({
 }: MEDDPICCFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [assessment, setAssessment] = useState<MEDDPICCAssessment | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState<MEDDPICCAssessment | null>(null)
   
   const {
     register,
@@ -73,19 +76,80 @@ export default function MEDDPICCForm({
     }
   }
 
+  const runAnalysis = async () => {
+    setIsAnalyzing(true)
+    try {
+      // Get current form data
+      const formData = {
+        metrics: document.getElementById('metrics')?.value || '',
+        economic_buyer: document.getElementById('economic_buyer')?.value || '',
+        decision_criteria: document.getElementById('decision_criteria')?.value || '',
+        decision_process: document.getElementById('decision_process')?.value || '',
+        paper_process: document.getElementById('paper_process')?.value || '',
+        identify_pain: document.getElementById('identify_pain')?.value || '',
+        champion: document.getElementById('champion')?.value || '',
+        competition: document.getElementById('competition')?.value || ''
+      }
+
+      // Convert form data to MEDDPICC responses
+      const responses: MEDDPICCResponse[] = []
+      
+      // Safety check for MEDDPICC_CONFIG
+      if (!MEDDPICC_CONFIG || !MEDDPICC_CONFIG.pillars) {
+        console.warn('MEDDPICC_CONFIG not available for analysis')
+        return
+      }
+
+      // Parse each pillar's text into individual responses
+      for (const pillar of MEDDPICC_CONFIG.pillars) {
+        const pillarText = formData[pillar.id as keyof typeof formData] || ''
+        if (pillarText.trim()) {
+          const pillarResponses = parsePillarText(pillarText, pillar.id)
+          responses.push(...pillarResponses)
+        }
+      }
+
+      // Calculate the assessment
+      const assessment = calculateMEDDPICCScore(responses)
+      setAnalysisResult(assessment)
+      
+      // Update the MEDDPICC score in the database
+      await meddpiccScoringService.updateOpportunityScore(opportunityId, assessment)
+      
+      console.log('Analysis completed:', {
+        overallScore: assessment.overallScore,
+        qualificationLevel: assessment.qualificationLevel,
+        pillarScores: assessment.pillarScores
+      })
+
+    } catch (error) {
+      console.error('Error running MEDDPICC analysis:', error)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
   const handleAssessmentSave = (newAssessment: MEDDPICCAssessment) => {
     setAssessment(newAssessment)
-    // Convert assessment to legacy format for backward compatibility
+    
+    // Convert comprehensive assessment to legacy format for backward compatibility
+    // We need to combine all responses for each pillar into a single text field
     const legacyData: MEDDPICCFormData = {
-      metrics: newAssessment.responses.find(r => r.pillarId === 'metrics' && r.questionId === 'current_cost')?.answer as string || '',
-      economic_buyer: newAssessment.responses.find(r => r.pillarId === 'economicBuyer' && r.questionId === 'budget_authority')?.answer as string || '',
-      decision_criteria: newAssessment.responses.find(r => r.pillarId === 'decisionCriteria' && r.questionId === 'key_criteria')?.answer as string || '',
-      decision_process: newAssessment.responses.find(r => r.pillarId === 'decisionProcess' && r.questionId === 'process_steps')?.answer as string || '',
-      paper_process: newAssessment.responses.find(r => r.pillarId === 'paperProcess' && r.questionId === 'documentation')?.answer as string || '',
-      identify_pain: newAssessment.responses.find(r => r.pillarId === 'identifyPain' && r.questionId === 'biggest_challenge')?.answer as string || '',
-      champion: newAssessment.responses.find(r => r.pillarId === 'champion' && r.questionId === 'champion_identity')?.answer as string || '',
-      competition: newAssessment.responses.find(r => r.pillarId === 'competition' && r.questionId === 'competitors')?.answer as string || ''
+      metrics: combinePillarResponses(newAssessment.responses, 'metrics'),
+      economic_buyer: combinePillarResponses(newAssessment.responses, 'economicBuyer'),
+      decision_criteria: combinePillarResponses(newAssessment.responses, 'decisionCriteria'),
+      decision_process: combinePillarResponses(newAssessment.responses, 'decisionProcess'),
+      paper_process: combinePillarResponses(newAssessment.responses, 'paperProcess'),
+      identify_pain: combinePillarResponses(newAssessment.responses, 'identifyPain'),
+      champion: combinePillarResponses(newAssessment.responses, 'champion'),
+      competition: combinePillarResponses(newAssessment.responses, 'competition')
     }
+    
+    console.log('Converting assessment to legacy format:', {
+      assessment: newAssessment,
+      legacyData: legacyData,
+      responses: newAssessment.responses
+    })
     
     if (onSave) {
       onSave(legacyData)
@@ -95,82 +159,118 @@ export default function MEDDPICCForm({
     }
   }
 
+  // Helper function to combine all responses for a pillar into a single text
+  const combinePillarResponses = (responses: MEDDPICCResponse[], pillarId: string): string => {
+    const pillarResponses = responses.filter(r => r.pillarId === pillarId)
+    if (pillarResponses.length === 0) return ''
+    
+    // Safety check for MEDDPICC_CONFIG
+    if (!MEDDPICC_CONFIG || !MEDDPICC_CONFIG.pillars) {
+      console.warn('MEDDPICC_CONFIG not available for combining responses')
+      return pillarResponses.map(r => r.answer).join('\n\n')
+    }
+    
+    // Combine all responses for this pillar into a readable format
+    return pillarResponses
+      .map(response => {
+        const question = MEDDPICC_CONFIG.pillars
+          .find(p => p.id === pillarId)
+          ?.questions.find(q => q.id === response.questionId)
+        
+        if (!question || !response.answer) return ''
+        
+        return `${question.text}: ${response.answer}`
+      })
+      .filter(text => text.length > 0)
+      .join('\n\n')
+  }
+
   // Convert simple MEDDPICC data to comprehensive format
   const convertToComprehensiveFormat = (simpleData: any): MEDDPICCResponse[] => {
     const responses: MEDDPICCResponse[] = []
     
-    // Convert each field to the comprehensive format
-    if (simpleData.metrics) {
-      responses.push({
-        pillarId: 'metrics',
-        questionId: 'current_cost',
-        answer: simpleData.metrics,
-        points: Math.min(10, Math.floor(simpleData.metrics.length / 10))
-      })
+    // Map simple field names to pillar IDs
+    const pillarMap: Record<string, string> = {
+      'metrics': 'metrics',
+      'economic_buyer': 'economicBuyer',
+      'decision_criteria': 'decisionCriteria',
+      'decision_process': 'decisionProcess',
+      'paper_process': 'paperProcess',
+      'identify_pain': 'identifyPain',
+      'champion': 'champion',
+      'competition': 'competition'
     }
     
-    if (simpleData.economic_buyer) {
-      responses.push({
-        pillarId: 'economicBuyer',
-        questionId: 'budget_authority',
-        answer: simpleData.economic_buyer,
-        points: Math.min(10, Math.floor(simpleData.economic_buyer.length / 10))
-      })
+    Object.entries(simpleData).forEach(([key, value]) => {
+      if (value && typeof value === 'string') {
+        const pillarId = pillarMap[key]
+        if (pillarId) {
+          // Try to parse the combined text back into individual responses
+          const parsedResponses = parsePillarText(value, pillarId)
+          responses.push(...parsedResponses)
+        }
+      }
+    })
+    
+    return responses
+  }
+
+  // Helper function to parse combined pillar text back into individual responses
+  const parsePillarText = (text: string, pillarId: string): MEDDPICCResponse[] => {
+    const responses: MEDDPICCResponse[] = []
+    
+    // Safety check for MEDDPICC_CONFIG
+    if (!MEDDPICC_CONFIG || !MEDDPICC_CONFIG.pillars) {
+      console.warn('MEDDPICC_CONFIG not available for parsing pillar text')
+      return responses
     }
     
-    if (simpleData.decision_criteria) {
-      responses.push({
-        pillarId: 'decisionCriteria',
-        questionId: 'key_criteria',
-        answer: simpleData.decision_criteria,
-        points: Math.min(10, Math.floor(simpleData.decision_criteria.length / 10))
-      })
+    const pillar = MEDDPICC_CONFIG.pillars.find(p => p.id === pillarId)
+    
+    if (!pillar) return responses
+    
+    // If text is empty, return empty array
+    if (!text || text.trim().length === 0) return responses
+    
+    // Split by double newlines to get individual question-answer pairs
+    const lines = text.split('\n\n').filter(line => line.trim().length > 0)
+    
+    // If no double newlines, treat the entire text as a single answer
+    if (lines.length === 0 && text.trim().length > 0) {
+      lines.push(text.trim())
     }
     
-    if (simpleData.decision_process) {
-      responses.push({
-        pillarId: 'decisionProcess',
-        questionId: 'process_steps',
-        answer: simpleData.decision_process,
-        points: Math.min(10, Math.floor(simpleData.decision_process.length / 10))
-      })
-    }
-    
-    if (simpleData.paper_process) {
-      responses.push({
-        pillarId: 'paperProcess',
-        questionId: 'documentation',
-        answer: simpleData.paper_process,
-        points: Math.min(10, Math.floor(simpleData.paper_process.length / 10))
-      })
-    }
-    
-    if (simpleData.identify_pain) {
-      responses.push({
-        pillarId: 'identifyPain',
-        questionId: 'biggest_challenge',
-        answer: simpleData.identify_pain,
-        points: Math.min(10, Math.floor(simpleData.identify_pain.length / 10))
-      })
-    }
-    
-    if (simpleData.champion) {
-      responses.push({
-        pillarId: 'champion',
-        questionId: 'champion_identity',
-        answer: simpleData.champion,
-        points: Math.min(10, Math.floor(simpleData.champion.length / 10))
-      })
-    }
-    
-    if (simpleData.competition) {
-      responses.push({
-        pillarId: 'competition',
-        questionId: 'competitors',
-        answer: simpleData.competition,
-        points: Math.min(10, Math.floor(simpleData.competition.length / 10))
-      })
-    }
+    lines.forEach((line, index) => {
+      // Look for pattern "Question: Answer"
+      const colonIndex = line.indexOf(':')
+      if (colonIndex > 0) {
+        const questionText = line.substring(0, colonIndex).trim()
+        const answer = line.substring(colonIndex + 1).trim()
+        
+        // Find the matching question in the pillar
+        const question = pillar.questions.find(q => q.text === questionText)
+        if (question && answer) {
+          responses.push({
+            pillarId,
+            questionId: question.id,
+            answer,
+            points: 0 // Will be calculated by the scoring function
+          })
+        }
+      } else {
+        // If no colon found, treat the entire line as an answer to a question
+        // Try to match with questions in order, or use the first question if no match
+        const question = pillar.questions[index] || pillar.questions[0]
+        if (question && line.trim()) {
+          responses.push({
+            pillarId,
+            questionId: question.id,
+            answer: line.trim(),
+            points: 0
+          })
+        }
+      }
+    })
     
     return responses
   }
@@ -324,7 +424,86 @@ export default function MEDDPICCForm({
           </div>
         </div>
 
-        <div className="flex justify-end">
+        {/* Analysis Results */}
+        {analysisResult && (
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="text-lg font-medium text-blue-900 mb-3">📊 MEDDPICC Analysis Results</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium text-gray-700">Overall Score:</span>
+                  <span className={`text-sm font-bold ${
+                    analysisResult.overallScore >= 80 ? 'text-green-600' :
+                    analysisResult.overallScore >= 60 ? 'text-blue-600' :
+                    analysisResult.overallScore >= 40 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {analysisResult.overallScore}%
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium text-gray-700">Qualification Level:</span>
+                  <span className={`text-sm font-bold ${
+                    analysisResult.qualificationLevel === 'excellent' ? 'text-green-600' :
+                    analysisResult.qualificationLevel === 'good' ? 'text-blue-600' :
+                    analysisResult.qualificationLevel === 'fair' ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {analysisResult.qualificationLevel.charAt(0).toUpperCase() + analysisResult.qualificationLevel.slice(1)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium text-gray-700">Litmus Test:</span>
+                  <span className="text-sm font-bold text-gray-600">
+                    {analysisResult.litmusTestScore}%
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700">Pillar Scores:</h4>
+                <div className="space-y-1">
+                  {Object.entries(analysisResult.pillarScores).map(([pillarId, score]) => {
+                    const pillar = MEDDPICC_CONFIG?.pillars?.find(p => p.id === pillarId)
+                    return (
+                      <div key={pillarId} className="flex justify-between text-xs">
+                        <span className="text-gray-600">{pillar?.displayName || pillarId}:</span>
+                        <span className={`font-medium ${
+                          score >= 80 ? 'text-green-600' :
+                          score >= 60 ? 'text-blue-600' :
+                          score >= 40 ? 'text-yellow-600' : 'text-red-600'
+                        }`}>
+                          {score}%
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+            {analysisResult.nextActions && analysisResult.nextActions.length > 0 && (
+              <div className="mt-3">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Next Actions:</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  {analysisResult.nextActions.map((action, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="text-blue-500 mr-2">•</span>
+                      {action}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex justify-between">
+          <button
+            type="button"
+            onClick={runAnalysis}
+            disabled={loading || isAnalyzing}
+            className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+          >
+            {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
+          </button>
+          
           <button
             type="button"
             onClick={handleSubmit(onSubmit)}

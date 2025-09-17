@@ -103,7 +103,7 @@ export default function MEDDPICCDashboard({
         <div className="mb-6">
           <h4 className="text-sm font-medium text-gray-900 mb-3">Pillar Status</h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {MEDDPICC_CONFIG.pillars.map((pillar) => {
+            {MEDDPICC_CONFIG && MEDDPICC_CONFIG.pillars ? MEDDPICC_CONFIG.pillars.map((pillar) => {
               const score = pillarScores[pillar.id] || 0
               const status = getPillarStatus(pillar.id)
               const StatusIcon = status.icon
@@ -118,7 +118,12 @@ export default function MEDDPICCDashboard({
                   <StatusIcon className={`h-4 w-4 ${status.color}`} />
                 </div>
               )
-            })}
+            }) : (
+              <div className="col-span-full text-center py-4 text-gray-500">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                <p className="text-sm">Loading MEDDPICC configuration...</p>
+              </div>
+            )}
           </div>
         </div>
 

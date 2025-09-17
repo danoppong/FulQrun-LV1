@@ -2,16 +2,32 @@ import { createMiddlewareClient } from '@/lib/auth-server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { supabaseConfig } from '@/lib/config'
+import { securityMiddleware, securityHeadersMiddleware } from './middleware-security'
 
 export async function middleware(request: NextRequest) {
+  // Security check: Remove sensitive data from URLs
+  const securityResponse = securityMiddleware(request)
+  if (securityResponse) {
+    return securityResponse
+  }
+
   // If Supabase is not configured, redirect to setup page (except for setup page itself)
   if (!supabaseConfig.isConfigured && request.nextUrl.pathname !== '/setup') {
     return NextResponse.redirect(new URL('/setup', request.url))
   }
 
+  // Apply security headers
+  const response = NextResponse.next()
+  const securityHeadersResponse = securityHeadersMiddleware(request)
+  
+  // Merge security headers
+  securityHeadersResponse.headers.forEach((value, key) => {
+    response.headers.set(key, value)
+  })
+
   // For now, let client-side AuthWrapper handle all authentication
   // This prevents middleware conflicts with client-side auth
-  return NextResponse.next()
+  return response
 }
 
 export const config = {

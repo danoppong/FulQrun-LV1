@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
+import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 interface OpportunityViewProps {
@@ -13,7 +14,21 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
   const [opportunity, setOpportunity] = useState<OpportunityWithDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [meddpiccScore, setMeddpiccScore] = useState<number>(0)
   const router = useRouter()
+
+  // Function to get MEDDPICC score for an opportunity using the unified service
+  const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<void> => {
+    try {
+      // Use the unified scoring service with fallback to database score
+      const scoreResult = await meddpiccScoringService.getScoreWithFallback(opportunity.id, opportunity)
+      setMeddpiccScore(scoreResult.score)
+    } catch (error) {
+      console.error('Error getting MEDDPICC score:', error)
+      // Fallback to database score if available
+      setMeddpiccScore(opportunity.meddpicc_score || 0)
+    }
+  }
 
   const fetchOpportunity = async () => {
     try {
@@ -24,6 +39,10 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
         setError(error.message || 'Failed to fetch opportunity')
       } else {
         setOpportunity(data)
+        // Calculate MEDDPICC score
+        if (data) {
+          await getOpportunityMEDDPICCScore(data)
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -51,6 +70,13 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
       }
     }
 
+    const handleScoreUpdate = (event: CustomEvent) => {
+      // Update score when MEDDPICC score is updated
+      if (event.detail.opportunityId === opportunityId) {
+        setMeddpiccScore(event.detail.score)
+      }
+    }
+
     const handlePeakUpdate = (event: CustomEvent) => {
       // Refresh data when PEAK is updated
       if (event.detail.opportunityId === opportunityId) {
@@ -60,11 +86,13 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
 
     window.addEventListener('focus', handleFocus)
     window.addEventListener('meddpiccUpdated', handleMeddpiccUpdate as EventListener)
+    window.addEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
     window.addEventListener('peakUpdated', handlePeakUpdate as EventListener)
     
     return () => {
       window.removeEventListener('focus', handleFocus)
       window.removeEventListener('meddpiccUpdated', handleMeddpiccUpdate as EventListener)
+      window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
       window.removeEventListener('peakUpdated', handlePeakUpdate as EventListener)
     }
   }, [opportunityId])
@@ -271,12 +299,12 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
                 <div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">MEDDPICC Score</span>
-                    <span className="font-medium">{opportunity.meddpicc_score}</span>
+                    <span className="font-medium">{meddpiccScore}%</span>
                   </div>
                   <div className="mt-1 bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${opportunity.meddpicc_score}%` }}
+                      style={{ width: `${meddpiccScore}%` }}
                     ></div>
                   </div>
                 </div>

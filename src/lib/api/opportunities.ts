@@ -121,6 +121,9 @@ export class OpportunityAPI {
 
   async updateOpportunity(id: string, updates: OpportunityUpdate): Promise<ApiResponse<Opportunity>> {
     try {
+      // Log the update data for debugging
+      console.log('Updating opportunity with data:', updates)
+      
       const { data, error } = await this.supabase
         .from('opportunities')
         .update(updates)
@@ -128,8 +131,15 @@ export class OpportunityAPI {
         .select()
         .single()
 
-      return { data, error: error ? normalizeError(error) : null }
+      if (error) {
+        console.error('Supabase update error:', error)
+        return { data: null, error: normalizeError(error) }
+      }
+
+      console.log('Opportunity updated successfully:', data)
+      return { data, error: null }
     } catch (error) {
+      console.error('Unexpected error updating opportunity:', error)
       return { data: null, error: normalizeError(error) }
     }
   }

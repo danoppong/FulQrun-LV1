@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
@@ -11,6 +11,7 @@ import { z } from 'zod'
 import PEAKForm from '@/components/forms/PEAKForm'
 import MEDDPICCForm from '@/components/forms/MEDDPICCForm'
 import { MEDDPICCDashboard, MEDDPICCPEAKIntegration } from '@/components/meddpicc'
+import { MEDDPICCAssessment } from '@/lib/meddpicc'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 const opportunitySchema = z.object({
@@ -35,6 +36,9 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   const [companies, setCompanies] = useState<CompanyWithStats[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [isDirty, setIsDirty] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [peakData, setPeakData] = useState({
     peak_stage: opportunity?.peak_stage || 'prospecting' as const,
     deal_value: opportunity?.deal_value || undefined,
@@ -52,7 +56,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     competition: opportunity?.competition || ''
   })
   const [showComprehensiveMEDDPICC, setShowComprehensiveMEDDPICC] = useState(false)
-  const [meddpiccAssessment, setMeddpiccAssessment] = useState(null)
+  const [meddpiccAssessment, setMeddpiccAssessment] = useState<MEDDPICCAssessment | undefined>(undefined)
 
   const {
     register,
@@ -154,6 +158,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
 
   const handlePeakSave = async (data: any) => {
     setPeakData(data)
+    setIsDirty(true)
     
     // If we're editing an existing opportunity, save PEAK data immediately
     if (mode === 'edit' && opportunityId) {
@@ -180,6 +185,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
 
   const handleMeddpiccSave = async (data: any) => {
     setMeddpiccData(data)
+    setIsDirty(true)
     
     // If we're editing an existing opportunity, save MEDDPICC data immediately
     if (mode === 'edit' && opportunityId) {
@@ -204,38 +210,101 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     setError(null)
   }
 
+  // Data validation function
+  const validateOpportunityData = (data: any) => {
+    const errors: string[] = []
+
+    // Validate required fields
+    if (!data.name || data.name.trim() === '') {
+      errors.push('Opportunity name is required')
+    }
+
+    // Validate probability range
+    if (data.probability !== undefined && data.probability !== null) {
+      if (data.probability < 0 || data.probability > 100) {
+        errors.push('Probability must be between 0 and 100')
+      }
+    }
+
+    // Validate deal value
+    if (data.deal_value !== undefined && data.deal_value !== null) {
+      if (data.deal_value < 0) {
+        errors.push('Deal value cannot be negative')
+      }
+    }
+
+    // Validate close date
+    if (data.close_date && data.close_date !== '') {
+      const closeDate = new Date(data.close_date)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      if (isNaN(closeDate.getTime())) {
+        errors.push('Invalid close date format')
+      } else if (closeDate < today) {
+        errors.push('Close date cannot be in the past')
+      }
+    }
+
+    return errors
+  }
+
   const onSubmit = async (data: OpportunityFormData) => {
     setLoading(true)
     setError(null)
+    setValidationErrors([])
 
     try {
+      // Prepare comprehensive opportunity data
       const opportunityData = {
         ...data,
         contact_id: data.contact_id || null,
         company_id: data.company_id || null,
-        ...peakData,
+        // Include PEAK data
+        peak_stage: peakData.peak_stage,
         deal_value: peakData.deal_value || null,
         probability: peakData.probability || null,
         close_date: peakData.close_date || null,
+        // Include MEDDPICC data
+        metrics: meddpiccData.metrics || null,
+        economic_buyer: meddpiccData.economic_buyer || null,
+        decision_criteria: meddpiccData.decision_criteria || null,
+        decision_process: meddpiccData.decision_process || null,
+        paper_process: meddpiccData.paper_process || null,
+        identify_pain: meddpiccData.identify_pain || null,
+        champion: meddpiccData.champion || null,
+        competition: meddpiccData.competition || null,
       }
+
+      // Validate data
+      const validationErrors = validateOpportunityData(opportunityData)
+      if (validationErrors.length > 0) {
+        setValidationErrors(validationErrors)
+        setLoading(false)
+        return
+      }
+
+      console.log('Saving opportunity with data:', opportunityData)
 
       let result
       if (mode === 'create') {
         result = await opportunityAPI.createOpportunity(opportunityData)
       } else if (opportunityId) {
+        // For updates, save all data in one call
         result = await opportunityAPI.updateOpportunity(opportunityId, opportunityData)
       }
 
       if (result?.error) {
         setError(result.error.message || 'Failed to save opportunity')
+        console.error('Opportunity save error:', result.error)
       } else {
-        // Save MEDDPICC data separately
-        if (opportunityId) {
-          await opportunityAPI.updateMEDDPICC(opportunityId, meddpiccData)
-        }
+        console.log('Opportunity saved successfully')
+        setLastSaved(new Date())
+        setIsDirty(false)
         router.push('/opportunities')
       }
     } catch (err) {
+      console.error('Unexpected error saving opportunity:', err)
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -246,6 +315,58 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     <div className="w-full">
       <div className="bg-card shadow sm:rounded-lg border border-border">
         <div className="px-4 py-5 sm:p-6">
+          
+          {/* Error Display */}
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Error</h3>
+                  <p className="text-sm text-red-700 mt-1">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Validation Errors */}
+          {validationErrors.length > 0 && (
+            <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">Validation Errors</h3>
+                  <ul className="text-sm text-yellow-700 mt-1 list-disc list-inside">
+                    {validationErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Save Status */}
+          {lastSaved && (
+            <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center">
+                <svg className="h-4 w-4 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm text-green-700">
+                  Last saved: {lastSaved.toLocaleTimeString()}
+                </span>
+              </div>
+            </div>
+          )}
           <h3 className="text-lg leading-6 font-medium text-card-foreground">
             {mode === 'create' ? 'Create New Opportunity' : 'Edit Opportunity'}
           </h3>

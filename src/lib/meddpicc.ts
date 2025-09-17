@@ -10,7 +10,7 @@ export interface MEDDPICCQuestion {
   required: boolean
 }
 
-export interface MEDDPICCField {
+export interface MEDDPICCPillar {
   id: string
   displayName: string
   description: string
@@ -40,7 +40,7 @@ export interface MEDDPICCConfig {
     weights: Record<string, number>
     thresholds: MEDDPICCThresholds
   }
-  pillars: MEDDPICCField[]
+  pillars: MEDDPICCPillar[]
   litmusTest: MEDDPICCLitmusTest
   integrations: {
     peakPipeline: {
@@ -69,12 +69,12 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
       metrics: 15,
       economicBuyer: 20,
       decisionCriteria: 10,
-      decisionProcess: 10,
-      paperProcess: 10,
-      identifyPain: 10,
-      implicatePain: 10,
-      champion: 15,
-      competition: 10
+      decisionProcess: 15,
+      paperProcess: 5,
+      identifyPain: 20,
+      implicatePain: 20,
+      champion: 10,
+      competition: 5
     },
     thresholds: {
       excellent: 80,
@@ -208,7 +208,7 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
       id: 'decisionProcess',
       displayName: 'Decision Process',
       description: 'Map the approval workflow and timeline',
-      weight: 10,
+      weight: 15,
       icon: '⚙️',
       color: 'bg-orange-100 text-orange-800',
       questions: [
@@ -239,7 +239,7 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
       id: 'paperProcess',
       displayName: 'Paper Process',
       description: 'Document requirements and procurement process',
-      weight: 10,
+      weight: 5,
       icon: '📄',
       color: 'bg-gray-100 text-gray-800',
       questions: [
@@ -270,7 +270,7 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
       id: 'identifyPain',
       displayName: 'Identify Pain',
       description: 'Understand their pain points and challenges',
-      weight: 10,
+      weight: 20,
       icon: '😰',
       color: 'bg-red-100 text-red-800',
       questions: [
@@ -301,7 +301,7 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
       id: 'implicatePain',
       displayName: 'Implicate Pain',
       description: 'Help them understand the full impact of their pain',
-      weight: 10,
+      weight: 20,
       icon: '💡',
       color: 'bg-yellow-100 text-yellow-800',
       questions: [
@@ -332,7 +332,7 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
       id: 'champion',
       displayName: 'Champion',
       description: 'Find internal advocate who will support you',
-      weight: 15,
+      weight: 10,
       icon: '🏆',
       color: 'bg-indigo-100 text-indigo-800',
       questions: [
@@ -377,7 +377,7 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
       id: 'competition',
       displayName: 'Competition',
       description: 'Assess competitive landscape and positioning',
-      weight: 10,
+      weight: 5,
       icon: '⚔️',
       color: 'bg-pink-100 text-pink-800',
       questions: [
@@ -497,13 +497,17 @@ export interface MEDDPICCField {
   questions: string[]
 }
 
-export const MEDDPICC_FIELDS: MEDDPICCField[] = MEDDPICC_CONFIG.pillars.map(pillar => ({
-  id: pillar.id,
-  name: pillar.displayName,
-  description: pillar.description,
-  weight: pillar.weight,
-  questions: pillar.questions.map(q => q.text)
-}))
+// Legacy MEDDPICC fields for backward compatibility
+export const MEDDPICC_FIELDS: MEDDPICCField[] = [
+  { id: 'metrics', name: 'Metrics', description: 'Quantify the business impact', weight: 15, questions: ['What is the current cost?', 'What is the potential savings?'] },
+  { id: 'economic_buyer', name: 'Economic Buyer', description: 'Identify the decision maker', weight: 20, questions: ['Who has budget authority?', 'What is their influence level?'] },
+  { id: 'decision_criteria', name: 'Decision Criteria', description: 'Understand evaluation process', weight: 10, questions: ['What are the key criteria?', 'How will success be measured?'] },
+  { id: 'decision_process', name: 'Decision Process', description: 'Map approval workflow', weight: 15, questions: ['What are the process steps?', 'Who needs to approve?'] },
+  { id: 'paper_process', name: 'Paper Process', description: 'Document requirements', weight: 5, questions: ['What documentation is needed?', 'What are the procurement steps?'] },
+  { id: 'identify_pain', name: 'Identify Pain', description: 'Understand pain points', weight: 20, questions: ['What is the biggest challenge?', 'What are the consequences?'] },
+  { id: 'champion', name: 'Champion', description: 'Find internal advocate', weight: 10, questions: ['Who is your champion?', 'What is their commitment level?'] },
+  { id: 'competition', name: 'Competition', description: 'Assess competitive landscape', weight: 5, questions: ['Who are the competitors?', 'What is our differentiation?'] }
+]
 
 export interface MEDDPICCResponse {
   pillarId: string
@@ -523,25 +527,75 @@ export interface MEDDPICCAssessment {
 }
 
 export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCAssessment => {
+  console.log('=== MEDDPICC Scoring Debug ===')
+  console.log('Input responses:', responses)
+  console.log('MEDDPICC_CONFIG available:', !!MEDDPICC_CONFIG)
+  console.log('MEDDPICC_CONFIG pillars:', MEDDPICC_CONFIG?.pillars?.length)
+  
+  // Safety check for MEDDPICC_CONFIG
+  if (!MEDDPICC_CONFIG || !MEDDPICC_CONFIG.pillars) {
+    console.warn('MEDDPICC_CONFIG not available for scoring')
+    return {
+      responses,
+      pillarScores: {},
+      overallScore: 0,
+      qualificationLevel: 'poor',
+      litmusTestScore: 0,
+      nextActions: ['Configuration not available - please refresh the page'],
+      stageGateReadiness: {}
+    }
+  }
+
   const pillarScores: Record<string, number> = {}
   const pillarMaxScores: Record<string, number> = {}
   const litmusTestResponses: MEDDPICCResponse[] = []
   
-  // Calculate pillar scores
+  // Calculate pillar scores using improved algorithm
   for (const pillar of MEDDPICC_CONFIG.pillars) {
     let pillarScore = 0
     let pillarMaxScore = 0
+    let answeredQuestions = 0
+    let totalQuestions = pillar.questions.length
+    
+    console.log(`\n--- Processing Pillar: ${pillar.id} ---`)
+    console.log('Pillar questions:', pillar.questions.map(q => ({ id: q.id, text: q.text })))
+    console.log('Available responses for this pillar:', responses.filter(r => r.pillarId === pillar.id))
     
     for (const question of pillar.questions) {
       const response = responses.find(r => r.pillarId === pillar.id && r.questionId === question.id)
+      console.log(`Looking for response to question ${question.id}:`, response)
       
-      if (response) {
+      if (response && response.answer && response.answer.toString().trim().length > 0) {
+        answeredQuestions++
+        
         if (question.type === 'text') {
-          // Text responses get points based on completeness
-          const textLength = (response.answer as string)?.length || 0
-          const points = Math.min(10, Math.floor(textLength / 10)) // 1 point per 10 characters, max 10
+          // Text responses: Score based on content quality and completeness
+          const answerText = response.answer.toString().trim()
+          let points = 0
+          
+          console.log(`Scoring text answer: "${answerText}" (length: ${answerText.length})`)
+          
+          // More generous scoring for any non-empty response
+          if (answerText.length > 0) points += 3  // Any content gets base points
+          if (answerText.length >= 3) points += 2  // Minimum meaningful content
+          if (answerText.length >= 10) points += 2 // Good detail
+          if (answerText.length >= 25) points += 2 // Comprehensive
+          if (answerText.length >= 50) points += 1 // Very detailed
+          
+          // Bonus points for specific keywords that indicate quality answers
+          const qualityKeywords = ['specific', 'measurable', 'quantified', 'roi', 'impact', 'cost', 'savings', 'efficiency', 'revenue', 'profit', 'test', 'quality', 'improvement', 'lives', 'saved']
+          const keywordCount = qualityKeywords.filter(keyword => 
+            answerText.toLowerCase().includes(keyword)
+          ).length
+          points += Math.min(keywordCount, 2) // Max 2 bonus points
+          
+          // Cap at 10 points per question
+          points = Math.min(points, 10)
           pillarScore += points
           pillarMaxScore += 10
+          
+          console.log(`Points awarded: ${points}, pillar score now: ${pillarScore}`)
+          
         } else if (question.type === 'scale' || question.type === 'yes_no') {
           // Scale and yes/no responses use predefined points
           const points = response.points || 0
@@ -549,46 +603,69 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
           pillarMaxScore += 10
         }
       } else {
-        // Missing responses get 0 points
+        // Missing or empty responses get 0 points
         pillarMaxScore += 10
       }
     }
     
-    pillarScores[pillar.id] = pillarScore
-    pillarMaxScores[pillar.id] = pillarMaxScore
+    // Calculate pillar score as percentage of answered questions
+    // If no questions answered, score is 0
+    if (totalQuestions === 0) {
+      pillarScores[pillar.id] = 0
+      pillarMaxScores[pillar.id] = 0
+      console.log(`Pillar ${pillar.id} final: 0% (no questions)`)
+    } else {
+      // Normalize score to percentage (0-100)
+      const normalizedScore = pillarMaxScore > 0 ? (pillarScore / pillarMaxScore) * 100 : 0
+      pillarScores[pillar.id] = Math.round(normalizedScore)
+      pillarMaxScores[pillar.id] = 100
+      console.log(`Pillar ${pillar.id} final: ${pillarScore}/${pillarMaxScore} = ${Math.round(normalizedScore)}%`)
+    }
   }
   
   // Calculate litmus test score
   let litmusScore = 0
   let litmusMaxScore = 0
   
-  for (const question of MEDDPICC_CONFIG.litmusTest.questions) {
-    const response = responses.find(r => r.pillarId === 'litmus' && r.questionId === question.id)
-    if (response) {
-      const points = response.points || 0
-      litmusScore += points
-      litmusMaxScore += 10
-    } else {
-      litmusMaxScore += 10
+  if (MEDDPICC_CONFIG.litmusTest && MEDDPICC_CONFIG.litmusTest.questions) {
+    for (const question of MEDDPICC_CONFIG.litmusTest.questions) {
+      const response = responses.find(r => r.pillarId === 'litmus' && r.questionId === question.id)
+      if (response) {
+        const points = response.points || 0
+        litmusScore += points
+        litmusMaxScore += 10
+      } else {
+        litmusMaxScore += 10
+      }
     }
   }
   
-  // Calculate weighted overall score
+  // Calculate weighted overall score using the improved algorithm
   let totalWeightedScore = 0
   let totalWeight = 0
   
+  console.log('\n=== Overall Score Calculation ===')
+  console.log('Pillar scores:', pillarScores)
+  
   for (const pillar of MEDDPICC_CONFIG.pillars) {
-    const pillarScore = pillarScores[pillar.id] || 0
-    const pillarMaxScore = pillarMaxScores[pillar.id] || 1
-    const normalizedScore = (pillarScore / pillarMaxScore) * 100
-    const weightedScore = normalizedScore * pillar.weight
+    const pillarScore = pillarScores[pillar.id] || 0  // Already normalized to 0-100
+    const pillarWeight = pillar.weight
     
+    // Apply pillar weight to the score
+    const weightedScore = (pillarScore / 100) * pillarWeight
     totalWeightedScore += weightedScore
-    totalWeight += pillar.weight
+    totalWeight += pillarWeight
+    
+    console.log(`Pillar ${pillar.id}: ${pillarScore}% × ${pillarWeight} = ${weightedScore.toFixed(2)}`)
   }
   
-  const overallScore = Math.round(totalWeightedScore / totalWeight)
+  // Calculate final score as percentage of total possible weighted score
+  const overallScore = totalWeight > 0 ? Math.round((totalWeightedScore / totalWeight) * 100) : 0
   const litmusTestScore = Math.round((litmusScore / litmusMaxScore) * 100)
+  
+  console.log(`Total weighted score: ${totalWeightedScore.toFixed(2)}`)
+  console.log(`Total weight: ${totalWeight}`)
+  console.log(`Overall score: ${overallScore}%`)
   
   // Determine qualification level
   const qualificationLevel = getMEDDPICCLevel(overallScore).level
@@ -611,6 +688,16 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
 }
 
 export const getMEDDPICCLevel = (score: number): { level: string; color: string; description: string } => {
+  // Safety check for MEDDPICC_CONFIG
+  if (!MEDDPICC_CONFIG || !MEDDPICC_CONFIG.scoring || !MEDDPICC_CONFIG.scoring.thresholds) {
+    console.warn('MEDDPICC_CONFIG not available for level calculation')
+    return {
+      level: 'poor',
+      color: 'text-red-600',
+      description: 'Unable to determine qualification level'
+    }
+  }
+  
   const thresholds = MEDDPICC_CONFIG.scoring.thresholds
   
   if (score >= thresholds.excellent) {
@@ -641,6 +728,12 @@ export const getMEDDPICCLevel = (score: number): { level: string; color: string;
 }
 
 function generateNextActions(pillarScores: Record<string, number>, pillarMaxScores: Record<string, number>): string[] {
+  // Safety check for MEDDPICC_CONFIG
+  if (!MEDDPICC_CONFIG || !MEDDPICC_CONFIG.pillars) {
+    console.warn('MEDDPICC_CONFIG not available for next actions')
+    return ['Configuration not available - please refresh the page']
+  }
+  
   const actions: string[] = []
   
   for (const pillar of MEDDPICC_CONFIG.pillars) {
@@ -657,6 +750,12 @@ function generateNextActions(pillarScores: Record<string, number>, pillarMaxScor
 }
 
 function checkStageGateReadiness(responses: MEDDPICCResponse[], pillarScores: Record<string, number>): Record<string, boolean> {
+  // Safety check for MEDDPICC_CONFIG
+  if (!MEDDPICC_CONFIG || !MEDDPICC_CONFIG.integrations || !MEDDPICC_CONFIG.integrations.peakPipeline || !MEDDPICC_CONFIG.integrations.peakPipeline.stageGates) {
+    console.warn('MEDDPICC_CONFIG not available for stage gate readiness')
+    return {}
+  }
+  
   const readiness: Record<string, boolean> = {}
   
   for (const stageGate of MEDDPICC_CONFIG.integrations.peakPipeline.stageGates) {
