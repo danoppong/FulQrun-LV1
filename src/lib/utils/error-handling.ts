@@ -21,10 +21,10 @@ export class ErrorHandler {
     let errorMessage = fallbackMessage
 
     if (error && typeof error === 'object') {
-      if ('message' in error) {
+      if ('message' in error && typeof error.message === 'string') {
         errorMessage = error.message
       } else if ('details' in error && Array.isArray(error.details)) {
-        errorMessage = error.details.join(', ')
+        errorMessage = (error as any).details.join(', ')
       }
     }
 

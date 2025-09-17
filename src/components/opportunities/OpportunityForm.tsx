@@ -22,7 +22,7 @@ const opportunitySchema = z.object({
   company_id: z.string().optional(),
 })
 
-type OpportunityFormData = z.infer<typeof opportunitySchema>
+type LocalOpportunityFormData = z.infer<typeof opportunitySchema>
 
 interface OpportunityFormProps {
   opportunity?: OpportunityWithDetails
@@ -69,7 +69,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     watch,
     setValue,
     reset
-  } = useForm<OpportunityFormData>({
+  } = useForm<LocalOpportunityFormData>({
     resolver: zodResolver(opportunitySchema),
     defaultValues: opportunity ? {
       name: opportunity.name,
@@ -257,7 +257,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     return errors
   }
 
-  const onSubmit = async (data: OpportunityFormData) => {
+  const onSubmit = async (data: LocalOpportunityFormData) => {
     const result = await handleAsyncOperation(
       async () => {
         // Prepare comprehensive opportunity data

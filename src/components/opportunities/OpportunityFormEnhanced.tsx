@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { opportunityAPIEnhanced, OpportunityWithDetails, OpportunityFormData, PEAKData, MEDDPICCData } from '@/lib/api/opportunities-enhanced'
+import { opportunityAPI, OpportunityWithDetails, OpportunityFormData, MEDDPICCData } from '@/lib/api/opportunities'
+
+type PEAKData = {
+  peak_stage: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
+  deal_value?: number | undefined
+  probability?: number | undefined
+  close_date?: string | undefined
+}
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
 import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
 import { useForm } from 'react-hook-form'
@@ -18,11 +25,9 @@ const opportunitySchema = z.object({
   name: z.string().min(1, 'Opportunity name is required'),
   contact_id: z.string().optional(),
   company_id: z.string().optional(),
-  description: z.string().optional(),
-  assigned_to: z.string().optional(),
 })
 
-type OpportunityFormData = z.infer<typeof opportunitySchema>
+type LocalOpportunityFormData = z.infer<typeof opportunitySchema>
 
 interface OpportunityFormEnhancedProps {
   opportunity?: OpportunityWithDetails | null
@@ -75,20 +80,16 @@ export default function OpportunityFormEnhanced({
     setValue,
     reset,
     trigger
-  } = useForm<OpportunityFormData>({
+  } = useForm<LocalOpportunityFormData>({
     resolver: zodResolver(opportunitySchema),
     defaultValues: opportunity ? {
       name: opportunity.name,
       contact_id: opportunity.contact_id || '',
-      company_id: opportunity.company_id || '',
-      description: opportunity.description || '',
-      assigned_to: opportunity.assigned_to || ''
+      company_id: opportunity.company_id || ''
     } : {
       name: '',
       contact_id: '',
-      company_id: '',
-      description: '',
-      assigned_to: ''
+      company_id: ''
     }
   })
 
@@ -129,7 +130,7 @@ export default function OpportunityFormEnhanced({
     
     try {
       setLoading(true)
-      const { data, error } = await opportunityAPIEnhanced.getOpportunity(opportunityId)
+      const { data, error } = await opportunityAPI.getOpportunity(opportunityId)
       
       if (error) {
         setError(error.message || 'Failed to load opportunity')
@@ -141,9 +142,7 @@ export default function OpportunityFormEnhanced({
         reset({
           name: data.name,
           contact_id: data.contact_id || '',
-          company_id: data.company_id || '',
-          description: data.description || '',
-          assigned_to: data.assigned_to || ''
+          company_id: data.company_id || ''
         })
 
         // Update PEAK data
@@ -207,13 +206,13 @@ export default function OpportunityFormEnhanced({
 
     try {
       const formData = watchedValues
-      const opportunityData: Partial<OpportunityFormData> = {
+      const opportunityData: Partial<LocalOpportunityFormData> = {
         ...formData,
         ...peakData,
         ...meddpiccData
       }
 
-      const { error } = await opportunityAPIEnhanced.updateOpportunity(opportunityId, opportunityData)
+      const { error } = await opportunityAPI.updateOpportunity(opportunityId, opportunityData)
       
       if (!error) {
         setLastSaved(new Date())
@@ -225,7 +224,7 @@ export default function OpportunityFormEnhanced({
     }
   }
 
-  const handlePeakSave = useCallback((data: PEAKData) => {
+  const handlePeakSave = useCallback(async (data: PEAKData) => {
     setPeakData(data)
     setIsDirty(true)
   }, [])
@@ -243,14 +242,14 @@ export default function OpportunityFormEnhanced({
     console.log('MEDDPICC data saved successfully')
   }, [])
 
-  const onSubmit = async (data: OpportunityFormData) => {
+  const onSubmit = async (data: LocalOpportunityFormData) => {
     setLoading(true)
     setError(null)
     setValidationErrors([])
 
     try {
       // Validate all data
-      const validation = opportunityAPIEnhanced['validateOpportunityData']({
+      const validation = opportunityAPI['validateOpportunityData']({
         ...data,
         ...peakData,
         ...meddpiccData
@@ -262,7 +261,7 @@ export default function OpportunityFormEnhanced({
         return
       }
 
-      const opportunityData: OpportunityFormData = {
+      const opportunityData: LocalOpportunityFormData = {
         ...data,
         ...peakData,
         ...meddpiccData
@@ -270,15 +269,15 @@ export default function OpportunityFormEnhanced({
 
       let result
       if (mode === 'create') {
-        result = await opportunityAPIEnhanced.createOpportunity(opportunityData)
+        result = await opportunityAPI.createOpportunity(opportunityData)
       } else if (opportunityId) {
-        result = await opportunityAPIEnhanced.updateOpportunity(opportunityId, opportunityData)
+        result = await opportunityAPI.updateOpportunity(opportunityId, opportunityData)
       }
 
       if (result?.error) {
         setError(result.error.message || 'Failed to save opportunity')
         if (result.error.details) {
-          setValidationErrors(result.error.details)
+          setValidationErrors([result.error.details])
         }
       } else {
         setLastSaved(new Date())
@@ -425,17 +424,6 @@ export default function OpportunityFormEnhanced({
                 </select>
               </div>
 
-              <div className="md:col-span-2">
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  {...register('description')}
-                  rows={3}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  placeholder="Enter opportunity description"
-                />
-              </div>
             </div>
           </div>
 
@@ -480,7 +468,7 @@ export default function OpportunityFormEnhanced({
                     assessment={meddpiccAssessment}
                     onStageAdvance={async (fromStage, toStage) => {
                       try {
-                        const { error } = await opportunityAPIEnhanced.updatePeakStage(opportunityId!, toStage as any)
+                        const { error } = await opportunityAPI.updatePeakStage(opportunityId!, toStage as any)
                         if (!error) {
                           setPeakData(prev => ({ ...prev, peak_stage: toStage as any }))
                           setIsDirty(true)
@@ -494,7 +482,17 @@ export default function OpportunityFormEnhanced({
                   {/* Comprehensive MEDDPICC Form */}
                   <MEDDPICCForm
                     opportunityId={opportunityId}
-                    initialData={meddpiccData}
+                    initialData={{
+                      metrics: meddpiccData.metrics || undefined,
+                      economic_buyer: meddpiccData.economic_buyer || undefined,
+                      decision_criteria: meddpiccData.decision_criteria || undefined,
+                      decision_process: meddpiccData.decision_process || undefined,
+                      paper_process: meddpiccData.paper_process || undefined,
+                      identify_pain: meddpiccData.identify_pain || undefined,
+                      implicate_pain: meddpiccData.implicate_pain || undefined,
+                      champion: meddpiccData.champion || undefined,
+                      competition: meddpiccData.competition || undefined
+                    }}
                     onSave={handleMeddpiccSave}
                     onSuccess={handleMeddpiccSuccess}
                     loading={loading}
@@ -503,7 +501,17 @@ export default function OpportunityFormEnhanced({
                 </div>
               ) : (
                 <MEDDPICCForm
-                  initialData={meddpiccData}
+                  initialData={{
+                    metrics: meddpiccData.metrics || undefined,
+                    economic_buyer: meddpiccData.economic_buyer || undefined,
+                    decision_criteria: meddpiccData.decision_criteria || undefined,
+                    decision_process: meddpiccData.decision_process || undefined,
+                    paper_process: meddpiccData.paper_process || undefined,
+                    identify_pain: meddpiccData.identify_pain || undefined,
+                    implicate_pain: meddpiccData.implicate_pain || undefined,
+                    champion: meddpiccData.champion || undefined,
+                    competition: meddpiccData.competition || undefined
+                  }}
                   onSave={handleMeddpiccSave}
                   onSuccess={handleMeddpiccSuccess}
                   loading={loading}

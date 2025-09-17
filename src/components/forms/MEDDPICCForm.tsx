@@ -116,7 +116,9 @@ export default function MEDDPICCForm({
       setAnalysisResult(assessment)
       
       // Update the MEDDPICC score in the database
-      await meddpiccScoringService.updateOpportunityScore(opportunityId, assessment)
+      if (opportunityId) {
+        await meddpiccScoringService.updateOpportunityScore(opportunityId, assessment)
+      }
       
       console.log('Analysis completed:', {
         overallScore: assessment.overallScore,
