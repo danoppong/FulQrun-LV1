@@ -25,6 +25,8 @@ const opportunitySchema = z.object({
   name: z.string().min(1, 'Opportunity name is required'),
   contact_id: z.string().optional(),
   company_id: z.string().optional(),
+  description: z.string().optional(),
+  assigned_to: z.string().optional(),
 })
 
 type LocalOpportunityFormData = z.infer<typeof opportunitySchema>
@@ -85,11 +87,15 @@ export default function OpportunityFormEnhanced({
     defaultValues: opportunity ? {
       name: opportunity.name,
       contact_id: opportunity.contact_id || '',
-      company_id: opportunity.company_id || ''
+      company_id: opportunity.company_id || '',
+      description: opportunity.description || '',
+      assigned_to: opportunity.assigned_to || ''
     } : {
       name: '',
       contact_id: '',
-      company_id: ''
+      company_id: '',
+      description: '',
+      assigned_to: ''
     }
   })
 
@@ -142,7 +148,9 @@ export default function OpportunityFormEnhanced({
         reset({
           name: data.name,
           contact_id: data.contact_id || '',
-          company_id: data.company_id || ''
+          company_id: data.company_id || '',
+          description: data.description || '',
+          assigned_to: data.assigned_to || ''
         })
 
         // Update PEAK data
@@ -424,6 +432,29 @@ export default function OpportunityFormEnhanced({
                 </select>
               </div>
 
+              <div className="md:col-span-2">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+                <textarea
+                  {...register('description')}
+                  rows={3}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                  placeholder="Enter opportunity description"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="assigned_to" className="block text-sm font-medium text-gray-700">
+                  Assigned To
+                </label>
+                <input
+                  {...register('assigned_to')}
+                  type="text"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                  placeholder="Enter assigned user ID"
+                />
+              </div>
             </div>
           </div>
 

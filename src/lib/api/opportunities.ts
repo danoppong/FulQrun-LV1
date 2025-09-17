@@ -49,6 +49,8 @@ export interface OpportunityFormData {
   name: string
   contact_id?: string | null
   company_id?: string | null
+  description?: string | null
+  assigned_to?: string | null
   peak_stage?: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
   meddpicc_score?: number
   deal_value?: number | null
@@ -190,6 +192,8 @@ export class OpportunityAPI {
         name: opportunity.name.trim(),
         contact_id: opportunity.contact_id || null,
         company_id: opportunity.company_id || null,
+        description: opportunity.description || null,
+        assigned_to: opportunity.assigned_to || null,
         peak_stage: opportunity.peak_stage || 'prospecting',
         deal_value: opportunity.deal_value || null,
         probability: opportunity.probability || null,
@@ -243,6 +247,8 @@ export class OpportunityAPI {
       if (updates.name !== undefined) updateData.name = updates.name.trim()
       if (updates.contact_id !== undefined) updateData.contact_id = updates.contact_id
       if (updates.company_id !== undefined) updateData.company_id = updates.company_id
+      if (updates.description !== undefined) updateData.description = updates.description
+      if (updates.assigned_to !== undefined) updateData.assigned_to = updates.assigned_to
       if (updates.peak_stage !== undefined) updateData.peak_stage = updates.peak_stage
       if (updates.meddpicc_score !== undefined) updateData.meddpicc_score = updates.meddpicc_score
       if (updates.deal_value !== undefined) updateData.deal_value = updates.deal_value

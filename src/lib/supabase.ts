@@ -336,6 +336,8 @@ export interface Database {
           name: string
           contact_id: string | null
           company_id: string | null
+          description: string | null
+          assigned_to: string | null
           peak_stage: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
           meddpicc_score: number
           metrics: string | null
@@ -363,6 +365,8 @@ export interface Database {
           name: string
           contact_id?: string | null
           company_id?: string | null
+          description?: string | null
+          assigned_to?: string | null
           peak_stage?: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
           meddpicc_score?: number
           metrics?: string | null
@@ -390,6 +394,8 @@ export interface Database {
           name?: string
           contact_id?: string | null
           company_id?: string | null
+          description?: string | null
+          assigned_to?: string | null
           peak_stage?: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
           meddpicc_score?: number
           metrics?: string | null
