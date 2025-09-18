@@ -162,6 +162,13 @@ export default function MEDDPICCForm({
     if (onSuccess) {
       onSuccess()
     }
+    
+    // Trigger score update event for comprehensive view
+    if (opportunityId) {
+      window.dispatchEvent(new CustomEvent('meddpicc-score-updated', { 
+        detail: { opportunityId, score: newAssessment.overallScore } 
+      }))
+    }
   }
 
   // Helper function to combine all responses for a pillar into a single text

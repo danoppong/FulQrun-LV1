@@ -11,7 +11,7 @@ import { z } from 'zod'
 import PEAKForm from '@/components/forms/PEAKForm'
 import MEDDPICCForm from '@/components/forms/MEDDPICCForm'
 import { MEDDPICCDashboard, MEDDPICCPEAKIntegration } from '@/components/meddpicc'
-import { MEDDPICCAssessment } from '@/lib/meddpicc'
+import { MEDDPICCAssessment, calculateMEDDPICCScore } from '@/lib/meddpicc'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { MEDDPICCErrorBoundary } from '@/components/error-boundaries/MEDDPICCErrorBoundary'
 import { useErrorHandler } from '@/lib/utils/error-handling'
@@ -31,6 +31,93 @@ interface OpportunityFormProps {
 }
 
 // PEAK stages moved to PEAKForm component
+
+// Helper function to calculate MEDDPICC score from simple data format
+const calculateMEDDPICCScoreFromData = (data: any): number => {
+  try {
+    // Convert simple data format to comprehensive format for scoring
+    const responses = []
+    
+    if (data.metrics) {
+      responses.push({
+        pillarId: 'metrics',
+        questionId: 'current_cost',
+        answer: data.metrics,
+        points: Math.min(10, Math.floor(data.metrics.length / 10))
+      })
+    }
+    
+    if (data.economic_buyer) {
+      responses.push({
+        pillarId: 'economicBuyer',
+        questionId: 'budget_authority',
+        answer: data.economic_buyer,
+        points: Math.min(10, Math.floor(data.economic_buyer.length / 10))
+      })
+    }
+    
+    if (data.decision_criteria) {
+      responses.push({
+        pillarId: 'decisionCriteria',
+        questionId: 'key_criteria',
+        answer: data.decision_criteria,
+        points: Math.min(10, Math.floor(data.decision_criteria.length / 10))
+      })
+    }
+    
+    if (data.decision_process) {
+      responses.push({
+        pillarId: 'decisionProcess',
+        questionId: 'process_steps',
+        answer: data.decision_process,
+        points: Math.min(10, Math.floor(data.decision_process.length / 10))
+      })
+    }
+    
+    if (data.paper_process) {
+      responses.push({
+        pillarId: 'paperProcess',
+        questionId: 'documentation',
+        answer: data.paper_process,
+        points: Math.min(10, Math.floor(data.paper_process.length / 10))
+      })
+    }
+    
+    if (data.identify_pain) {
+      responses.push({
+        pillarId: 'identifyPain',
+        questionId: 'biggest_challenge',
+        answer: data.identify_pain,
+        points: Math.min(10, Math.floor(data.identify_pain.length / 10))
+      })
+    }
+    
+    if (data.champion) {
+      responses.push({
+        pillarId: 'champion',
+        questionId: 'champion_identity',
+        answer: data.champion,
+        points: Math.min(10, Math.floor(data.champion.length / 10))
+      })
+    }
+    
+    if (data.competition) {
+      responses.push({
+        pillarId: 'competition',
+        questionId: 'competitors',
+        answer: data.competition,
+        points: Math.min(10, Math.floor(data.competition.length / 10))
+      })
+    }
+    
+    // Calculate score using the comprehensive scoring function
+    const assessment = calculateMEDDPICCScore(responses)
+    return assessment.overallScore
+  } catch (error) {
+    console.error('Error calculating MEDDPICC score:', error)
+    return 0
+  }
+}
 
 export default function OpportunityForm({ opportunity, opportunityId, mode }: OpportunityFormProps) {
   const router = useRouter()
@@ -201,13 +288,26 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     // If we're editing an existing opportunity, save MEDDPICC data immediately
     if (mode === 'edit' && opportunityId) {
       try {
-        const { error } = await opportunityAPI.updateMEDDPICC(opportunityId, data)
+        // Calculate MEDDPICC score from the data
+        const meddpiccScore = calculateMEDDPICCScoreFromData(data)
+        
+        // Save both MEDDPICC data and calculated score
+        const { error } = await opportunityAPI.updateMEDDPICC(opportunityId, {
+          ...data,
+          meddpicc_score: meddpiccScore
+        })
+        
         if (error) {
           setError(error.message || 'Failed to save MEDDPICC data')
         } else {
           // Trigger a custom event to notify other components that MEDDPICC data was updated
           window.dispatchEvent(new CustomEvent('meddpiccUpdated', { 
-            detail: { opportunityId, data } 
+            detail: { opportunityId, data, score: meddpiccScore } 
+          }))
+          
+          // Also trigger score update event
+          window.dispatchEvent(new CustomEvent('meddpicc-score-updated', { 
+            detail: { opportunityId, score: meddpiccScore } 
           }))
         }
       } catch (err) {
@@ -263,6 +363,9 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   const onSubmit = async (data: LocalOpportunityFormData) => {
     const result = await handleAsyncOperation(
       async () => {
+        // Calculate MEDDPICC score from current data
+        const meddpiccScore = calculateMEDDPICCScoreFromData(meddpiccData)
+        
         // Prepare comprehensive opportunity data
         const opportunityData = {
           ...data,
@@ -283,6 +386,8 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
           implicate_pain: meddpiccData.implicate_pain || null,
           champion: meddpiccData.champion || null,
           competition: meddpiccData.competition || null,
+          // Include calculated MEDDPICC score
+          meddpicc_score: meddpiccScore,
         }
 
         // Validate data
