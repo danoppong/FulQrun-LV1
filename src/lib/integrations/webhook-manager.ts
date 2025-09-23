@@ -422,7 +422,7 @@ export class WebhookManager {
         attempts,
         lastAttemptAt: new Date(),
         nextRetryAt,
-        errorMessage: error.message,
+        errorMessage: (error as Error).message,
       });
     }
   }

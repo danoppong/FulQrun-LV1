@@ -357,13 +357,21 @@ class LearningManagementSystem {
     score: number,
     timeSpent: number
   ): Promise<UserProgress> {
+    // Get existing progress first
+    const { data: existingProgress } = await supabase
+      .from('user_learning_progress')
+      .select('attempts')
+      .eq('user_id', userId)
+      .eq('module_id', moduleId)
+      .single();
+
     const { data, error } = await supabase
       .from('user_learning_progress')
       .update({
         status: 'completed',
         progress: 100,
         score,
-        attempts: supabase.raw('attempts + 1'),
+        attempts: (existingProgress?.attempts || 0) + 1,
         time_spent: timeSpent,
         completed_at: new Date().toISOString(),
         last_accessed_at: new Date().toISOString()
@@ -383,7 +391,8 @@ class LearningManagementSystem {
         moduleId,
         completedAt: new Date(),
         score,
-        organizationId: module.organizationId
+        organizationId: module.organizationId,
+        isExpired: false
       });
     }
 

@@ -8,8 +8,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+import type { BaseIntegration } from './base-integration';
+import { SalesforceIntegration } from './salesforce-integration';
+
 // Base integration classes and types
-export {
+export type {
   BaseIntegration,
   EnterpriseIntegration,
   SyncResult,
@@ -22,7 +25,7 @@ export {
 export { SalesforceIntegration } from './salesforce-integration';
 
 // Webhook management
-export {
+export type {
   WebhookManager,
   webhookManager,
   WebhookConfig,

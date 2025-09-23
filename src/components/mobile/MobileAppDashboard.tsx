@@ -29,7 +29,7 @@ interface MobileAppDashboardProps {
 export default function MobileAppDashboard({ organizationId, userId }: MobileAppDashboardProps) {
   const [sessions, setSessions] = useState<MobileSession[]>([]);
   const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
-  const [analytics, setAnalytics] = useState<MobileAnalytics[]>([]);
+  const [analytics, setAnalytics] = useState<MobileAnalytics | null>(null);
   const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'sessions' | 'voice' | 'analytics' | 'health'>('sessions');

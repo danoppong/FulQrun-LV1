@@ -230,19 +230,25 @@ export class MobileAppAPI {
           await this.uploadPendingChange(change);
           result.uploaded++;
           result.operations.push({
+            id: `upload-${change.entityId}`,
             type: 'upload',
             entityType: change.entityType,
             entityId: change.entityId,
-            success: true
+            data: change.data,
+            priority: 1,
+            status: 'completed'
           });
         } catch (error) {
           result.errors++;
           result.operations.push({
+            id: `upload-${change.entityId}`,
             type: 'upload',
             entityType: change.entityType,
             entityId: change.entityId,
-            success: false,
-            error: error.message
+            data: change.data,
+            priority: 1,
+            status: 'failed',
+            errorMessage: (error as Error).message
           });
         }
       }
@@ -262,21 +268,26 @@ export class MobileAppAPI {
           if (entities) {
             result.downloaded += entities.length;
             result.operations.push({
+              id: `download-${entityType}`,
               type: 'download',
               entityType,
               entityId: 'batch',
-              success: true,
-              count: entities.length
+              data: entities,
+              priority: 1,
+              status: 'completed'
             });
           }
         } catch (error) {
           result.errors++;
           result.operations.push({
+            id: `download-${entityType}`,
             type: 'download',
             entityType,
             entityId: 'batch',
-            success: false,
-            error: error.message
+            data: null,
+            priority: 1,
+            status: 'failed',
+            errorMessage: (error as Error).message
           });
         }
       }
@@ -755,15 +766,6 @@ interface SyncResult {
   conflicts: number;
   errors: number;
   operations: SyncOperation[];
-}
-
-interface SyncOperation {
-  type: 'upload' | 'download';
-  entityType: string;
-  entityId: string;
-  success: boolean;
-  error?: string;
-  count?: number;
 }
 
 export default MobileAppAPI;

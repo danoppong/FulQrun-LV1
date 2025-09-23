@@ -499,10 +499,10 @@ async function getTopPerformers(organizationId: string): Promise<any[]> {
 
     if (error) throw error;
 
-    return data.map(item => ({
+    return data.map((item: any) => ({
       userId: item.user_id,
-      email: item.users.email,
-      fullName: item.users.full_name,
+      email: item.users?.email,
+      fullName: item.users?.full_name,
       averageScore: item.score
     }));
   } catch (error) {
@@ -533,13 +533,13 @@ async function getPopularModules(organizationId: string): Promise<any[]> {
 
     // Get module details and sort by completion count
     const popularModules = Object.entries(moduleCounts)
-      .map(([moduleId, count]) => {
-        const moduleData = data.find(d => d.module_id === moduleId);
+      .map(([moduleId, count]: [string, any]) => {
+        const moduleData = data.find((d: any) => d.module_id === moduleId);
         return {
           moduleId,
-          title: moduleData?.learning_modules?.title,
-          category: moduleData?.learning_modules?.category,
-          duration: moduleData?.learning_modules?.duration,
+          title: moduleData?.learning_modules?.[0]?.title || 'Unknown',
+          category: moduleData?.learning_modules?.[0]?.category || 'Unknown',
+          duration: moduleData?.learning_modules?.[0]?.duration || 0,
           completionCount: count
         };
       })

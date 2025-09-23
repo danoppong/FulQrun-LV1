@@ -46,7 +46,7 @@ export class ErrorHandler {
 
     if (logError) {
       // Use centralized error logging instead of console.error
-      await logError(errorMessage, {
+      await errorLogger.logError('error', errorMessage, {
         module,
         function: functionName,
         organizationId,
@@ -88,7 +88,7 @@ export class ErrorHandler {
       const data = await operation()
       return { data, error: null }
     } catch (error) {
-      const errorMessage = this.handleApiError(error as ApiError, options)
+      const errorMessage = await this.handleApiError(error as ApiError, options)
       return { data: null, error: errorMessage }
     }
   }
@@ -96,8 +96,8 @@ export class ErrorHandler {
   /**
    * Handle component state errors
    */
-  static handleComponentError(error: unknown, setError: (error: string) => void): void {
-    const errorMessage = this.handleApiError(error as ApiError, { logError: true })
+  static async handleComponentError(error: unknown, setError: (error: string) => void): Promise<void> {
+    const errorMessage = await this.handleApiError(error as ApiError, { logError: true })
     setError(errorMessage)
   }
 

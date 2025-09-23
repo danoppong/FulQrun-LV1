@@ -281,7 +281,7 @@ export class EnterpriseSecurityAPI {
         .from('enterprise_compliance_reports')
         .update({
           status: 'failed',
-          report_data: { error: error.message }
+          report_data: { error: (error as Error).message }
         })
         .eq('id', reportId);
     }
@@ -586,7 +586,7 @@ export class EnterpriseSecurityAPI {
         .eq('action', action)
         .eq('organization_id', organizationId);
 
-      return permissions && permissions.length > 0;
+      return permissions ? permissions.length > 0 : false;
     } catch (error) {
       console.error('Error checking permission:', error);
       return false;
@@ -676,7 +676,7 @@ export class EnterpriseSecurityAPI {
         return acc;
       }, {} as any);
 
-      Object.entries(loginCounts).forEach(([userId, count]) => {
+      Object.entries(loginCounts).forEach(([userId, count]: [string, any]) => {
         if (count > 10) { // More than 10 logins in 24 hours
           anomalies.push({
             type: 'unusual_login_activity',

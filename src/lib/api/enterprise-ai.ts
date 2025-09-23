@@ -73,7 +73,7 @@ export async function getAIModels(organizationId: string): Promise<AIModelConfig
 
     if (error) throw error;
 
-    return data.map(model => ({
+    return data.map((model: any) => ({
       id: model.id,
       name: model.name,
       modelType: model.model_type,
@@ -381,7 +381,7 @@ export async function processBatchAIInsights(organizationId: string, entityType:
         }
         results.push({ entityId, success: true, insight });
       } catch (error) {
-        results.push({ entityId, success: false, error: error.message });
+        results.push({ entityId, success: false, error: (error as Error).message });
       }
     }
     

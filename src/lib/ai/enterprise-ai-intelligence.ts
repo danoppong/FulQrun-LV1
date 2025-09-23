@@ -3,7 +3,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
+// import Anthropic from '@anthropic-ai/sdk';
 
 // Types for enterprise AI features
 export interface AIModel {
@@ -75,12 +75,12 @@ export interface ForecastingData {
 class EnterpriseAIIntelligence {
   private supabase: any;
   private openai: OpenAI;
-  private anthropic: Anthropic;
+  // private anthropic: Anthropic;
 
   constructor(supabaseUrl: string, supabaseKey: string, openaiApiKey: string, anthropicApiKey: string) {
     this.supabase = createClient(supabaseUrl, supabaseKey);
     this.openai = new OpenAI({ apiKey: openaiApiKey });
-    this.anthropic = new Anthropic({ apiKey: anthropicApiKey });
+    // this.anthropic = new Anthropic({ apiKey: anthropicApiKey });
   }
 
   // Advanced Lead Scoring with ML
@@ -329,7 +329,7 @@ class EnterpriseAIIntelligence {
       }
 
       // Deal strategy recommendations
-      const activeOpportunities = userData.opportunities?.filter(opp => opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') || [];
+      const activeOpportunities = userData.opportunities?.filter((opp: any) => opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') || [];
       if (activeOpportunities.length > 0) {
         recommendations.push({
           id: crypto.randomUUID(),
@@ -687,7 +687,7 @@ class EnterpriseAIIntelligence {
     
     if (!similarOpportunities || similarOpportunities.length === 0) return 0.5;
     
-    const winRate = similarOpportunities.filter(opp => opp.stage === 'closed_won').length / similarOpportunities.length;
+    const winRate = similarOpportunities.filter((opp: any) => opp.stage === 'closed_won').length / similarOpportunities.length;
     return Math.max(0, 1 - winRate);
   }
 

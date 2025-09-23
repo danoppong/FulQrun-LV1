@@ -29,10 +29,103 @@ import {
   getWorkflowTemplates,
   createWorkflowFromTemplate,
   getWorkflowAnalytics,
-  getWorkflowHealth,
-  EnterpriseWorkflow,
-  WorkflowExecution
+  getWorkflowHealth
 } from '@/lib/api/enterprise-workflows';
+
+// Define interfaces locally to avoid import issues
+interface EnterpriseWorkflow {
+  id: string;
+  name: string;
+  description: string;
+  workflowType: 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom';
+  triggerConditions: Record<string, any>;
+  steps: WorkflowStep[];
+  approvalConfig: ApprovalConfig;
+  notificationConfig: NotificationConfig;
+  isActive: boolean;
+  priority: number;
+  timeoutHours: number;
+  retryConfig: RetryConfig;
+  organizationId: string;
+  createdBy: string;
+  createdAt: Date;
+}
+
+interface WorkflowStep {
+  id: string;
+  name: string;
+  type: 'action' | 'condition' | 'approval' | 'notification' | 'delay';
+  config: Record<string, any>;
+  conditions?: WorkflowCondition[];
+  actions?: WorkflowAction[];
+  nextSteps?: string[];
+  errorHandling?: ErrorHandling;
+}
+
+interface WorkflowCondition {
+  field: string;
+  operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
+  value: any;
+  logicalOperator?: 'AND' | 'OR';
+}
+
+interface WorkflowAction {
+  type: string;
+  config: Record<string, any>;
+  parameters: Record<string, any>;
+}
+
+interface ApprovalConfig {
+  approvalType: 'sequential' | 'parallel' | 'any';
+  approvers: string[];
+  minApprovals: number;
+  escalationConfig: EscalationConfig;
+  timeoutHours: number;
+  approvalCriteria?: Record<string, any>;
+  escalationRules?: any[];
+  requireAllApprovers?: boolean;
+}
+
+interface NotificationConfig {
+  channels: string[];
+  templates: Record<string, any>;
+  recipients: string[];
+  escalationConfig: EscalationConfig;
+}
+
+interface RetryConfig {
+  maxAttempts: number;
+  delayMinutes: number;
+  backoffMultiplier: number;
+  maxDelayMinutes: number;
+}
+
+interface ErrorHandling {
+  onError: 'stop' | 'retry' | 'continue' | 'escalate';
+  retryConfig?: RetryConfig;
+  escalationConfig?: EscalationConfig;
+}
+
+interface EscalationConfig {
+  enabled: boolean;
+  escalationUsers: string[];
+  escalationDelayMinutes: number;
+  maxEscalations: number;
+}
+
+interface WorkflowExecution {
+  id: string;
+  workflowId: string;
+  entityType: string;
+  entityId: string;
+  status: 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
+  currentStepId?: string;
+  executionData: Record<string, any>;
+  startedAt: Date;
+  completedAt?: Date;
+  errorMessage?: string;
+  organizationId: string;
+}
 
 interface EnterpriseWorkflowDashboardProps {
   organizationId: string;
@@ -97,27 +190,37 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
         approvalConfig: {
           approvalType: 'sequential',
           approvers: [],
-          approvalCriteria: {},
-          escalationRules: [],
+          minApprovals: 1,
           timeoutHours: 24,
-          requireAllApprovers: false
+          escalationConfig: {
+            enabled: false,
+            escalationUsers: [],
+            escalationDelayMinutes: 0,
+            maxEscalations: 0
+          }
         },
         notificationConfig: {
           channels: ['email'],
           templates: {},
           recipients: [],
-          conditions: []
+          escalationConfig: {
+            enabled: false,
+            escalationUsers: [],
+            escalationDelayMinutes: 0,
+            maxEscalations: 0
+          }
         },
         isActive: true,
         priority: 1,
         timeoutHours: 24,
         retryConfig: {
-          maxRetries: 3,
-          retryIntervalMinutes: 5,
+          maxAttempts: 3,
+          delayMinutes: 5,
           backoffMultiplier: 2,
-          retryConditions: ['network_error', 'timeout']
+          maxDelayMinutes: 60
         },
-        organizationId
+        organizationId,
+        createdBy: userId
       }, userId);
       
       setWorkflows([newWorkflow, ...workflows]);
@@ -436,7 +539,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-500">
                           <span>Started: {new Date(execution.startedAt).toLocaleString()}</span>
-                          <span>Steps: {execution.executedSteps.length}/{execution.executedSteps.length + execution.pendingSteps.length}</span>
+                          <span>Step: {execution.currentStepId || 'N/A'}</span>
                         </div>
                       </div>
                     ))}
@@ -569,7 +672,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-500">
                           <span>Started: {new Date(execution.startedAt).toLocaleString()}</span>
-                          <span>Progress: {execution.executedSteps.length}/{execution.executedSteps.length + execution.pendingSteps.length}</span>
+                          <span>Step: {execution.currentStepId || 'N/A'}</span>
                         </div>
                         {execution.errorMessage && (
                           <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-800">

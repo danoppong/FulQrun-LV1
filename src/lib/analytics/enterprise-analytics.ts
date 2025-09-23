@@ -809,8 +809,8 @@ export class EnterpriseAnalyticsAPI {
         generatedAt: new Date().toISOString(),
         summary: {},
         metrics: {},
-        insights: [],
-        recommendations: []
+        insights: [] as string[],
+        recommendations: [] as string[]
       };
 
       // Generate summary metrics

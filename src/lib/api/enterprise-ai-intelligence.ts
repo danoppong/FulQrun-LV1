@@ -238,7 +238,7 @@ export class EnterpriseAIIntelligence {
           title: 'Skill Development Opportunities',
           description: 'Focus on developing key skills to improve performance',
           priority: 'high',
-          actionItems: performanceAnalysis.skillGaps.map(skill => `Complete ${skill} training`),
+          actionItems: performanceAnalysis.skillGaps.map((skill: any) => `Complete ${skill} training`),
           expectedImpact: '15-25% improvement in conversion rates',
           timeframe: '30-60 days',
           resources: ['LMS Training Modules', 'Mentor Sessions', 'Practice Scenarios'],
@@ -264,7 +264,7 @@ export class EnterpriseAIIntelligence {
       }
 
       // Generate deal strategy recommendations
-      const activeOpportunities = user.opportunities?.filter(opp => opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') || []
+      const activeOpportunities = user.opportunities?.filter((opp: any) => opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') || []
       if (activeOpportunities.length > 0) {
         recommendations.push({
           id: `strategy-${userId}-${Date.now()}`,
@@ -443,7 +443,7 @@ export class EnterpriseAIIntelligence {
       quarterly: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
       yearly: new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
     }
-    return ranges[period]?.toISOString() || ranges.monthly.toISOString()
+    return ranges[period as keyof typeof ranges]?.toISOString() || ranges.monthly.toISOString()
   }
 
   private calculateForecast(opportunities: any[], period: string): any {
@@ -472,7 +472,7 @@ export class EnterpriseAIIntelligence {
       quarterly: new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000),
       yearly: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000)
     }
-    return ranges[period] || ranges.monthly
+    return ranges[period as keyof typeof ranges] || ranges.monthly
   }
 
   private generateEmailTemplate(context: any): string {

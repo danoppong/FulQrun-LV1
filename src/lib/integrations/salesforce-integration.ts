@@ -137,7 +137,7 @@ export class SalesforceIntegration extends BaseIntegration {
         recordsCreated,
         recordsUpdated,
         recordsFailed,
-        errorMessage: error.message,
+        errorMessage: (error as Error).message,
         syncDuration: Date.now() - startTime
       };
     }

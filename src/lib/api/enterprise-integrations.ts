@@ -48,7 +48,7 @@ export async function getEnterpriseIntegrations(organizationId: string): Promise
     if (error) throw error;
     
     // Map database fields to interface
-    return (data || []).map(integration => ({
+    return (data || []).map((integration: any) => ({
       id: integration.id,
       name: integration.name,
       integrationType: integration.type,
@@ -306,15 +306,15 @@ export async function getIntegrationStatistics(organizationId: string): Promise<
     if (error) throw error;
 
     const total = integrations?.length || 0;
-    const active = integrations?.filter(i => i.is_active).length || 0;
+    const active = integrations?.filter((i: any) => i.is_active).length || 0;
     
-    const byStatus = integrations?.reduce((acc, integration) => {
+    const byStatus = integrations?.reduce((acc: any, integration: any) => {
       const status = integration.sync_status || 'never';
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>) || {};
 
-    const byType = integrations?.reduce((acc, integration) => {
+    const byType = integrations?.reduce((acc: any, integration: any) => {
       const type = integration.type || 'unknown';
       acc[type] = (acc[type] || 0) + 1;
       return acc;
@@ -354,7 +354,7 @@ export async function getIntegrationHealth(organizationId: string): Promise<any>
       lastSync: null as Date | null
     };
 
-    integrations?.forEach(integration => {
+    integrations?.forEach((integration: any) => {
       if (integration.sync_status === 'success') {
         health.healthy++;
       } else if (integration.sync_status === 'error') {
@@ -409,7 +409,7 @@ export class EnterpriseIntegrationAPI {
   }
 
   static async syncData(integrationId: string): Promise<SyncResult> {
-    return syncIntegrationData(integrationId);
+    return syncIntegrationData(integrationId, 'contacts');
   }
 
   static async getSyncHistory(integrationId: string): Promise<SyncResult[]> {

@@ -564,17 +564,17 @@ async function detectAnomalies(organizationId: string): Promise<any[]> {
       .eq('organization_id', organizationId)
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Last 24 hours
 
-    const anomalies = [];
+    const anomalies: any[] = [];
     
     // Check for unusual login patterns
-    const loginCounts = {};
+    const loginCounts: any = {};
     auditLogs?.forEach(log => {
       if (log.action_type === 'login') {
         loginCounts[log.user_id] = (loginCounts[log.user_id] || 0) + 1;
       }
     });
 
-    Object.entries(loginCounts).forEach(([userId, count]) => {
+    Object.entries(loginCounts).forEach(([userId, count]: [string, any]) => {
       if (count > 10) { // More than 10 logins in 24 hours
         anomalies.push({
           type: 'unusual_login_activity',

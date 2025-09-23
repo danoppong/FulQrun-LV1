@@ -8,31 +8,162 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// Define interfaces locally to avoid import issues
+export interface EnterpriseWorkflow {
+  id: string;
+  name: string;
+  description: string;
+  workflowType: 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom';
+  triggerConditions: Record<string, any>;
+  steps: WorkflowStep[];
+  approvalConfig: ApprovalConfig;
+  notificationConfig: NotificationConfig;
+  isActive: boolean;
+  priority: number;
+  timeoutHours: number;
+  retryConfig: RetryConfig;
+  organizationId: string;
+  createdBy: string;
+  createdAt: Date;
+}
+
+export interface WorkflowStep {
+  id: string;
+  name: string;
+  type: 'action' | 'condition' | 'approval' | 'notification' | 'delay';
+  config: Record<string, any>;
+  conditions?: WorkflowCondition[];
+  actions?: WorkflowAction[];
+  nextSteps?: string[];
+  errorHandling?: ErrorHandling;
+}
+
+export interface WorkflowCondition {
+  field: string;
+  operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
+  value: any;
+  logicalOperator?: 'AND' | 'OR';
+}
+
+export interface WorkflowAction {
+  type: string;
+  config: Record<string, any>;
+  parameters: Record<string, any>;
+}
+
+export interface ApprovalConfig {
+  approvalType: 'sequential' | 'parallel' | 'any';
+  approvers: string[];
+  minApprovals: number;
+  escalationConfig: EscalationConfig;
+  timeoutHours: number;
+}
+
+export interface NotificationConfig {
+  channels: string[];
+  templates: Record<string, any>;
+  recipients: string[];
+  escalationConfig: EscalationConfig;
+}
+
+export interface RetryConfig {
+  maxAttempts: number;
+  delayMinutes: number;
+  backoffMultiplier: number;
+  maxDelayMinutes: number;
+}
+
+export interface ErrorHandling {
+  onError: 'stop' | 'retry' | 'continue' | 'escalate';
+  retryConfig?: RetryConfig;
+  escalationConfig?: EscalationConfig;
+}
+
+export interface EscalationConfig {
+  enabled: boolean;
+  escalationUsers: string[];
+  escalationDelayMinutes: number;
+  maxEscalations: number;
+}
+
+export interface WorkflowExecution {
+  id: string;
+  workflowId: string;
+  entityType: string;
+  entityId: string;
+  status: 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
+  currentStepId?: string;
+  executionData: Record<string, any>;
+  startedAt: Date;
+  completedAt?: Date;
+  errorMessage?: string;
+  organizationId: string;
+}
+
+export interface WorkflowStepExecution {
+  id: string;
+  executionId: string;
+  stepId: string;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+  inputData: Record<string, any>;
+  outputData?: Record<string, any>;
+  startedAt: Date;
+  completedAt?: Date;
+  errorMessage?: string;
+}
+
+export interface ApprovalRequest {
+  id: string;
+  workflowExecutionId: string;
+  stepId: string;
+  approvers: ApprovalUser[];
+  status: 'pending' | 'approved' | 'rejected' | 'expired';
+  requestedAt: Date;
+  completedAt?: Date;
+  comments?: string;
+}
+
+export interface ApprovalUser {
+  userId: string;
+  email: string;
+  name: string;
+  role: string;
+  response?: 'approved' | 'rejected';
+  respondedAt?: Date;
+  comments?: string;
+}
+
+export interface ApprovalResponse {
+  requestId: string;
+  userId: string;
+  response: 'approved' | 'rejected';
+  comments?: string;
+  respondedAt: Date;
+}
+
+export interface ApprovalTemplate {
+  id: string;
+  name: string;
+  description: string;
+  approvers: string[];
+  approvalType: 'sequential' | 'parallel' | 'any';
+  timeoutHours: number;
+  organizationId: string;
+}
+
 // Core workflow engine
 export {
   WorkflowEngine,
   workflowEngine,
-  EnterpriseWorkflow,
-  WorkflowStep,
-  WorkflowCondition,
-  WorkflowAction,
-  ApprovalConfig,
-  NotificationConfig,
-  RetryConfig,
-  ErrorHandling,
-  EscalationConfig,
-  WorkflowExecution,
-  WorkflowStepExecution,
 } from './workflow-engine';
+
+// Import workflowEngine for use in WorkflowManager
+import { workflowEngine } from './workflow-engine';
 
 // Approval processes
 export {
   ApprovalProcessManager,
   approvalProcessManager,
-  ApprovalRequest,
-  ApprovalUser,
-  ApprovalResponse,
-  ApprovalTemplate,
 } from './approval-processes';
 
 // Workflow factory for creating workflow instances

@@ -426,7 +426,7 @@ export class WorkflowEngine {
       }
     } catch (error) {
       execution.status = 'failed';
-      execution.errorMessage = error.message;
+      execution.errorMessage = (error as Error).message;
       execution.completedAt = new Date();
       await this.updateExecution(execution);
       throw error;
@@ -455,7 +455,7 @@ export class WorkflowEngine {
       await this.executeStep(execution, currentStep);
     } catch (error) {
       execution.status = 'failed';
-      execution.errorMessage = error.message;
+      execution.errorMessage = (error as Error).message;
       execution.completedAt = new Date();
       await this.updateExecution(execution);
       throw error;
@@ -513,7 +513,7 @@ export class WorkflowEngine {
       switch (step.errorHandling.onError) {
         case 'stop':
           execution.status = 'failed';
-          execution.errorMessage = error.message;
+          execution.errorMessage = (error as Error).message;
           execution.completedAt = new Date();
           await this.updateExecution(execution);
           break;

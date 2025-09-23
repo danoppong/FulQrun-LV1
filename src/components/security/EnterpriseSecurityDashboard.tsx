@@ -27,13 +27,75 @@ import {
   detectAnomalies,
   getSecurityMetrics,
   getComplianceStatus,
-  getSecurityAlerts,
-  AuditLogEntry,
-  ComplianceReport,
-  SecurityPolicy,
-  RBACPermission,
-  DataPrivacyRequest
+  getSecurityAlerts
 } from '@/lib/api/enterprise-security';
+
+// Define interfaces locally to avoid import issues
+interface AuditLogEntry {
+  id: string;
+  userId?: string;
+  organizationId: string;
+  actionType: string;
+  entityType: string;
+  entityId?: string;
+  oldValues?: Record<string, any>;
+  newValues?: Record<string, any>;
+  ipAddress?: string;
+  userAgent?: string;
+  sessionId?: string;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  complianceFlags: string[];
+  createdAt: Date;
+}
+
+interface ComplianceReport {
+  id: string;
+  name?: string;
+  type?: string;
+  reportName?: string;
+  reportType?: string;
+  status: 'draft' | 'in_progress' | 'completed' | 'failed' | 'generating' | 'expired';
+  generatedAt?: Date;
+  createdAt?: Date;
+  downloadCount?: number;
+  data?: Record<string, any>;
+  organizationId: string;
+}
+
+interface SecurityPolicy {
+  id: string;
+  name: string;
+  description: string;
+  type?: string;
+  policyType?: string;
+  rules: Record<string, any>;
+  isActive: boolean;
+  organizationId: string;
+}
+
+interface RBACPermission {
+  id: string;
+  name?: string;
+  description?: string;
+  resource: string;
+  actions?: string[];
+  conditions?: Record<string, any>;
+  organizationId: string;
+}
+
+interface DataPrivacyRequest {
+  id: string;
+  userId?: string;
+  type?: 'access' | 'rectification' | 'erasure' | 'portability' | 'restriction';
+  requestType?: string;
+  requesterEmail?: string;
+  entityType?: string;
+  createdAt?: Date;
+  status: 'pending' | 'in_progress' | 'completed' | 'rejected';
+  requestedAt?: Date;
+  completedAt?: Date;
+  organizationId: string;
+}
 
 interface EnterpriseSecurityDashboardProps {
   organizationId: string;
@@ -444,8 +506,8 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                       <div key={report.id} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <h4 className="font-medium text-gray-900">{report.reportName}</h4>
-                            <p className="text-sm text-gray-500 capitalize">{report.reportType.replace('_', ' ')}</p>
+                            <h4 className="font-medium text-gray-900">{report.reportName || report.name || 'Unnamed Report'}</h4>
+                            <p className="text-sm text-gray-500 capitalize">{report.reportType?.replace('_', ' ') || report.type || 'Unknown'}</p>
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(report.status)}`}>
@@ -463,8 +525,8 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-500">
-                          <span>Created: {new Date(report.createdAt).toLocaleDateString()}</span>
-                          <span>Downloads: {report.downloadCount}</span>
+                          <span>Created: {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Unknown'}</span>
+                          <span>Downloads: {report.downloadCount || 0}</span>
                         </div>
                       </div>
                     ))}
@@ -507,7 +569,7 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                           </div>
                         </div>
                         <div className="text-sm text-gray-500">
-                          Type: {policy.policyType.replace('_', ' ').toUpperCase()}
+                          Type: {(policy.policyType || policy.type || 'Unknown').replace('_', ' ').toUpperCase()}
                         </div>
                       </div>
                     ))}
@@ -534,16 +596,16 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                       <div key={request.id} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <h4 className="font-medium text-gray-900">{request.requesterEmail}</h4>
-                            <p className="text-sm text-gray-500 capitalize">{request.requestType.replace('_', ' ')}</p>
+                            <h4 className="font-medium text-gray-900">{request.requesterEmail || request.userId || 'Unknown Requester'}</h4>
+                            <p className="text-sm text-gray-500 capitalize">{(request.requestType || request.type || 'Unknown').replace('_', ' ')}</p>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
                             {request.status.toUpperCase()}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-500">
-                          <span>Entity: {request.entityType}</span>
-                          <span>Created: {new Date(request.createdAt).toLocaleDateString()}</span>
+                          <span>Entity: {request.entityType || 'Unknown'}</span>
+                          <span>Created: {request.createdAt ? new Date(request.createdAt).toLocaleDateString() : 'Unknown'}</span>
                         </div>
                       </div>
                     ))}
