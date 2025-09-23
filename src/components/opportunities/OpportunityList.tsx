@@ -92,6 +92,27 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
     loadOpportunities(searchTerm, selectedStage)
   }, [searchTerm, selectedStage])
 
+  // Listen for MEDDPICC score updates to refresh the list
+  useEffect(() => {
+    const handleScoreUpdate = (event: CustomEvent) => {
+      const { opportunityId, score } = event.detail
+      if (opportunityId && typeof score === 'number') {
+        setMeddpiccScores(prev => ({
+          ...prev,
+          [opportunityId]: score
+        }))
+        // Invalidate cache to ensure fresh calculation next time
+        meddpiccScoringService.invalidateScore(opportunityId)
+      }
+    }
+
+    window.addEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
+    
+    return () => {
+      window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
+    }
+  }, [])
+
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this opportunity?')) return

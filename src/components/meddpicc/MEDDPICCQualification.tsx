@@ -55,21 +55,72 @@ export default function MEDDPICCQualification({
 
   const watchedValues = watch()
 
-  // Check if MEDDPICC_CONFIG is available
+  // Load existing opportunity data and current score
   useEffect(() => {
+    const loadOpportunityData = async () => {
+      try {
+        setIsLoading(true)
+        
+        // Get the opportunity data to load existing MEDDPICC information
+        const { data: opportunity, error } = await opportunityAPI.getOpportunity(opportunityId)
+        
+        if (error) {
+          console.error('Error loading opportunity:', error)
+          return
+        }
+        
+        if (opportunity) {
+          // Get the current MEDDPICC score using the unified service
+          const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, opportunity)
+          
+          // Convert opportunity MEDDPICC data to responses format
+          const existingResponses = convertLegacyToComprehensive({
+            metrics: opportunity.metrics,
+            economic_buyer: opportunity.economic_buyer,
+            decision_criteria: opportunity.decision_criteria,
+            decision_process: opportunity.decision_process,
+            paper_process: opportunity.paper_process,
+            identify_pain: opportunity.identify_pain,
+            implicate_pain: opportunity.implicate_pain,
+            champion: opportunity.champion,
+            competition: opportunity.competition
+          })
+          
+          setResponses(existingResponses)
+          
+          // Set the current assessment with the unified score
+          const assessment = {
+            responses: existingResponses,
+            pillarScores: scoreResult.pillarScores,
+            overallScore: scoreResult.score,
+            qualificationLevel: scoreResult.qualificationLevel,
+            litmusTestScore: 0, // Will be calculated if needed
+            nextActions: [],
+            stageGateReadiness: {}
+          }
+          
+          setCurrentAssessment(assessment)
+        }
+      } catch (error) {
+        console.error('Error loading opportunity data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
     if (MEDDPICC_CONFIG && MEDDPICC_CONFIG.pillars) {
-      setIsLoading(false)
+      loadOpportunityData()
     } else {
       console.warn('MEDDPICC_CONFIG not available, retrying...')
       // Retry after a short delay
       const timer = setTimeout(() => {
         if (MEDDPICC_CONFIG && MEDDPICC_CONFIG.pillars) {
-          setIsLoading(false)
+          loadOpportunityData()
         }
       }, 100)
       return () => clearTimeout(timer)
     }
-  }, [])
+  }, [opportunityId])
 
   // Convert legacy MEDDPICC data to comprehensive format
   const convertLegacyToComprehensive = (legacyData: any): MEDDPICCResponse[] => {
@@ -165,10 +216,12 @@ export default function MEDDPICCQualification({
   // Memoize the assessment calculation to prevent unnecessary re-calculations
   const assessment = useMemo(() => {
     if (responses.length > 0) {
-      return calculateMEDDPICCScore(responses)
+      // Use the unified scoring service for consistency across all views
+      const scoreResult = calculateMEDDPICCScore(responses)
+      return scoreResult
     }
-    return null
-  }, [responses])
+    return currentAssessment // Return the loaded assessment if no form changes
+  }, [responses, currentAssessment])
 
   useEffect(() => {
     if (assessment) {
@@ -180,6 +233,30 @@ export default function MEDDPICCQualification({
       }
     }
   }, [assessment, currentAssessment?.overallScore, notifyStageGateReadiness])
+
+  // Listen for MEDDPICC score updates from other components
+  useEffect(() => {
+    const handleScoreUpdate = (event: CustomEvent) => {
+      const { opportunityId: updatedOpportunityId, score } = event.detail
+      if (updatedOpportunityId === opportunityId && typeof score === 'number') {
+        // Update the current assessment with the new score
+        setCurrentAssessment(prev => prev ? {
+          ...prev,
+          overallScore: score,
+          qualificationLevel: getMEDDPICCLevel(score).level
+        } : null)
+        
+        // Invalidate cache to ensure fresh calculation
+        meddpiccScoringService.invalidateScore(opportunityId)
+      }
+    }
+
+    window.addEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
+    
+    return () => {
+      window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
+    }
+  }, [opportunityId])
 
   const togglePillar = (pillarId: string) => {
     setExpandedPillars(prev => {
