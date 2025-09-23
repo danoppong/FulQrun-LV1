@@ -29,7 +29,7 @@ export default function EnterpriseIntegrationsPage() {
 
   return (
     <EnterpriseIntegrationsDashboard 
-      organizationId={user.organization_id || ''} 
+      organizationId={user.profile?.organization_id || ''} 
       userId={user.id} 
     />
   );

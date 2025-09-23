@@ -72,13 +72,16 @@ export default function EnterpriseIntegrationsDashboard({ organizationId, userId
       const newIntegration = await createEnterpriseIntegration({
         integrationType: selectedTemplate.type,
         name: integrationForm.name,
+        provider: selectedTemplate.provider,
         config: integrationForm.config || {},
         credentials: integrationForm.credentials || {},
         webhookConfig: {},
         syncConfig: {},
         isActive: true,
         syncFrequencyMinutes: 60,
-        organizationId
+        syncStatus: 'never',
+        organizationId,
+        createdBy: userId
       }, userId);
       
       setIntegrations([...integrations, newIntegration]);
@@ -301,12 +304,12 @@ export default function EnterpriseIntegrationsDashboard({ organizationId, userId
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(statistics?.byType || {}).map(([type, count]) => (
+                  {(Object.entries(statistics?.byType || {}) as [string, number][]).map(([type, count]) => (
                     <div key={type} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-medium text-gray-900 capitalize">{type}</h4>
-                          <p className="text-sm text-gray-500">{count} integration{(count as number) > 1 ? 's' : ''}</p>
+                          <p className="text-sm text-gray-500">{count} integration{count > 1 ? 's' : ''}</p>
                         </div>
                         <div className="text-right">
                           <span className="text-2xl font-bold text-gray-900">{count}</span>

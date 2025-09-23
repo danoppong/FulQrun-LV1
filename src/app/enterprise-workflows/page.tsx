@@ -29,7 +29,7 @@ export default function EnterpriseWorkflowPage() {
 
   return (
     <EnterpriseWorkflowDashboard 
-      organizationId={user.organization_id || ''} 
+      organizationId={user.profile?.organization_id || ''} 
       userId={user.id} 
     />
   );

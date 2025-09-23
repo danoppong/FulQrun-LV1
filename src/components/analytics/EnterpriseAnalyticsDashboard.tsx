@@ -60,7 +60,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
         insightsData
       ] = await Promise.all([
         getAnalyticsDashboards(organizationId),
-        getKPITemplates(),
+        getKPITemplates(organizationId),
         getRealTimeMetrics(organizationId),
         generateAnalyticsInsights(organizationId)
       ]);
@@ -88,7 +88,8 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
         refreshFrequencyMinutes: 15,
         isPublic: false,
         accessLevel: 'organization',
-        organizationId
+        organizationId,
+        createdBy: userId
       }, userId);
       
       setDashboards([newDashboard, ...dashboards]);
@@ -106,7 +107,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
   const handleGenerateForecast = async () => {
     try {
       setLoading(true);
-      const forecast = await generateForecast(organizationId, 'revenue', 'monthly', 6);
+      const forecast = await generateForecast(organizationId, 'monthly');
       alert(`Forecast generated: ${forecast.predictions.length} predictions with ${Math.round(forecast.confidence * 100)}% confidence`);
     } catch (error) {
       console.error('Error generating forecast:', error);
@@ -119,12 +120,16 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
   const handleExecuteQuery = async () => {
     try {
       setLoading(true);
-      const query = await executeAnalyticsQuery(
-        'sales_performance_by_user',
-        {},
+      const query = await executeAnalyticsQuery({
+        id: 'temp-query',
+        name: 'Sales Performance by User',
+        query: 'sales_performance_by_user',
+        parameters: {},
+        resultType: 'table',
+        isPublic: false,
         organizationId,
-        userId
-      );
+        createdBy: userId
+      });
       alert(`Query executed in ${query.executionTime}ms`);
     } catch (error) {
       console.error('Error executing query:', error);
@@ -468,7 +473,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                   <h4 className="font-medium text-gray-900 mb-2">Deal Forecast</h4>
                   <p className="text-sm text-gray-500 mb-4">Predict deal closure patterns</p>
                   <button
-                    onClick={() => generateForecast(organizationId, 'deals', 'monthly', 3)}
+                    onClick={() => generateForecast(organizationId, 'monthly')}
                     disabled={loading}
                     className="w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50"
                   >
@@ -529,7 +534,16 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                     <h4 className="font-medium text-gray-900 mb-2">Conversion Funnel</h4>
                     <p className="text-sm text-gray-500 mb-4">Analyze conversion funnel stages</p>
                     <button
-                      onClick={() => executeAnalyticsQuery('conversion_funnel', {}, organizationId, userId)}
+                      onClick={() => executeAnalyticsQuery({
+                        id: 'temp-conversion-query',
+                        name: 'Conversion Funnel',
+                        query: 'conversion_funnel',
+                        parameters: {},
+                        resultType: 'chart',
+                        isPublic: false,
+                        organizationId,
+                        createdBy: userId
+                      })}
                       disabled={loading}
                       className="w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50"
                     >
@@ -555,7 +569,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                     <h4 className="font-medium text-gray-900 mb-2">Monthly Report</h4>
                     <p className="text-sm text-gray-500 mb-4">Generate comprehensive monthly report</p>
                     <button
-                      onClick={() => generateExecutiveReport(organizationId, 'monthly', new Date())}
+                      onClick={() => generateExecutiveReport(organizationId, 'monthly')}
                       disabled={loading}
                       className="w-full px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50"
                     >
@@ -567,7 +581,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                     <h4 className="font-medium text-gray-900 mb-2">Quarterly Report</h4>
                     <p className="text-sm text-gray-500 mb-4">Generate quarterly performance report</p>
                     <button
-                      onClick={() => generateExecutiveReport(organizationId, 'quarterly', new Date())}
+                      onClick={() => generateExecutiveReport(organizationId, 'quarterly')}
                       disabled={loading}
                       className="w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50"
                     >
@@ -579,7 +593,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                     <h4 className="font-medium text-gray-900 mb-2">Yearly Report</h4>
                     <p className="text-sm text-gray-500 mb-4">Generate annual performance report</p>
                     <button
-                      onClick={() => generateExecutiveReport(organizationId, 'yearly', new Date())}
+                      onClick={() => generateExecutiveReport(organizationId, 'yearly')}
                       disabled={loading}
                       className="w-full px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 disabled:opacity-50"
                     >

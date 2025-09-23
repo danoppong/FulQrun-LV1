@@ -2,13 +2,13 @@
 // API functions for mobile app management and offline-first features
 
 import { createClient } from '@supabase/supabase-js';
-import MobileAppAPI, { 
+import { 
   MobileSession, 
   DeviceInfo, 
   OfflineData, 
   VoiceNote, 
   MobileAnalytics 
-} from './mobile-app';
+} from '@/lib/mobile/mobile-app';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -547,7 +547,3 @@ export async function getMobileAppHealth(organizationId: string): Promise<any> {
   }
 }
 
-// Export all functions
-export {
-  MobileAppAPI
-};

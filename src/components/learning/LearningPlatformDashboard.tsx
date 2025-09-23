@@ -19,8 +19,8 @@ import {
   VideoCameraIcon,
   QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
-import LearningPlatformAPI from '../api/learning-platform';
-import { LearningModule, CertificationTrack, UserProgress, LearningPath, ComplianceRecord } from '../learning/learning-management';
+import * as LearningPlatformAPI from '@/lib/api/learning-platform';
+import { LearningModule, CertificationTrack, UserProgress, LearningPath, ComplianceRecord } from '@/lib/learning/learning-management';
 
 interface LearningPlatformDashboardProps {
   organizationId: string;

@@ -18,8 +18,8 @@ import {
   PauseIcon,
   StopIcon
 } from '@heroicons/react/24/outline';
-import MobileAppAPI from '../api/mobile-app';
-import { MobileSession, DeviceInfo, VoiceNote, MobileAnalytics } from '../mobile/mobile-app';
+import * as MobileAppAPI from '@/lib/api/mobile-app';
+import { MobileSession, DeviceInfo, VoiceNote, MobileAnalytics } from '@/lib/mobile/mobile-app';
 
 interface MobileAppDashboardProps {
   organizationId: string;

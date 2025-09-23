@@ -467,5 +467,8 @@ export {
   validateWorkflowSteps,
   testWorkflowStep,
   getWorkflowAnalytics,
-  getWorkflowHealth
+  getWorkflowHealth,
+  EnterpriseWorkflow,
+  WorkflowStep,
+  WorkflowExecution
 };

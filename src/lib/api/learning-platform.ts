@@ -9,7 +9,7 @@ import LearningManagementSystem, {
   LearningPath, 
   ComplianceRecord, 
   LearningAnalytics 
-} from './learning-management';
+} from '@/lib/learning/learning-management';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

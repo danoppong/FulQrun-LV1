@@ -29,10 +29,15 @@ export interface KPIMetric {
   calculation: string;
   target: number;
   currentValue: number;
+  previousValue: number;
   trend: 'up' | 'down' | 'stable';
   unit: string;
+  format: string;
+  color: string;
   isActive: boolean;
   organizationId: string;
+  createdBy: string;
+  createdAt: Date;
 }
 
 export interface ForecastingModel {
@@ -60,6 +65,7 @@ export interface AnalyticsQuery {
 export interface RealTimeMetric {
   id: string;
   name: string;
+  metricName: string;
   value: number;
   unit: string;
   timestamp: Date;

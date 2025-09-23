@@ -95,7 +95,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
         triggerConditions: {},
         steps: [],
         approvalConfig: {
-          approvalType: 'single',
+          approvalType: 'sequential',
           approvers: [],
           approvalCriteria: {},
           escalationRules: [],

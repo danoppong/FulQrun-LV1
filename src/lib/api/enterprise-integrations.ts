@@ -9,12 +9,17 @@ const supabase = getSupabaseClient();
 export interface EnterpriseIntegration {
   id: string;
   name: string;
-  type: 'crm' | 'erp' | 'marketing' | 'analytics' | 'communication' | 'custom';
+  integrationType: 'crm' | 'erp' | 'marketing' | 'analytics' | 'communication' | 'custom';
   provider: string;
   config: Record<string, any>;
+  credentials: Record<string, any>;
+  webhookConfig: Record<string, any>;
+  syncConfig: Record<string, any>;
   isActive: boolean;
-  lastSync?: Date;
-  syncStatus: 'success' | 'error' | 'pending' | 'never';
+  lastSyncAt?: Date;
+  syncStatus: 'success' | 'error' | 'pending' | 'syncing' | 'never';
+  syncFrequencyMinutes: number;
+  errorMessage?: string;
   organizationId: string;
   createdBy: string;
   createdAt: Date;
@@ -24,6 +29,8 @@ export interface EnterpriseIntegration {
 export interface SyncResult {
   success: boolean;
   recordsProcessed: number;
+  recordsCreated: number;
+  recordsUpdated: number;
   errors: string[];
   duration: number;
   timestamp: Date;
@@ -39,7 +46,27 @@ export async function getEnterpriseIntegrations(organizationId: string): Promise
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Map database fields to interface
+    return (data || []).map(integration => ({
+      id: integration.id,
+      name: integration.name,
+      integrationType: integration.type,
+      provider: integration.provider,
+      config: integration.config || {},
+      credentials: integration.credentials || {},
+      webhookConfig: integration.webhook_config || {},
+      syncConfig: integration.sync_config || {},
+      isActive: integration.is_active,
+      lastSyncAt: integration.last_sync ? new Date(integration.last_sync) : undefined,
+      syncStatus: integration.sync_status || 'never',
+      syncFrequencyMinutes: integration.sync_frequency_minutes || 60,
+      errorMessage: integration.error_message,
+      organizationId: integration.organization_id,
+      createdBy: integration.created_by,
+      createdAt: new Date(integration.created_at),
+      updatedAt: new Date(integration.updated_at)
+    }));
   } catch (error) {
     console.error('Error fetching enterprise integrations:', error);
     throw error;
@@ -56,11 +83,15 @@ export async function createEnterpriseIntegration(
       .from('enterprise_integrations')
       .insert({
         name: integration.name,
-        type: integration.type,
+        type: integration.integrationType,
         provider: integration.provider,
         config: integration.config,
+        credentials: integration.credentials,
+        webhook_config: integration.webhookConfig,
+        sync_config: integration.syncConfig,
         is_active: integration.isActive,
         sync_status: integration.syncStatus,
+        sync_frequency_minutes: integration.syncFrequencyMinutes,
         organization_id: integration.organizationId,
         created_by: userId
       })
@@ -83,11 +114,17 @@ export async function updateEnterpriseIntegration(
   try {
     const updateData: any = {};
     if (updates.name) updateData.name = updates.name;
-    if (updates.type) updateData.type = updates.type;
+    if (updates.integrationType) updateData.type = updates.integrationType;
     if (updates.provider) updateData.provider = updates.provider;
     if (updates.config) updateData.config = updates.config;
+    if (updates.credentials) updateData.credentials = updates.credentials;
+    if (updates.webhookConfig) updateData.webhook_config = updates.webhookConfig;
+    if (updates.syncConfig) updateData.sync_config = updates.syncConfig;
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
     if (updates.syncStatus) updateData.sync_status = updates.syncStatus;
+    if (updates.syncFrequencyMinutes) updateData.sync_frequency_minutes = updates.syncFrequencyMinutes;
+    if (updates.lastSyncAt) updateData.last_sync = updates.lastSyncAt;
+    if (updates.errorMessage) updateData.error_message = updates.errorMessage;
 
     const { data, error } = await supabase
       .from('enterprise_integrations')
@@ -131,12 +168,14 @@ export async function testIntegrationConnection(integrationId: string): Promise<
 }
 
 // Sync integration data
-export async function syncIntegrationData(integrationId: string): Promise<SyncResult> {
+export async function syncIntegrationData(integrationId: string, entityType: string): Promise<SyncResult> {
   try {
     const startTime = Date.now();
     
     // Mock sync process
     const recordsProcessed = Math.floor(Math.random() * 1000) + 100;
+    const recordsCreated = Math.floor(recordsProcessed * 0.3);
+    const recordsUpdated = Math.floor(recordsProcessed * 0.7);
     const errors: string[] = [];
     const success = Math.random() > 0.1; // 90% success rate
     
@@ -148,6 +187,8 @@ export async function syncIntegrationData(integrationId: string): Promise<SyncRe
     const result: SyncResult = {
       success,
       recordsProcessed,
+      recordsCreated,
+      recordsUpdated,
       errors,
       duration: Date.now() - startTime,
       timestamp: new Date()
@@ -155,7 +196,7 @@ export async function syncIntegrationData(integrationId: string): Promise<SyncRe
 
     // Update integration sync status
     await updateEnterpriseIntegration(integrationId, {
-      lastSync: new Date(),
+      lastSyncAt: new Date(),
       syncStatus: success ? 'success' : 'error'
     });
 
@@ -223,7 +264,12 @@ export async function getIntegrationTemplates(): Promise<any[]> {
           apiUrl: 'https://your-instance.salesforce.com',
           apiKey: 'your-api-key',
           syncFields: ['contacts', 'leads', 'opportunities']
-        }
+        },
+        fields: [
+          { name: 'apiUrl', label: 'API URL', type: 'url', required: true },
+          { name: 'apiKey', label: 'API Key', type: 'password', required: true }
+        ],
+        supportedEntities: ['contacts', 'leads', 'opportunities']
       },
       {
         id: 'hubspot-marketing',
@@ -235,12 +281,102 @@ export async function getIntegrationTemplates(): Promise<any[]> {
           apiUrl: 'https://api.hubapi.com',
           apiKey: 'your-hubspot-key',
           syncFields: ['contacts', 'companies', 'deals']
-        }
+        },
+        fields: [
+          { name: 'apiUrl', label: 'API URL', type: 'url', required: true },
+          { name: 'apiKey', label: 'API Key', type: 'password', required: true }
+        ],
+        supportedEntities: ['contacts', 'companies', 'deals']
       }
     ];
   } catch (error) {
     console.error('Error fetching integration templates:', error);
     return [];
+  }
+}
+
+// Get integration statistics
+export async function getIntegrationStatistics(organizationId: string): Promise<any> {
+  try {
+    const { data: integrations, error } = await supabase
+      .from('enterprise_integrations')
+      .select('*')
+      .eq('organization_id', organizationId);
+
+    if (error) throw error;
+
+    const total = integrations?.length || 0;
+    const active = integrations?.filter(i => i.is_active).length || 0;
+    
+    const byStatus = integrations?.reduce((acc, integration) => {
+      const status = integration.sync_status || 'never';
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>) || {};
+
+    const byType = integrations?.reduce((acc, integration) => {
+      const type = integration.type || 'unknown';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>) || {};
+
+    return {
+      total,
+      active,
+      byStatus,
+      byType
+    };
+  } catch (error) {
+    console.error('Error fetching integration statistics:', error);
+    return {
+      total: 0,
+      active: 0,
+      byStatus: {},
+      byType: {}
+    };
+  }
+}
+
+// Get integration health
+export async function getIntegrationHealth(organizationId: string): Promise<any> {
+  try {
+    const { data: integrations, error } = await supabase
+      .from('enterprise_integrations')
+      .select('*')
+      .eq('organization_id', organizationId);
+
+    if (error) throw error;
+
+    const health = {
+      healthy: 0,
+      warning: 0,
+      error: 0,
+      lastSync: null as Date | null
+    };
+
+    integrations?.forEach(integration => {
+      if (integration.sync_status === 'success') {
+        health.healthy++;
+      } else if (integration.sync_status === 'error') {
+        health.error++;
+      } else {
+        health.warning++;
+      }
+
+      if (integration.last_sync && (!health.lastSync || new Date(integration.last_sync) > health.lastSync)) {
+        health.lastSync = new Date(integration.last_sync);
+      }
+    });
+
+    return health;
+  } catch (error) {
+    console.error('Error fetching integration health:', error);
+    return {
+      healthy: 0,
+      warning: 0,
+      error: 0,
+      lastSync: null
+    };
   }
 }
 
