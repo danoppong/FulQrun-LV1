@@ -40,6 +40,8 @@ interface SecurityAlert {
   message: string;
   timestamp: string;
   resolved: boolean;
+  title: string;
+  description: string;
 }
 
 interface SecurityMetrics {
