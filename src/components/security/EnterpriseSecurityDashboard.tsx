@@ -8,7 +8,7 @@ import {
   UserGroupIcon,
   LockClosedIcon,
   EyeIcon,
-  DownloadIcon,
+  ArrowDownTrayIcon,
   PlusIcon,
   CogIcon,
   ChartBarIcon,
@@ -456,7 +456,7 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                                 onClick={() => handleDownloadReport(report.id)}
                                 className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                               >
-                                <DownloadIcon className="h-4 w-4 mr-2" />
+                                <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
                                 Download
                               </button>
                             )}

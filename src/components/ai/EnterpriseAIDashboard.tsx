@@ -5,7 +5,7 @@ import {
   ChartBarIcon, 
   LightBulbIcon, 
   UserGroupIcon, 
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -79,7 +79,7 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
   const getInsightIcon = (type: string) => {
     switch (type) {
       case 'lead_scoring':
-        return <TrendingUpIcon className="h-5 w-5 text-green-500" />;
+        return <ArrowTrendingUpIcon className="h-5 w-5 text-green-500" />;
       case 'deal_risk':
         return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />;
       case 'coaching':
@@ -110,7 +110,7 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
     { id: 'overview', name: 'Overview', icon: ChartBarIcon },
     { id: 'insights', name: 'AI Insights', icon: LightBulbIcon },
     { id: 'coaching', name: 'Coaching', icon: UserGroupIcon },
-    { id: 'forecasting', name: 'Forecasting', icon: TrendingUpIcon },
+    { id: 'forecasting', name: 'Forecasting', icon: ArrowTrendingUpIcon },
     { id: 'models', name: 'AI Models', icon: SparklesIcon }
   ];
 
@@ -121,7 +121,7 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Enterprise AI Intelligence</h1>
+              <h1 className="text-3xl font-bold bg-gradient-phase3-primary bg-clip-text text-transparent">Enterprise AI Intelligence</h1>
               <p className="mt-2 text-gray-600">
                 Advanced AI-powered insights, coaching, and forecasting for enterprise sales operations
               </p>
@@ -179,7 +179,7 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <TrendingUpIcon className="h-8 w-8 text-green-500" />
+                    <ArrowTrendingUpIcon className="h-8 w-8 text-green-500" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-500">Active Insights</p>

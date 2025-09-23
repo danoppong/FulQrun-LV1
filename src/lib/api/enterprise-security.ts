@@ -2,13 +2,13 @@
 // API functions for enterprise security, compliance, and audit management
 
 import { createClient } from '@supabase/supabase-js';
-import EnterpriseSecurityAPI, { 
+import { 
   AuditLogEntry, 
   ComplianceReport, 
   SecurityPolicy, 
   RBACPermission, 
   DataPrivacyRequest 
-} from './enterprise-security';
+} from '../security/enterprise-security';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,16 +16,34 @@ const supabase = createClient(
 );
 
 // Audit Logging
-export async function logAuditEvent(event: Omit<AuditLogEntry, 'id' | 'createdAt'>): Promise<void> {
+async function logAuditEvent(event: Omit<AuditLogEntry, 'id' | 'createdAt'>): Promise<void> {
   try {
-    await EnterpriseSecurityAPI.logAuditEvent(event);
+    const { error } = await supabase
+      .from('enterprise_audit_logs')
+      .insert({
+        user_id: event.userId,
+        organization_id: event.organizationId,
+        action_type: event.actionType,
+        entity_type: event.entityType,
+        entity_id: event.entityId,
+        old_values: event.oldValues,
+        new_values: event.newValues,
+        ip_address: event.ipAddress,
+        user_agent: event.userAgent,
+        session_id: event.sessionId,
+        risk_level: event.riskLevel,
+        compliance_flags: event.complianceFlags,
+        created_at: new Date().toISOString()
+      });
+
+    if (error) throw error;
   } catch (error) {
     console.error('Error logging audit event:', error);
     throw error;
   }
 }
 
-export async function getAuditLogs(
+async function getAuditLogs(
   organizationId: string,
   filters: {
     userId?: string;
@@ -39,7 +57,43 @@ export async function getAuditLogs(
   } = {}
 ): Promise<AuditLogEntry[]> {
   try {
-    return await EnterpriseSecurityAPI.getAuditLogs(organizationId, filters);
+    let query = supabase
+      .from('enterprise_audit_logs')
+      .select('*')
+      .eq('organization_id', organizationId);
+
+    if (filters.userId) query = query.eq('user_id', filters.userId);
+    if (filters.actionType) query = query.eq('action_type', filters.actionType);
+    if (filters.entityType) query = query.eq('entity_type', filters.entityType);
+    if (filters.riskLevel) query = query.eq('risk_level', filters.riskLevel);
+    if (filters.dateFrom) query = query.gte('created_at', filters.dateFrom.toISOString());
+    if (filters.dateTo) query = query.lte('created_at', filters.dateTo.toISOString());
+
+    query = query.order('created_at', { ascending: false });
+
+    if (filters.limit) query = query.limit(filters.limit);
+    if (filters.offset) query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return data.map(log => ({
+      id: log.id,
+      userId: log.user_id,
+      organizationId: log.organization_id,
+      actionType: log.action_type,
+      entityType: log.entity_type,
+      entityId: log.entity_id,
+      oldValues: log.old_values,
+      newValues: log.new_values,
+      ipAddress: log.ip_address,
+      userAgent: log.user_agent,
+      sessionId: log.session_id,
+      riskLevel: log.risk_level,
+      complianceFlags: log.compliance_flags,
+      createdAt: new Date(log.created_at)
+    }));
   } catch (error) {
     console.error('Error fetching audit logs:', error);
     throw error;
@@ -47,7 +101,7 @@ export async function getAuditLogs(
 }
 
 // Compliance Reporting
-export async function generateComplianceReport(
+async function generateComplianceReport(
   reportType: ComplianceReport['reportType'],
   reportName: string,
   filters: any,
@@ -55,20 +109,55 @@ export async function generateComplianceReport(
   userId: string
 ): Promise<ComplianceReport> {
   try {
-    return await EnterpriseSecurityAPI.generateComplianceReport(
+    const reportData = {
       reportType,
       reportName,
       filters,
-      organizationId,
-      userId
-    );
+      generatedAt: new Date().toISOString(),
+      organizationId
+    };
+
+    const { data, error } = await supabase
+      .from('enterprise_compliance_reports')
+      .insert({
+        report_type: reportType,
+        report_name: reportName,
+        report_data: reportData,
+        filters: filters,
+        status: 'generating',
+        organization_id: organizationId,
+        created_by: userId,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      reportType: data.report_type,
+      reportName: data.report_name,
+      reportData: data.report_data,
+      filters: data.filters,
+      dateRangeStart: data.date_range_start ? new Date(data.date_range_start) : undefined,
+      dateRangeEnd: data.date_range_end ? new Date(data.date_range_end) : undefined,
+      status: data.status,
+      filePath: data.file_path,
+      fileSize: data.file_size,
+      downloadCount: data.download_count,
+      expiresAt: data.expires_at ? new Date(data.expires_at) : undefined,
+      organizationId: data.organization_id,
+      createdBy: data.created_by,
+      createdAt: new Date(data.created_at)
+    };
   } catch (error) {
     console.error('Error generating compliance report:', error);
     throw error;
   }
 }
 
-export async function getComplianceReports(organizationId: string): Promise<ComplianceReport[]> {
+async function getComplianceReports(organizationId: string): Promise<ComplianceReport[]> {
   try {
     const { data, error } = await supabase
       .from('enterprise_compliance_reports')
@@ -101,7 +190,7 @@ export async function getComplianceReports(organizationId: string): Promise<Comp
   }
 }
 
-export async function downloadComplianceReport(reportId: string): Promise<Blob> {
+async function downloadComplianceReport(reportId: string): Promise<Blob> {
   try {
     const { data: report } = await supabase
       .from('enterprise_compliance_reports')
@@ -127,19 +216,46 @@ export async function downloadComplianceReport(reportId: string): Promise<Blob> 
 }
 
 // Security Policies
-export async function createSecurityPolicy(
+async function createSecurityPolicy(
   policy: Omit<SecurityPolicy, 'id' | 'createdAt'>,
   userId: string
 ): Promise<SecurityPolicy> {
   try {
-    return await EnterpriseSecurityAPI.createSecurityPolicy(policy, userId);
+    const { data, error } = await supabase
+      .from('security_policies')
+      .insert({
+        name: policy.name,
+        description: policy.description,
+        policy_type: policy.policyType,
+        rules: policy.rules,
+        is_active: policy.isActive,
+        organization_id: policy.organizationId,
+        created_by: userId,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      policyType: data.policy_type,
+      rules: data.rules,
+      isActive: data.is_active,
+      organizationId: data.organization_id,
+      createdBy: data.created_by,
+      createdAt: new Date(data.created_at)
+    };
   } catch (error) {
     console.error('Error creating security policy:', error);
     throw error;
   }
 }
 
-export async function getSecurityPolicies(organizationId: string): Promise<SecurityPolicy[]> {
+async function getSecurityPolicies(organizationId: string): Promise<SecurityPolicy[]> {
   try {
     const { data, error } = await supabase
       .from('security_policies')
@@ -166,7 +282,7 @@ export async function getSecurityPolicies(organizationId: string): Promise<Secur
   }
 }
 
-export async function updateSecurityPolicy(
+async function updateSecurityPolicy(
   policyId: string,
   updates: Partial<SecurityPolicy>
 ): Promise<SecurityPolicy> {
@@ -203,7 +319,7 @@ export async function updateSecurityPolicy(
   }
 }
 
-export async function deleteSecurityPolicy(policyId: string): Promise<void> {
+async function deleteSecurityPolicy(policyId: string): Promise<void> {
   try {
     const { error } = await supabase
       .from('security_policies')
@@ -218,16 +334,38 @@ export async function deleteSecurityPolicy(policyId: string): Promise<void> {
 }
 
 // RBAC Permissions
-export async function createRBACPermission(permission: Omit<RBACPermission, 'id'>): Promise<RBACPermission> {
+async function createRBACPermission(permission: Omit<RBACPermission, 'id'>): Promise<RBACPermission> {
   try {
-    return await EnterpriseSecurityAPI.createRBACPermission(permission);
+    const { data, error } = await supabase
+      .from('rbac_permissions')
+      .insert({
+        role: permission.role,
+        resource: permission.resource,
+        action: permission.action,
+        conditions: permission.conditions,
+        organization_id: permission.organizationId,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      role: data.role,
+      resource: data.resource,
+      action: data.action,
+      conditions: data.conditions,
+      organizationId: data.organization_id
+    };
   } catch (error) {
     console.error('Error creating RBAC permission:', error);
     throw error;
   }
 }
 
-export async function getRBACPermissions(organizationId: string): Promise<RBACPermission[]> {
+async function getRBACPermissions(organizationId: string): Promise<RBACPermission[]> {
   try {
     const { data, error } = await supabase
       .from('rbac_permissions')
@@ -251,21 +389,42 @@ export async function getRBACPermissions(organizationId: string): Promise<RBACPe
   }
 }
 
-export async function checkPermission(
+async function checkPermission(
   userId: string,
   resource: string,
   action: string,
   organizationId: string
 ): Promise<boolean> {
   try {
-    return await EnterpriseSecurityAPI.checkPermission(userId, resource, action, organizationId);
+    // Get user's role
+    const { data: user } = await supabase
+      .from('users')
+      .select('enterprise_role')
+      .eq('id', userId)
+      .eq('organization_id', organizationId)
+      .single();
+
+    if (!user) return false;
+
+    // Check if permission exists for the role
+    const { data, error } = await supabase
+      .from('rbac_permissions')
+      .select('*')
+      .eq('role', user.enterprise_role)
+      .eq('resource', resource)
+      .eq('action', action)
+      .eq('organization_id', organizationId)
+      .single();
+
+    if (error) return false;
+    return !!data;
   } catch (error) {
     console.error('Error checking permission:', error);
     return false;
   }
 }
 
-export async function getUserPermissions(userId: string, organizationId: string): Promise<RBACPermission[]> {
+async function getUserPermissions(userId: string, organizationId: string): Promise<RBACPermission[]> {
   try {
     // Get user's role
     const { data: user } = await supabase
@@ -301,18 +460,50 @@ export async function getUserPermissions(userId: string, organizationId: string)
 }
 
 // Data Privacy Requests
-export async function createDataPrivacyRequest(
+async function createDataPrivacyRequest(
   request: Omit<DataPrivacyRequest, 'id' | 'createdAt'>
 ): Promise<DataPrivacyRequest> {
   try {
-    return await EnterpriseSecurityAPI.createDataPrivacyRequest(request);
+    const { data, error } = await supabase
+      .from('data_privacy_requests')
+      .insert({
+        request_type: request.requestType,
+        requester_email: request.requesterEmail,
+        requester_name: request.requesterName,
+        entity_type: request.entityType,
+        entity_id: request.entityId,
+        status: request.status,
+        request_data: request.requestData,
+        response_data: request.responseData,
+        organization_id: request.organizationId,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      requestType: data.request_type,
+      requesterEmail: data.requester_email,
+      requesterName: data.requester_name,
+      entityType: data.entity_type,
+      entityId: data.entity_id,
+      status: data.status,
+      requestData: data.request_data,
+      responseData: data.response_data,
+      organizationId: data.organization_id,
+      createdAt: new Date(data.created_at),
+      completedAt: data.completed_at ? new Date(data.completed_at) : undefined
+    };
   } catch (error) {
     console.error('Error creating data privacy request:', error);
     throw error;
   }
 }
 
-export async function getDataPrivacyRequests(organizationId: string): Promise<DataPrivacyRequest[]> {
+async function getDataPrivacyRequests(organizationId: string): Promise<DataPrivacyRequest[]> {
   try {
     const { data, error } = await supabase
       .from('data_privacy_requests')
@@ -342,12 +533,21 @@ export async function getDataPrivacyRequests(organizationId: string): Promise<Da
   }
 }
 
-export async function processDataPrivacyRequest(
+async function processDataPrivacyRequest(
   requestId: string,
   responseData: any
 ): Promise<void> {
   try {
-    await EnterpriseSecurityAPI.processDataPrivacyRequest(requestId, responseData);
+    const { error } = await supabase
+      .from('data_privacy_requests')
+      .update({
+        response_data: responseData,
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', requestId);
+
+    if (error) throw error;
   } catch (error) {
     console.error('Error processing data privacy request:', error);
     throw error;
@@ -355,16 +555,45 @@ export async function processDataPrivacyRequest(
 }
 
 // Security Monitoring
-export async function detectAnomalies(organizationId: string): Promise<any[]> {
+async function detectAnomalies(organizationId: string): Promise<any[]> {
   try {
-    return await EnterpriseSecurityAPI.detectAnomalies(organizationId);
+    // Simple anomaly detection based on audit logs
+    const { data: auditLogs } = await supabase
+      .from('enterprise_audit_logs')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Last 24 hours
+
+    const anomalies = [];
+    
+    // Check for unusual login patterns
+    const loginCounts = {};
+    auditLogs?.forEach(log => {
+      if (log.action_type === 'login') {
+        loginCounts[log.user_id] = (loginCounts[log.user_id] || 0) + 1;
+      }
+    });
+
+    Object.entries(loginCounts).forEach(([userId, count]) => {
+      if (count > 10) { // More than 10 logins in 24 hours
+        anomalies.push({
+          type: 'unusual_login_activity',
+          userId,
+          count,
+          severity: 'medium',
+          description: `User ${userId} has ${count} login attempts in the last 24 hours`
+        });
+      }
+    });
+
+    return anomalies;
   } catch (error) {
     console.error('Error detecting anomalies:', error);
     return [];
   }
 }
 
-export async function getSecurityMetrics(organizationId: string): Promise<any> {
+async function getSecurityMetrics(organizationId: string): Promise<any> {
   try {
     const { data: auditLogs } = await supabase
       .from('enterprise_audit_logs')
@@ -400,9 +629,34 @@ export async function getSecurityMetrics(organizationId: string): Promise<any> {
 }
 
 // Compliance Status
-export async function getComplianceStatus(organizationId: string): Promise<any> {
+async function getComplianceStatus(organizationId: string): Promise<any> {
   try {
-    return await EnterpriseSecurityAPI.getComplianceStatus(organizationId);
+    const { data: policies } = await supabase
+      .from('security_policies')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .eq('is_active', true);
+
+    const { data: users } = await supabase
+      .from('users')
+      .select('*')
+      .eq('organization_id', organizationId);
+
+    const { data: auditLogs } = await supabase
+      .from('enterprise_audit_logs')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+    return {
+      totalPolicies: policies?.length || 0,
+      activePolicies: policies?.filter(p => p.is_active).length || 0,
+      totalUsers: users?.length || 0,
+      mfaEnabledUsers: users?.filter(u => u.mfa_enabled).length || 0,
+      auditEventsLast30Days: auditLogs?.length || 0,
+      complianceScore: Math.min(100, ((policies?.length || 0) * 20 + (users?.filter(u => u.mfa_enabled).length || 0) * 10)),
+      lastAuditDate: auditLogs?.[0]?.created_at ? new Date(auditLogs[0].created_at) : null
+    };
   } catch (error) {
     console.error('Error getting compliance status:', error);
     throw error;
@@ -410,18 +664,22 @@ export async function getComplianceStatus(organizationId: string): Promise<any> 
 }
 
 // Data Encryption
-export async function encryptSensitiveData(data: any): Promise<string> {
+async function encryptSensitiveData(data: any): Promise<string> {
   try {
-    return await EnterpriseSecurityAPI.encryptSensitiveData(data);
+    // Simple base64 encoding for demo purposes
+    // In production, use proper encryption libraries
+    return btoa(JSON.stringify(data));
   } catch (error) {
     console.error('Error encrypting sensitive data:', error);
     throw error;
   }
 }
 
-export async function decryptSensitiveData(encryptedData: string): Promise<any> {
+async function decryptSensitiveData(encryptedData: string): Promise<any> {
   try {
-    return await EnterpriseSecurityAPI.decryptSensitiveData(encryptedData);
+    // Simple base64 decoding for demo purposes
+    // In production, use proper decryption libraries
+    return JSON.parse(atob(encryptedData));
   } catch (error) {
     console.error('Error decrypting sensitive data:', error);
     throw error;
@@ -429,7 +687,7 @@ export async function decryptSensitiveData(encryptedData: string): Promise<any> 
 }
 
 // Security Alerts
-export async function createSecurityAlert(
+async function createSecurityAlert(
   alert: {
     type: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
@@ -458,7 +716,7 @@ export async function createSecurityAlert(
   }
 }
 
-export async function getSecurityAlerts(organizationId: string): Promise<any[]> {
+async function getSecurityAlerts(organizationId: string): Promise<any[]> {
   try {
     const { data, error } = await supabase
       .from('security_alerts')
@@ -477,5 +735,27 @@ export async function getSecurityAlerts(organizationId: string): Promise<any[]> 
 
 // Export all functions
 export {
-  EnterpriseSecurityAPI
+  logAuditEvent,
+  getAuditLogs,
+  generateComplianceReport,
+  getComplianceReports,
+  downloadComplianceReport,
+  createSecurityPolicy,
+  getSecurityPolicies,
+  updateSecurityPolicy,
+  deleteSecurityPolicy,
+  createRBACPermission,
+  getRBACPermissions,
+  checkPermission,
+  getUserPermissions,
+  createDataPrivacyRequest,
+  getDataPrivacyRequests,
+  processDataPrivacyRequest,
+  detectAnomalies,
+  getSecurityMetrics,
+  getComplianceStatus,
+  encryptSensitiveData,
+  decryptSensitiveData,
+  createSecurityAlert,
+  getSecurityAlerts
 };

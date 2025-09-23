@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  DevicePhoneIcon, 
+  DevicePhoneMobileIcon, 
   CloudIcon, 
   MicrophoneIcon, 
   ChartBarIcon,
@@ -10,7 +10,6 @@ import {
   CheckCircleIcon,
   ClockIcon,
   WifiIcon,
-  WifiSlashIcon,
   BellIcon,
   CogIcon,
   ShieldCheckIcon,
@@ -148,7 +147,7 @@ export default function MobileAppDashboard({ organizationId, userId }: MobileApp
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center space-x-2">
-                <DevicePhoneIcon className="h-5 w-5 text-blue-600" />
+                <DevicePhoneMobileIcon className="h-5 w-5 text-blue-600" />
                 <span className="text-sm font-medium text-gray-700">Active Sessions</span>
               </div>
               <p className="text-2xl font-bold text-gray-900">{health.activeSessions}</p>
@@ -164,7 +163,7 @@ export default function MobileAppDashboard({ organizationId, userId }: MobileApp
             
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center space-x-2">
-                <WifiSlashIcon className="h-5 w-5 text-yellow-600" />
+                <WifiIcon className="h-5 w-5 text-yellow-600" />
                 <span className="text-sm font-medium text-gray-700">Offline Sessions</span>
               </div>
               <p className="text-2xl font-bold text-gray-900">{health.offlineSessions}</p>
@@ -214,7 +213,7 @@ export default function MobileAppDashboard({ organizationId, userId }: MobileApp
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {[
-              { id: 'sessions', label: 'Sessions', icon: DevicePhoneIcon },
+              { id: 'sessions', label: 'Sessions', icon: DevicePhoneMobileIcon },
               { id: 'voice', label: 'Voice Notes', icon: MicrophoneIcon },
               { id: 'analytics', label: 'Analytics', icon: ChartBarIcon },
               { id: 'health', label: 'Health', icon: ShieldCheckIcon }
@@ -247,7 +246,7 @@ export default function MobileAppDashboard({ organizationId, userId }: MobileApp
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center justify-between p-3 bg-white rounded border">
                     <div className="flex items-center space-x-3">
-                      <DevicePhoneIcon className="h-5 w-5 text-blue-600" />
+                      <DevicePhoneMobileIcon className="h-5 w-5 text-blue-600" />
                       <div>
                         <p className="font-medium">iPhone 15 Pro</p>
                         <p className="text-sm text-gray-500">iOS 17.0 • v1.2.3</p>
@@ -302,7 +301,7 @@ export default function MobileAppDashboard({ organizationId, userId }: MobileApp
                 
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">
-                    <DevicePhoneIcon className="h-5 w-5 text-green-600" />
+                    <DevicePhoneMobileIcon className="h-5 w-5 text-green-600" />
                     <span className="text-sm font-medium text-gray-700">Active Users</span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">456</p>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect, memo, useCallback } from 'react'
 import { performanceMonitor, PerformanceMetric } from '@/lib/performance-monitor'
 
 interface PerformanceDashboardProps {
@@ -15,13 +15,7 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
   const [report, setReport] = useState<any>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  useEffect(() => {
-    if (isOpen) {
-      refreshReport()
-    }
-  }, [isOpen])
-
-  const refreshReport = async () => {
+  const refreshReport = useCallback(async () => {
     setIsRefreshing(true)
     try {
       const performanceReport = performanceMonitor.getPerformanceReport()
@@ -31,7 +25,13 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
     } finally {
       setIsRefreshing(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshReport()
+    }
+  }, [isOpen, refreshReport])
 
   if (!isOpen) return null
 

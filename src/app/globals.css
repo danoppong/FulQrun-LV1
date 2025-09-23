@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Phase 3 Enterprise Theme */
+@import '../styles/phase3-theme.css';
+
 :root {
   /* Default light theme colors - will be overridden by theme system */
   --background: #fafafa;
@@ -30,6 +33,12 @@
   --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   --gradient-warning: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  
+  /* Phase 3 Enterprise gradients */
+  --gradient-phase3-primary: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  --gradient-phase3-secondary: linear-gradient(135deg, #a855f7 0%, #f472b6 100%);
+  --gradient-phase3-accent: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+  --gradient-phase3-hover: linear-gradient(135deg, #9333ea 0%, #e11d48 100%);
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -132,6 +141,23 @@ body {
 
 .gradient-warning {
   background: var(--gradient-warning);
+}
+
+/* Phase 3 Enterprise gradient utilities */
+.gradient-phase3-primary {
+  background: var(--gradient-phase3-primary);
+}
+
+.gradient-phase3-secondary {
+  background: var(--gradient-phase3-secondary);
+}
+
+.gradient-phase3-accent {
+  background: var(--gradient-phase3-accent);
+}
+
+.gradient-phase3-hover {
+  background: var(--gradient-phase3-hover);
 }
 
 .shadow-custom {

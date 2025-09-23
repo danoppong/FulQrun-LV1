@@ -1,22 +1,38 @@
 /**
  * Standardized Error Handling Utilities
  * Provides consistent error handling patterns across the application
+ * Now integrated with centralized error logging system
  */
 
 import { ApiError } from '@/lib/types/errors'
+import { logError, logWarning, logInfo, errorLogger } from './error-logger'
 
 export interface ErrorHandlerOptions {
   showToast?: boolean
   logError?: boolean
   fallbackMessage?: string
+  module?: string
+  function?: string
+  organizationId?: string
+  userId?: string
+  additionalData?: Record<string, any>
 }
 
 export class ErrorHandler {
   /**
-   * Handle API errors consistently
+   * Handle API errors consistently with centralized logging
    */
-  static handleApiError(error: ApiError | Error, options: ErrorHandlerOptions = {}): string {
-    const { showToast = false, logError = true, fallbackMessage = 'An unexpected error occurred' } = options
+  static async handleApiError(error: ApiError | Error, options: ErrorHandlerOptions = {}): Promise<string> {
+    const { 
+      showToast = false, 
+      logError = true, 
+      fallbackMessage = 'An unexpected error occurred',
+      module = 'unknown',
+      function: functionName = 'handleApiError',
+      organizationId = 'unknown',
+      userId,
+      additionalData = {}
+    } = options
 
     let errorMessage = fallbackMessage
 
@@ -29,7 +45,18 @@ export class ErrorHandler {
     }
 
     if (logError) {
-      console.error('API Error:', error)
+      // Use centralized error logging instead of console.error
+      await logError(errorMessage, {
+        module,
+        function: functionName,
+        organizationId,
+        userId,
+        additionalData: {
+          ...additionalData,
+          errorType: 'API_ERROR',
+          originalError: error instanceof Error ? error.stack : error,
+        }
+      }, error instanceof Error ? error : undefined)
     }
 
     if (showToast) {

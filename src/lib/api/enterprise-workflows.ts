@@ -2,11 +2,11 @@
 // API functions for enterprise workflow automation management
 
 import { createClient } from '@supabase/supabase-js';
-import EnterpriseWorkflowAPI, { 
+import { 
   EnterpriseWorkflow, 
   WorkflowStep, 
   WorkflowExecution 
-} from './enterprise-workflows';
+} from '../workflows/enterprise-workflows';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,7 +14,7 @@ const supabase = createClient(
 );
 
 // Workflow Management
-export async function createEnterpriseWorkflow(
+async function createEnterpriseWorkflow(
   workflow: Omit<EnterpriseWorkflow, 'id' | 'createdAt'>,
   userId: string
 ): Promise<EnterpriseWorkflow> {
@@ -26,7 +26,7 @@ export async function createEnterpriseWorkflow(
   }
 }
 
-export async function getEnterpriseWorkflows(organizationId: string): Promise<EnterpriseWorkflow[]> {
+async function getEnterpriseWorkflows(organizationId: string): Promise<EnterpriseWorkflow[]> {
   try {
     return await EnterpriseWorkflowAPI.getWorkflows(organizationId);
   } catch (error) {
@@ -35,7 +35,7 @@ export async function getEnterpriseWorkflows(organizationId: string): Promise<En
   }
 }
 
-export async function updateEnterpriseWorkflow(
+async function updateEnterpriseWorkflow(
   workflowId: string,
   updates: Partial<EnterpriseWorkflow>
 ): Promise<EnterpriseWorkflow> {
@@ -85,7 +85,7 @@ export async function updateEnterpriseWorkflow(
   }
 }
 
-export async function deleteEnterpriseWorkflow(workflowId: string): Promise<void> {
+async function deleteEnterpriseWorkflow(workflowId: string): Promise<void> {
   try {
     const { error } = await supabase
       .from('enterprise_workflows')
@@ -100,7 +100,7 @@ export async function deleteEnterpriseWorkflow(workflowId: string): Promise<void
 }
 
 // Workflow Execution
-export async function executeEnterpriseWorkflow(
+async function executeEnterpriseWorkflow(
   workflowId: string,
   entityType: string,
   entityId: string,
@@ -121,7 +121,7 @@ export async function executeEnterpriseWorkflow(
   }
 }
 
-export async function getWorkflowExecutions(organizationId: string): Promise<WorkflowExecution[]> {
+async function getWorkflowExecutions(organizationId: string): Promise<WorkflowExecution[]> {
   try {
     return await EnterpriseWorkflowAPI.getWorkflowExecutions(organizationId);
   } catch (error) {
@@ -130,7 +130,7 @@ export async function getWorkflowExecutions(organizationId: string): Promise<Wor
   }
 }
 
-export async function cancelWorkflowExecution(executionId: string): Promise<void> {
+async function cancelWorkflowExecution(executionId: string): Promise<void> {
   try {
     await EnterpriseWorkflowAPI.cancelWorkflowExecution(executionId);
   } catch (error) {
@@ -139,7 +139,7 @@ export async function cancelWorkflowExecution(executionId: string): Promise<void
   }
 }
 
-export async function retryWorkflowExecution(executionId: string): Promise<void> {
+async function retryWorkflowExecution(executionId: string): Promise<void> {
   try {
     await EnterpriseWorkflowAPI.retryWorkflowExecution(executionId);
   } catch (error) {
@@ -149,7 +149,7 @@ export async function retryWorkflowExecution(executionId: string): Promise<void>
 }
 
 // Workflow Templates
-export async function getWorkflowTemplates(): Promise<any[]> {
+async function getWorkflowTemplates(): Promise<any[]> {
   try {
     return await EnterpriseWorkflowAPI.getWorkflowTemplates();
   } catch (error) {
@@ -158,7 +158,7 @@ export async function getWorkflowTemplates(): Promise<any[]> {
   }
 }
 
-export async function createWorkflowFromTemplate(
+async function createWorkflowFromTemplate(
   templateId: string,
   customizations: Record<string, any>,
   organizationId: string,
@@ -197,7 +197,7 @@ export async function createWorkflowFromTemplate(
 }
 
 // Workflow Builder
-export async function validateWorkflowSteps(steps: WorkflowStep[]): Promise<{ valid: boolean; errors: string[] }> {
+async function validateWorkflowSteps(steps: WorkflowStep[]): Promise<{ valid: boolean; errors: string[] }> {
   try {
     const errors: string[] = [];
 
@@ -257,7 +257,7 @@ export async function validateWorkflowSteps(steps: WorkflowStep[]): Promise<{ va
   }
 }
 
-export async function testWorkflowStep(
+async function testWorkflowStep(
   step: WorkflowStep,
   testData: Record<string, any>
 ): Promise<{ success: boolean; error?: string; result?: any }> {
@@ -288,7 +288,7 @@ export async function testWorkflowStep(
 }
 
 // Workflow Analytics
-export async function getWorkflowAnalytics(organizationId: string): Promise<any> {
+async function getWorkflowAnalytics(organizationId: string): Promise<any> {
   try {
     const { data: executions } = await supabase
       .from('workflow_executions')
@@ -380,7 +380,7 @@ export async function getWorkflowAnalytics(organizationId: string): Promise<any>
 }
 
 // Workflow Monitoring
-export async function getWorkflowHealth(organizationId: string): Promise<any> {
+async function getWorkflowHealth(organizationId: string): Promise<any> {
   try {
     const { data: executions } = await supabase
       .from('workflow_executions')
@@ -454,5 +454,18 @@ export async function getWorkflowHealth(organizationId: string): Promise<any> {
 
 // Export all functions
 export {
-  EnterpriseWorkflowAPI
+  createEnterpriseWorkflow,
+  getEnterpriseWorkflows,
+  updateEnterpriseWorkflow,
+  deleteEnterpriseWorkflow,
+  executeEnterpriseWorkflow,
+  getWorkflowExecutions,
+  cancelWorkflowExecution,
+  retryWorkflowExecution,
+  getWorkflowTemplates,
+  createWorkflowFromTemplate,
+  validateWorkflowSteps,
+  testWorkflowStep,
+  getWorkflowAnalytics,
+  getWorkflowHealth
 };

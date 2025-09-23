@@ -21,7 +21,11 @@ import {
   ChartPieIcon,
   PuzzlePieceIcon,
   LightBulbIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  CpuChipIcon,
+  ShieldCheckIcon,
+  DevicePhoneMobileIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline'
 
 const navigation = [
@@ -42,6 +46,17 @@ const phase2Navigation = [
   { name: 'Integrations', href: '/integrations', icon: PuzzlePieceIcon, badge: 'HUB' },
   { name: 'Learning', href: '/learning', icon: AcademicCapIcon, badge: 'LMS' },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, badge: 'BI' },
+]
+
+// Phase 3 Enterprise features navigation
+const phase3Navigation = [
+  { name: 'Enterprise AI', href: '/enterprise-ai', icon: CpuChipIcon, badge: 'AI+' },
+  { name: 'Enterprise Analytics', href: '/enterprise-analytics', icon: ChartBarIcon, badge: 'BI+' },
+  { name: 'Enterprise Integrations', href: '/enterprise-integrations', icon: PuzzlePieceIcon, badge: 'HUB+' },
+  { name: 'Enterprise Security', href: '/enterprise-security', icon: ShieldCheckIcon, badge: 'SEC+' },
+  { name: 'Enterprise Workflows', href: '/enterprise-workflows', icon: ArrowPathIcon, badge: 'WF+' },
+  { name: 'Mobile App', href: '/mobile-app', icon: DevicePhoneMobileIcon, badge: 'MOBILE' },
+  { name: 'Learning Platform', href: '/learning-platform', icon: AcademicCapIcon, badge: 'LMS+' },
 ]
 
 export default function Navigation() {
@@ -148,6 +163,50 @@ export default function Navigation() {
                 </Link>
               )
             })}
+            
+            {/* Phase 3 Features Separator */}
+            <div className="pt-4">
+              <div className="flex items-center px-4 py-2">
+                <div className="flex-1 border-t border-border/30"></div>
+                <span className="px-3 text-xs font-semibold text-muted-foreground bg-card rounded-full">Phase 3 Enterprise</span>
+                <div className="flex-1 border-t border-border/30"></div>
+              </div>
+            </div>
+            
+            {/* Phase 3 Navigation */}
+            {phase3Navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`group flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-phase3-primary text-white shadow-lg shadow-purple-500/25'
+                      : 'text-muted-foreground hover:bg-gradient-phase3-hover hover:text-white hover:shadow-md'
+                  }`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <div className="flex items-center">
+                    <item.icon
+                      className={`mr-3 h-5 w-5 flex-shrink-0 transition-colors ${
+                        isActive ? 'text-white' : 'text-muted-foreground group-hover:text-white'
+                      }`}
+                    />
+                    {item.name}
+                  </div>
+                  {item.badge && (
+                    <span className={`px-2 py-1 text-xs font-bold rounded-full ${
+                      isActive 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-gradient-phase3-secondary text-white'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              )
+            })}
           </nav>
           <div className="border-t border-border/50 p-4">
             <button
@@ -231,6 +290,49 @@ export default function Navigation() {
                       isActive 
                         ? 'bg-white/20 text-white' 
                         : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              )
+            })}
+            
+            {/* Phase 3 Features Separator */}
+            <div className="pt-4">
+              <div className="flex items-center px-4 py-2">
+                <div className="flex-1 border-t border-border/30"></div>
+                <span className="px-3 text-xs font-semibold text-muted-foreground bg-card rounded-full">Phase 3 Enterprise</span>
+                <div className="flex-1 border-t border-border/30"></div>
+              </div>
+            </div>
+            
+            {/* Phase 3 Navigation */}
+            {phase3Navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`group flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-phase3-primary text-white shadow-lg shadow-purple-500/25'
+                      : 'text-muted-foreground hover:bg-gradient-phase3-hover hover:text-white hover:shadow-md'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <item.icon
+                      className={`mr-3 h-5 w-5 flex-shrink-0 transition-colors ${
+                        isActive ? 'text-white' : 'text-muted-foreground group-hover:text-white'
+                      }`}
+                    />
+                    {item.name}
+                  </div>
+                  {item.badge && (
+                    <span className={`px-2 py-1 text-xs font-bold rounded-full ${
+                      isActive 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-gradient-phase3-secondary text-white'
                     }`}>
                       {item.badge}
                     </span>

@@ -1,13 +1,10 @@
 // Enterprise AI API Layer
 // API functions for enterprise AI intelligence features
 
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/lib/supabase-client';
 import EnterpriseAIIntelligence from './enterprise-ai-intelligence';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabase = getSupabaseClient();
 
 // Initialize AI intelligence engine
 const aiIntelligence = new EnterpriseAIIntelligence(

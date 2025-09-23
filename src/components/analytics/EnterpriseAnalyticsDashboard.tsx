@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChartBarIcon, 
-  TrendingUpIcon, 
+  ArrowTrendingUpIcon, 
   EyeIcon,
   PlusIcon,
   CogIcon,
@@ -137,11 +137,11 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'up':
-        return <TrendingUpIcon className="h-5 w-5 text-green-500" />;
+        return <ArrowTrendingUpIcon className="h-5 w-5 text-green-500" />;
       case 'down':
-        return <TrendingUpIcon className="h-5 w-5 text-red-500 rotate-180" />;
+        return <ArrowTrendingUpIcon className="h-5 w-5 text-red-500 rotate-180" />;
       default:
-        return <TrendingUpIcon className="h-5 w-5 text-gray-500" />;
+        return <ArrowTrendingUpIcon className="h-5 w-5 text-gray-500" />;
     }
   };
 
@@ -172,7 +172,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
   const tabs = [
     { id: 'overview', name: 'Overview', icon: ChartBarIcon },
     { id: 'dashboards', name: 'Dashboards', icon: PresentationChartLineIcon },
-    { id: 'kpis', name: 'KPIs', icon: TrendingUpIcon },
+    { id: 'kpis', name: 'KPIs', icon: ArrowTrendingUpIcon },
     { id: 'forecasting', name: 'Forecasting', icon: ArrowPathIcon },
     { id: 'realtime', name: 'Real-time', icon: EyeIcon },
     { id: 'queries', name: 'Queries', icon: TableCellsIcon },
