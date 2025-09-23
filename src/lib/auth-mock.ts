@@ -85,7 +85,7 @@ export const createServerComponentClient = () => {
   }
 }
 
-export const createMiddlewareClient = (request: any) => {
+export const createMiddlewareClient = (request: Request) => {
   return {
     supabase: {
       auth: {

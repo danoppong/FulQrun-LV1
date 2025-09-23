@@ -16,7 +16,7 @@ export async function GET(_request: NextRequest) {
     const supabase = createServerClient()
 
     // Get all active integrations for the organization
-    const { data: integrations, error } = await supabase
+    const { data: integrations, error: _error } = await supabase
       .from('integration_connections')
       .select('*')
       .eq('organization_id', organizationId)

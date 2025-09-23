@@ -423,7 +423,7 @@ class PerformanceMonitor {
 export const performanceMonitor = new PerformanceMonitor()
 
 // React hook for component performance tracking
-export function usePerformanceTracking(componentName: string, props?: Record<string, any>) {
+export function usePerformanceTracking(componentName: string, props?: Record<string, unknown>) {
   const startTime = performance.now()
 
   React.useEffect(() => {
@@ -447,7 +447,7 @@ export function withPerformanceTracking<P extends object>(
 ) {
   const WrappedComponent = (props: P) => {
     const name = componentName || Component.displayName || Component.name || 'Unknown'
-    const { recordRender } = usePerformanceTracking(name, props as Record<string, any>)
+    const { recordRender } = usePerformanceTracking(name, props as Record<string, unknown>)
     
     const startTime = performance.now()
     

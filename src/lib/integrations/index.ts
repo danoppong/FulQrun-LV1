@@ -37,8 +37,8 @@ export class IntegrationFactory {
   static createIntegration(
     integrationType: string,
     integrationId: string,
-    config: Record<string, any>,
-    credentials: Record<string, any>,
+    config: Record<string, unknown>,
+    credentials: Record<string, unknown>,
     organizationId: string
   ): BaseIntegration {
     switch (integrationType) {

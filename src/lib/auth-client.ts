@@ -10,7 +10,7 @@ export type AuthUser = {
     full_name: string | null
     role: 'rep' | 'manager' | 'admin'
     organization_id: string
-    learning_progress: Record<string, any>
+    learning_progress: Record<string, unknown>
     created_at: string
     updated_at: string
   }

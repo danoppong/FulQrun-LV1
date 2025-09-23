@@ -15,8 +15,8 @@ export class SalesforceIntegration extends BaseIntegration {
 
   constructor(
     integrationId: string,
-    config: Record<string, any>,
-    credentials: Record<string, any>,
+    config: Record<string, unknown>,
+    credentials: Record<string, unknown>,
     organizationId: string
   ) {
     super(integrationId, config, credentials, organizationId);
@@ -143,7 +143,7 @@ export class SalesforceIntegration extends BaseIntegration {
     }
   }
 
-  async getEntityData(entityType: string, entityId: string): Promise<any> {
+  async getEntityData(entityType: string, entityId: string): Promise<Record<string, unknown>> {
     try {
       const sobjectName = this.getSalesforceObjectName(entityType);
       const response = await fetch(
@@ -262,7 +262,7 @@ export class SalesforceIntegration extends BaseIntegration {
   }
 
   // Private helper methods
-  private async getSalesforceData(entityType: string): Promise<any[]> {
+  private async getSalesforceData(entityType: string): Promise<Array<Record<string, unknown>>> {
     const sobjectName = this.getSalesforceObjectName(entityType);
     const query = this.buildSalesforceQuery(sobjectName);
     
@@ -313,7 +313,7 @@ export class SalesforceIntegration extends BaseIntegration {
     return fieldMapping[sobjectName] || ['Id', 'Name', 'CreatedDate', 'LastModifiedDate'];
   }
 
-  private async transformWebhookData(payload: WebhookPayload): Promise<any> {
+  private async transformWebhookData(payload: WebhookPayload): Promise<Record<string, unknown>> {
     // Transform Salesforce webhook data to FulQrun format
     const data = payload.data;
     

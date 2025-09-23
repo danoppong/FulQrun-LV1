@@ -183,7 +183,7 @@ export class WorkflowManager {
 
   async updateWorkflow(workflowId: string, updates: Partial<EnterpriseWorkflow>): Promise<void> {
     try {
-      const updateData: Record<string, any> = {};
+      const updateData: Record<string, unknown> = {};
       if (updates.name) updateData.name = updates.name;
       if (updates.description) updateData.description = updates.description;
       if (updates.workflowType) updateData.workflow_type = updates.workflowType;

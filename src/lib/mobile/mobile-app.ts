@@ -518,7 +518,7 @@ export class MobileAppAPI {
   static async storeOfflineData(
     sessionId: string,
     entityType: string,
-    data: any[]
+    data: Array<Record<string, unknown>>
   ): Promise<void> {
     try {
       const { data: session } = await supabase
@@ -547,7 +547,7 @@ export class MobileAppAPI {
     }
   }
 
-  static async getOfflineData(sessionId: string, entityType: string): Promise<any[]> {
+  static async getOfflineData(sessionId: string, entityType: string): Promise<Array<Record<string, unknown>>> {
     try {
       const { data: session } = await supabase
         .from('mobile_sessions')
@@ -569,12 +569,12 @@ export class MobileAppAPI {
     sessionId: string,
     entityType: string,
     entityId: string,
-    localData: any,
-    serverData: any,
+    localData: Record<string, unknown>,
+    serverData: Record<string, unknown>,
     resolutionStrategy: 'local_wins' | 'server_wins' | 'merge' | 'manual'
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
-      let resolvedData: any;
+      let resolvedData: Record<string, unknown>;
 
       switch (resolutionStrategy) {
         case 'local_wins':
@@ -607,7 +607,7 @@ export class MobileAppAPI {
     }
   }
 
-  private static mergeData(localData: any, serverData: any): any {
+  private static mergeData(localData: Record<string, unknown>, serverData: Record<string, unknown>): Record<string, unknown> {
     // Simple merge strategy - in a real implementation, this would be more sophisticated
     return {
       ...serverData,
@@ -622,7 +622,7 @@ export class MobileAppAPI {
     userId: string,
     title: string,
     body: string,
-    data?: Record<string, any>
+    data?: Record<string, unknown>
   ): Promise<void> {
     try {
       // In a real implementation, this would integrate with push notification services
@@ -657,7 +657,7 @@ export class MobileAppAPI {
   }
 
   // Mobile App Configuration
-  static async getMobileAppConfig(organizationId: string): Promise<any> {
+  static async getMobileAppConfig(organizationId: string): Promise<Record<string, unknown>> {
     try {
       const { data, error } = await supabase
         .from('mobile_app_config')
@@ -690,7 +690,7 @@ export class MobileAppAPI {
 
   static async updateMobileAppConfig(
     organizationId: string,
-    config: any
+    config: Record<string, unknown>
   ): Promise<void> {
     try {
       await supabase
@@ -710,7 +710,7 @@ export class MobileAppAPI {
   static async getDeviceCompliance(
     organizationId: string,
     deviceId: string
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
       const { data, error } = await supabase
         .from('device_compliance')
@@ -746,7 +746,7 @@ export class MobileAppAPI {
   static async enforceDevicePolicy(
     organizationId: string,
     deviceId: string,
-    policy: any
+    policy: Record<string, unknown>
   ): Promise<void> {
     try {
       // In a real implementation, this would enforce MDM policies

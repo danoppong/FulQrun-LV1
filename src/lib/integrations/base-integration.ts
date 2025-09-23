@@ -13,10 +13,10 @@ export interface EnterpriseIntegration {
   id: string;
   integrationType: 'salesforce' | 'dynamics' | 'sap' | 'oracle' | 'workday' | 'hubspot' | 'pipedrive' | 'custom';
   name: string;
-  config: Record<string, any>;
-  credentials: Record<string, any>;
-  webhookConfig: Record<string, any>;
-  syncConfig: Record<string, any>;
+  config: Record<string, unknown>;
+  credentials: Record<string, unknown>;
+  webhookConfig: Record<string, unknown>;
+  syncConfig: Record<string, unknown>;
   isActive: boolean;
   lastSyncAt?: Date;
   syncStatus: 'pending' | 'success' | 'error' | 'disabled' | 'syncing';
@@ -63,15 +63,15 @@ export interface SyncConfiguration {
 
 // Abstract base class for all integrations
 export abstract class BaseIntegration {
-  protected config: Record<string, any>;
-  protected credentials: Record<string, any>;
+  protected config: Record<string, unknown>;
+  protected credentials: Record<string, unknown>;
   protected organizationId: string;
   protected integrationId: string;
 
   constructor(
     integrationId: string,
-    config: Record<string, any>,
-    credentials: Record<string, any>,
+    config: Record<string, unknown>,
+    credentials: Record<string, unknown>,
     organizationId: string
   ) {
     this.integrationId = integrationId;
@@ -84,7 +84,7 @@ export abstract class BaseIntegration {
   abstract authenticate(): Promise<boolean>;
   abstract testConnection(): Promise<boolean>;
   abstract syncData(entityType: string, syncConfig: SyncConfiguration): Promise<SyncResult>;
-  abstract getEntityData(entityType: string, entityId: string): Promise<any>;
+  abstract getEntityData(entityType: string, entityId: string): Promise<Record<string, unknown>>;
   abstract createEntity(entityType: string, data: Record<string, unknown>): Promise<string>;
   abstract updateEntity(entityType: string, entityId: string, data: Record<string, unknown>): Promise<boolean>;
   abstract deleteEntity(entityType: string, entityId: string): Promise<boolean>;
@@ -183,7 +183,7 @@ export abstract class BaseIntegration {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
-  private setNestedValue(obj: any, path: string, value: any): void {
+  private setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
     const keys = path.split('.');
     const lastKey = keys.pop()!;
     const target = keys.reduce((current, key) => {
@@ -193,7 +193,7 @@ export abstract class BaseIntegration {
     target[lastKey] = value;
   }
 
-  private applyTransformation(value: any, transformation: string): any {
+  private applyTransformation(value: unknown, transformation: string): unknown {
     switch (transformation) {
       case 'uppercase':
         return typeof value === 'string' ? value.toUpperCase() : value;
@@ -230,7 +230,7 @@ export abstract class BaseIntegration {
     maxAttempts: number = 3,
     delayMs: number = 1000
   ): Promise<T> {
-    let lastError: any;
+    let lastError: Error | null = null;
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
@@ -286,7 +286,7 @@ export abstract class BaseIntegration {
   protected abstract handleWebhookDelete(payload: WebhookPayload): Promise<void>;
 
   // Configuration management
-  public async updateConfig(newConfig: Record<string, any>): Promise<void> {
+  public async updateConfig(newConfig: Record<string, unknown>): Promise<void> {
     this.config = { ...this.config, ...newConfig };
     
     await supabase
@@ -296,7 +296,7 @@ export abstract class BaseIntegration {
       .eq('organization_id', this.organizationId);
   }
 
-  public async updateCredentials(newCredentials: Record<string, any>): Promise<void> {
+  public async updateCredentials(newCredentials: Record<string, unknown>): Promise<void> {
     this.credentials = { ...this.credentials, ...newCredentials };
     
     await supabase

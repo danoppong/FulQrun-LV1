@@ -244,7 +244,7 @@ export class EnterpriseSecurityAPI {
     organizationId: string
   ): Promise<void> {
     try {
-      let reportData: any = {};
+      let reportData: Record<string, unknown> = {};
 
       switch (reportType) {
         case 'audit_log':
@@ -287,7 +287,7 @@ export class EnterpriseSecurityAPI {
     }
   }
 
-  private static async generateAuditLogReport(filters: any, organizationId: string): Promise<any> {
+  private static async generateAuditLogReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     const auditLogs = await this.getAuditLogs(organizationId, filters);
     
     return {
@@ -311,7 +311,7 @@ export class EnterpriseSecurityAPI {
     };
   }
 
-  private static async generateDataExportReport(filters: any, organizationId: string): Promise<any> {
+  private static async generateDataExportReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     // Generate data export report for GDPR/CCPA compliance
     const { data: users } = await supabase
       .from('users')
@@ -352,7 +352,7 @@ export class EnterpriseSecurityAPI {
     };
   }
 
-  private static async generateUserActivityReport(filters: any, organizationId: string): Promise<any> {
+  private static async generateUserActivityReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     const auditLogs = await this.getAuditLogs(organizationId, {
       ...filters,
       actionType: 'login'
@@ -374,7 +374,7 @@ export class EnterpriseSecurityAPI {
       if (log.ipAddress) acc[userId].ipAddresses.add(log.ipAddress);
       if (log.userAgent) acc[userId].userAgents.add(log.userAgent);
       return acc;
-    }, {} as any);
+    }, {} as Record<string, unknown>);
 
     return {
       summary: {
@@ -385,7 +385,7 @@ export class EnterpriseSecurityAPI {
           to: filters.dateTo
         }
       },
-      userActivity: Object.values(userActivity).map((activity: any) => ({
+      userActivity: Object.values(userActivity).map((activity: Record<string, unknown>) => ({
         ...activity,
         ipAddresses: Array.from(activity.ipAddresses),
         userAgents: Array.from(activity.userAgents)
@@ -393,7 +393,7 @@ export class EnterpriseSecurityAPI {
     };
   }
 
-  private static async generateSecurityScanReport(filters: any, organizationId: string): Promise<any> {
+  private static async generateSecurityScanReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     // Generate security scan report
     const { data: auditLogs } = await supabase
       .from('enterprise_audit_logs')
@@ -429,7 +429,7 @@ export class EnterpriseSecurityAPI {
     };
   }
 
-  private static async generateComplianceCheckReport(filters: any, organizationId: string): Promise<any> {
+  private static async generateComplianceCheckReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     // Generate compliance check report
     const { data: auditLogs } = await supabase
       .from('enterprise_audit_logs')
@@ -637,7 +637,7 @@ export class EnterpriseSecurityAPI {
 
   static async processDataPrivacyRequest(
     requestId: string,
-    responseData: any
+    responseData: Record<string, unknown>
   ): Promise<void> {
     try {
       const { error } = await supabase
@@ -674,7 +674,7 @@ export class EnterpriseSecurityAPI {
         const userId = log.user_id || 'anonymous';
         acc[userId] = (acc[userId] || 0) + 1;
         return acc;
-      }, {} as any);
+      }, {} as Record<string, unknown>);
 
       Object.entries(loginCounts).forEach(([userId, count]: [string, any]) => {
         if (count > 10) { // More than 10 logins in 24 hours
@@ -710,7 +710,7 @@ export class EnterpriseSecurityAPI {
   }
 
   // Data Encryption
-  static async encryptSensitiveData(data: any): Promise<string> {
+  static async encryptSensitiveData(data: Record<string, unknown>): Promise<string> {
     // In a real implementation, this would use proper encryption
     // For now, we'll use a simple base64 encoding as a placeholder
     return btoa(JSON.stringify(data));

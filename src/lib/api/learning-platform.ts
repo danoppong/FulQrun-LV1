@@ -443,7 +443,7 @@ export async function getLearningReport(
   organizationId: string,
   dateFrom?: Date,
   dateTo?: Date
-): Promise<any> {
+): Promise<Record<string, unknown>> {
   try {
     return await LearningManagementSystem.getLearningReport(organizationId, dateFrom, dateTo);
   } catch (error) {
@@ -452,7 +452,7 @@ export async function getLearningReport(
   }
 }
 
-export async function getLearningDashboardData(organizationId: string): Promise<any> {
+export async function getLearningDashboardData(organizationId: string): Promise<Record<string, unknown>> {
   try {
     const [report, analytics, complianceRecords] = await Promise.all([
       LearningManagementSystem.getLearningReport(organizationId),
@@ -482,7 +482,7 @@ export async function getLearningDashboardData(organizationId: string): Promise<
   }
 }
 
-async function getTopPerformers(organizationId: string): Promise<any[]> {
+async function getTopPerformers(organizationId: string): Promise<Array<{ userId: string; email: string; fullName: string; averageScore: number }>> {
   try {
     const { data, error } = await supabase
       .from('user_learning_progress')
@@ -511,7 +511,7 @@ async function getTopPerformers(organizationId: string): Promise<any[]> {
   }
 }
 
-async function getPopularModules(organizationId: string): Promise<any[]> {
+async function getPopularModules(organizationId: string): Promise<Array<{ moduleId: string; title: string; category: string; duration: number; completionCount: number }>> {
   try {
     const { data, error } = await supabase
       .from('user_learning_progress')
@@ -560,7 +560,7 @@ export async function createAssessment(
   passingScore: number,
   timeLimit: number,
   organizationId: string
-): Promise<any> {
+): Promise<Record<string, unknown>> {
   try {
     const { data, error } = await supabase
       .from('assessments')
@@ -588,7 +588,7 @@ export async function submitAssessment(
   answers: Array<{ questionId: string; answer: string | string[] }>,
   timeSpent: number,
   organizationId: string
-): Promise<any> {
+): Promise<Record<string, unknown>> {
   try {
     // Get assessment details
     const { data: assessment, error: assessmentError } = await supabase

@@ -52,7 +52,7 @@ export interface RBACPermission {
   description?: string;
   resource: string;
   actions?: string[];
-  conditions?: Record<string, any>;
+  conditions?: Record<string, unknown>;
   organizationId: string;
 }
 
@@ -75,7 +75,7 @@ export interface SecurityAlert {
   type: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   message: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   organizationId: string;
   createdAt: Date;
 }
@@ -149,7 +149,7 @@ async function getAuditLogs(
     limit?: number;
     offset?: number;
   } = {}
-): Promise<any[]> {
+): Promise<Array<{ id: string; type: string; severity: string; message: string; createdAt: string }>> {
   try {
     let query = supabase
       .from('enterprise_audit_logs')
@@ -251,7 +251,7 @@ async function generateComplianceReport(
   }
 }
 
-async function getComplianceReports(organizationId: string): Promise<any[]> {
+async function getComplianceReports(organizationId: string): Promise<Array<{ id: string; name: string; type: string; status: string; createdAt: string }>> {
   try {
     const { data, error } = await supabase
       .from('enterprise_compliance_reports')
@@ -349,7 +349,7 @@ async function createSecurityPolicy(
   }
 }
 
-async function getSecurityPolicies(organizationId: string): Promise<any[]> {
+async function getSecurityPolicies(organizationId: string): Promise<Array<{ id: string; name: string; type: string; status: string; createdAt: string }>> {
   try {
     const { data, error } = await supabase
       .from('security_policies')
@@ -378,7 +378,7 @@ async function getSecurityPolicies(organizationId: string): Promise<any[]> {
 
 async function updateSecurityPolicy(
   policyId: string,
-  updates: Partial<any>
+  updates: Partial<Record<string, unknown>>
 ): Promise<Record<string, unknown>> {
   try {
     const updateData: Record<string, unknown> = {};
@@ -459,7 +459,7 @@ async function createRBACPermission(permission: Record<string, unknown>): Promis
   }
 }
 
-async function getRBACPermissions(organizationId: string): Promise<any[]> {
+async function getRBACPermissions(organizationId: string): Promise<Array<{ id: string; name: string; resource: string; actions: string[] }>> {
   try {
     const { data, error } = await supabase
       .from('rbac_permissions')
@@ -518,7 +518,7 @@ async function checkPermission(
   }
 }
 
-async function getUserPermissions(userId: string, organizationId: string): Promise<any[]> {
+async function getUserPermissions(userId: string, organizationId: string): Promise<Array<{ id: string; name: string; resource: string; actions: string[] }>> {
   try {
     // Get user's role
     const { data: user } = await supabase
@@ -597,7 +597,7 @@ async function createDataPrivacyRequest(
   }
 }
 
-async function getDataPrivacyRequests(organizationId: string): Promise<any[]> {
+async function getDataPrivacyRequests(organizationId: string): Promise<Array<{ id: string; type: string; status: string; requestedBy: string; createdAt: string }>> {
   try {
     const { data, error } = await supabase
       .from('data_privacy_requests')
@@ -649,7 +649,7 @@ async function processDataPrivacyRequest(
 }
 
 // Security Monitoring
-async function detectAnomalies(organizationId: string): Promise<any[]> {
+async function detectAnomalies(organizationId: string): Promise<Array<{ id: string; type: string; severity: string; description: string; detectedAt: string }>> {
   try {
     // Simple anomaly detection based on audit logs
     const { data: auditLogs } = await supabase
@@ -668,7 +668,7 @@ async function detectAnomalies(organizationId: string): Promise<any[]> {
       }
     });
 
-    Object.entries(loginCounts).forEach(([userId, count]: [string, any]) => {
+    Object.entries(loginCounts).forEach(([userId, count]: [string, number]) => {
       if (count > 10) { // More than 10 logins in 24 hours
         anomalies.push({
           type: 'unusual_login_activity',
@@ -758,7 +758,7 @@ async function getComplianceStatus(organizationId: string): Promise<Record<strin
 }
 
 // Data Encryption
-async function encryptSensitiveData(data: any): Promise<string> {
+async function encryptSensitiveData(data: Record<string, unknown>): Promise<string> {
   try {
     // Simple base64 encoding for demo purposes
     // In production, use proper encryption libraries

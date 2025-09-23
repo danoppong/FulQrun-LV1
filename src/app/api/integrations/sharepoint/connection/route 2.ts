@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const supabase = createServerClient()
 
     // Get SharePoint connection for the organization
-    const { data: connection, error } = await supabase
+    const { data: connection, error: _error } = await supabase
       .from('integration_connections')
       .select('*')
       .eq('organization_id', organizationId)
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     if (existingConnection) {
       // Update existing connection
-      const { error } = await supabase
+      const { error: _error } = await supabase
         .from('integration_connections')
         .update({
           credentials: JSON.stringify(credentials),
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       })
     } else {
       // Create new connection
-      const { data: newConnection, error } = await supabase
+      const { data: newConnection, error: _error2 } = await supabase
         .from('integration_connections')
         .insert({
           organization_id: organizationId,

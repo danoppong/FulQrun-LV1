@@ -14,7 +14,7 @@ export interface ErrorLogEntry {
   level: 'debug' | 'info' | 'warn' | 'error' | 'critical';
   message: string;
   stack?: string;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   userId?: string;
   organizationId: string;
   module: string;
@@ -92,7 +92,7 @@ export class ErrorLogger {
       function: string;
       userId?: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     },
     error?: Error
   ): Promise<string> {
@@ -147,7 +147,7 @@ export class ErrorLogger {
       module: string;
       function: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     }
   ): Promise<string> {
     return this.logError('debug', message, context);
@@ -162,7 +162,7 @@ export class ErrorLogger {
       module: string;
       function: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     }
   ): Promise<string> {
     return this.logError('info', message, context);
@@ -177,7 +177,7 @@ export class ErrorLogger {
       module: string;
       function: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     }
   ): Promise<string> {
     return this.logError('warn', message, context);
@@ -193,7 +193,7 @@ export class ErrorLogger {
       function: string;
       userId?: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     },
     error?: Error
   ): Promise<string> {
@@ -210,7 +210,7 @@ export class ErrorLogger {
       function: string;
       userId?: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     },
     error?: Error
   ): Promise<string> {
@@ -602,7 +602,7 @@ export const logError = (
     function: string;
     userId?: string;
     organizationId: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   },
   error?: Error
 ) => errorLogger.error(message, context, error);
@@ -614,7 +614,7 @@ export const logCritical = (
     function: string;
     userId?: string;
     organizationId: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   },
   error?: Error
 ) => errorLogger.critical(message, context, error);
@@ -625,7 +625,7 @@ export const logWarning = (
     module: string;
     function: string;
     organizationId: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   }
 ) => errorLogger.warn(message, context);
 
@@ -635,7 +635,7 @@ export const logInfo = (
     module: string;
     function: string;
     organizationId: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   }
 ) => errorLogger.info(message, context);
 
@@ -645,6 +645,6 @@ export const logDebug = (
     module: string;
     function: string;
     organizationId: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   }
 ) => errorLogger.debug(message, context);

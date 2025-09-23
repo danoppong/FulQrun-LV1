@@ -10,8 +10,8 @@ export interface WorkflowAutomationData {
   name: string
   description: string | null
   triggerType: 'stage_change' | 'field_update' | 'time_based' | 'manual'
-  triggerConditions: Record<string, any>
-  actions: Record<string, any>[]
+  triggerConditions: Record<string, unknown>
+  actions: Record<string, unknown>[]
   isActive: boolean
   branchSpecific: boolean
   roleSpecific: boolean
@@ -32,7 +32,7 @@ export interface TriggerCondition {
 
 export interface WorkflowAction {
   type: 'send_email' | 'create_task' | 'update_field' | 'send_notification' | 'create_activity' | 'assign_user' | 'webhook'
-  config: Record<string, any>
+  config: Record<string, unknown>
   delay?: number // in minutes
 }
 
@@ -45,7 +45,7 @@ export interface WorkflowExecution {
   startedAt: string
   completedAt: string | null
   errorMessage: string | null
-  executionData: Record<string, any>
+  executionData: Record<string, unknown>
 }
 
 export class WorkflowAutomationAPI {
@@ -207,7 +207,7 @@ export class WorkflowAutomationAPI {
     workflowId: string,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<WorkflowExecution> {
     const workflow = await this.getAutomation(workflowId)
     if (!workflow) {
@@ -272,7 +272,7 @@ export class WorkflowAutomationAPI {
     action: WorkflowAction,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<void> {
     switch (action.type) {
       case 'send_email':
@@ -305,8 +305,8 @@ export class WorkflowAutomationAPI {
    * Evaluate trigger conditions
    */
   private static evaluateTriggerConditions(
-    conditions: Record<string, any>,
-    data: Record<string, any>
+    conditions: Record<string, unknown>,
+    data: Record<string, unknown>
   ): boolean {
     // Simple condition evaluation - can be enhanced with more complex logic
     for (const [field, condition] of Object.entries(conditions)) {
@@ -367,7 +367,7 @@ export class WorkflowAutomationAPI {
     action: WorkflowAction,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would integrate with email service
   }
@@ -379,7 +379,7 @@ export class WorkflowAutomationAPI {
     action: WorkflowAction,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would create a task in the activities table
   }
@@ -391,7 +391,7 @@ export class WorkflowAutomationAPI {
     action: WorkflowAction,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would update the specified field in the entity
   }
@@ -403,7 +403,7 @@ export class WorkflowAutomationAPI {
     action: WorkflowAction,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would send notification via Slack, email, or in-app
   }
@@ -415,7 +415,7 @@ export class WorkflowAutomationAPI {
     action: WorkflowAction,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would create an activity record
   }
@@ -427,7 +427,7 @@ export class WorkflowAutomationAPI {
     action: WorkflowAction,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would assign a user to the entity
   }
@@ -439,7 +439,7 @@ export class WorkflowAutomationAPI {
     action: WorkflowAction,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would make HTTP request to webhook URL
   }

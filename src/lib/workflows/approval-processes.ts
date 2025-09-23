@@ -537,7 +537,7 @@ export class ApprovalProcessManager {
     console.log(`Sending approval notification to ${approver.email}`);
   }
 
-  private async handleExpiredApproval(approval: any): Promise<void> {
+  private async handleExpiredApproval(approval: ApprovalRequest): Promise<void> {
     // Handle expired approval based on escalation config
     if (approval.escalation_config?.enabled) {
       await this.escalateApproval(approval);
@@ -553,7 +553,7 @@ export class ApprovalProcessManager {
     }
   }
 
-  private async escalateApproval(approval: any): Promise<void> {
+  private async escalateApproval(approval: ApprovalRequest): Promise<void> {
     // Implement escalation logic
     console.log(`Escalating approval ${approval.id}`);
   }
