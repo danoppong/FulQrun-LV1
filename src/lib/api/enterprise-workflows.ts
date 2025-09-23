@@ -6,7 +6,7 @@ import { workflowManager } from '../workflows/index';
 import { 
   EnterpriseWorkflow, 
   WorkflowExecution 
-} from '../workflows/enterprise-workflows';
+} from '../workflows/index';
 
 // Define WorkflowStep locally to include integration type
 interface WorkflowStep {
