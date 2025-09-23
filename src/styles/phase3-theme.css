@@ -1,0 +1,349 @@
+/* Phase 3 Enterprise Theme Styles */
+/* Additional CSS for Phase 3 enterprise features */
+
+/* Phase 3 Enterprise Color Palette */
+:root {
+  /* Phase 3 Primary Colors */
+  --phase3-purple-50: #faf5ff;
+  --phase3-purple-100: #f3e8ff;
+  --phase3-purple-200: #e9d5ff;
+  --phase3-purple-300: #d8b4fe;
+  --phase3-purple-400: #c084fc;
+  --phase3-purple-500: #a855f7;
+  --phase3-purple-600: #9333ea;
+  --phase3-purple-700: #7c3aed;
+  --phase3-purple-800: #6b21a8;
+  --phase3-purple-900: #581c87;
+
+  /* Phase 3 Pink Colors */
+  --phase3-pink-50: #fdf2f8;
+  --phase3-pink-100: #fce7f3;
+  --phase3-pink-200: #fbcfe8;
+  --phase3-pink-300: #f9a8d4;
+  --phase3-pink-400: #f472b6;
+  --phase3-pink-500: #ec4899;
+  --phase3-pink-600: #db2777;
+  --phase3-pink-700: #be185d;
+  --phase3-pink-800: #9d174d;
+  --phase3-pink-900: #831843;
+
+  /* Phase 3 Enterprise Gradients */
+  --gradient-phase3-primary: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  --gradient-phase3-secondary: linear-gradient(135deg, #a855f7 0%, #f472b6 100%);
+  --gradient-phase3-accent: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+  --gradient-phase3-hover: linear-gradient(135deg, #9333ea 0%, #e11d48 100%);
+  --gradient-phase3-light: linear-gradient(135deg, #f3e8ff 0%, #fce7f3 100%);
+  --gradient-phase3-dark: linear-gradient(135deg, #581c87 0%, #831843 100%);
+
+  /* Phase 3 Shadows */
+  --shadow-phase3-sm: 0 1px 2px 0 rgb(139 92 246 / 0.05);
+  --shadow-phase3: 0 1px 3px 0 rgb(139 92 246 / 0.1), 0 1px 2px -1px rgb(139 92 246 / 0.1);
+  --shadow-phase3-md: 0 4px 6px -1px rgb(139 92 246 / 0.1), 0 2px 4px -2px rgb(139 92 246 / 0.1);
+  --shadow-phase3-lg: 0 10px 15px -3px rgb(139 92 246 / 0.1), 0 4px 6px -4px rgb(139 92 246 / 0.1);
+  --shadow-phase3-xl: 0 20px 25px -5px rgb(139 92 246 / 0.1), 0 8px 10px -6px rgb(139 92 246 / 0.1);
+  --shadow-phase3-2xl: 0 25px 50px -12px rgb(139 92 246 / 0.25);
+}
+
+/* Phase 3 Enterprise Utility Classes */
+.phase3-gradient-primary {
+  background: var(--gradient-phase3-primary);
+}
+
+.phase3-gradient-secondary {
+  background: var(--gradient-phase3-secondary);
+}
+
+.phase3-gradient-accent {
+  background: var(--gradient-phase3-accent);
+}
+
+.phase3-gradient-hover {
+  background: var(--gradient-phase3-hover);
+}
+
+.phase3-gradient-light {
+  background: var(--gradient-phase3-light);
+}
+
+.phase3-gradient-dark {
+  background: var(--gradient-phase3-dark);
+}
+
+/* Phase 3 Text Gradients */
+.phase3-text-gradient {
+  background: var(--gradient-phase3-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.phase3-text-gradient-secondary {
+  background: var(--gradient-phase3-secondary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Phase 3 Shadows */
+.phase3-shadow-sm {
+  box-shadow: var(--shadow-phase3-sm);
+}
+
+.phase3-shadow {
+  box-shadow: var(--shadow-phase3);
+}
+
+.phase3-shadow-md {
+  box-shadow: var(--shadow-phase3-md);
+}
+
+.phase3-shadow-lg {
+  box-shadow: var(--shadow-phase3-lg);
+}
+
+.phase3-shadow-xl {
+  box-shadow: var(--shadow-phase3-xl);
+}
+
+.phase3-shadow-2xl {
+  box-shadow: var(--shadow-phase3-2xl);
+}
+
+/* Phase 3 Button Styles */
+.btn-phase3-primary {
+  background: var(--gradient-phase3-primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-phase3-md);
+}
+
+.btn-phase3-primary:hover {
+  background: var(--gradient-phase3-hover);
+  box-shadow: var(--shadow-phase3-lg);
+  transform: translateY(-1px);
+}
+
+.btn-phase3-secondary {
+  background: var(--gradient-phase3-secondary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-phase3-md);
+}
+
+.btn-phase3-secondary:hover {
+  background: var(--gradient-phase3-accent);
+  box-shadow: var(--shadow-phase3-lg);
+  transform: translateY(-1px);
+}
+
+/* Phase 3 Card Styles */
+.card-phase3 {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-phase3);
+  border: 1px solid var(--phase3-purple-100);
+  transition: all 0.2s ease;
+}
+
+.card-phase3:hover {
+  box-shadow: var(--shadow-phase3-lg);
+  transform: translateY(-2px);
+}
+
+.card-phase3-gradient {
+  background: var(--gradient-phase3-light);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-phase3);
+  border: 1px solid var(--phase3-purple-200);
+  transition: all 0.2s ease;
+}
+
+.card-phase3-gradient:hover {
+  box-shadow: var(--shadow-phase3-lg);
+  transform: translateY(-2px);
+}
+
+/* Phase 3 Badge Styles */
+.badge-phase3 {
+  background: var(--gradient-phase3-primary);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-phase3-sm);
+}
+
+.badge-phase3-secondary {
+  background: var(--gradient-phase3-secondary);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-phase3-sm);
+}
+
+/* Phase 3 Navigation Styles */
+.nav-phase3-active {
+  background: var(--gradient-phase3-primary);
+  color: white;
+  box-shadow: var(--shadow-phase3-lg);
+}
+
+.nav-phase3-hover {
+  transition: all 0.2s ease;
+}
+
+.nav-phase3-hover:hover {
+  background: var(--gradient-phase3-hover);
+  color: white;
+  box-shadow: var(--shadow-phase3-md);
+}
+
+/* Phase 3 Dashboard Header */
+.dashboard-phase3-header {
+  background: var(--gradient-phase3-light);
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-phase3);
+  border: 1px solid var(--phase3-purple-200);
+}
+
+.dashboard-phase3-title {
+  background: var(--gradient-phase3-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+/* Phase 3 Stats Cards */
+.stats-phase3-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-phase3);
+  border: 1px solid var(--phase3-purple-100);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-phase3-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-phase3-primary);
+}
+
+.stats-phase3-card:hover {
+  box-shadow: var(--shadow-phase3-lg);
+  transform: translateY(-2px);
+}
+
+/* Phase 3 Tab Styles */
+.tab-phase3-active {
+  background: var(--gradient-phase3-primary);
+  color: white;
+  box-shadow: var(--shadow-phase3-md);
+}
+
+.tab-phase3-inactive {
+  color: var(--phase3-purple-600);
+  transition: all 0.2s ease;
+}
+
+.tab-phase3-inactive:hover {
+  background: var(--phase3-purple-50);
+  color: var(--phase3-purple-700);
+}
+
+/* Phase 3 Loading States */
+.loading-phase3 {
+  background: var(--gradient-phase3-primary);
+  animation: pulse-phase3 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-phase3 {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Phase 3 Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-phase3-title {
+    font-size: 2rem;
+  }
+  
+  .card-phase3,
+  .card-phase3-gradient {
+    padding: 1rem;
+  }
+  
+  .btn-phase3-primary,
+  .btn-phase3-secondary {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Phase 3 Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .card-phase3 {
+    background: var(--phase3-purple-900);
+    border-color: var(--phase3-purple-800);
+    color: white;
+  }
+  
+  .card-phase3-gradient {
+    background: var(--gradient-phase3-dark);
+    border-color: var(--phase3-purple-700);
+    color: white;
+  }
+  
+  .dashboard-phase3-header {
+    background: var(--gradient-phase3-dark);
+    border-color: var(--phase3-purple-700);
+    color: white;
+  }
+  
+  .stats-phase3-card {
+    background: var(--phase3-purple-900);
+    border-color: var(--phase3-purple-800);
+    color: white;
+  }
+  
+  .tab-phase3-inactive {
+    color: var(--phase3-purple-300);
+  }
+  
+  .tab-phase3-inactive:hover {
+    background: var(--phase3-purple-800);
+    color: var(--phase3-purple-100);
+  }
+}

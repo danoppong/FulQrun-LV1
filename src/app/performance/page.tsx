@@ -193,7 +193,7 @@ function PerformanceContent() {
         {/* CSTPV Dashboard */}
         <CSTPVDashboard
           userId={user.id}
-          organizationId={user.organization_id || DEFAULT_ORGANIZATION_ID}
+          organizationId={user.profile?.organization_id || DEFAULT_ORGANIZATION_ID}
           periodStart={periodDates.start}
           periodEnd={periodDates.end}
         />

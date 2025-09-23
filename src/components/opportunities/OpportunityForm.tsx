@@ -12,6 +12,7 @@ import PEAKForm from '@/components/forms/PEAKForm'
 import MEDDPICCForm from '@/components/forms/MEDDPICCForm'
 import { MEDDPICCDashboard, MEDDPICCPEAKIntegration } from '@/components/meddpicc'
 import { MEDDPICCAssessment, calculateMEDDPICCScore } from '@/lib/meddpicc'
+import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { MEDDPICCErrorBoundary } from '@/components/error-boundaries/MEDDPICCErrorBoundary'
 import { useErrorHandler } from '@/lib/utils/error-handling'
@@ -288,8 +289,9 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     // If we're editing an existing opportunity, save MEDDPICC data immediately
     if (mode === 'edit' && opportunityId) {
       try {
-        // Calculate MEDDPICC score from the data
-        const meddpiccScore = calculateMEDDPICCScoreFromData(data)
+        // Use the unified scoring service for consistency
+        const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, { ...opportunity, ...data })
+        const meddpiccScore = scoreResult.score
         
         // Save both MEDDPICC data and calculated score
         const { error } = await opportunityAPI.updateMEDDPICC(opportunityId, {

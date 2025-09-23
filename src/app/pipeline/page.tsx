@@ -32,7 +32,7 @@ function PipelineContent() {
 
     try {
       setIsLoading(true)
-      const data = await PipelineConfigAPI.getConfigurations(user.organization_id || DEFAULT_ORGANIZATION_ID)
+      const data = await PipelineConfigAPI.getConfigurations(user.profile?.organization_id || DEFAULT_ORGANIZATION_ID)
       setConfigurations(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load pipeline configurations')
@@ -112,7 +112,7 @@ function PipelineContent() {
     if (!user?.id) return
 
     try {
-      await PipelineConfigAPI.setAsDefault(id, user.organization_id || DEFAULT_ORGANIZATION_ID)
+      await PipelineConfigAPI.setAsDefault(id, user.profile?.organization_id || DEFAULT_ORGANIZATION_ID)
       loadConfigurations()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to set default pipeline')
