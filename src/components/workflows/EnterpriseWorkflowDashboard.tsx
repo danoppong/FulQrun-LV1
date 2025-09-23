@@ -366,7 +366,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'overview' | 'workflows' | 'executions' | 'templates' | 'analytics' | 'settings')}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'

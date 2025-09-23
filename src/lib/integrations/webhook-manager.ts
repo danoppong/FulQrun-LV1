@@ -25,7 +25,7 @@ export interface WebhookConfig {
 export interface WebhookDelivery {
   id: string;
   webhookId: string;
-  payload: any;
+  payload: Record<string, unknown>;
   status: 'pending' | 'delivered' | 'failed' | 'retrying';
   attempts: number;
   lastAttemptAt?: Date;
@@ -120,7 +120,7 @@ export class WebhookManager {
    */
   async updateWebhook(webhookId: string, updates: Partial<WebhookConfig>): Promise<void> {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (updates.webhookUrl) updateData.webhook_url = updates.webhookUrl;
       if (updates.secretKey) updateData.secret_key = updates.secretKey;
       if (updates.events) updateData.events = updates.events;
@@ -346,7 +346,7 @@ export class WebhookManager {
     deliveryId: string,
     updates: Partial<WebhookDelivery>
   ): Promise<void> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (updates.status) updateData.status = updates.status;
     if (updates.attempts) updateData.attempts = updates.attempts;
     if (updates.lastAttemptAt) updateData.last_attempt_at = updates.lastAttemptAt.toISOString();
@@ -364,7 +364,7 @@ export class WebhookManager {
   private async handleWebhookDeliveryError(
     config: WebhookConfig,
     payload: WebhookPayload,
-    error: any
+    error: Error
   ): Promise<void> {
     const deliveryId = await this.createWebhookDelivery(config.id, payload);
     
@@ -380,7 +380,7 @@ export class WebhookManager {
     });
   }
 
-  private async retryWebhookDelivery(delivery: any): Promise<void> {
+  private async retryWebhookDelivery(delivery: WebhookDelivery): Promise<void> {
     try {
       const config = this.webhookConfigs.get(delivery.webhook_id);
       if (!config) return;
@@ -436,7 +436,7 @@ export class WebhookManager {
   private async logWebhookError(
     integrationId: string,
     payload: WebhookPayload,
-    error: any
+    error: Error
   ): Promise<void> {
     try {
       await supabase

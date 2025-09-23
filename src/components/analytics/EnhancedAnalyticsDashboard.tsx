@@ -65,7 +65,7 @@ export function EnhancedAnalyticsDashboard({
 
   useEffect(() => {
     loadAnalyticsData()
-  }, [organizationId, userId, dateRange])
+  }, [organizationId, userId, dateRange, loadAnalyticsData])
 
   const loadAnalyticsData = async () => {
     try {

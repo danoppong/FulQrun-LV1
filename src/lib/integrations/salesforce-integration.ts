@@ -167,7 +167,7 @@ export class SalesforceIntegration extends BaseIntegration {
     }
   }
 
-  async createEntity(entityType: string, data: any): Promise<string> {
+  async createEntity(entityType: string, data: Record<string, unknown>): Promise<string> {
     try {
       const sobjectName = this.getSalesforceObjectName(entityType);
       const response = await fetch(
@@ -194,7 +194,7 @@ export class SalesforceIntegration extends BaseIntegration {
     }
   }
 
-  async updateEntity(entityType: string, entityId: string, data: any): Promise<boolean> {
+  async updateEntity(entityType: string, entityId: string, data: Record<string, unknown>): Promise<boolean> {
     try {
       const sobjectName = this.getSalesforceObjectName(entityType);
       const response = await fetch(
@@ -335,7 +335,7 @@ export class SalesforceIntegration extends BaseIntegration {
     };
   }
 
-  private async findExistingRecord(entityType: string, data: any): Promise<any> {
+  private async findExistingRecord(entityType: string, data: Record<string, unknown>): Promise<Record<string, unknown> | null> {
     // Find existing record in FulQrun by external ID
     const { data: record } = await supabase
       .from(this.getFulQrunTableName(entityType))
@@ -347,7 +347,7 @@ export class SalesforceIntegration extends BaseIntegration {
     return record;
   }
 
-  private async createFulQrunRecord(entityType: string, data: any): Promise<void> {
+  private async createFulQrunRecord(entityType: string, data: Record<string, unknown>): Promise<void> {
     const tableName = this.getFulQrunTableName(entityType);
     
     await supabase
@@ -359,7 +359,7 @@ export class SalesforceIntegration extends BaseIntegration {
       });
   }
 
-  private async updateFulQrunRecord(entityType: string, recordId: string, data: any): Promise<void> {
+  private async updateFulQrunRecord(entityType: string, recordId: string, data: Record<string, unknown>): Promise<void> {
     const tableName = this.getFulQrunTableName(entityType);
     
     await supabase

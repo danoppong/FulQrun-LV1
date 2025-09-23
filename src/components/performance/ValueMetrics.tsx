@@ -16,13 +16,19 @@ const ValueMetrics = memo(function ValueMetrics({
   periodStart, 
   periodEnd 
 }: ValueMetricsProps) {
-  const [metrics, setMetrics] = useState<any[]>([])
+  const [metrics, setMetrics] = useState<Array<{
+    id: string
+    metric_type: string
+    value: number
+    timestamp: string
+    context: Record<string, unknown>
+  }>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadValueMetrics()
-  }, [userId, organizationId, periodStart, periodEnd])
+  }, [userId, organizationId, periodStart, periodEnd, loadValueMetrics])
 
   const loadValueMetrics = async () => {
     try {

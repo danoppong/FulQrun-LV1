@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(_request.url)
     const organizationId = searchParams.get('organizationId')
-    const userId = searchParams.get('userId')
+    const _userId = searchParams.get('userId')
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
@@ -51,25 +51,25 @@ export async function GET(request: NextRequest) {
       .lte('created_at', endDate)
 
     // Calculate metrics
-    const currentRevenue = revenueData?.reduce((sum: number, opp: any) => sum + (opp.value || 0), 0) || 0
+    const currentRevenue = revenueData?.reduce((sum: number, opp: { value?: number }) => sum + (opp.value || 0), 0) || 0
     const targetRevenue = 1000000 // This would come from organization settings
     const revenueGrowth = 15.2 // This would be calculated based on previous period
 
     const totalOpportunities = opportunitiesData?.length || 0
-    const wonOpportunities = opportunitiesData?.filter((opp: any) => opp.stage === 'closed_won').length || 0
-    const lostOpportunities = opportunitiesData?.filter((opp: any) => opp.stage === 'closed_lost').length || 0
+    const wonOpportunities = opportunitiesData?.filter((opp: { stage: string }) => opp.stage === 'closed_won').length || 0
+    const lostOpportunities = opportunitiesData?.filter((opp: { stage: string }) => opp.stage === 'closed_lost').length || 0
     const inProgressOpportunities = totalOpportunities - wonOpportunities - lostOpportunities
     const conversionRate = totalOpportunities > 0 ? (wonOpportunities / totalOpportunities) * 100 : 0
 
     const totalLeads = leadsData?.length || 0
-    const qualifiedLeads = leadsData?.filter((lead: any) => lead.ai_score && lead.ai_score > 70).length || 0
-    const convertedLeads = leadsData?.filter((lead: any) => lead.status === 'converted').length || 0
+    const qualifiedLeads = leadsData?.filter((lead: { ai_score?: number }) => lead.ai_score && lead.ai_score > 70).length || 0
+    const convertedLeads = leadsData?.filter((lead: { status: string }) => lead.status === 'converted').length || 0
     const leadConversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0
 
-    const calls = activitiesData?.filter((act: any) => act.type === 'call').length || 0
-    const emails = activitiesData?.filter((act: any) => act.type === 'email').length || 0
-    const meetings = activitiesData?.filter((act: any) => act.type === 'meeting').length || 0
-    const tasks = activitiesData?.filter((act: any) => act.type === 'task').length || 0
+    const calls = activitiesData?.filter((act: { type: string }) => act.type === 'call').length || 0
+    const emails = activitiesData?.filter((act: { type: string }) => act.type === 'email').length || 0
+    const meetings = activitiesData?.filter((act: { type: string }) => act.type === 'meeting').length || 0
+    const tasks = activitiesData?.filter((act: { type: string }) => act.type === 'task').length || 0
 
     const avgDealSize = wonOpportunities > 0 ? currentRevenue / wonOpportunities : 0
     const salesCycle = 45 // This would be calculated based on actual data

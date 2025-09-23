@@ -39,7 +39,7 @@ export interface WebhookPayload {
   eventType: string;
   entityType: string;
   entityId: string;
-  data: any;
+  data: Record<string, unknown>;
   timestamp: Date;
   organizationId: string;
 }
@@ -85,15 +85,15 @@ export abstract class BaseIntegration {
   abstract testConnection(): Promise<boolean>;
   abstract syncData(entityType: string, syncConfig: SyncConfiguration): Promise<SyncResult>;
   abstract getEntityData(entityType: string, entityId: string): Promise<any>;
-  abstract createEntity(entityType: string, data: any): Promise<string>;
-  abstract updateEntity(entityType: string, entityId: string, data: any): Promise<boolean>;
+  abstract createEntity(entityType: string, data: Record<string, unknown>): Promise<string>;
+  abstract updateEntity(entityType: string, entityId: string, data: Record<string, unknown>): Promise<boolean>;
   abstract deleteEntity(entityType: string, entityId: string): Promise<boolean>;
 
   // Common methods available to all integrations
   protected async logSyncActivity(
     entityType: string,
     operation: 'sync_start' | 'sync_complete' | 'sync_error',
-    details: any
+    details: Record<string, unknown>
   ): Promise<void> {
     try {
       await supabase
@@ -116,7 +116,7 @@ export abstract class BaseIntegration {
     errorMessage?: string
   ): Promise<void> {
     try {
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         sync_status: status,
         last_sync_at: status === 'success' ? new Date().toISOString() : undefined
       };
@@ -144,7 +144,7 @@ export abstract class BaseIntegration {
     }
   }
 
-  protected async handleSyncError(error: any, entityType: string): Promise<void> {
+  protected async handleSyncError(error: Error, entityType: string): Promise<void> {
     const errorMessage = error.message || 'Unknown sync error';
     
     await this.updateSyncStatus('error', errorMessage);
@@ -155,10 +155,10 @@ export abstract class BaseIntegration {
   }
 
   protected async transformData(
-    data: any,
+    data: Record<string, unknown>,
     fieldMappings: IntegrationFieldMapping[]
-  ): Promise<any> {
-    const transformedData: any = {};
+  ): Promise<Record<string, unknown>> {
+    const transformedData: Record<string, unknown> = {};
 
     for (const mapping of fieldMappings) {
       const sourceValue = this.getNestedValue(data, mapping.sourceField);
@@ -179,7 +179,7 @@ export abstract class BaseIntegration {
     return transformedData;
   }
 
-  private getNestedValue(obj: any, path: string): any {
+  private getNestedValue(obj: Record<string, unknown>, path: string): unknown {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 

@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { jest } from '@jest/globals'
 import { MEDDPICCQualification } from '@/components/meddpicc'
-import { MEDDPICC_CONFIG, MEDDPICCResponse, calculateMEDDPICCScore } from '@/lib/meddpicc'
+import { MEDDPICC_CONFIG, calculateMEDDPICCScore } from '@/lib/meddpicc'
 
 // Mock the opportunity API
 jest.mock('@/lib/api/opportunities', () => ({
@@ -224,7 +224,7 @@ describe('MEDDPICC Integration', () => {
 
   describe('Backward Compatibility', () => {
     it('maintains compatibility with legacy MEDDPICC form', () => {
-      const legacyData = {
+      const _legacyData = {
         metrics: 'Legacy metrics data',
         economic_buyer: 'Legacy buyer data',
         decision_criteria: 'Legacy criteria data',

@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const organizationId = searchParams.get('organizationId')
-    const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate')
+    const { searchParams } = new URL(_request.url)
+    const _organizationId = searchParams.get('organizationId')
+    const _startDate = searchParams.get('startDate')
+    const _endDate = searchParams.get('endDate')
 
     // Return mock forecast data
     const forecastData = [

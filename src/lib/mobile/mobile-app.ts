@@ -37,11 +37,11 @@ export interface DeviceInfo {
 
 export interface OfflineData {
   entities: {
-    contacts: any[];
-    companies: any[];
-    opportunities: any[];
-    leads: any[];
-    activities: any[];
+    contacts: Array<{ id: string; name: string; email: string; phone?: string }>;
+    companies: Array<{ id: string; name: string; industry?: string; size?: string }>;
+    opportunities: Array<{ id: string; name: string; stage: string; value: number }>;
+    leads: Array<{ id: string; name: string; email: string; status: string }>;
+    activities: Array<{ id: string; type: string; description: string; createdAt: string }>;
   };
   lastSyncTimestamp: Date;
   pendingChanges: PendingChange[];
@@ -53,7 +53,7 @@ export interface PendingChange {
   entityType: string;
   entityId: string;
   operation: 'create' | 'update' | 'delete';
-  data: any;
+  data: Record<string, unknown>;
   timestamp: Date;
   retryCount: number;
 }
@@ -63,7 +63,7 @@ export interface SyncOperation {
   type: 'upload' | 'download' | 'conflict_resolution';
   entityType: string;
   entityId: string;
-  data: any;
+  data: Record<string, unknown>;
   priority: number;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   errorMessage?: string;
@@ -88,7 +88,7 @@ export interface MobileAnalytics {
   userId: string;
   sessionId: string;
   eventType: string;
-  eventData: any;
+  eventData: Record<string, unknown>;
   timestamp: Date;
   deviceInfo: DeviceInfo;
   networkType: string;
@@ -442,7 +442,7 @@ export class MobileAppAPI {
     userId: string,
     sessionId: string,
     eventType: string,
-    eventData: any,
+    eventData: Record<string, unknown>,
     deviceInfo: DeviceInfo,
     networkType: string,
     appVersion: string,

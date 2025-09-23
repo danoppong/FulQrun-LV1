@@ -38,7 +38,7 @@ export default function ActivityList({ opportunityId, onEdit, onDelete }: Activi
 
   useEffect(() => {
     loadActivities()
-  }, [opportunityId])
+  }, [opportunityId, loadActivities])
 
   const loadActivities = async () => {
     setLoading(true)

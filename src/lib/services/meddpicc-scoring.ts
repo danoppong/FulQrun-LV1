@@ -25,7 +25,7 @@ export class MEDDPICCScoringService {
    * Get MEDDPICC score for an opportunity
    * This is the single source of truth for all MEDDPICC scores
    */
-  async getOpportunityScore(opportunityId: string, opportunity?: any): Promise<MEDDPICCScoreResult> {
+  async getOpportunityScore(opportunityId: string, opportunity?: Record<string, unknown>): Promise<MEDDPICCScoreResult> {
     try {
       // Check if we have a cached score that's recent (within 5 minutes)
       const cached = this.scoreCache.get(opportunityId)
@@ -68,7 +68,7 @@ export class MEDDPICCScoringService {
    * Calculate MEDDPICC score from opportunity data
    * This uses the same algorithm across all components
    */
-  private async calculateScoreFromOpportunity(opportunity: any): Promise<MEDDPICCScoreResult> {
+  private async calculateScoreFromOpportunity(opportunity: Record<string, unknown>): Promise<MEDDPICCScoreResult> {
     const responses = this.convertOpportunityToResponses(opportunity)
     const assessment = calculateMEDDPICCScore(responses)
     
@@ -85,7 +85,7 @@ export class MEDDPICCScoringService {
    * Convert opportunity data to MEDDPICC responses
    * This ensures consistent data parsing across all components
    */
-  private convertOpportunityToResponses(opportunity: any): MEDDPICCResponse[] {
+  private convertOpportunityToResponses(opportunity: Record<string, unknown>): MEDDPICCResponse[] {
     const responses: MEDDPICCResponse[] = []
     
     // Safety check for MEDDPICC_CONFIG
@@ -178,7 +178,7 @@ export class MEDDPICCScoringService {
    * Get score from database (if available) or calculate it
    * This provides a fallback mechanism
    */
-  async getScoreWithFallback(opportunityId: string, opportunity?: any): Promise<MEDDPICCScoreResult> {
+  async getScoreWithFallback(opportunityId: string, opportunity?: Record<string, unknown>): Promise<MEDDPICCScoreResult> {
     try {
       // If we have opportunity data, try to get the stored score first
       if (opportunity && opportunity.meddpicc_score !== null && opportunity.meddpicc_score !== undefined) {

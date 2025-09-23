@@ -33,10 +33,6 @@ export type {
 // Import types for use in this file
 import type {
   EnterpriseWorkflow,
-  WorkflowStep,
-  ApprovalConfig,
-  NotificationConfig,
-  RetryConfig,
   WorkflowExecution,
 } from './workflow-engine';
 

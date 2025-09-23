@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const organizationId = searchParams.get('organizationId')
-    const userId = searchParams.get('userId')
-    const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate')
+    const { searchParams } = new URL(_request.url)
+    const _organizationId = searchParams.get('organizationId')
+    const _userId = searchParams.get('userId')
+    const _startDate = searchParams.get('startDate')
+    const _endDate = searchParams.get('endDate')
 
     // Return mock data for now to test the API
     const analyticsData = {

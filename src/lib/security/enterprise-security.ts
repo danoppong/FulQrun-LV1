@@ -16,8 +16,8 @@ export interface AuditLogEntry {
   actionType: 'create' | 'read' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import' | 'admin_action';
   entityType: string;
   entityId?: string;
-  oldValues?: any;
-  newValues?: any;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   sessionId?: string;
@@ -30,8 +30,8 @@ export interface ComplianceReport {
   id: string;
   reportType: 'audit_log' | 'data_export' | 'user_activity' | 'security_scan' | 'compliance_check';
   reportName: string;
-  reportData: any;
-  filters: any;
+  reportData: Record<string, unknown>;
+  filters: Record<string, unknown>;
   dateRangeStart?: Date;
   dateRangeEnd?: Date;
   status: 'generating' | 'completed' | 'failed' | 'expired';
@@ -49,7 +49,7 @@ export interface SecurityPolicy {
   name: string;
   description: string;
   policyType: 'password' | 'session' | 'access' | 'data_retention' | 'encryption';
-  rules: any;
+  rules: Record<string, unknown>;
   isActive: boolean;
   organizationId: string;
   createdBy: string;
@@ -61,7 +61,7 @@ export interface RBACPermission {
   role: string;
   resource: string;
   action: string;
-  conditions?: any;
+  conditions?: Record<string, unknown>;
   organizationId: string;
 }
 
@@ -73,8 +73,8 @@ export interface DataPrivacyRequest {
   entityType: string;
   entityId?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
-  requestData: any;
-  responseData?: any;
+  requestData: Record<string, unknown>;
+  responseData?: Record<string, unknown>;
   organizationId: string;
   createdAt: Date;
   completedAt?: Date;
@@ -184,7 +184,7 @@ export class EnterpriseSecurityAPI {
   static async generateComplianceReport(
     reportType: ComplianceReport['reportType'],
     reportName: string,
-    filters: any,
+    filters: Record<string, unknown>,
     organizationId: string,
     userId: string
   ): Promise<ComplianceReport> {
@@ -240,7 +240,7 @@ export class EnterpriseSecurityAPI {
   private static async generateReportData(
     reportId: string,
     reportType: string,
-    filters: any,
+    filters: Record<string, unknown>,
     organizationId: string
   ): Promise<void> {
     try {

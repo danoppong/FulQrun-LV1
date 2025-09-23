@@ -12,7 +12,7 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
   isOpen, 
   onClose 
 }: PerformanceDashboardProps) {
-  const [report, setReport] = useState<any>(null)
+  const [report, setReport] = useState<Record<string, unknown> | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const refreshReport = useCallback(async () => {
@@ -82,7 +82,7 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Web Vitals</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {Object.entries(report.webVitals).map(([name, data]: [string, any]) => (
+                  {Object.entries(report.webVitals).map(([name, data]: [string, { value: number; score: string }]) => (
                     <div key={name} className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="text-sm font-medium text-gray-700">{name}</h4>
                       <div className="mt-2 space-y-1">
@@ -121,7 +121,7 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {report.componentPerformance.map((comp: any, index: number) => (
+                      {report.componentPerformance.map((comp: { name: string; renderTime: number; memoryUsage: number }, index: number) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {comp.name}
@@ -177,7 +177,7 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {report.apiPerformance.map((api: any, index: number) => (
+                      {report.apiPerformance.map((api: { endpoint: string; avgResponseTime: number; slowestCall: number }, index: number) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {api.endpoint}

@@ -555,7 +555,7 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
     let pillarScore = 0
     let pillarMaxScore = 0
     let answeredQuestions = 0
-    let totalQuestions = pillar.questions.length
+    const totalQuestions = pillar.questions.length
     
     console.log(`\n--- Processing Pillar: ${pillar.id} ---`)
     console.log('Pillar questions:', pillar.questions.map(q => ({ id: q.id, text: q.text })))

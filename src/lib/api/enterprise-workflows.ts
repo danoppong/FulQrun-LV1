@@ -13,7 +13,7 @@ interface WorkflowStep {
   id: string;
   name: string;
   type: 'action' | 'condition' | 'approval' | 'notification' | 'delay' | 'integration';
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   conditions?: WorkflowCondition[];
   actions?: WorkflowAction[];
   nextSteps?: string[];
@@ -23,14 +23,14 @@ interface WorkflowStep {
 interface WorkflowCondition {
   field: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
-  value: any;
+  value: Record<string, unknown>;
   logicalOperator?: 'AND' | 'OR';
 }
 
 interface WorkflowAction {
   type: string;
-  config: Record<string, any>;
-  parameters: Record<string, any>;
+  config: Record<string, unknown>;
+  parameters: Record<string, unknown>;
 }
 
 interface ErrorHandling {
@@ -86,7 +86,7 @@ async function updateEnterpriseWorkflow(
   updates: Partial<EnterpriseWorkflow>
 ): Promise<EnterpriseWorkflow> {
   try {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (updates.name) updateData.name = updates.name;
     if (updates.description) updateData.description = updates.description;
     if (updates.workflowType) updateData.workflow_type = updates.workflowType;
@@ -150,7 +150,7 @@ async function executeEnterpriseWorkflow(
   workflowId: string,
   entityType: string,
   entityId: string,
-  executionData: Record<string, any>,
+  executionData: Record<string, unknown>,
   organizationId: string
 ): Promise<WorkflowExecution> {
   try {
@@ -304,7 +304,7 @@ async function validateWorkflowSteps(steps: WorkflowStep[]): Promise<{ valid: bo
 async function testWorkflowStep(
   step: WorkflowStep,
   testData: Record<string, any>
-): Promise<{ success: boolean; error?: string; result?: any }> {
+): Promise<{ success: boolean; error?: string; result?: Record<string, unknown> }> {
   try {
     // Create a mock execution for testing
     const mockExecution = {
@@ -344,7 +344,7 @@ async function getWorkflowAnalytics(organizationId: string): Promise<any> {
       .select('*')
       .eq('organization_id', organizationId);
 
-    const analytics: any = {
+    const analytics: Record<string, unknown> = {
       totalWorkflows: workflows?.length || 0,
       activeWorkflows: workflows?.filter(w => w.is_active).length || 0,
       totalExecutions: executions?.length || 0,
@@ -437,7 +437,7 @@ async function getWorkflowHealth(organizationId: string): Promise<any> {
       .eq('organization_id', organizationId)
       .eq('is_active', true);
 
-    const health: any = {
+    const health: Record<string, unknown> = {
       status: 'healthy',
       issues: [],
       recommendations: []

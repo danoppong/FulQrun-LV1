@@ -29,7 +29,7 @@ interface EnterpriseAIDashboardProps {
 
 export default function EnterpriseAIDashboard({ organizationId, userId }: EnterpriseAIDashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'insights' | 'coaching' | 'forecasting' | 'models'>('overview');
-  const [insights, setInsights] = useState<any[]>([]);
+  const [insights, setInsights] = useState<Record<string, unknown>[]>([]);
   const [coachingRecommendations, setCoachingRecommendations] = useState<CoachingRecommendation[]>([]);
   const [forecastData, setForecastData] = useState<ForecastingData | null>(null);
   const [aiModels, setAiModels] = useState<AIModelConfig[]>([]);
@@ -156,7 +156,7 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'overview' | 'insights' | 'coaching' | 'forecasting' | 'models')}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'

@@ -87,7 +87,7 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [complianceReports, setComplianceReports] = useState<ComplianceReport[]>([]);
   const [securityPolicies, setSecurityPolicies] = useState<SecurityPolicy[]>([]);
-  const [rbacPermissions, setRbacPermissions] = useState<RBACPermission[]>([]);
+  const [_rbacPermissions, setRbacPermissions] = useState<RBACPermission[]>([]);
   const [privacyRequests, setPrivacyRequests] = useState<DataPrivacyRequest[]>([]);
   const [securityAlerts, setSecurityAlerts] = useState<SecurityAlert[]>([]);
   const [securityMetrics, setSecurityMetrics] = useState<SecurityMetrics | null>(null);
@@ -284,7 +284,7 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'overview' | 'compliance' | 'audit' | 'alerts' | 'users' | 'settings')}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'

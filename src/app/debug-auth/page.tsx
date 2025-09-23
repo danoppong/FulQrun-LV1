@@ -5,7 +5,13 @@ import { AuthClientService } from '@/lib/auth-client'
 import { supabaseConfig } from '@/lib/config'
 
 export default function DebugAuthPage() {
-  const [authState, setAuthState] = useState<any>(null)
+  const [authState, setAuthState] = useState<{
+    config?: Record<string, unknown>
+    session?: Record<string, unknown> | null
+    user?: Record<string, unknown> | null
+    error?: string
+    timestamp: string
+  } | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = AuthClientService.getClient()
 

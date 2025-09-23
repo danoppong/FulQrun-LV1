@@ -70,7 +70,7 @@ export default function CompanyForm({ company, companyId, mode }: CompanyFormPro
     if (mode === 'edit' && companyId && !company) {
       loadCompany()
     }
-  }, [mode, companyId, company])
+  }, [mode, companyId, company, loadCompany])
 
   const loadCompany = async () => {
     if (!companyId) return

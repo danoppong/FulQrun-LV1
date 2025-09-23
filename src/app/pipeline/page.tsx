@@ -17,7 +17,7 @@ export default function PipelinePage() {
 }
 
 function PipelineContent() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [configurations, setConfigurations] = useState<PipelineConfigData[]>([])
   const [showBuilder, setShowBuilder] = useState(false)

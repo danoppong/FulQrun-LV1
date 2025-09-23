@@ -26,7 +26,7 @@ export interface WorkflowAutomationData {
 export interface TriggerCondition {
   field: string
   operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'is_empty' | 'is_not_empty'
-  value: any
+  value: Record<string, unknown>
   logicalOperator?: 'AND' | 'OR'
 }
 
@@ -330,7 +330,7 @@ export class WorkflowAutomationAPI {
   /**
    * Evaluate a single condition
    */
-  private static evaluateCondition(fieldValue: any, operator: string, expectedValue: any): boolean {
+  private static evaluateCondition(fieldValue: unknown, operator: string, expectedValue: unknown): boolean {
     switch (operator) {
       case 'equals':
         return fieldValue === expectedValue
@@ -356,7 +356,7 @@ export class WorkflowAutomationAPI {
   /**
    * Get nested value from object using dot notation
    */
-  private static getNestedValue(obj: Record<string, any>, path: string): any {
+  private static getNestedValue(obj: Record<string, unknown>, path: string): unknown {
     return path.split('.').reduce((current, key) => current?.[key], obj)
   }
 

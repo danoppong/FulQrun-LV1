@@ -11,10 +11,10 @@ export interface EnterpriseIntegration {
   name: string;
   integrationType: 'crm' | 'erp' | 'marketing' | 'analytics' | 'communication' | 'custom';
   provider: string;
-  config: Record<string, any>;
-  credentials: Record<string, any>;
-  webhookConfig: Record<string, any>;
-  syncConfig: Record<string, any>;
+  config: Record<string, unknown>;
+  credentials: Record<string, unknown>;
+  webhookConfig: Record<string, unknown>;
+  syncConfig: Record<string, unknown>;
   isActive: boolean;
   lastSyncAt?: Date;
   syncStatus: 'success' | 'error' | 'pending' | 'syncing' | 'never';
@@ -48,7 +48,7 @@ export async function getEnterpriseIntegrations(organizationId: string): Promise
     if (error) throw error;
     
     // Map database fields to interface
-    return (data || []).map((integration: any) => ({
+    return (data || []).map((integration: Record<string, unknown>) => ({
       id: integration.id,
       name: integration.name,
       integrationType: integration.type,
@@ -112,7 +112,7 @@ export async function updateEnterpriseIntegration(
   updates: Partial<EnterpriseIntegration>
 ): Promise<EnterpriseIntegration> {
   try {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (updates.name) updateData.name = updates.name;
     if (updates.integrationType) updateData.type = updates.integrationType;
     if (updates.provider) updateData.provider = updates.provider;
@@ -306,15 +306,15 @@ export async function getIntegrationStatistics(organizationId: string): Promise<
     if (error) throw error;
 
     const total = integrations?.length || 0;
-    const active = integrations?.filter((i: any) => i.is_active).length || 0;
+    const active = integrations?.filter((i: { is_active: boolean }) => i.is_active).length || 0;
     
-    const byStatus = integrations?.reduce((acc: any, integration: any) => {
+    const byStatus = integrations?.reduce((acc: Record<string, number>, integration: { sync_status?: string }) => {
       const status = integration.sync_status || 'never';
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>) || {};
 
-    const byType = integrations?.reduce((acc: any, integration: any) => {
+    const byType = integrations?.reduce((acc: Record<string, number>, integration: { type: string }) => {
       const type = integration.type || 'unknown';
       acc[type] = (acc[type] || 0) + 1;
       return acc;
@@ -354,7 +354,7 @@ export async function getIntegrationHealth(organizationId: string): Promise<any>
       lastSync: null as Date | null
     };
 
-    integrations?.forEach((integration: any) => {
+    integrations?.forEach((integration: { last_sync_at?: string; sync_status?: string }) => {
       if (integration.sync_status === 'success') {
         health.healthy++;
       } else if (integration.sync_status === 'error') {

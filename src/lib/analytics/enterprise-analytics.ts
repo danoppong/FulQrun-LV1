@@ -56,8 +56,8 @@ export interface AnalyticsQuery {
   id: string;
   name: string;
   query: string;
-  parameters: Record<string, any>;
-  result: any;
+  parameters: Record<string, unknown>;
+  result: Record<string, unknown>;
   executionTime: number;
   cached: boolean;
   organizationId: string;
@@ -176,9 +176,9 @@ export class EnterpriseAnalyticsAPI {
         .select('kpis')
         .eq('organization_id', organizationId);
 
-      let kpiDefinition: any = null;
+      let kpiDefinition: Record<string, unknown> | null = null;
       dashboards?.forEach(dashboard => {
-        const kpi = dashboard.kpis.find((k: any) => k.id === kpiId);
+        const kpi = dashboard.kpis.find((k: { id: string }) => k.id === kpiId);
         if (kpi) kpiDefinition = kpi;
       });
 
@@ -480,10 +480,16 @@ export class EnterpriseAnalyticsAPI {
   }
 
   private static async applyForecastingAlgorithm(
-    historicalData: any[],
+    historicalData: Array<{
+      id: string
+      type: string
+      timestamp: string
+      value: number
+      context: Record<string, unknown>
+    }>,
     horizon: number,
     period: string
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     // Simple linear regression forecasting
     const dataPoints = historicalData.length;
     if (dataPoints < 2) {
@@ -531,7 +537,7 @@ export class EnterpriseAnalyticsAPI {
     };
   }
 
-  private static calculateAccuracy(actual: number[], predicted: any[]): number {
+  private static calculateAccuracy(actual: number[], predicted: Array<{ value: number }>): number {
     if (actual.length === 0 || predicted.length === 0) return 0;
     
     let totalError = 0;
@@ -622,7 +628,7 @@ export class EnterpriseAnalyticsAPI {
       const startTime = Date.now();
       
       // Execute query (simplified - in real implementation, this would be more sophisticated)
-      let result: any = {};
+      let result: Record<string, unknown> = {};
       
       if (query.includes('SELECT')) {
         // Parse and execute SQL-like query
@@ -715,7 +721,7 @@ export class EnterpriseAnalyticsAPI {
     }
   }
 
-  private static async getSalesPerformanceByUser(organizationId: string, parameters: any): Promise<any> {
+  private static async getSalesPerformanceByUser(organizationId: string, parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     const { data: users } = await supabase
       .from('users')
       .select('id, first_name, last_name')
@@ -746,7 +752,7 @@ export class EnterpriseAnalyticsAPI {
     return performance;
   }
 
-  private static async getConversionFunnel(organizationId: string, parameters: any): Promise<any> {
+  private static async getConversionFunnel(organizationId: string, parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     const { data: opportunities } = await supabase
       .from('opportunities')
       .select('stage')
@@ -774,7 +780,7 @@ export class EnterpriseAnalyticsAPI {
     return funnel;
   }
 
-  private static async getCustomerLifetimeValue(organizationId: string, parameters: any): Promise<any> {
+  private static async getCustomerLifetimeValue(organizationId: string, parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     const { data: opportunities } = await supabase
       .from('opportunities')
       .select('deal_value, company_id, closed_at')

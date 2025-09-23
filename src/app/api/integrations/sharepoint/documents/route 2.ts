@@ -38,7 +38,14 @@ export async function GET(request: NextRequest) {
     const credentials = JSON.parse(connection.credentials)
     const sharepoint = new SharePointIntegration(credentials.access_token)
 
-    let documents: any[] = []
+    let documents: Array<{
+      id: string
+      name: string
+      url: string
+      size: number
+      modified: string
+      type: string
+    }> = []
 
     if (opportunityId) {
       // Get PEAK process documents for specific opportunity

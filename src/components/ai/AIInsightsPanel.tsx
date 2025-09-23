@@ -8,7 +8,7 @@ interface AIInsightsPanelProps {
   entityType: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization'
   entityId: string
   organizationId: string
-  entityData?: any
+  entityData?: Record<string, unknown>
   onRefresh?: () => void
 }
 
@@ -26,7 +26,7 @@ export function AIInsightsPanel({
 
   useEffect(() => {
     loadInsights()
-  }, [entityType, entityId, organizationId])
+  }, [entityType, entityId, organizationId, loadInsights])
 
   const loadInsights = async () => {
     try {
@@ -88,9 +88,9 @@ export function AIInsightsPanel({
       case 'next_action':
         return <NextActionInsight insight={insight.insightData as NextActionInsight} />
       case 'forecasting':
-        return <ForecastingInsight insight={insight.insightData as any} />
+        return <ForecastingInsight insight={insight.insightData as Record<string, unknown>} />
       case 'performance':
-        return <PerformanceInsight insight={insight.insightData as any} />
+        return <PerformanceInsight insight={insight.insightData as Record<string, unknown>} />
       default:
         return <div className="text-gray-500">Unknown insight type</div>
     }
@@ -345,7 +345,7 @@ function NextActionInsight({ insight }: { insight: NextActionInsight }) {
   )
 }
 
-function ForecastingInsight({ insight }: { insight: any }) {
+function ForecastingInsight({ insight }: { insight: Record<string, unknown> }) {
   return (
     <div className="space-y-4">
       <h4 className="text-md font-medium text-gray-900">Sales Forecast</h4>
@@ -384,7 +384,7 @@ function ForecastingInsight({ insight }: { insight: any }) {
   )
 }
 
-function PerformanceInsight({ insight }: { insight: any }) {
+function PerformanceInsight({ insight }: { insight: Record<string, unknown> }) {
   return (
     <div className="space-y-4">
       <h4 className="text-md font-medium text-gray-900">Performance Analysis</h4>

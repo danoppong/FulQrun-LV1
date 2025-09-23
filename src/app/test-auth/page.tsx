@@ -3,7 +3,12 @@ import { createClientComponentClient } from '@/lib/auth'
 import { useEffect, useState } from 'react'
 
 const TestAuthPage = () => {
-  const [authState, setAuthState] = useState<any>(null)
+  const [authState, setAuthState] = useState<{
+    session: Record<string, unknown> | null
+    sessionError: Error | null
+    user: Record<string, unknown> | null
+    userError: Error | null
+  } | null>(null)
   const [loading, setLoading] = useState(true)
   
   useEffect(() => {

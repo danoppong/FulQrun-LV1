@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 const ForceLoginPage = () => {
   const [status, setStatus] = useState('Initializing...')
-  const [debugInfo, setDebugInfo] = useState<any>({})
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown>>({})
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -36,7 +36,7 @@ const ForceLoginPage = () => {
         // Force refresh the session
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
-        setDebugInfo((prev: any) => ({ ...prev, user: !!user, userError: userError?.message }))
+        setDebugInfo((prev: Record<string, unknown>) => ({ ...prev, user: !!user, userError: userError?.message }))
         
         if (userError) {
           setStatus(`User error: ${userError.message}`)
@@ -58,7 +58,7 @@ const ForceLoginPage = () => {
         
       } catch (error) {
         setStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
-        setDebugInfo((prev: any) => ({ ...prev, error: error instanceof Error ? error.message : 'Unknown error' }))
+        setDebugInfo((prev: Record<string, unknown>) => ({ ...prev, error: error instanceof Error ? error.message : 'Unknown error' }))
       }
     }
     

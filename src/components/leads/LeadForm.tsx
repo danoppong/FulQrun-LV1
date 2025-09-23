@@ -77,7 +77,7 @@ export default function LeadForm({ lead, leadId, mode }: LeadFormProps) {
     if (mode === 'edit' && leadId && !lead) {
       loadLead()
     }
-  }, [mode, leadId, lead])
+  }, [mode, leadId, lead, loadLead])
 
   const loadLead = async () => {
     if (!leadId) return

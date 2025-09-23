@@ -65,7 +65,18 @@ export interface ForecastingData {
 }
 
 export class EnterpriseAIIntelligence {
-  private supabase: any
+  private supabase: {
+    from: (table: string) => {
+      select: (columns?: string) => {
+        eq: (column: string, value: string | number) => {
+          order: (column: string, options?: { ascending?: boolean }) => {
+            single: () => Promise<{ data: Record<string, unknown> | null; error: Error | null }>;
+          };
+        };
+        single: () => Promise<{ data: Record<string, unknown> | null; error: Error | null }>;
+      };
+    };
+  }
   private openaiApiKey: string
   private anthropicApiKey: string
 
@@ -238,7 +249,7 @@ export class EnterpriseAIIntelligence {
           title: 'Skill Development Opportunities',
           description: 'Focus on developing key skills to improve performance',
           priority: 'high',
-          actionItems: performanceAnalysis.skillGaps.map((skill: any) => `Complete ${skill} training`),
+          actionItems: performanceAnalysis.skillGaps.map((skill: { name: string; level: number }) => `Complete ${skill.name} training`),
           expectedImpact: '15-25% improvement in conversion rates',
           timeframe: '30-60 days',
           resources: ['LMS Training Modules', 'Mentor Sessions', 'Practice Scenarios'],
@@ -264,7 +275,7 @@ export class EnterpriseAIIntelligence {
       }
 
       // Generate deal strategy recommendations
-      const activeOpportunities = user.opportunities?.filter((opp: any) => opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') || []
+      const activeOpportunities = user.opportunities?.filter((opp: { stage: string }) => opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') || []
       if (activeOpportunities.length > 0) {
         recommendations.push({
           id: `strategy-${userId}-${Date.now()}`,
@@ -326,7 +337,7 @@ export class EnterpriseAIIntelligence {
   }
 
   // AI Content Generation
-  async generateAIContent(type: 'email' | 'proposal' | 'presentation' | 'follow_up', context: any): Promise<string> {
+  async generateAIContent(type: 'email' | 'proposal' | 'presentation' | 'follow_up', context: Record<string, unknown>): Promise<string> {
     try {
       // This would integrate with OpenAI or Anthropic APIs
       // For now, return template-based content
@@ -345,62 +356,62 @@ export class EnterpriseAIIntelligence {
   }
 
   // Helper methods
-  private calculateDemographicScore(lead: any): number {
+  private calculateDemographicScore(lead: Record<string, unknown>): number {
     // Implement demographic scoring logic
     return Math.floor(Math.random() * 40) + 60 // Placeholder
   }
 
-  private calculateBehavioralScore(lead: any): number {
+  private calculateBehavioralScore(lead: Record<string, unknown>): number {
     // Implement behavioral scoring logic
     return Math.floor(Math.random() * 40) + 60 // Placeholder
   }
 
-  private calculateEngagementScore(lead: any): number {
+  private calculateEngagementScore(lead: Record<string, unknown>): number {
     // Implement engagement scoring logic
     return Math.floor(Math.random() * 40) + 60 // Placeholder
   }
 
-  private calculateCompanyScore(company: any): number {
+  private calculateCompanyScore(company: Record<string, unknown>): number {
     // Implement company scoring logic
     return Math.floor(Math.random() * 40) + 60 // Placeholder
   }
 
-  private calculateConfidence(lead: any): number {
+  private calculateConfidence(lead: Record<string, unknown>): number {
     // Implement confidence calculation
     return Math.random() * 0.3 + 0.7 // Placeholder
   }
 
-  private generateLeadRecommendations(lead: any, score: number): string[] {
+  private generateLeadRecommendations(lead: Record<string, unknown>, score: number): string[] {
     // Implement recommendation generation
     return ['Follow up within 24 hours', 'Schedule discovery call', 'Send relevant case studies']
   }
 
-  private identifyRiskFactors(lead: any): string[] {
+  private identifyRiskFactors(lead: Record<string, unknown>): string[] {
     // Implement risk factor identification
     return ['Long sales cycle', 'Budget constraints', 'Multiple decision makers']
   }
 
-  private calculateTimelineRisk(opportunity: any): number {
+  private calculateTimelineRisk(opportunity: Record<string, unknown>): number {
     // Implement timeline risk calculation
     return Math.floor(Math.random() * 100) // Placeholder
   }
 
-  private calculateBudgetRisk(opportunity: any): number {
+  private calculateBudgetRisk(opportunity: Record<string, unknown>): number {
     // Implement budget risk calculation
     return Math.floor(Math.random() * 100) // Placeholder
   }
 
-  private calculateDecisionMakerRisk(opportunity: any): number {
+  private calculateDecisionMakerRisk(opportunity: Record<string, unknown>): number {
     // Implement decision maker risk calculation
     return Math.floor(Math.random() * 100) // Placeholder
   }
 
-  private calculateCompetitionRisk(opportunity: any): number {
+  private calculateCompetitionRisk(opportunity: Record<string, unknown>): number {
     // Implement competition risk calculation
     return Math.floor(Math.random() * 100) // Placeholder
   }
 
-  private calculateRelationshipRisk(opportunity: any): number {
+  private calculateRelationshipRisk(opportunity: Record<string, unknown>): number {
     // Implement relationship risk calculation
     return Math.floor(Math.random() * 100) // Placeholder
   }
@@ -412,17 +423,17 @@ export class EnterpriseAIIntelligence {
     return 'critical'
   }
 
-  private generateDealRecommendations(opportunity: any, riskLevel: string): string[] {
+  private generateDealRecommendations(opportunity: Record<string, unknown>, riskLevel: string): string[] {
     // Implement deal recommendation generation
     return ['Schedule stakeholder meeting', 'Prepare competitive analysis', 'Review budget approval process']
   }
 
-  private generateNextSteps(opportunity: any, riskLevel: string): string[] {
+  private generateNextSteps(opportunity: Record<string, unknown>, riskLevel: string): string[] {
     // Implement next steps generation
     return ['Follow up with decision maker', 'Prepare proposal', 'Schedule demo']
   }
 
-  private analyzeUserPerformance(user: any): any {
+  private analyzeUserPerformance(user: Record<string, unknown>): Record<string, unknown> {
     // Implement user performance analysis
     return {
       skillGaps: ['Objection Handling', 'Closing Techniques'],
@@ -430,7 +441,7 @@ export class EnterpriseAIIntelligence {
     }
   }
 
-  private generateDealStrategyActions(opportunities: any[]): string[] {
+  private generateDealStrategyActions(opportunities: Array<Record<string, unknown>>): string[] {
     // Implement deal strategy action generation
     return ['Review opportunity pipeline', 'Identify decision makers', 'Prepare competitive positioning']
   }
@@ -446,7 +457,7 @@ export class EnterpriseAIIntelligence {
     return ranges[period as keyof typeof ranges]?.toISOString() || ranges.monthly.toISOString()
   }
 
-  private calculateForecast(opportunities: any[], period: string): any {
+  private calculateForecast(opportunities: Array<Record<string, unknown>>, period: string): Record<string, unknown> {
     // Implement forecast calculation
     return {
       predictions: {
@@ -475,7 +486,7 @@ export class EnterpriseAIIntelligence {
     return ranges[period as keyof typeof ranges] || ranges.monthly
   }
 
-  private generateEmailTemplate(context: any): string {
+  private generateEmailTemplate(context: Record<string, unknown>): string {
     return `Subject: ${context.subject || 'Follow-up on our conversation'}
 
 Hi ${context.contactName || 'there'},
@@ -486,7 +497,7 @@ Best regards,
 ${context.senderName || 'Your Sales Team'}`
   }
 
-  private generateProposalTemplate(context: any): string {
+  private generateProposalTemplate(context: Record<string, unknown>): string {
     return `# Proposal: ${context.title || 'Business Solution'}
 
 ## Executive Summary
@@ -499,7 +510,7 @@ ${context.solution || 'Detailed solution description...'}
 ${context.investment || 'Pricing details...'}`
   }
 
-  private generatePresentationTemplate(context: any): string {
+  private generatePresentationTemplate(context: Record<string, unknown>): string {
     return `# ${context.title || 'Business Presentation'}
 
 ## Agenda
@@ -513,7 +524,7 @@ ${context.investment || 'Pricing details...'}`
 ${context.keyPoints || 'Main presentation points...'}`
   }
 
-  private generateFollowUpTemplate(context: any): string {
+  private generateFollowUpTemplate(context: Record<string, unknown>): string {
     return `Hi ${context.contactName || 'there'},
 
 Thank you for taking the time to speak with me today. ${context.followUpMessage || 'I wanted to follow up on our conversation...'}
@@ -525,7 +536,7 @@ Best regards,
 ${context.senderName || 'Your Sales Team'}`
   }
 
-  private async saveInsight(entityType: string, entityId: string, type: string, data: any, organizationId: string): Promise<void> {
+  private async saveInsight(entityType: string, entityId: string, type: string, data: Record<string, unknown>, organizationId: string): Promise<void> {
     try {
       const { error } = await this.supabase
         .from('ai_insights')

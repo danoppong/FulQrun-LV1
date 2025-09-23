@@ -14,7 +14,7 @@ export default function AIInsightsPage() {
 }
 
 function AIInsightsContent() {
-  const [user, setUser] = useState<any>(null)
+  const [_user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = AuthClientService.getClient()
   const router = useRouter()
@@ -28,7 +28,7 @@ function AIInsightsContent() {
           return
         }
         setUser(user)
-      } catch (error) {
+      } catch (_error) {
         router.push('/auth/login')
       } finally {
         setLoading(false)
@@ -121,7 +121,7 @@ function AIInsightsContent() {
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
               <div>
                 <p className="text-sm font-medium text-blue-900">Lead Scoring Update</p>
-                <p className="text-sm text-blue-700">Lead "Acme Corp" has increased score by 15 points due to recent website engagement.</p>
+                <p className="text-sm text-blue-700">Lead &quot;Acme Corp&quot; has increased score by 15 points due to recent website engagement.</p>
                 <p className="text-xs text-blue-600 mt-1">2 hours ago</p>
               </div>
             </div>
@@ -129,7 +129,7 @@ function AIInsightsContent() {
               <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
               <div>
                 <p className="text-sm font-medium text-red-900">Deal Risk Alert</p>
-                <p className="text-sm text-red-700">Deal "Enterprise Software" shows 75% risk of stalling. Recommend immediate follow-up.</p>
+                <p className="text-sm text-red-700">Deal &quot;Enterprise Software&quot; shows 75% risk of stalling. Recommend immediate follow-up.</p>
                 <p className="text-xs text-red-600 mt-1">4 hours ago</p>
               </div>
             </div>
@@ -137,7 +137,7 @@ function AIInsightsContent() {
               <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
               <div>
                 <p className="text-sm font-medium text-green-900">Action Recommendation</p>
-                <p className="text-sm text-green-700">Schedule demo for "Tech Solutions" - high probability of conversion based on engagement patterns.</p>
+                <p className="text-sm text-green-700">Schedule demo for &quot;Tech Solutions&quot; - high probability of conversion based on engagement patterns.</p>
                 <p className="text-xs text-green-600 mt-1">6 hours ago</p>
               </div>
             </div>

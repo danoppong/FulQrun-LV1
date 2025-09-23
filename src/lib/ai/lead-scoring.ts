@@ -33,8 +33,19 @@ export interface LeadData {
   title?: string
   location?: string
   website?: string
-  engagement?: any[]
-  activities?: any[]
+  engagement?: Array<{
+    id: string
+    type: string
+    timestamp: string
+    value: number
+  }>
+  activities?: Array<{
+    id: string
+    type: string
+    description: string
+    createdAt: string
+    userId: string
+  }>
   createdAt: string
   updatedAt: string
 }
@@ -96,7 +107,12 @@ export class LeadScoringEngine {
   }> {
     try {
       const insight = await AIInsightsEngine.generateLeadScoring(leadData.id, leadData, context)
-      const insightData = insight.insightData as any
+      const insightData = insight.insightData as {
+        score: number
+        factors: LeadScoringFactors
+        confidence: number
+        recommendations: string[]
+      }
 
       return {
         score: insightData.score || 0,
@@ -197,7 +213,7 @@ export class LeadScoringEngine {
   /**
    * Calculate engagement score (0-100)
    */
-  private static calculateEngagementScore(engagement: any[]): number {
+  private static calculateEngagementScore(engagement: Array<{ id: string; type: string; timestamp: string; value: number }>): number {
     if (!engagement || engagement.length === 0) return 20
 
     let score = 20 // Base score

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       .lte('created_at', endDate)
 
     // Simple forecasting algorithm
-    const currentRevenue = historicalData?.reduce((sum: number, opp: any) => sum + (opp.value || 0), 0) || 0
+    const currentRevenue = historicalData?.reduce((sum: number, opp: { value?: number }) => sum + (opp.value || 0), 0) || 0
     const currentOpportunities = historicalData?.length || 0
     const currentLeads = 100 // This would come from leads data
 

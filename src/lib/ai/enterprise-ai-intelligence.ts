@@ -12,7 +12,7 @@ export interface AIModel {
   modelType: 'lead_scoring' | 'deal_prediction' | 'forecasting' | 'coaching' | 'content_generation' | 'sentiment_analysis';
   provider: 'openai' | 'anthropic' | 'azure' | 'aws' | 'custom';
   modelVersion: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   accuracyMetrics: Record<string, number>;
   isActive: boolean;
   isEnterprise: boolean;
@@ -25,7 +25,7 @@ export interface PredictiveInsight {
   entityType: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization';
   entityId: string;
   insightData: {
-    prediction: any;
+    prediction: Record<string, unknown>;
     confidence: number;
     factors: string[];
     recommendations: string[];
@@ -73,7 +73,18 @@ export interface ForecastingData {
 }
 
 class EnterpriseAIIntelligence {
-  private supabase: any;
+  private supabase: {
+    from: (table: string) => {
+      select: (columns?: string) => {
+        eq: (column: string, value: string | number) => {
+          order: (column: string, options?: { ascending?: boolean }) => {
+            single: () => Promise<{ data: Record<string, unknown> | null; error: Error | null }>;
+          };
+        };
+        single: () => Promise<{ data: Record<string, unknown> | null; error: Error | null }>;
+      };
+    };
+  };
   private openai: OpenAI;
   // private anthropic: Anthropic;
 
@@ -391,7 +402,7 @@ class EnterpriseAIIntelligence {
   }
 
   // AI Content Generation
-  async generateAIContent(type: 'email' | 'proposal' | 'presentation' | 'follow_up', context: any): Promise<string> {
+  async generateAIContent(type: 'email' | 'proposal' | 'presentation' | 'follow_up', context: Record<string, unknown>): Promise<string> {
     try {
       const prompt = this.buildContentPrompt(type, context);
       
@@ -455,7 +466,7 @@ class EnterpriseAIIntelligence {
     return locationScores[this.extractRegion(address) as keyof typeof locationScores] || 0.5;
   }
 
-  private calculateEmailEngagementScore(activities: any[]): number {
+  private calculateEmailEngagementScore(activities: Array<{ type: string; timestamp: string; value?: number }>): number {
     const emailActivities = activities?.filter(activity => activity.type === 'email') || [];
     if (emailActivities.length === 0) return 0.3;
     
@@ -466,7 +477,7 @@ class EnterpriseAIIntelligence {
     return (openRate * 0.3 + clickRate * 0.4 + replyRate * 0.3);
   }
 
-  private calculateWebsiteEngagementScore(activities: any[]): number {
+  private calculateWebsiteEngagementScore(activities: Array<{ type: string; timestamp: string; value?: number }>): number {
     const websiteActivities = activities?.filter(activity => activity.type === 'website_visit') || [];
     if (websiteActivities.length === 0) return 0.2;
     
@@ -476,7 +487,7 @@ class EnterpriseAIIntelligence {
     return Math.min(1.0, (avgSessionDuration / 300) * 0.5 + (pageViews / 10) * 0.5);
   }
 
-  private calculateSocialEngagementScore(activities: any[]): number {
+  private calculateSocialEngagementScore(activities: Array<{ type: string; timestamp: string; value?: number }>): number {
     const socialActivities = activities?.filter(activity => activity.type === 'social_engagement') || [];
     if (socialActivities.length === 0) return 0.1;
     
@@ -484,7 +495,7 @@ class EnterpriseAIIntelligence {
     return engagementRate;
   }
 
-  private calculateResponseTimeScore(activities: any[]): number {
+  private calculateResponseTimeScore(activities: Array<{ type: string; timestamp: string; value?: number }>): number {
     const responseActivities = activities?.filter(activity => activity.response_time) || [];
     if (responseActivities.length === 0) return 0.5;
     
@@ -492,7 +503,7 @@ class EnterpriseAIIntelligence {
     return Math.max(0, 1 - (avgResponseTime / 24)); // 24 hours = 0 score
   }
 
-  private calculateMeetingAttendanceScore(activities: any[]): number {
+  private calculateMeetingAttendanceScore(activities: Array<{ type: string; timestamp: string; value?: number }>): number {
     const meetingActivities = activities?.filter(activity => activity.type === 'meeting') || [];
     if (meetingActivities.length === 0) return 0.3;
     
@@ -500,7 +511,7 @@ class EnterpriseAIIntelligence {
     return attendanceRate;
   }
 
-  private calculateContentConsumptionScore(activities: any[]): number {
+  private calculateContentConsumptionScore(activities: Array<{ type: string; timestamp: string; value?: number }>): number {
     const contentActivities = activities?.filter(activity => activity.type === 'content_view') || [];
     if (contentActivities.length === 0) return 0.2;
     

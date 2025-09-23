@@ -7,19 +7,19 @@ interface PEAKProcessProps {
   opportunityName: string
   currentStage: string
   onStageChange: (stage: string) => void
-  onDocumentUpload: (stage: string, document: any) => void
+  onDocumentUpload: (stage: string, document: File) => void
   onDocumentDelete: (stage: string, documentId: string) => void
-  onDocumentOpen: (document: any) => void
+  onDocumentOpen: (document: { id: string; name: string; url: string }) => void
 }
 
 export function PEAKProcess({
-  opportunityId,
+  opportunityId: _opportunityId,
   opportunityName,
   currentStage,
-  onStageChange,
-  onDocumentUpload,
-  onDocumentDelete,
-  onDocumentOpen
+  onStageChange: _onStageChange,
+  onDocumentUpload: _onDocumentUpload,
+  onDocumentDelete: _onDocumentDelete,
+  onDocumentOpen: _onDocumentOpen
 }: PEAKProcessProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">

@@ -17,7 +17,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [meddpiccScore, setMeddpiccScore] = useState<number>(0)
-  const router = useRouter()
+  const _router = useRouter()
 
   // Debug logging
   console.log('OpportunityView rendered with opportunityId:', opportunityId)
@@ -59,7 +59,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
 
   useEffect(() => {
     fetchOpportunity()
-  }, [opportunityId])
+  }, [opportunityId, fetchOpportunity])
 
   // Refresh data when returning from edit mode
   useEffect(() => {
@@ -100,7 +100,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
       window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
       window.removeEventListener('peakUpdated', handlePeakUpdate as EventListener)
     }
-  }, [opportunityId])
+  }, [opportunityId, fetchOpportunity])
 
   if (loading) {
     return (

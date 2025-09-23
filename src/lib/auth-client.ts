@@ -29,7 +29,16 @@ export class AuthClientService {
    * Uses singleton pattern to prevent multiple instances
    * Always returns a valid client (never null)
    */
-  static getClient(): any {
+  static getClient(): {
+    auth: {
+      getUser: () => Promise<{ data: { user: Record<string, unknown> | null }; error: Error | null }>
+      getSession: () => Promise<{ data: { session: Record<string, unknown> | null }; error: Error | null }>
+      signInWithPassword: (credentials: { email: string; password: string }) => Promise<{ data: { user: Record<string, unknown> | null; session: Record<string, unknown> | null }; error: Error | null }>
+      signUp: (credentials: { email: string; password: string; options?: Record<string, unknown> }) => Promise<{ data: { user: Record<string, unknown> | null; session: Record<string, unknown> | null }; error: Error | null }>
+      signOut: () => Promise<{ error: Error | null }>
+      onAuthStateChange: (callback: (event: string, session: Record<string, unknown> | null) => void) => { data: { subscription: { unsubscribe: () => void } } }
+    }
+  } {
     return getSupabaseClient()
   }
 

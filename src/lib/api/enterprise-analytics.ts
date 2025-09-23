@@ -10,9 +10,9 @@ export interface AnalyticsDashboard {
   id: string;
   dashboardName: string;
   dashboardType: 'executive' | 'operational' | 'compliance' | 'custom' | 'real_time';
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   kpis: KPIMetric[];
-  filters: Record<string, any>;
+  filters: Record<string, unknown>;
   refreshFrequencyMinutes: number;
   isPublic: boolean;
   accessLevel: 'user' | 'department' | 'organization' | 'global';
@@ -44,7 +44,7 @@ export interface ForecastingModel {
   id: string;
   name: string;
   modelType: 'linear' | 'exponential' | 'seasonal' | 'ml';
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   accuracy: number;
   lastTrained: Date;
   isActive: boolean;
@@ -55,7 +55,7 @@ export interface AnalyticsQuery {
   id: string;
   name: string;
   query: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   resultType: 'table' | 'chart' | 'metric';
   isPublic: boolean;
   organizationId: string;
@@ -155,7 +155,7 @@ export async function getKPITemplates(organizationId: string): Promise<KPIMetric
 }
 
 // Forecasting
-export async function generateForecast(organizationId: string, period: string): Promise<any> {
+export async function generateForecast(organizationId: string, period: string): Promise<Record<string, unknown>> {
   try {
     // Mock forecast data for now
     return {
@@ -198,7 +198,7 @@ export async function getRealTimeMetrics(organizationId: string): Promise<RealTi
 }
 
 // Query Execution
-export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<any> {
+export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<Record<string, unknown>> {
   try {
     // Mock query execution for now
     return {
@@ -213,7 +213,7 @@ export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<any>
 }
 
 // Executive Reporting
-export async function generateExecutiveReport(organizationId: string, period: string): Promise<any> {
+export async function generateExecutiveReport(organizationId: string, period: string): Promise<Record<string, unknown>> {
   try {
     // Mock executive report for now
     return {
@@ -242,7 +242,7 @@ export async function generateExecutiveReport(organizationId: string, period: st
 }
 
 // Chart Data
-export async function getChartData(organizationId: string, chartType: string): Promise<any> {
+export async function getChartData(organizationId: string, chartType: string): Promise<Record<string, unknown>> {
   try {
     // Mock chart data for now
     const dataPoints = Array.from({ length: 12 }, (_, i) => ({
@@ -263,7 +263,7 @@ export async function getChartData(organizationId: string, chartType: string): P
 }
 
 // Analytics Insights
-export async function generateAnalyticsInsights(organizationId: string): Promise<any[]> {
+export async function generateAnalyticsInsights(organizationId: string): Promise<Record<string, unknown>[]> {
   try {
     // Mock insights for now
     return [

@@ -662,7 +662,7 @@ export class WorkflowEngine {
   }
 
   private async updateStepExecution(stepExecutionId: string, status: string, result?: Record<string, string | number | boolean>): Promise<void> {
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
       status,
       completed_at: status === 'completed' || status === 'failed' || status === 'skipped' 
         ? new Date().toISOString() 
@@ -692,8 +692,13 @@ export class WorkflowEngine {
       .eq('id', execution.id);
   }
 
-  private getNestedValue(obj: Record<string, any>, path: string): any {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+  private getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+    return path.split('.').reduce((current, key) => {
+      if (current && typeof current === 'object' && key in current) {
+        return (current as Record<string, unknown>)[key];
+      }
+      return undefined;
+    }, obj);
   }
 
   // Step execution methods (to be implemented by specific step handlers)

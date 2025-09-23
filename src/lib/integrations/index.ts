@@ -123,7 +123,7 @@ export class IntegrationManager {
     }
   }
 
-  private async performSync(integration: BaseIntegration, config: any): Promise<void> {
+  private async performSync(integration: BaseIntegration, config: Record<string, unknown>): Promise<void> {
     try {
       // Test connection first
       const isConnected = await integration.testConnection();
