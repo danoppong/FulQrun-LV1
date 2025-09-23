@@ -340,7 +340,7 @@ class EnterpriseAIIntelligence {
       }
 
       // Deal strategy recommendations
-      const activeOpportunities = userData.opportunities?.filter((opp: any) => opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') || [];
+      const activeOpportunities = userData.opportunities?.filter((opp: { stage: string }) => opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') || [];
       if (activeOpportunities.length > 0) {
         recommendations.push({
           id: crypto.randomUUID(),
@@ -543,7 +543,7 @@ class EnterpriseAIIntelligence {
     return 0.7;
   }
 
-  private calculateConversionPatternScore(historicalData: any[], currentLead: any): number {
+  private calculateConversionPatternScore(historicalData: Array<Record<string, unknown>>, currentLead: Record<string, unknown>): number {
     if (!historicalData || historicalData.length === 0) return 0.5;
     
     const similarLeads = historicalData.filter(lead => 
@@ -557,7 +557,7 @@ class EnterpriseAIIntelligence {
     return conversionRate;
   }
 
-  private calculateSimilarLeadsScore(historicalData: any[], currentLead: any): number {
+  private calculateSimilarLeadsScore(historicalData: Array<Record<string, unknown>>, currentLead: Record<string, unknown>): number {
     if (!historicalData || historicalData.length === 0) return 0.5;
     
     // Calculate similarity based on multiple factors
@@ -582,7 +582,7 @@ class EnterpriseAIIntelligence {
     return 'Cold';
   }
 
-  private calculateConversionProbability(score: number, historicalData: any[]): number {
+  private calculateConversionProbability(score: number, historicalData: Array<Record<string, unknown>>): number {
     if (!historicalData || historicalData.length === 0) return score / 100;
     
     const totalLeads = historicalData.length;
@@ -613,7 +613,7 @@ class EnterpriseAIIntelligence {
       .map(item => item.factor);
   }
 
-  private async generateLeadRecommendations(lead: any, factors: Record<string, number>): Promise<string[]> {
+  private async generateLeadRecommendations(lead: Record<string, unknown>, factors: Record<string, number>): Promise<string[]> {
     const recommendations = [];
     
     if (factors.emailEngagement < 0.5) {
@@ -636,14 +636,14 @@ class EnterpriseAIIntelligence {
   }
 
   // Additional helper methods for risk assessment, coaching, and forecasting...
-  private calculateMEDDPICCRiskScore(meddpiccScores: any[]): number {
+  private calculateMEDDPICCRiskScore(meddpiccScores: Array<Record<string, unknown>>): number {
     if (!meddpiccScores || meddpiccScores.length === 0) return 0.5;
     
     const avgScore = meddpiccScores.reduce((sum, score) => sum + score.total_score, 0) / meddpiccScores.length;
     return Math.max(0, 1 - (avgScore / 100));
   }
 
-  private calculateTimelineRisk(opportunity: any): number {
+  private calculateTimelineRisk(opportunity: Record<string, unknown>): number {
     const daysSinceCreated = (Date.now() - new Date(opportunity.created_at).getTime()) / (1000 * 60 * 60 * 24);
     const expectedCloseDate = new Date(opportunity.expected_close_date);
     const daysToClose = (expectedCloseDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
@@ -654,12 +654,12 @@ class EnterpriseAIIntelligence {
     return 0.1; // Long timeline
   }
 
-  private async calculateCompetitionRisk(opportunity: any): Promise<number> {
+  private async calculateCompetitionRisk(opportunity: Record<string, unknown>): Promise<number> {
     // This would integrate with competitive intelligence data
     return 0.4; // Base risk
   }
 
-  private calculateStakeholderRisk(contacts: any[]): number {
+  private calculateStakeholderRisk(contacts: Array<Record<string, unknown>>): number {
     if (!contacts || contacts.length === 0) return 0.8;
     
     const championContacts = contacts.filter(contact => contact.role === 'champion');
@@ -671,7 +671,7 @@ class EnterpriseAIIntelligence {
     return 0.2; // Low risk with both champions and decision makers
   }
 
-  private calculateValuePropositionRisk(opportunity: any): number {
+  private calculateValuePropositionRisk(opportunity: Record<string, unknown>): number {
     // Analyze value proposition strength
     const valueScore = opportunity.deal_value || 0;
     const budgetScore = opportunity.budget_allocated || 0;
@@ -688,7 +688,7 @@ class EnterpriseAIIntelligence {
     return 0.3; // Base market risk
   }
 
-  private async calculateHistoricalRisk(opportunity: any, organizationId: string): Promise<number> {
+  private async calculateHistoricalRisk(opportunity: Record<string, unknown>, organizationId: string): Promise<number> {
     const { data: similarOpportunities } = await this.supabase
       .from('opportunities')
       .select('*')
@@ -698,11 +698,11 @@ class EnterpriseAIIntelligence {
     
     if (!similarOpportunities || similarOpportunities.length === 0) return 0.5;
     
-    const winRate = similarOpportunities.filter((opp: any) => opp.stage === 'closed_won').length / similarOpportunities.length;
+    const winRate = similarOpportunities.filter((opp: { stage: string }) => opp.stage === 'closed_won').length / similarOpportunities.length;
     return Math.max(0, 1 - winRate);
   }
 
-  private calculateEngagementRisk(activities: any[]): number {
+  private calculateEngagementRisk(activities: Array<Record<string, unknown>>): number {
     if (!activities || activities.length === 0) return 0.8;
     
     const recentActivities = activities.filter(activity => 
@@ -743,7 +743,7 @@ class EnterpriseAIIntelligence {
       .map(factor => `${factor}: ${Math.round(factors[factor] * 100)}% risk`);
   }
 
-  private async generateMitigationStrategies(opportunity: any, riskFactors: Record<string, number>): Promise<string[]> {
+  private async generateMitigationStrategies(opportunity: Record<string, unknown>, riskFactors: Record<string, number>): Promise<string[]> {
     const strategies = [];
     
     if (riskFactors.meddpiccScore > 0.6) {
@@ -766,7 +766,7 @@ class EnterpriseAIIntelligence {
   }
 
   // Additional helper methods for coaching and forecasting...
-  private analyzePerformancePatterns(userData: any): any {
+  private analyzePerformancePatterns(userData: Record<string, unknown>): Record<string, unknown> {
     const opportunities = userData.opportunities || [];
     const activities = userData.activities || [];
     const metrics = userData.performance_metrics || [];
@@ -779,7 +779,7 @@ class EnterpriseAIIntelligence {
     };
   }
 
-  private identifySkillGaps(opportunities: any[], activities: any[]): string[] {
+  private identifySkillGaps(opportunities: Array<Record<string, unknown>>, activities: Array<Record<string, unknown>>): string[] {
     const gaps = [];
     
     const winRate = opportunities.filter(opp => opp.stage === 'closed_won').length / opportunities.length;
@@ -794,7 +794,7 @@ class EnterpriseAIIntelligence {
     return gaps;
   }
 
-  private identifyProcessIssues(activities: any[]): string[] {
+  private identifyProcessIssues(activities: Array<Record<string, unknown>>): string[] {
     const issues = [];
     
     const followUpRate = activities.filter(a => a.type === 'follow_up').length / activities.length;
@@ -806,7 +806,7 @@ class EnterpriseAIIntelligence {
     return issues;
   }
 
-  private identifyStrengths(opportunities: any[], activities: any[]): string[] {
+  private identifyStrengths(opportunities: Array<Record<string, unknown>>, activities: Array<Record<string, unknown>>): string[] {
     const strengths = [];
     
     const activityVolume = activities.length;
@@ -818,7 +818,7 @@ class EnterpriseAIIntelligence {
     return strengths;
   }
 
-  private identifyOpportunities(opportunities: any[], metrics: any[]): string[] {
+  private identifyOpportunities(opportunities: Array<Record<string, unknown>>, metrics: Array<Record<string, unknown>>): string[] {
     const opportunities_list = [];
     
     const pipelineValue = opportunities.reduce((sum, opp) => sum + (opp.deal_value || 0), 0);
@@ -862,7 +862,7 @@ class EnterpriseAIIntelligence {
     return actions;
   }
 
-  private generateDealStrategyActions(opportunities: any[]): string[] {
+  private generateDealStrategyActions(opportunities: Array<Record<string, unknown>>): string[] {
     const actions = [];
     
     const highValueOpps = opportunities.filter(opp => (opp.deal_value || 0) > 100000);
@@ -909,7 +909,7 @@ class EnterpriseAIIntelligence {
     ];
   }
 
-  private calculateAdvancedForecast(historicalData: any[], currentPipeline: any[], period: string): any {
+  private calculateAdvancedForecast(historicalData: Array<Record<string, unknown>>, currentPipeline: Array<Record<string, unknown>>, period: string): Record<string, unknown> {
     // Advanced forecasting algorithm
     const historicalRevenue = historicalData.reduce((sum, opp) => sum + (opp.deal_value || 0), 0);
     const avgDealSize = historicalRevenue / historicalData.length;
@@ -955,7 +955,7 @@ class EnterpriseAIIntelligence {
     }
   }
 
-  private buildContentPrompt(type: string, context: any): string {
+  private buildContentPrompt(type: string, context: Record<string, unknown>): string {
     const basePrompt = `Generate professional ${type} content for enterprise B2B sales.`;
     
     switch (type) {

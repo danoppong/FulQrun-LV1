@@ -420,7 +420,7 @@ export class LearningAPI {
   /**
    * Check if module is relevant to opportunity stage
    */
-  private static isRelevantToStage(module: any, stage: string): boolean {
+  private static isRelevantToStage(module: Record<string, unknown>, stage: string): boolean {
     // Simple stage-based filtering - can be enhanced
     const stageTags = {
       'prospecting': ['prospecting', 'lead generation', 'cold calling'],

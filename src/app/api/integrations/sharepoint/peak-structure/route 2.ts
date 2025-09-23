@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       folders: result.folders,
       message: 'PEAK folder structure created successfully'
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to create PEAK structure' },
       { status: 500 }

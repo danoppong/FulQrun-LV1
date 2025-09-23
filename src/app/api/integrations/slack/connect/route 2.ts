@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         message: 'Slack connection created successfully'
       })
     }
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to save Slack connection' },
       { status: 500 }

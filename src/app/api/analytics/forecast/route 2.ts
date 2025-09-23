@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(forecastData)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to generate forecast' },
       { status: 500 }

@@ -62,7 +62,7 @@ export const supabase = (() => {
           eq: async () => ({ error: { message: 'Supabase not configured' } })
         })
       })
-    } as any
+    } as Record<string, unknown>
   }
   
   return supabaseInstance
@@ -120,7 +120,7 @@ export const createServerClient = () => {
           eq: async () => ({ error: { message: 'Supabase not configured' } })
         })
       })
-    } as any
+    } as Record<string, unknown>
   }
 }
 
@@ -161,7 +161,7 @@ export interface Database {
           full_name: string | null
           role: 'rep' | 'manager' | 'admin'
           organization_id: string
-          learning_progress: Record<string, any>
+          learning_progress: Record<string, unknown>
           created_at: string
           updated_at: string
         }
@@ -171,7 +171,7 @@ export interface Database {
           full_name?: string | null
           role?: 'rep' | 'manager' | 'admin'
           organization_id: string
-          learning_progress?: Record<string, any>
+          learning_progress?: Record<string, unknown>
           created_at?: string
           updated_at?: string
         }
@@ -181,7 +181,7 @@ export interface Database {
           full_name?: string | null
           role?: 'rep' | 'manager' | 'admin'
           organization_id?: string
-          learning_progress?: Record<string, any>
+          learning_progress?: Record<string, unknown>
           created_at?: string
           updated_at?: string
         }

@@ -70,7 +70,7 @@ export async function updateMobileSession(
   updates: Partial<MobileSession>
 ): Promise<MobileSession> {
   try {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (updates.deviceInfo) updateData.device_info = updates.deviceInfo;
     if (updates.appVersion) updateData.app_version = updates.appVersion;
     if (updates.offlineData) updateData.offline_data = updates.offlineData;
@@ -132,7 +132,7 @@ export async function syncOfflineData(sessionId: string): Promise<any> {
 export async function storeOfflineData(
   sessionId: string,
   entityType: string,
-  data: any[]
+  data: Array<Record<string, unknown>>
 ): Promise<void> {
   try {
     // TODO: Implement storeOfflineData
@@ -158,7 +158,7 @@ export async function addPendingChange(
   entityType: string,
   entityId: string,
   operation: 'create' | 'update' | 'delete',
-  data: any
+  data: Record<string, unknown>
 ): Promise<void> {
   try {
     const { data: session } = await supabase
@@ -277,7 +277,7 @@ export async function trackMobileEvent(
   userId: string,
   sessionId: string,
   eventType: string,
-  eventData: any,
+  eventData: Record<string, unknown>,
   deviceInfo: DeviceInfo,
   networkType: string,
   appVersion: string,
@@ -435,7 +435,7 @@ export async function getMobileAppConfig(organizationId: string): Promise<any> {
 
 export async function updateMobileAppConfig(
   organizationId: string,
-  config: any
+  config: Record<string, unknown>
 ): Promise<void> {
   try {
     // TODO: Implement updateMobileAppConfig
@@ -469,7 +469,7 @@ export async function getDeviceCompliance(
 export async function enforceDevicePolicy(
   organizationId: string,
   deviceId: string,
-  policy: any
+  policy: Record<string, unknown>
 ): Promise<void> {
   try {
     // TODO: Implement enforceDevicePolicy
@@ -501,8 +501,8 @@ export async function resolveDataConflict(
   sessionId: string,
   entityType: string,
   entityId: string,
-  localData: any,
-  serverData: any,
+  localData: Record<string, unknown>,
+  serverData: Record<string, unknown>,
   resolutionStrategy: 'local_wins' | 'server_wins' | 'merge' | 'manual'
 ): Promise<any> {
   try {

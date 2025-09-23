@@ -70,7 +70,7 @@ export function getSupabaseClient() {
           eq: async () => ({ error: { message: 'Database not configured' } })
         })
       })
-    } as any
+    } as Record<string, unknown>
     return globalClient
   }
 
@@ -135,7 +135,7 @@ export function getSupabaseClient() {
           eq: async () => ({ error: { message: 'Database not configured' } })
         })
       })
-    } as any
+    } as Record<string, unknown>
     return globalClient
   }
 }

@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(documents)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch SharePoint documents' },
       { status: 500 }
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
         size: file.size
       }
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to upload document' },
       { status: 500 }
@@ -236,7 +236,7 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: 'Document deleted successfully'
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to delete document' },
       { status: 500 }
