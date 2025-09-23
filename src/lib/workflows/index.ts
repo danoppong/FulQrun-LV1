@@ -8,7 +8,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Define interfaces locally to avoid import issues
+// Define interfaces locally to maintain compatibility
 export interface EnterpriseWorkflow {
   id: string;
   name: string;
@@ -57,6 +57,9 @@ export interface ApprovalConfig {
   minApprovals: number;
   escalationConfig: EscalationConfig;
   timeoutHours: number;
+  approvalCriteria?: Record<string, any>;
+  escalationRules?: any[];
+  requireAllApprovers?: boolean;
 }
 
 export interface NotificationConfig {
@@ -116,29 +119,40 @@ export interface ApprovalRequest {
   id: string;
   workflowExecutionId: string;
   stepId: string;
+  entityType: string;
+  entityId: string;
   approvers: ApprovalUser[];
-  status: 'pending' | 'approved' | 'rejected' | 'expired';
-  requestedAt: Date;
-  completedAt?: Date;
-  comments?: string;
+  approvalType: 'sequential' | 'parallel' | 'any';
+  minApprovals: number;
+  currentApprovals: number;
+  status: 'pending' | 'approved' | 'rejected' | 'escalated' | 'expired';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  dueDate?: Date;
+  escalationConfig: EscalationConfig;
+  organizationId: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface ApprovalUser {
   userId: string;
   email: string;
-  name: string;
+  fullName: string;
   role: string;
-  response?: 'approved' | 'rejected';
-  respondedAt?: Date;
-  comments?: string;
+  department: string;
+  isRequired: boolean;
+  order: number;
 }
 
 export interface ApprovalResponse {
-  requestId: string;
+  id: string;
+  approvalRequestId: string;
   userId: string;
-  response: 'approved' | 'rejected';
-  comments?: string;
-  respondedAt: Date;
+  action: 'approve' | 'reject' | 'delegate';
+  comment?: string;
+  delegatedTo?: string;
+  timestamp: Date;
+  ipAddress?: string;
 }
 
 export interface ApprovalTemplate {

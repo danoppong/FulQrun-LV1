@@ -2,6 +2,106 @@
 // API functions for enterprise security, compliance, and audit management
 
 import { createClient } from '@supabase/supabase-js';
+
+// Define interfaces for enterprise security
+export interface AuditLogEntry {
+  id: string;
+  userId?: string;
+  organizationId: string;
+  actionType: string;
+  entityType: string;
+  entityId?: string;
+  oldValues?: Record<string, any>;
+  newValues?: Record<string, any>;
+  ipAddress?: string;
+  userAgent?: string;
+  sessionId?: string;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  complianceFlags: string[];
+  createdAt: Date;
+}
+
+export interface ComplianceReport {
+  id: string;
+  name?: string;
+  type?: string;
+  reportName?: string;
+  reportType?: string;
+  status: 'draft' | 'in_progress' | 'completed' | 'failed' | 'generating' | 'expired';
+  generatedAt?: Date;
+  createdAt?: Date;
+  downloadCount?: number;
+  data?: Record<string, any>;
+  organizationId: string;
+}
+
+export interface SecurityPolicy {
+  id: string;
+  name: string;
+  description: string;
+  type?: string;
+  policyType?: string;
+  rules: Record<string, any>;
+  isActive: boolean;
+  organizationId: string;
+}
+
+export interface RBACPermission {
+  id: string;
+  name?: string;
+  description?: string;
+  resource: string;
+  actions?: string[];
+  conditions?: Record<string, any>;
+  organizationId: string;
+}
+
+export interface DataPrivacyRequest {
+  id: string;
+  userId?: string;
+  type?: 'access' | 'rectification' | 'erasure' | 'portability' | 'restriction';
+  requestType?: string;
+  requesterEmail?: string;
+  entityType?: string;
+  createdAt?: Date;
+  status: 'pending' | 'in_progress' | 'completed' | 'rejected';
+  requestedAt?: Date;
+  completedAt?: Date;
+  organizationId: string;
+}
+
+export interface SecurityAlert {
+  id: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  message: string;
+  details: Record<string, any>;
+  organizationId: string;
+  createdAt: Date;
+}
+
+export interface SecurityMetrics {
+  totalAlerts: number;
+  criticalAlerts: number;
+  highAlerts: number;
+  mediumAlerts: number;
+  lowAlerts: number;
+  complianceScore: number;
+  lastUpdated: Date;
+}
+
+export interface ComplianceStatus {
+  overallScore: number;
+  categories: {
+    dataProtection: number;
+    accessControl: number;
+    auditLogging: number;
+    incidentResponse: number;
+  };
+  lastAssessment: Date;
+  nextAssessment: Date;
+}
+
 // Interfaces removed to fix build errors - using any types for parameters
 
 const supabase = createClient(

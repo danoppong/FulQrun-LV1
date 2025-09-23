@@ -27,75 +27,13 @@ import {
   detectAnomalies,
   getSecurityMetrics,
   getComplianceStatus,
-  getSecurityAlerts
+  getSecurityAlerts,
+  AuditLogEntry,
+  ComplianceReport,
+  SecurityPolicy,
+  RBACPermission,
+  DataPrivacyRequest
 } from '@/lib/api/enterprise-security';
-
-// Define interfaces locally to avoid import issues
-interface AuditLogEntry {
-  id: string;
-  userId?: string;
-  organizationId: string;
-  actionType: string;
-  entityType: string;
-  entityId?: string;
-  oldValues?: Record<string, any>;
-  newValues?: Record<string, any>;
-  ipAddress?: string;
-  userAgent?: string;
-  sessionId?: string;
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
-  complianceFlags: string[];
-  createdAt: Date;
-}
-
-interface ComplianceReport {
-  id: string;
-  name?: string;
-  type?: string;
-  reportName?: string;
-  reportType?: string;
-  status: 'draft' | 'in_progress' | 'completed' | 'failed' | 'generating' | 'expired';
-  generatedAt?: Date;
-  createdAt?: Date;
-  downloadCount?: number;
-  data?: Record<string, any>;
-  organizationId: string;
-}
-
-interface SecurityPolicy {
-  id: string;
-  name: string;
-  description: string;
-  type?: string;
-  policyType?: string;
-  rules: Record<string, any>;
-  isActive: boolean;
-  organizationId: string;
-}
-
-interface RBACPermission {
-  id: string;
-  name?: string;
-  description?: string;
-  resource: string;
-  actions?: string[];
-  conditions?: Record<string, any>;
-  organizationId: string;
-}
-
-interface DataPrivacyRequest {
-  id: string;
-  userId?: string;
-  type?: 'access' | 'rectification' | 'erasure' | 'portability' | 'restriction';
-  requestType?: string;
-  requesterEmail?: string;
-  entityType?: string;
-  createdAt?: Date;
-  status: 'pending' | 'in_progress' | 'completed' | 'rejected';
-  requestedAt?: Date;
-  completedAt?: Date;
-  organizationId: string;
-}
 
 interface EnterpriseSecurityDashboardProps {
   organizationId: string;
