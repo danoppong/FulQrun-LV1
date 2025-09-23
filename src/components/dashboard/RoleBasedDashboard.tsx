@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { UserRole, getUserPermissions, canUserAccessLevel } from '@/lib/roles'
 import { DashboardWidget, WidgetType, DEFAULT_WIDGETS, WIDGET_TEMPLATES } from '@/lib/dashboard-widgets'
 import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData } from '@/lib/types/dashboard'

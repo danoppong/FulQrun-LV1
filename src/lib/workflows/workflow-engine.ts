@@ -9,12 +9,18 @@ const supabase = createClient(
 );
 
 // Core workflow types
+export interface TriggerCondition {
+  field: string;
+  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains' | 'is_empty' | 'is_not_empty';
+  value: string | number | boolean;
+}
+
 export interface EnterpriseWorkflow {
   id: string;
   name: string;
   description: string;
-  workflowType: 'approval' | 'notification' | 'data_sync' | 'ai_trigger' | 'compliance' | 'custom';
-  triggerConditions: Record<string, any>;
+  workflowType: 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom';
+  triggerConditions: Record<string, TriggerCondition>;
   steps: WorkflowStep[];
   approvalConfig: ApprovalConfig;
   notificationConfig: NotificationConfig;
@@ -32,7 +38,7 @@ export interface WorkflowStep {
   stepType: 'condition' | 'action' | 'approval' | 'notification' | 'integration' | 'delay' | 'ai_processing';
   name: string;
   description: string;
-  config: Record<string, any>;
+  config: Record<string, string | number | boolean>;
   conditions?: WorkflowCondition[];
   actions?: WorkflowAction[];
   nextSteps: string[];
@@ -44,15 +50,15 @@ export interface WorkflowCondition {
   id: string;
   field: string;
   operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains' | 'is_empty' | 'is_not_empty';
-  value: any;
+  value: string | number | boolean;
   logicalOperator?: 'AND' | 'OR';
 }
 
 export interface WorkflowAction {
   id: string;
   actionType: 'create' | 'update' | 'delete' | 'send_email' | 'send_slack' | 'create_task' | 'assign_user' | 'call_api';
-  config: Record<string, any>;
-  parameters: Record<string, any>;
+  config: Record<string, string | number | boolean>;
+  parameters: Record<string, string | number | boolean>;
 }
 
 export interface ApprovalConfig {
@@ -97,7 +103,7 @@ export interface WorkflowExecution {
   entityId: string;
   status: 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
   currentStepId?: string;
-  executionData: Record<string, any>;
+  executionData: Record<string, string | number | boolean>;
   startedAt: Date;
   completedAt?: Date;
   errorMessage?: string;
@@ -112,7 +118,7 @@ export interface WorkflowStepExecution {
   startedAt?: Date;
   completedAt?: Date;
   errorMessage?: string;
-  result?: any;
+  result?: Record<string, string | number | boolean>;
 }
 
 // Core Workflow Engine
@@ -131,7 +137,7 @@ export class WorkflowEngine {
     workflowId: string,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, string | number | boolean>
   ): Promise<WorkflowExecution> {
     try {
       const workflow = await this.getWorkflow(workflowId);
@@ -352,8 +358,8 @@ export class WorkflowEngine {
   }
 
   private evaluateTriggerConditions(
-    conditions: Record<string, any>,
-    data: Record<string, any>
+    conditions: Record<string, TriggerCondition>,
+    data: Record<string, string | number | boolean>
   ): boolean {
     // Evaluate trigger conditions against the provided data
     for (const [field, expectedValue] of Object.entries(conditions)) {
@@ -369,7 +375,7 @@ export class WorkflowEngine {
     workflowId: string,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, string | number | boolean>
   ): Promise<WorkflowExecution> {
     const { data, error } = await supabase
       .from('workflow_executions')
@@ -532,7 +538,7 @@ export class WorkflowEngine {
 
   private evaluateStepConditions(
     conditions: WorkflowCondition[],
-    data: Record<string, any>
+    data: Record<string, string | number | boolean>
   ): boolean {
     let result = true;
     let logicalOperator: 'AND' | 'OR' = 'AND';
@@ -626,8 +632,8 @@ export class WorkflowEngine {
     };
   }
 
-  private async updateStepExecution(stepExecutionId: string, status: string, result?: any): Promise<void> {
-    const updateData: any = {
+  private async updateStepExecution(stepExecutionId: string, status: string, result?: Record<string, string | number | boolean>): Promise<void> {
+    const updateData: Record<string, string | number | boolean | undefined> = {
       status,
       completed_at: status === 'completed' || status === 'failed' || status === 'skipped' 
         ? new Date().toISOString() 
@@ -657,7 +663,7 @@ export class WorkflowEngine {
       .eq('id', execution.id);
   }
 
-  private getNestedValue(obj: any, path: string): any {
+  private getNestedValue(obj: Record<string, string | number | boolean>, path: string): string | number | boolean | undefined {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
@@ -702,7 +708,7 @@ export class WorkflowEngine {
     console.log(`Retrying step: ${step.name}`);
   }
 
-  private async escalateStep(execution: WorkflowExecution, step: WorkflowStep, error: any): Promise<void> {
+  private async escalateStep(execution: WorkflowExecution, step: WorkflowStep, error: Error): Promise<void> {
     // Escalate step logic
     console.log(`Escalating step: ${step.name}`, error);
   }

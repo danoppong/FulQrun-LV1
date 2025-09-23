@@ -1,5 +1,5 @@
 'use client'
-import { createClientComponentClient } from '@/lib/auth'
+import React, { createClientComponentClient } from '@/lib/auth'
 import { useEffect, useState } from 'react'
 
 const AuthDebug = () => {

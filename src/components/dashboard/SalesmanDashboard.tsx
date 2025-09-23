@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect, memo } from 'react'
 import { usePerformanceTracking } from '@/hooks/usePerformanceTracking'
 import { createClientComponentClient } from '@/lib/auth'
 import { 

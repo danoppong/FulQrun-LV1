@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { UserRole } from '@/lib/roles'
 import { PerformanceMetrics, getPerformanceDataForRole, calculateTeamPerformance, getDrillDownData } from '@/lib/performance-data'
 import RoleSelector from '@/components/RoleSelector'

@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect } from 'react'
 import { activityAPI, ActivityWithDetails } from '@/lib/api/activities'

@@ -20,4 +20,12 @@ module.exports = {
   testEnvironmentOptions: {
     customExportConditions: [''],
   },
+  // Memory optimization settings
+  maxWorkers: 2,
+  workerIdleMemoryLimit: '512MB',
+  detectLeaks: false,
+  detectOpenHandles: false,
+  forceExit: true,
+  // Reduce test timeout to prevent hanging
+  testTimeout: 10000,
 }

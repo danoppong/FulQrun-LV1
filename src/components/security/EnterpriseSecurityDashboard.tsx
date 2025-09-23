@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   ShieldCheckIcon, 
   ExclamationTriangleIcon, 
-  DocumentTextIcon,
   UserGroupIcon,
   LockClosedIcon,
   EyeIcon,
@@ -12,9 +11,7 @@ import {
   PlusIcon,
   CogIcon,
   ChartBarIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import { 
   getAuditLogs,
@@ -35,6 +32,40 @@ import {
   DataPrivacyRequest
 } from '@/lib/api/enterprise-security';
 
+// Define proper types for security dashboard data
+interface SecurityAlert {
+  id: string;
+  type: 'suspicious_activity' | 'unauthorized_access' | 'data_breach' | 'policy_violation';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  message: string;
+  timestamp: string;
+  resolved: boolean;
+}
+
+interface SecurityMetrics {
+  totalAlerts: number;
+  criticalAlerts: number;
+  resolvedAlerts: number;
+  averageResponseTime: number;
+  securityScore: number;
+}
+
+interface ComplianceStatus {
+  overallScore: number;
+  gdprCompliance: number;
+  soxCompliance: number;
+  hipaaCompliance: number;
+  lastAuditDate: string;
+}
+
+interface SecurityAnomaly {
+  id: string;
+  type: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  detectedAt: string;
+}
+
 interface EnterpriseSecurityDashboardProps {
   organizationId: string;
   userId: string;
@@ -47,19 +78,19 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
   const [securityPolicies, setSecurityPolicies] = useState<SecurityPolicy[]>([]);
   const [rbacPermissions, setRbacPermissions] = useState<RBACPermission[]>([]);
   const [privacyRequests, setPrivacyRequests] = useState<DataPrivacyRequest[]>([]);
-  const [securityAlerts, setSecurityAlerts] = useState<any[]>([]);
-  const [securityMetrics, setSecurityMetrics] = useState<any>(null);
-  const [complianceStatus, setComplianceStatus] = useState<any>(null);
-  const [anomalies, setAnomalies] = useState<any[]>([]);
+  const [securityAlerts, setSecurityAlerts] = useState<SecurityAlert[]>([]);
+  const [securityMetrics, setSecurityMetrics] = useState<SecurityMetrics | null>(null);
+  const [complianceStatus, setComplianceStatus] = useState<ComplianceStatus | null>(null);
+  const [anomalies, setAnomalies] = useState<SecurityAnomaly[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateReportModal, setShowCreateReportModal] = useState(false);
-  const [reportForm, setReportForm] = useState<any>({});
+  const [reportForm, setReportForm] = useState<Record<string, string | number | boolean>>({});
 
   useEffect(() => {
     loadDashboardData();
-  }, [organizationId]);
+  }, [organizationId, loadDashboardData]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       const [
@@ -98,7 +129,7 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId]);
 
   const handleGenerateReport = async () => {
     try {

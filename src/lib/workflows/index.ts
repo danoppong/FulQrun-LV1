@@ -8,162 +8,37 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Define interfaces locally to maintain compatibility
-export interface EnterpriseWorkflow {
-  id: string;
-  name: string;
-  description: string;
-  workflowType: 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom';
-  triggerConditions: Record<string, any>;
-  steps: WorkflowStep[];
-  approvalConfig: ApprovalConfig;
-  notificationConfig: NotificationConfig;
-  isActive: boolean;
-  priority: number;
-  timeoutHours: number;
-  retryConfig: RetryConfig;
-  organizationId: string;
-  createdBy: string;
-  createdAt: Date;
-}
+// Re-export all interfaces from individual modules
+export type {
+  EnterpriseWorkflow,
+  WorkflowStep,
+  WorkflowCondition,
+  WorkflowAction,
+  ApprovalConfig,
+  NotificationConfig,
+  RetryConfig,
+  ErrorHandling,
+  EscalationConfig,
+  WorkflowExecution,
+  WorkflowStepExecution,
+} from './workflow-engine';
 
-export interface WorkflowStep {
-  id: string;
-  name: string;
-  type: 'action' | 'condition' | 'approval' | 'notification' | 'delay';
-  config: Record<string, any>;
-  conditions?: WorkflowCondition[];
-  actions?: WorkflowAction[];
-  nextSteps?: string[];
-  errorHandling?: ErrorHandling;
-}
+export type {
+  ApprovalRequest,
+  ApprovalUser,
+  ApprovalResponse,
+  ApprovalTemplate,
+} from './approval-processes';
 
-export interface WorkflowCondition {
-  field: string;
-  operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
-  value: any;
-  logicalOperator?: 'AND' | 'OR';
-}
-
-export interface WorkflowAction {
-  type: string;
-  config: Record<string, any>;
-  parameters: Record<string, any>;
-}
-
-export interface ApprovalConfig {
-  approvalType: 'sequential' | 'parallel' | 'any';
-  approvers: string[];
-  minApprovals: number;
-  escalationConfig: EscalationConfig;
-  timeoutHours: number;
-  approvalCriteria?: Record<string, any>;
-  escalationRules?: any[];
-  requireAllApprovers?: boolean;
-}
-
-export interface NotificationConfig {
-  channels: string[];
-  templates: Record<string, any>;
-  recipients: string[];
-  escalationConfig: EscalationConfig;
-}
-
-export interface RetryConfig {
-  maxAttempts: number;
-  delayMinutes: number;
-  backoffMultiplier: number;
-  maxDelayMinutes: number;
-}
-
-export interface ErrorHandling {
-  onError: 'stop' | 'retry' | 'continue' | 'escalate';
-  retryConfig?: RetryConfig;
-  escalationConfig?: EscalationConfig;
-}
-
-export interface EscalationConfig {
-  enabled: boolean;
-  escalationUsers: string[];
-  escalationDelayMinutes: number;
-  maxEscalations: number;
-}
-
-export interface WorkflowExecution {
-  id: string;
-  workflowId: string;
-  entityType: string;
-  entityId: string;
-  status: 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
-  currentStepId?: string;
-  executionData: Record<string, any>;
-  startedAt: Date;
-  completedAt?: Date;
-  errorMessage?: string;
-  organizationId: string;
-}
-
-export interface WorkflowStepExecution {
-  id: string;
-  executionId: string;
-  stepId: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
-  inputData: Record<string, any>;
-  outputData?: Record<string, any>;
-  startedAt: Date;
-  completedAt?: Date;
-  errorMessage?: string;
-}
-
-export interface ApprovalRequest {
-  id: string;
-  workflowExecutionId: string;
-  stepId: string;
-  entityType: string;
-  entityId: string;
-  approvers: ApprovalUser[];
-  approvalType: 'sequential' | 'parallel' | 'any';
-  minApprovals: number;
-  currentApprovals: number;
-  status: 'pending' | 'approved' | 'rejected' | 'escalated' | 'expired';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  dueDate?: Date;
-  escalationConfig: EscalationConfig;
-  organizationId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface ApprovalUser {
-  userId: string;
-  email: string;
-  fullName: string;
-  role: string;
-  department: string;
-  isRequired: boolean;
-  order: number;
-}
-
-export interface ApprovalResponse {
-  id: string;
-  approvalRequestId: string;
-  userId: string;
-  action: 'approve' | 'reject' | 'delegate';
-  comment?: string;
-  delegatedTo?: string;
-  timestamp: Date;
-  ipAddress?: string;
-}
-
-export interface ApprovalTemplate {
-  id: string;
-  name: string;
-  description: string;
-  approvers: string[];
-  approvalType: 'sequential' | 'parallel' | 'any';
-  timeoutHours: number;
-  organizationId: string;
-}
+// Import types for use in this file
+import type {
+  EnterpriseWorkflow,
+  WorkflowStep,
+  ApprovalConfig,
+  NotificationConfig,
+  RetryConfig,
+  WorkflowExecution,
+} from './workflow-engine';
 
 // Core workflow engine
 export {
@@ -183,14 +58,14 @@ export {
 // Workflow factory for creating workflow instances
 export class WorkflowFactory {
   static createWorkflow(
-    workflowType: string,
-    config: Record<string, any>
+    workflowType: 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom',
+    config: Partial<EnterpriseWorkflow>
   ): EnterpriseWorkflow {
     const baseWorkflow: EnterpriseWorkflow = {
       id: config.id || '',
       name: config.name || '',
       description: config.description || '',
-      workflowType: workflowType as any,
+      workflowType: workflowType,
       triggerConditions: config.triggerConditions || {},
       steps: config.steps || [],
       approvalConfig: config.approvalConfig || {
@@ -312,7 +187,7 @@ export class WorkflowManager {
 
   async updateWorkflow(workflowId: string, updates: Partial<EnterpriseWorkflow>): Promise<void> {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, string | number | boolean | undefined> = {};
       if (updates.name) updateData.name = updates.name;
       if (updates.description) updateData.description = updates.description;
       if (updates.workflowType) updateData.workflow_type = updates.workflowType;
@@ -402,7 +277,7 @@ export class WorkflowManager {
     workflowId: string,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, string | number | boolean>
   ): Promise<WorkflowExecution> {
     return await workflowEngine.executeWorkflow(workflowId, entityType, entityId, triggerData);
   }

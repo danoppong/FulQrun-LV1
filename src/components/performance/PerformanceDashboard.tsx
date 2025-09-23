@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, memo, useCallback } from 'react'
-import { performanceMonitor, PerformanceMetric } from '@/lib/performance-monitor'
+import { performanceMonitor } from '@/lib/performance-monitor'
 
 interface PerformanceDashboardProps {
   isOpen: boolean
