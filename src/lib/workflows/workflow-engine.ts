@@ -362,9 +362,38 @@ export class WorkflowEngine {
     data: Record<string, string | number | boolean>
   ): boolean {
     // Evaluate trigger conditions against the provided data
-    for (const [field, expectedValue] of Object.entries(conditions)) {
+    for (const [field, condition] of Object.entries(conditions)) {
       const actualValue = this.getNestedValue(data, field);
-      if (actualValue !== expectedValue) {
+      let conditionResult = false;
+
+      switch (condition.operator) {
+        case 'equals':
+          conditionResult = actualValue === condition.value;
+          break;
+        case 'not_equals':
+          conditionResult = actualValue !== condition.value;
+          break;
+        case 'greater_than':
+          conditionResult = actualValue > condition.value;
+          break;
+        case 'less_than':
+          conditionResult = actualValue < condition.value;
+          break;
+        case 'contains':
+          conditionResult = String(actualValue).includes(String(condition.value));
+          break;
+        case 'not_contains':
+          conditionResult = !String(actualValue).includes(String(condition.value));
+          break;
+        case 'is_empty':
+          conditionResult = !actualValue || actualValue === '';
+          break;
+        case 'is_not_empty':
+          conditionResult = actualValue && actualValue !== '';
+          break;
+      }
+
+      if (!conditionResult) {
         return false;
       }
     }
