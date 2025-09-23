@@ -48,6 +48,10 @@ interface SecurityMetrics {
   resolvedAlerts: number;
   averageResponseTime: number;
   securityScore: number;
+  totalAuditEvents: number;
+  highRiskEvents: number;
+  mfaAdoptionRate: number;
+  activePolicies: number;
 }
 
 interface ComplianceStatus {
@@ -56,6 +60,14 @@ interface ComplianceStatus {
   soxCompliance: number;
   hipaaCompliance: number;
   lastAuditDate: string;
+  status: 'compliant' | 'non-compliant' | 'partial';
+  complianceLevel: string;
+  mfaAdoptionRate: number;
+  encryptionStatus: string;
+  accessControl: string;
+  accessControlCompliance: boolean;
+  auditLogging: string;
+  auditLoggingCompliance: boolean;
 }
 
 interface SecurityAnomaly {
@@ -71,6 +83,12 @@ interface EnterpriseSecurityDashboardProps {
   userId: string;
 }
 
+interface ReportForm {
+  reportType: string;
+  reportName: string;
+  filters: Record<string, string | number | boolean>;
+}
+
 export default function EnterpriseSecurityDashboard({ organizationId, userId }: EnterpriseSecurityDashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'audit' | 'compliance' | 'policies' | 'privacy' | 'alerts'>('overview');
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
@@ -84,11 +102,7 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
   const [anomalies, setAnomalies] = useState<SecurityAnomaly[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateReportModal, setShowCreateReportModal] = useState(false);
-  const [reportForm, setReportForm] = useState<Record<string, string | number | boolean>>({});
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [organizationId, loadDashboardData]);
+  const [reportForm, setReportForm] = useState<Partial<ReportForm>>({});
 
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
@@ -131,12 +145,16 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
     }
   }, [organizationId]);
 
+  useEffect(() => {
+    loadDashboardData();
+  }, [organizationId, loadDashboardData]);
+
   const handleGenerateReport = async () => {
     try {
       setLoading(true);
       const report = await generateComplianceReport(
-        reportForm.reportType,
-        reportForm.reportName,
+        reportForm.reportType || 'compliance',
+        reportForm.reportName || 'Security Report',
         reportForm.filters || {},
         organizationId,
         userId

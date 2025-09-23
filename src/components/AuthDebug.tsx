@@ -1,9 +1,21 @@
 'use client'
-import React, { createClientComponentClient } from '@/lib/auth'
+import React from 'react'
+import { createClientComponentClient } from '@/lib/auth'
 import { useEffect, useState } from 'react'
 
+interface AuthState {
+  user: {
+    email: string;
+    id: string;
+  } | null;
+  session: Record<string, string | number | boolean> | null;
+  sessionError: string | null;
+  userError: string | null;
+  timestamp: string;
+}
+
 const AuthDebug = () => {
-  const [authState, setAuthState] = useState<any>(null)
+  const [authState, setAuthState] = useState<AuthState | null>(null)
   const [loading, setLoading] = useState(true)
   
   useEffect(() => {
@@ -47,16 +59,16 @@ const AuthDebug = () => {
         <div>
           <strong>User:</strong> {authState?.user ? `✅ ${authState.user.email}` : '❌ None'}
         </div>
-        {authState?.sessionError && (
-          <div className="text-red-600">
-            <strong>Session Error:</strong> {authState.sessionError.message}
-          </div>
-        )}
-        {authState?.userError && (
-          <div className="text-red-600">
-            <strong>User Error:</strong> {authState.userError.message}
-          </div>
-        )}
+         {authState?.sessionError && (
+           <div className="text-red-600">
+             <strong>Session Error:</strong> {authState.sessionError}
+           </div>
+         )}
+         {authState?.userError && (
+           <div className="text-red-600">
+             <strong>User Error:</strong> {authState.userError}
+           </div>
+         )}
         <div className="text-gray-500">
           Last checked: {authState?.timestamp}
         </div>
