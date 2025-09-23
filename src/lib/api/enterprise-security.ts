@@ -810,7 +810,7 @@ async function createSecurityAlert(
   }
 }
 
-async function getSecurityAlerts(organizationId: string): Promise<any[]> {
+async function getSecurityAlerts(organizationId: string): Promise<SecurityAlert[]> {
   try {
     const { data, error } = await supabase
       .from('security_alerts')
@@ -820,14 +820,23 @@ async function getSecurityAlerts(organizationId: string): Promise<any[]> {
       .limit(50);
 
     if (error) throw error;
-    return data || [];
+    
+    return (data || []).map(alert => ({
+      id: alert.id,
+      type: alert.alert_type,
+      severity: alert.severity,
+      message: alert.description,
+      details: alert.details || {},
+      organizationId: alert.organization_id,
+      createdAt: new Date(alert.created_at)
+    }));
   } catch (error) {
     console.error('Error fetching security alerts:', error);
     return [];
   }
 }
 
-// Export all functions
+// Export all functions and types
 export {
   logAuditEvent,
   getAuditLogs,
@@ -853,3 +862,4 @@ export {
   createSecurityAlert,
   getSecurityAlerts
 };
+

@@ -29,20 +29,11 @@ import {
   ComplianceReport,
   SecurityPolicy,
   RBACPermission,
-  DataPrivacyRequest
+  DataPrivacyRequest,
+  SecurityAlert
 } from '@/lib/api/enterprise-security';
 
 // Define proper types for security dashboard data
-interface SecurityAlert {
-  id: string;
-  type: 'suspicious_activity' | 'unauthorized_access' | 'data_breach' | 'policy_violation';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  message: string;
-  timestamp: string;
-  resolved: boolean;
-  title: string;
-  description: string;
-}
 
 interface SecurityMetrics {
   totalAlerts: number;
@@ -621,16 +612,16 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                       <div key={alert.id} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <h4 className="font-medium text-gray-900">{alert.title}</h4>
-                            <p className="text-sm text-gray-500">{alert.description}</p>
+                            <h4 className="font-medium text-gray-900">{alert.type}</h4>
+                            <p className="text-sm text-gray-500">{alert.message}</p>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSeverityColor(alert.severity)}`}>
                             {alert.severity.toUpperCase()}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-500">
-                          <span>Type: {alert.alert_type}</span>
-                          <span>{new Date(alert.created_at).toLocaleString()}</span>
+                          <span>Type: {alert.type}</span>
+                          <span>{alert.createdAt.toLocaleString()}</span>
                         </div>
                       </div>
                     ))}

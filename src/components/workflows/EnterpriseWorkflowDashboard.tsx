@@ -32,6 +32,7 @@ import {
 import type {
   EnterpriseWorkflow,
   WorkflowExecution,
+  WorkflowStep,
 } from '@/lib/workflows';
 
 // Define proper types for dashboard data
@@ -93,10 +94,6 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
   const [workflowForm, setWorkflowForm] = useState<Partial<WorkflowFormData>>({});
   const [selectedTemplate, setSelectedTemplate] = useState<WorkflowTemplate | null>(null);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [organizationId, loadDashboardData]);
-
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
@@ -113,7 +110,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
         getWorkflowAnalytics(organizationId),
         getWorkflowHealth(organizationId)
       ]);
-      
+
       setWorkflows(workflowsData);
       setExecutions(executionsData);
       setTemplates(templatesData);
@@ -126,13 +123,22 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
     }
   }, [organizationId]);
 
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
   const handleCreateWorkflow = async () => {
+    if (!workflowForm.name || !workflowForm.description || !workflowForm.type) {
+      console.error('Missing required workflow form data');
+      return;
+    }
+
     try {
       setLoading(true);
       const newWorkflow = await createEnterpriseWorkflow({
         name: workflowForm.name,
         description: workflowForm.description,
-        workflowType: workflowForm.type,
+        workflowType: workflowForm.type as 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom',
         triggerConditions: {},
         steps: [],
         approvalConfig: {
@@ -183,6 +189,11 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
   };
 
   const handleCreateFromTemplate = async () => {
+    if (!selectedTemplate) {
+      console.error('No template selected');
+      return;
+    }
+
     try {
       setLoading(true);
       const newWorkflow = await createWorkflowFromTemplate(

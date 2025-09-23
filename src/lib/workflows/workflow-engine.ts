@@ -15,24 +15,6 @@ export interface TriggerCondition {
   value: string | number | boolean;
 }
 
-export interface EnterpriseWorkflow {
-  id: string;
-  name: string;
-  description: string;
-  workflowType: 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom';
-  triggerConditions: Record<string, TriggerCondition>;
-  steps: WorkflowStep[];
-  approvalConfig: ApprovalConfig;
-  notificationConfig: NotificationConfig;
-  isActive: boolean;
-  priority: number;
-  timeoutHours: number;
-  retryConfig: RetryConfig;
-  organizationId: string;
-  createdBy: string;
-  createdAt: Date;
-}
-
 export interface WorkflowStep {
   id: string;
   stepType: 'condition' | 'action' | 'approval' | 'notification' | 'integration' | 'delay' | 'ai_processing';
@@ -59,6 +41,13 @@ export interface WorkflowAction {
   actionType: 'create' | 'update' | 'delete' | 'send_email' | 'send_slack' | 'create_task' | 'assign_user' | 'call_api';
   config: Record<string, string | number | boolean>;
   parameters: Record<string, string | number | boolean>;
+}
+
+export interface EscalationConfig {
+  enabled: boolean;
+  escalationUsers: string[];
+  escalationDelayMinutes: number;
+  maxEscalations: number;
 }
 
 export interface ApprovalConfig {
@@ -89,11 +78,22 @@ export interface ErrorHandling {
   notificationChannels: string[];
 }
 
-export interface EscalationConfig {
-  enabled: boolean;
-  escalationUsers: string[];
-  escalationDelayMinutes: number;
-  maxEscalations: number;
+export interface EnterpriseWorkflow {
+  id: string;
+  name: string;
+  description: string;
+  workflowType: 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom';
+  triggerConditions: Record<string, TriggerCondition>;
+  steps: WorkflowStep[];
+  approvalConfig: ApprovalConfig;
+  notificationConfig: NotificationConfig;
+  isActive: boolean;
+  priority: number;
+  timeoutHours: number;
+  retryConfig: RetryConfig;
+  organizationId: string;
+  createdBy: string;
+  createdAt: Date;
 }
 
 export interface WorkflowExecution {
@@ -374,22 +374,22 @@ export class WorkflowEngine {
           conditionResult = actualValue !== condition.value;
           break;
         case 'greater_than':
-          conditionResult = actualValue > condition.value;
+          conditionResult = actualValue !== undefined && actualValue > condition.value;
           break;
         case 'less_than':
-          conditionResult = actualValue < condition.value;
+          conditionResult = actualValue !== undefined && actualValue < condition.value;
           break;
         case 'contains':
-          conditionResult = String(actualValue).includes(String(condition.value));
+          conditionResult = actualValue !== undefined && String(actualValue).includes(String(condition.value));
           break;
         case 'not_contains':
-          conditionResult = !String(actualValue).includes(String(condition.value));
+          conditionResult = actualValue !== undefined && !String(actualValue).includes(String(condition.value));
           break;
         case 'is_empty':
           conditionResult = !actualValue || actualValue === '';
           break;
         case 'is_not_empty':
-          conditionResult = actualValue && actualValue !== '';
+          conditionResult = actualValue !== undefined && actualValue !== '';
           break;
       }
 
@@ -559,7 +559,7 @@ export class WorkflowEngine {
           await this.retryStep(execution, step);
           break;
         case 'escalate':
-          await this.escalateStep(execution, step, error);
+          await this.escalateStep(execution, step, error as Error);
           break;
       }
     }
@@ -584,22 +584,22 @@ export class WorkflowEngine {
           conditionResult = fieldValue !== condition.value;
           break;
         case 'greater_than':
-          conditionResult = fieldValue > condition.value;
+          conditionResult = fieldValue !== undefined && fieldValue > condition.value;
           break;
         case 'less_than':
-          conditionResult = fieldValue < condition.value;
+          conditionResult = fieldValue !== undefined && fieldValue < condition.value;
           break;
         case 'contains':
-          conditionResult = String(fieldValue).includes(String(condition.value));
+          conditionResult = fieldValue !== undefined && String(fieldValue).includes(String(condition.value));
           break;
         case 'not_contains':
-          conditionResult = !String(fieldValue).includes(String(condition.value));
+          conditionResult = fieldValue !== undefined && !String(fieldValue).includes(String(condition.value));
           break;
         case 'is_empty':
           conditionResult = !fieldValue || fieldValue === '';
           break;
         case 'is_not_empty':
-          conditionResult = fieldValue && fieldValue !== '';
+          conditionResult = fieldValue !== undefined && fieldValue !== '';
           break;
       }
 
@@ -662,7 +662,7 @@ export class WorkflowEngine {
   }
 
   private async updateStepExecution(stepExecutionId: string, status: string, result?: Record<string, string | number | boolean>): Promise<void> {
-    const updateData: Record<string, string | number | boolean | undefined> = {
+    const updateData: Record<string, any> = {
       status,
       completed_at: status === 'completed' || status === 'failed' || status === 'skipped' 
         ? new Date().toISOString() 
@@ -692,7 +692,7 @@ export class WorkflowEngine {
       .eq('id', execution.id);
   }
 
-  private getNestedValue(obj: Record<string, string | number | boolean>, path: string): string | number | boolean | undefined {
+  private getNestedValue(obj: Record<string, any>, path: string): any {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
