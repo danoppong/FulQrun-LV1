@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Get SharePoint connection
     const { data: connection, error: connectionError } = await supabase
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     const sites = await sharepoint.getSites()
 
     return NextResponse.json(sites)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch SharePoint sites' },
       { status: 500 }

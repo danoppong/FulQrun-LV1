@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   ShieldCheckIcon, 
   ExclamationTriangleIcon, 
-  DocumentTextIcon,
   UserGroupIcon,
   LockClosedIcon,
   EyeIcon,
@@ -12,9 +11,7 @@ import {
   PlusIcon,
   CogIcon,
   ChartBarIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import { 
   getAuditLogs,
@@ -32,12 +29,57 @@ import {
   ComplianceReport,
   SecurityPolicy,
   RBACPermission,
-  DataPrivacyRequest
+  DataPrivacyRequest,
+  SecurityAlert
 } from '@/lib/api/enterprise-security';
+
+// Define proper types for security dashboard data
+
+interface SecurityMetrics {
+  totalAlerts: number;
+  criticalAlerts: number;
+  resolvedAlerts: number;
+  averageResponseTime: number;
+  securityScore: number;
+  totalAuditEvents: number;
+  highRiskEvents: number;
+  mfaAdoptionRate: number;
+  activePolicies: number;
+}
+
+interface ComplianceStatus {
+  overallScore: number;
+  gdprCompliance: number;
+  soxCompliance: number;
+  hipaaCompliance: number;
+  lastAuditDate: string;
+  status: 'compliant' | 'non-compliant' | 'partial';
+  complianceLevel: string;
+  mfaAdoptionRate: number;
+  encryptionStatus: string;
+  accessControl: string;
+  accessControlCompliance: boolean;
+  auditLogging: string;
+  auditLoggingCompliance: boolean;
+}
+
+interface SecurityAnomaly {
+  id: string;
+  type: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  detectedAt: string;
+}
 
 interface EnterpriseSecurityDashboardProps {
   organizationId: string;
   userId: string;
+}
+
+interface ReportForm {
+  reportType: string;
+  reportName: string;
+  filters: Record<string, string | number | boolean>;
 }
 
 export default function EnterpriseSecurityDashboard({ organizationId, userId }: EnterpriseSecurityDashboardProps) {
@@ -45,21 +87,17 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [complianceReports, setComplianceReports] = useState<ComplianceReport[]>([]);
   const [securityPolicies, setSecurityPolicies] = useState<SecurityPolicy[]>([]);
-  const [rbacPermissions, setRbacPermissions] = useState<RBACPermission[]>([]);
+  const [_rbacPermissions, setRbacPermissions] = useState<RBACPermission[]>([]);
   const [privacyRequests, setPrivacyRequests] = useState<DataPrivacyRequest[]>([]);
-  const [securityAlerts, setSecurityAlerts] = useState<any[]>([]);
-  const [securityMetrics, setSecurityMetrics] = useState<any>(null);
-  const [complianceStatus, setComplianceStatus] = useState<any>(null);
-  const [anomalies, setAnomalies] = useState<any[]>([]);
+  const [securityAlerts, setSecurityAlerts] = useState<SecurityAlert[]>([]);
+  const [securityMetrics, setSecurityMetrics] = useState<SecurityMetrics | null>(null);
+  const [complianceStatus, setComplianceStatus] = useState<ComplianceStatus | null>(null);
+  const [anomalies, setAnomalies] = useState<SecurityAnomaly[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateReportModal, setShowCreateReportModal] = useState(false);
-  const [reportForm, setReportForm] = useState<any>({});
+  const [reportForm, setReportForm] = useState<Partial<ReportForm>>({});
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [organizationId]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       const [
@@ -98,14 +136,18 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [organizationId, loadDashboardData]);
 
   const handleGenerateReport = async () => {
     try {
       setLoading(true);
       const report = await generateComplianceReport(
-        reportForm.reportType,
-        reportForm.reportName,
+        reportForm.reportType || 'compliance',
+        reportForm.reportName || 'Security Report',
         reportForm.filters || {},
         organizationId,
         userId
@@ -242,7 +284,7 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'overview' | 'compliance' | 'audit' | 'alerts' | 'users' | 'settings')}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'
@@ -444,8 +486,8 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                       <div key={report.id} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <h4 className="font-medium text-gray-900">{report.reportName}</h4>
-                            <p className="text-sm text-gray-500 capitalize">{report.reportType.replace('_', ' ')}</p>
+                            <h4 className="font-medium text-gray-900">{report.reportName || report.name || 'Unnamed Report'}</h4>
+                            <p className="text-sm text-gray-500 capitalize">{report.reportType?.replace('_', ' ') || report.type || 'Unknown'}</p>
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(report.status)}`}>
@@ -463,8 +505,8 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-500">
-                          <span>Created: {new Date(report.createdAt).toLocaleDateString()}</span>
-                          <span>Downloads: {report.downloadCount}</span>
+                          <span>Created: {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Unknown'}</span>
+                          <span>Downloads: {report.downloadCount || 0}</span>
                         </div>
                       </div>
                     ))}
@@ -507,7 +549,7 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                           </div>
                         </div>
                         <div className="text-sm text-gray-500">
-                          Type: {policy.policyType.replace('_', ' ').toUpperCase()}
+                          Type: {(policy.policyType || policy.type || 'Unknown').replace('_', ' ').toUpperCase()}
                         </div>
                       </div>
                     ))}
@@ -534,16 +576,16 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                       <div key={request.id} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <h4 className="font-medium text-gray-900">{request.requesterEmail}</h4>
-                            <p className="text-sm text-gray-500 capitalize">{request.requestType.replace('_', ' ')}</p>
+                            <h4 className="font-medium text-gray-900">{request.requesterEmail || request.userId || 'Unknown Requester'}</h4>
+                            <p className="text-sm text-gray-500 capitalize">{(request.requestType || request.type || 'Unknown').replace('_', ' ')}</p>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
                             {request.status.toUpperCase()}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-500">
-                          <span>Entity: {request.entityType}</span>
-                          <span>Created: {new Date(request.createdAt).toLocaleDateString()}</span>
+                          <span>Entity: {request.entityType || 'Unknown'}</span>
+                          <span>Created: {request.createdAt ? new Date(request.createdAt).toLocaleDateString() : 'Unknown'}</span>
                         </div>
                       </div>
                     ))}
@@ -570,16 +612,16 @@ export default function EnterpriseSecurityDashboard({ organizationId, userId }: 
                       <div key={alert.id} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <h4 className="font-medium text-gray-900">{alert.title}</h4>
-                            <p className="text-sm text-gray-500">{alert.description}</p>
+                            <h4 className="font-medium text-gray-900">{alert.type}</h4>
+                            <p className="text-sm text-gray-500">{alert.message}</p>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSeverityColor(alert.severity)}`}>
                             {alert.severity.toUpperCase()}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-500">
-                          <span>Type: {alert.alert_type}</span>
-                          <span>{new Date(alert.created_at).toLocaleString()}</span>
+                          <span>Type: {alert.type}</span>
+                          <span>{alert.createdAt.toLocaleString()}</span>
                         </div>
                       </div>
                     ))}

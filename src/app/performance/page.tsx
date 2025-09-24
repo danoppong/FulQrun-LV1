@@ -16,7 +16,7 @@ export default function PerformancePage() {
 }
 
 function PerformanceContent() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState<'current' | 'last_month' | 'last_quarter' | 'last_year' | 'custom'>('current')
   const [customPeriod, setCustomPeriod] = useState<{
@@ -144,7 +144,7 @@ function PerformanceContent() {
             <div className="flex items-center space-x-4">
               <select
                 value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value as any)}
+                onChange={(e) => setSelectedPeriod(e.target.value as 'current' | 'last_month' | 'last_quarter' | 'last_year' | 'custom')}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="current">Current Month</option>
@@ -193,7 +193,7 @@ function PerformanceContent() {
         {/* CSTPV Dashboard */}
         <CSTPVDashboard
           userId={user.id}
-          organizationId={user.profile?.organization_id || DEFAULT_ORGANIZATION_ID}
+          organizationId={(user as any).profile?.organization_id || DEFAULT_ORGANIZATION_ID}
           periodStart={periodDates.start}
           periodEnd={periodDates.end}
         />

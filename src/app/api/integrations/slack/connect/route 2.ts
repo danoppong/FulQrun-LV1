@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Check if Slack connection already exists
     const { data: existingConnection } = await supabase
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         message: 'Slack connection created successfully'
       })
     }
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to save Slack connection' },
       { status: 500 }

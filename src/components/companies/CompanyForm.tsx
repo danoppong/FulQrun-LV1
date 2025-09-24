@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -65,12 +66,6 @@ export default function CompanyForm({ company, companyId, mode }: CompanyFormPro
     } : {}
   })
 
-  useEffect(() => {
-    if (mode === 'edit' && companyId && !company) {
-      loadCompany()
-    }
-  }, [mode, companyId, company])
-
   const loadCompany = async () => {
     if (!companyId) return
     
@@ -96,6 +91,12 @@ export default function CompanyForm({ company, companyId, mode }: CompanyFormPro
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (mode === 'edit' && companyId && !company) {
+      loadCompany()
+    }
+  }, [mode, companyId, company, loadCompany])
 
   const onSubmit = async (data: CompanyFormData) => {
     setLoading(true)

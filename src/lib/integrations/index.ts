@@ -8,8 +8,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+import type { BaseIntegration } from './base-integration';
+import { SalesforceIntegration } from './salesforce-integration';
+
 // Base integration classes and types
-export {
+export type {
   BaseIntegration,
   EnterpriseIntegration,
   SyncResult,
@@ -22,7 +25,7 @@ export {
 export { SalesforceIntegration } from './salesforce-integration';
 
 // Webhook management
-export {
+export type {
   WebhookManager,
   webhookManager,
   WebhookConfig,
@@ -34,8 +37,8 @@ export class IntegrationFactory {
   static createIntegration(
     integrationType: string,
     integrationId: string,
-    config: Record<string, any>,
-    credentials: Record<string, any>,
+    config: Record<string, unknown>,
+    credentials: Record<string, unknown>,
     organizationId: string
   ): BaseIntegration {
     switch (integrationType) {
@@ -120,7 +123,7 @@ export class IntegrationManager {
     }
   }
 
-  private async performSync(integration: BaseIntegration, config: any): Promise<void> {
+  private async performSync(integration: BaseIntegration, config: Record<string, unknown>): Promise<void> {
     try {
       // Test connection first
       const isConnected = await integration.testConnection();

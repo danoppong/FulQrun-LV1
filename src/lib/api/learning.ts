@@ -5,7 +5,6 @@ type LearningModule = Database['public']['Tables']['learning_modules']['Row']
 type LearningModuleInsert = Database['public']['Tables']['learning_modules']['Insert']
 type LearningModuleUpdate = Database['public']['Tables']['learning_modules']['Update']
 type UserLearningProgress = Database['public']['Tables']['user_learning_progress']['Row']
-type UserLearningProgressInsert = Database['public']['Tables']['user_learning_progress']['Insert']
 type UserLearningProgressUpdate = Database['public']['Tables']['user_learning_progress']['Update']
 
 export interface LearningModuleData {
@@ -36,7 +35,7 @@ export interface UserProgressData {
   lastAccessedAt: string | null
   completedAt: string | null
   certificationDate: string | null
-  quizScores: Record<string, any>
+  quizScores: Record<string, number>
   organizationId: string
   createdAt: string
   updatedAt: string
@@ -272,7 +271,7 @@ export class LearningAPI {
     userId: string,
     moduleId: string,
     organizationId: string,
-    quizScores?: Record<string, any>
+    quizScores?: Record<string, number>
   ): Promise<UserProgressData> {
     return this.updateUserProgress(userId, moduleId, organizationId, {
       status: 'completed',
@@ -320,8 +319,8 @@ export class LearningAPI {
     const recommendations: LearningRecommendation[] = availableModules.map(module => ({
       moduleId: module.id,
       title: module.title,
-      reason: this.getRecommendationReason(module, userProgress),
-      priority: this.getRecommendationPriority(module, userProgress),
+      reason: this.getRecommendationReason(module),
+      priority: this.getRecommendationPriority(module),
       estimatedTime: module.durationMinutes || 30,
     }))
 
@@ -343,8 +342,8 @@ export class LearningAPI {
     
     // Filter recommendations based on opportunity stage
     return allRecommendations.filter(rec => {
-      const module = allRecommendations.find(m => m.moduleId === rec.moduleId)
-      return module && this.isRelevantToStage(module, opportunityStage)
+      const learningModule = allRecommendations.find(m => m.moduleId === rec.moduleId)
+      return learningModule && this.isRelevantToStage(learningModule, opportunityStage)
     })
   }
 
@@ -389,8 +388,7 @@ export class LearningAPI {
    * Get recommendation reason for a module
    */
   private static getRecommendationReason(
-    module: LearningModuleData,
-    userProgress: UserProgressData[]
+    module: LearningModuleData
   ): string {
     // Simple logic - can be enhanced with AI
     if (module.difficultyLevel === 'beginner') {
@@ -408,8 +406,7 @@ export class LearningAPI {
    * Get recommendation priority for a module
    */
   private static getRecommendationPriority(
-    module: LearningModuleData,
-    userProgress: UserProgressData[]
+    module: LearningModuleData
   ): 'high' | 'medium' | 'low' {
     if (module.certificationRequired) return 'high'
     if (module.difficultyLevel === 'beginner') return 'high'
@@ -420,7 +417,7 @@ export class LearningAPI {
   /**
    * Check if module is relevant to opportunity stage
    */
-  private static isRelevantToStage(module: any, stage: string): boolean {
+  private static isRelevantToStage(learningModule: Record<string, unknown>, stage: string): boolean {
     // Simple stage-based filtering - can be enhanced
     const stageTags = {
       'prospecting': ['prospecting', 'lead generation', 'cold calling'],
@@ -430,7 +427,7 @@ export class LearningAPI {
     }
     
     const relevantTags = stageTags[stage as keyof typeof stageTags] || []
-    return module.tags?.some((tag: string) => 
+    return learningModule.tags?.some((tag: string) => 
       relevantTags.some(relevantTag => 
         tag.toLowerCase().includes(relevantTag.toLowerCase())
       )

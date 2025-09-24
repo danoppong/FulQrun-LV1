@@ -38,11 +38,12 @@ export function normalizeError(error: unknown): ApiError {
   }
 
   if (error && typeof error === 'object' && 'message' in error) {
+    const errorObj = error as Record<string, unknown>
     return {
-      message: (error as any).message || 'Unknown error',
-      code: (error as any).code,
-      details: (error as any).details,
-      hint: (error as any).hint
+      message: (errorObj.message as string) || 'Unknown error',
+      code: errorObj.code as string,
+      details: errorObj.details as string,
+      hint: errorObj.hint as string
     }
   }
   

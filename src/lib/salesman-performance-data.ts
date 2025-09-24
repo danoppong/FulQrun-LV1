@@ -94,7 +94,7 @@ export interface PerformanceWidget {
   type: 'quota' | 'deals' | 'conversion' | 'activity' | 'satisfaction' | 'trend' | 'pipeline' | 'products'
   size: 'small' | 'medium' | 'large'
   position: { x: number; y: number; w: number; h: number }
-  data: any
+  data: Record<string, unknown>
 }
 
 export const SALESMAN_WIDGET_TEMPLATES: { [key: string]: Omit<PerformanceWidget, 'position' | 'data'> } = {
@@ -261,7 +261,7 @@ export const DEFAULT_SALESMAN_WIDGETS: PerformanceWidget[] = [
   }
 ]
 
-export function getWidgetData(widget: PerformanceWidget, salesmanData: SalesmanKPIs): any {
+export function getWidgetData(widget: PerformanceWidget, salesmanData: SalesmanKPIs): Record<string, unknown> {
   switch (widget.type) {
     case 'quota':
       if (widget.id.includes('weekly')) return salesmanData.performance.weekly

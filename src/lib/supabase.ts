@@ -1,5 +1,6 @@
 import { createBrowserClient, createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { supabaseConfig } from '@/lib/config'
+import type { SupabaseClientType } from '@/lib/types/supabase'
 
 // Singleton client instance to prevent multiple GoTrueClient instances
 let supabaseInstance: ReturnType<typeof createBrowserClient> | null = null
@@ -11,85 +12,26 @@ export const supabase = (() => {
   
   // Only create client if Supabase is configured
   if (supabaseConfig.isConfigured) {
-    supabaseInstance = createBrowserClient(
-      supabaseConfig.url!, 
-      supabaseConfig.anonKey!
-    )
+    try {
+      supabaseInstance = createBrowserClient(
+        supabaseConfig.url!, 
+        supabaseConfig.anonKey!
+      )
+    } catch (error) {
+      console.warn('Failed to create Supabase client:', error)
+      supabaseInstance = createMockClient()
+    }
   } else {
     // Return a mock client if not configured
-    supabaseInstance = {
-      auth: {
-        getUser: async () => ({ data: { user: null }, error: null }),
-        getSession: async () => ({ data: { session: null }, error: null }),
-        signInWithPassword: async () => ({ 
-          data: { user: null }, 
-          error: { message: 'Supabase not configured' } 
-        }),
-        signUp: async () => ({ 
-          data: { user: null }, 
-          error: { message: 'Supabase not configured' } 
-        }),
-        signOut: async () => ({ error: null }),
-        signInWithOAuth: async () => ({ 
-          error: { message: 'Supabase not configured' } 
-        })
-      },
-      from: (table: string) => ({
-        select: () => ({
-          eq: () => ({
-            single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
-          }),
-          order: () => ({
-            single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
-          })
-        }),
-        insert: (data: any) => {
-          const result = { data: null, error: { message: 'Supabase not configured' } }
-          const promise = Promise.resolve(result)
-          return Object.assign(promise, {
-            select: () => ({
-              single: async () => result
-            })
-          })
-        },
-        update: () => ({
-          eq: () => ({
-            select: () => ({
-              single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
-            })
-          })
-        }),
-        delete: () => ({
-          eq: async () => ({ error: { message: 'Supabase not configured' } })
-        })
-      })
-    } as any
+    supabaseInstance = createMockClient()
   }
   
   return supabaseInstance
 })()
 
-// Server-side client for API routes
-export const createServerClient = () => {
-  // Only create client if Supabase is configured
-  if (supabaseConfig.isConfigured) {
-    // For server-side usage, cookies will be handled by the calling component
-    return createSupabaseServerClient(supabaseConfig.url!, supabaseConfig.anonKey!, {
-      cookies: {
-        get(name: string) {
-          return undefined // Will be handled by the calling component
-        },
-        set(name: string, value: string, options: any) {
-          // Will be handled by the calling component
-        },
-        remove(name: string, options: any) {
-          // Will be handled by the calling component
-        },
-      },
-    })
-  } else {
-    // Return a mock client if not configured
-    return {
+// Helper function to create a mock client
+function createMockClient() {
+  return {
       auth: {
         getUser: async () => ({ data: { user: null }, error: null }),
         getSession: async () => ({ data: { session: null }, error: null }),
@@ -115,7 +57,7 @@ export const createServerClient = () => {
             single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
           })
         }),
-        insert: (data: any) => {
+        insert: (data: Record<string, unknown>) => {
           const result = { data: null, error: { message: 'Supabase not configured' } }
           const promise = Promise.resolve(result)
           return Object.assign(promise, {
@@ -135,7 +77,35 @@ export const createServerClient = () => {
           eq: async () => ({ error: { message: 'Supabase not configured' } })
         })
       })
-    } as any
+    } as Record<string, unknown>
+}
+
+// Server-side client for API routes
+export const createServerClient = (): SupabaseClientType => {
+  // Only create client if Supabase is configured
+  if (supabaseConfig.isConfigured) {
+    try {
+      // For server-side usage, cookies will be handled by the calling component
+      return createSupabaseServerClient(supabaseConfig.url!, supabaseConfig.anonKey!, {
+        cookies: {
+          get(name: string) {
+            return undefined // Will be handled by the calling component
+          },
+          set(name: string, value: string, options: Record<string, unknown>) {
+            // Will be handled by the calling component
+          },
+          remove(name: string, options: Record<string, unknown>) {
+            // Will be handled by the calling component
+          },
+        },
+      })
+    } catch (error) {
+      console.warn('Failed to create Supabase server client:', error)
+      return createMockClient()
+    }
+  } else {
+    // Return a mock client if not configured
+    return createMockClient()
   }
 }
 
@@ -176,7 +146,7 @@ export interface Database {
           full_name: string | null
           role: 'rep' | 'manager' | 'admin'
           organization_id: string
-          learning_progress: Record<string, any>
+          learning_progress: Record<string, unknown>
           created_at: string
           updated_at: string
         }
@@ -186,7 +156,7 @@ export interface Database {
           full_name?: string | null
           role?: 'rep' | 'manager' | 'admin'
           organization_id: string
-          learning_progress?: Record<string, any>
+          learning_progress?: Record<string, unknown>
           created_at?: string
           updated_at?: string
         }
@@ -196,7 +166,7 @@ export interface Database {
           full_name?: string | null
           role?: 'rep' | 'manager' | 'admin'
           organization_id?: string
-          learning_progress?: Record<string, any>
+          learning_progress?: Record<string, unknown>
           created_at?: string
           updated_at?: string
         }

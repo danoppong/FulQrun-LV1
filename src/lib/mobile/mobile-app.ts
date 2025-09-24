@@ -37,11 +37,11 @@ export interface DeviceInfo {
 
 export interface OfflineData {
   entities: {
-    contacts: any[];
-    companies: any[];
-    opportunities: any[];
-    leads: any[];
-    activities: any[];
+    contacts: Array<{ id: string; name: string; email: string; phone?: string }>;
+    companies: Array<{ id: string; name: string; industry?: string; size?: string }>;
+    opportunities: Array<{ id: string; name: string; stage: string; value: number }>;
+    leads: Array<{ id: string; name: string; email: string; status: string }>;
+    activities: Array<{ id: string; type: string; description: string; createdAt: string }>;
   };
   lastSyncTimestamp: Date;
   pendingChanges: PendingChange[];
@@ -53,7 +53,7 @@ export interface PendingChange {
   entityType: string;
   entityId: string;
   operation: 'create' | 'update' | 'delete';
-  data: any;
+  data: Record<string, unknown>;
   timestamp: Date;
   retryCount: number;
 }
@@ -63,7 +63,7 @@ export interface SyncOperation {
   type: 'upload' | 'download' | 'conflict_resolution';
   entityType: string;
   entityId: string;
-  data: any;
+  data: Record<string, unknown>;
   priority: number;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   errorMessage?: string;
@@ -88,7 +88,7 @@ export interface MobileAnalytics {
   userId: string;
   sessionId: string;
   eventType: string;
-  eventData: any;
+  eventData: Record<string, unknown>;
   timestamp: Date;
   deviceInfo: DeviceInfo;
   networkType: string;
@@ -230,19 +230,25 @@ export class MobileAppAPI {
           await this.uploadPendingChange(change);
           result.uploaded++;
           result.operations.push({
+            id: `upload-${change.entityId}`,
             type: 'upload',
             entityType: change.entityType,
             entityId: change.entityId,
-            success: true
+            data: change.data,
+            priority: 1,
+            status: 'completed'
           });
         } catch (error) {
           result.errors++;
           result.operations.push({
+            id: `upload-${change.entityId}`,
             type: 'upload',
             entityType: change.entityType,
             entityId: change.entityId,
-            success: false,
-            error: error.message
+            data: change.data,
+            priority: 1,
+            status: 'failed',
+            errorMessage: (error as Error).message
           });
         }
       }
@@ -262,21 +268,26 @@ export class MobileAppAPI {
           if (entities) {
             result.downloaded += entities.length;
             result.operations.push({
+              id: `download-${entityType}`,
               type: 'download',
               entityType,
               entityId: 'batch',
-              success: true,
-              count: entities.length
+              data: entities,
+              priority: 1,
+              status: 'completed'
             });
           }
         } catch (error) {
           result.errors++;
           result.operations.push({
+            id: `download-${entityType}`,
             type: 'download',
             entityType,
             entityId: 'batch',
-            success: false,
-            error: error.message
+            data: null,
+            priority: 1,
+            status: 'failed',
+            errorMessage: (error as Error).message
           });
         }
       }
@@ -431,7 +442,7 @@ export class MobileAppAPI {
     userId: string,
     sessionId: string,
     eventType: string,
-    eventData: any,
+    eventData: Record<string, unknown>,
     deviceInfo: DeviceInfo,
     networkType: string,
     appVersion: string,
@@ -507,7 +518,7 @@ export class MobileAppAPI {
   static async storeOfflineData(
     sessionId: string,
     entityType: string,
-    data: any[]
+    data: Array<Record<string, unknown>>
   ): Promise<void> {
     try {
       const { data: session } = await supabase
@@ -536,7 +547,7 @@ export class MobileAppAPI {
     }
   }
 
-  static async getOfflineData(sessionId: string, entityType: string): Promise<any[]> {
+  static async getOfflineData(sessionId: string, entityType: string): Promise<Array<Record<string, unknown>>> {
     try {
       const { data: session } = await supabase
         .from('mobile_sessions')
@@ -558,12 +569,12 @@ export class MobileAppAPI {
     sessionId: string,
     entityType: string,
     entityId: string,
-    localData: any,
-    serverData: any,
+    localData: Record<string, unknown>,
+    serverData: Record<string, unknown>,
     resolutionStrategy: 'local_wins' | 'server_wins' | 'merge' | 'manual'
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
-      let resolvedData: any;
+      let resolvedData: Record<string, unknown>;
 
       switch (resolutionStrategy) {
         case 'local_wins':
@@ -596,7 +607,7 @@ export class MobileAppAPI {
     }
   }
 
-  private static mergeData(localData: any, serverData: any): any {
+  private static mergeData(localData: Record<string, unknown>, serverData: Record<string, unknown>): Record<string, unknown> {
     // Simple merge strategy - in a real implementation, this would be more sophisticated
     return {
       ...serverData,
@@ -611,7 +622,7 @@ export class MobileAppAPI {
     userId: string,
     title: string,
     body: string,
-    data?: Record<string, any>
+    data?: Record<string, unknown>
   ): Promise<void> {
     try {
       // In a real implementation, this would integrate with push notification services
@@ -646,7 +657,7 @@ export class MobileAppAPI {
   }
 
   // Mobile App Configuration
-  static async getMobileAppConfig(organizationId: string): Promise<any> {
+  static async getMobileAppConfig(organizationId: string): Promise<Record<string, unknown>> {
     try {
       const { data, error } = await supabase
         .from('mobile_app_config')
@@ -679,7 +690,7 @@ export class MobileAppAPI {
 
   static async updateMobileAppConfig(
     organizationId: string,
-    config: any
+    config: Record<string, unknown>
   ): Promise<void> {
     try {
       await supabase
@@ -699,7 +710,7 @@ export class MobileAppAPI {
   static async getDeviceCompliance(
     organizationId: string,
     deviceId: string
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
       const { data, error } = await supabase
         .from('device_compliance')
@@ -735,7 +746,7 @@ export class MobileAppAPI {
   static async enforceDevicePolicy(
     organizationId: string,
     deviceId: string,
-    policy: any
+    policy: Record<string, unknown>
   ): Promise<void> {
     try {
       // In a real implementation, this would enforce MDM policies
@@ -755,15 +766,6 @@ interface SyncResult {
   conflicts: number;
   errors: number;
   operations: SyncOperation[];
-}
-
-interface SyncOperation {
-  type: 'upload' | 'download';
-  entityType: string;
-  entityId: string;
-  success: boolean;
-  error?: string;
-  count?: number;
 }
 
 export default MobileAppAPI;

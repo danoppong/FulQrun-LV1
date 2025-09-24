@@ -15,7 +15,7 @@ export async function GET(
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Get specific learning module
     const { data: module, error } = await supabase

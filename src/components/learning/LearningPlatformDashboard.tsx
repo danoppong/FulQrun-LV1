@@ -33,7 +33,28 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
   const [userProgress, setUserProgress] = useState<UserProgress[]>([]);
   const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
   const [complianceRecords, setComplianceRecords] = useState<ComplianceRecord[]>([]);
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  interface TopPerformer {
+    userId: string
+    email: string
+    fullName: string
+    averageScore: number
+  }
+
+  interface PopularModule {
+    moduleId: string
+    title: string
+    category: string
+    duration: number
+    completionCount: number
+  }
+
+  interface DashboardData {
+    topPerformers: TopPerformer[]
+    popularModules: PopularModule[]
+    [key: string]: unknown
+  }
+
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'modules' | 'tracks' | 'progress' | 'compliance' | 'analytics'>('modules');
   const [showCreateModule, setShowCreateModule] = useState(false);
@@ -395,7 +416,7 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-3">Top Performers</h4>
                   <div className="space-y-2">
-                    {dashboardData?.topPerformers?.slice(0, 5).map((performer: any, index: number) => (
+                    {dashboardData?.topPerformers?.slice(0, 5).map((performer: TopPerformer, index: number) => (
                       <div key={index} className="flex items-center justify-between">
                         <span className="text-sm text-gray-700">{performer.fullName || performer.email}</span>
                         <span className="text-sm font-medium text-gray-900">{performer.averageScore}%</span>
@@ -407,7 +428,7 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-3">Popular Modules</h4>
                   <div className="space-y-2">
-                    {dashboardData?.popularModules?.slice(0, 5).map((module: any, index: number) => (
+                    {dashboardData?.popularModules?.slice(0, 5).map((module: PopularModule, index: number) => (
                       <div key={index} className="flex items-center justify-between">
                         <span className="text-sm text-gray-700">{module.title}</span>
                         <span className="text-sm font-medium text-gray-900">{module.completionCount} completions</span>

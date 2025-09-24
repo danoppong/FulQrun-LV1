@@ -108,7 +108,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
     try {
       setLoading(true);
       const forecast = await generateForecast(organizationId, 'monthly');
-      alert(`Forecast generated: ${forecast.predictions.length} predictions with ${Math.round(forecast.confidence * 100)}% confidence`);
+      alert(`Forecast generated: ${(forecast as any).predictions.length} predictions with ${Math.round((forecast as any).confidence * 100)}% confidence`);
     } catch (error) {
       console.error('Error generating forecast:', error);
       alert('Error generating forecast');

@@ -9,22 +9,10 @@ const supabase = createClient(
 );
 
 // Core workflow types
-export interface EnterpriseWorkflow {
-  id: string;
-  name: string;
-  description: string;
-  workflowType: 'approval' | 'notification' | 'data_sync' | 'ai_trigger' | 'compliance' | 'custom';
-  triggerConditions: Record<string, any>;
-  steps: WorkflowStep[];
-  approvalConfig: ApprovalConfig;
-  notificationConfig: NotificationConfig;
-  isActive: boolean;
-  priority: number;
-  timeoutHours: number;
-  retryConfig: RetryConfig;
-  organizationId: string;
-  createdBy: string;
-  createdAt: Date;
+export interface TriggerCondition {
+  field: string;
+  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains' | 'is_empty' | 'is_not_empty';
+  value: string | number | boolean;
 }
 
 export interface WorkflowStep {
@@ -32,7 +20,7 @@ export interface WorkflowStep {
   stepType: 'condition' | 'action' | 'approval' | 'notification' | 'integration' | 'delay' | 'ai_processing';
   name: string;
   description: string;
-  config: Record<string, any>;
+  config: Record<string, string | number | boolean>;
   conditions?: WorkflowCondition[];
   actions?: WorkflowAction[];
   nextSteps: string[];
@@ -44,15 +32,22 @@ export interface WorkflowCondition {
   id: string;
   field: string;
   operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains' | 'is_empty' | 'is_not_empty';
-  value: any;
+  value: string | number | boolean;
   logicalOperator?: 'AND' | 'OR';
 }
 
 export interface WorkflowAction {
   id: string;
   actionType: 'create' | 'update' | 'delete' | 'send_email' | 'send_slack' | 'create_task' | 'assign_user' | 'call_api';
-  config: Record<string, any>;
-  parameters: Record<string, any>;
+  config: Record<string, string | number | boolean>;
+  parameters: Record<string, string | number | boolean>;
+}
+
+export interface EscalationConfig {
+  enabled: boolean;
+  escalationUsers: string[];
+  escalationDelayMinutes: number;
+  maxEscalations: number;
 }
 
 export interface ApprovalConfig {
@@ -83,11 +78,22 @@ export interface ErrorHandling {
   notificationChannels: string[];
 }
 
-export interface EscalationConfig {
-  enabled: boolean;
-  escalationUsers: string[];
-  escalationDelayMinutes: number;
-  maxEscalations: number;
+export interface EnterpriseWorkflow {
+  id: string;
+  name: string;
+  description: string;
+  workflowType: 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom';
+  triggerConditions: Record<string, TriggerCondition>;
+  steps: WorkflowStep[];
+  approvalConfig: ApprovalConfig;
+  notificationConfig: NotificationConfig;
+  isActive: boolean;
+  priority: number;
+  timeoutHours: number;
+  retryConfig: RetryConfig;
+  organizationId: string;
+  createdBy: string;
+  createdAt: Date;
 }
 
 export interface WorkflowExecution {
@@ -97,7 +103,7 @@ export interface WorkflowExecution {
   entityId: string;
   status: 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
   currentStepId?: string;
-  executionData: Record<string, any>;
+  executionData: Record<string, string | number | boolean>;
   startedAt: Date;
   completedAt?: Date;
   errorMessage?: string;
@@ -112,7 +118,7 @@ export interface WorkflowStepExecution {
   startedAt?: Date;
   completedAt?: Date;
   errorMessage?: string;
-  result?: any;
+  result?: Record<string, string | number | boolean>;
 }
 
 // Core Workflow Engine
@@ -131,7 +137,7 @@ export class WorkflowEngine {
     workflowId: string,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, string | number | boolean>
   ): Promise<WorkflowExecution> {
     try {
       const workflow = await this.getWorkflow(workflowId);
@@ -352,13 +358,42 @@ export class WorkflowEngine {
   }
 
   private evaluateTriggerConditions(
-    conditions: Record<string, any>,
-    data: Record<string, any>
+    conditions: Record<string, TriggerCondition>,
+    data: Record<string, string | number | boolean>
   ): boolean {
     // Evaluate trigger conditions against the provided data
-    for (const [field, expectedValue] of Object.entries(conditions)) {
+    for (const [field, condition] of Object.entries(conditions)) {
       const actualValue = this.getNestedValue(data, field);
-      if (actualValue !== expectedValue) {
+      let conditionResult = false;
+
+      switch (condition.operator) {
+        case 'equals':
+          conditionResult = actualValue === condition.value;
+          break;
+        case 'not_equals':
+          conditionResult = actualValue !== condition.value;
+          break;
+        case 'greater_than':
+          conditionResult = actualValue !== undefined && actualValue > condition.value;
+          break;
+        case 'less_than':
+          conditionResult = actualValue !== undefined && actualValue < condition.value;
+          break;
+        case 'contains':
+          conditionResult = actualValue !== undefined && String(actualValue).includes(String(condition.value));
+          break;
+        case 'not_contains':
+          conditionResult = actualValue !== undefined && !String(actualValue).includes(String(condition.value));
+          break;
+        case 'is_empty':
+          conditionResult = !actualValue || actualValue === '';
+          break;
+        case 'is_not_empty':
+          conditionResult = actualValue !== undefined && actualValue !== '';
+          break;
+      }
+
+      if (!conditionResult) {
         return false;
       }
     }
@@ -369,7 +404,7 @@ export class WorkflowEngine {
     workflowId: string,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, string | number | boolean>
   ): Promise<WorkflowExecution> {
     const { data, error } = await supabase
       .from('workflow_executions')
@@ -426,7 +461,7 @@ export class WorkflowEngine {
       }
     } catch (error) {
       execution.status = 'failed';
-      execution.errorMessage = error.message;
+      execution.errorMessage = (error as Error).message;
       execution.completedAt = new Date();
       await this.updateExecution(execution);
       throw error;
@@ -455,7 +490,7 @@ export class WorkflowEngine {
       await this.executeStep(execution, currentStep);
     } catch (error) {
       execution.status = 'failed';
-      execution.errorMessage = error.message;
+      execution.errorMessage = (error as Error).message;
       execution.completedAt = new Date();
       await this.updateExecution(execution);
       throw error;
@@ -513,7 +548,7 @@ export class WorkflowEngine {
       switch (step.errorHandling.onError) {
         case 'stop':
           execution.status = 'failed';
-          execution.errorMessage = error.message;
+          execution.errorMessage = (error as Error).message;
           execution.completedAt = new Date();
           await this.updateExecution(execution);
           break;
@@ -524,7 +559,7 @@ export class WorkflowEngine {
           await this.retryStep(execution, step);
           break;
         case 'escalate':
-          await this.escalateStep(execution, step, error);
+          await this.escalateStep(execution, step, error as Error);
           break;
       }
     }
@@ -532,7 +567,7 @@ export class WorkflowEngine {
 
   private evaluateStepConditions(
     conditions: WorkflowCondition[],
-    data: Record<string, any>
+    data: Record<string, string | number | boolean>
   ): boolean {
     let result = true;
     let logicalOperator: 'AND' | 'OR' = 'AND';
@@ -549,22 +584,22 @@ export class WorkflowEngine {
           conditionResult = fieldValue !== condition.value;
           break;
         case 'greater_than':
-          conditionResult = fieldValue > condition.value;
+          conditionResult = fieldValue !== undefined && fieldValue > condition.value;
           break;
         case 'less_than':
-          conditionResult = fieldValue < condition.value;
+          conditionResult = fieldValue !== undefined && fieldValue < condition.value;
           break;
         case 'contains':
-          conditionResult = String(fieldValue).includes(String(condition.value));
+          conditionResult = fieldValue !== undefined && String(fieldValue).includes(String(condition.value));
           break;
         case 'not_contains':
-          conditionResult = !String(fieldValue).includes(String(condition.value));
+          conditionResult = fieldValue !== undefined && !String(fieldValue).includes(String(condition.value));
           break;
         case 'is_empty':
           conditionResult = !fieldValue || fieldValue === '';
           break;
         case 'is_not_empty':
-          conditionResult = fieldValue && fieldValue !== '';
+          conditionResult = fieldValue !== undefined && fieldValue !== '';
           break;
       }
 
@@ -626,8 +661,8 @@ export class WorkflowEngine {
     };
   }
 
-  private async updateStepExecution(stepExecutionId: string, status: string, result?: any): Promise<void> {
-    const updateData: any = {
+  private async updateStepExecution(stepExecutionId: string, status: string, result?: Record<string, string | number | boolean>): Promise<void> {
+    const updateData: Record<string, unknown> = {
       status,
       completed_at: status === 'completed' || status === 'failed' || status === 'skipped' 
         ? new Date().toISOString() 
@@ -657,8 +692,13 @@ export class WorkflowEngine {
       .eq('id', execution.id);
   }
 
-  private getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+  private getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+    return path.split('.').reduce((current, key) => {
+      if (current && typeof current === 'object' && key in current) {
+        return (current as Record<string, unknown>)[key];
+      }
+      return undefined;
+    }, obj);
   }
 
   // Step execution methods (to be implemented by specific step handlers)
@@ -702,7 +742,7 @@ export class WorkflowEngine {
     console.log(`Retrying step: ${step.name}`);
   }
 
-  private async escalateStep(execution: WorkflowExecution, step: WorkflowStep, error: any): Promise<void> {
+  private async escalateStep(execution: WorkflowExecution, step: WorkflowStep, error: Error): Promise<void> {
     // Escalate step logic
     console.log(`Escalating step: ${step.name}`, error);
   }

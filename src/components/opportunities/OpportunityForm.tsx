@@ -8,9 +8,28 @@ import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import PEAKForm from '@/components/forms/PEAKForm'
-import MEDDPICCForm from '@/components/forms/MEDDPICCForm'
-import { MEDDPICCDashboard, MEDDPICCPEAKIntegration } from '@/components/meddpicc'
+import dynamic from 'next/dynamic'
+
+// Dynamic imports for heavy components
+const PEAKForm = dynamic(() => import('@/components/forms/PEAKForm'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  ssr: false
+})
+const MEDDPICCForm = dynamic(() => import('@/components/forms/MEDDPICCForm'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  ssr: false
+})
+const MEDDPICCDashboard = dynamic(() => import('@/components/meddpicc').then(mod => ({ default: mod.MEDDPICCDashboard })), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  ssr: false
+})
+const MEDDPICCPEAKIntegration = dynamic(() => import('@/components/meddpicc').then(mod => ({ default: mod.MEDDPICCPEAKIntegration })), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  ssr: false
+})
+
+import type { PEAKFormData } from '@/components/forms/PEAKForm'
+import type { MEDDPICCFormData } from '@/components/forms/MEDDPICCForm'
 import { MEDDPICCAssessment, calculateMEDDPICCScore } from '@/lib/meddpicc'
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -34,7 +53,7 @@ interface OpportunityFormProps {
 // PEAK stages moved to PEAKForm component
 
 // Helper function to calculate MEDDPICC score from simple data format
-const calculateMEDDPICCScoreFromData = (data: any): number => {
+const calculateMEDDPICCScoreFromData = (data: Record<string, string>): number => {
   try {
     // Convert simple data format to comprehensive format for scoring
     const responses = []
@@ -255,7 +274,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     }
   }
 
-  const handlePeakSave = async (data: any) => {
+  const handlePeakSave = async (data: PEAKFormData) => {
     setPeakData(data)
     setIsDirty(true)
     
@@ -282,7 +301,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     setError(null)
   }
 
-  const handleMeddpiccSave = async (data: any) => {
+  const handleMeddpiccSave = async (data: MEDDPICCFormData) => {
     setMeddpiccData(data)
     setIsDirty(true)
     
@@ -324,7 +343,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   }
 
   // Data validation function
-  const validateOpportunityData = (data: any) => {
+  const validateOpportunityData = (data: OpportunityFormData) => {
     const errors: string[] = []
 
     // Validate required fields

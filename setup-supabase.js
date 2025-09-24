@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const readline = require('readline');
-const fs = require('fs');
-const path = require('path');
+import readline from 'readline';
+import fs from 'fs';
+import path from 'path';
 
 const rl = readline.createInterface({
   input: process.stdin,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -198,7 +198,7 @@ export default function MEDDPICCForm({
   }
 
   // Convert simple MEDDPICC data to comprehensive format
-  const convertToComprehensiveFormat = (simpleData: any): MEDDPICCResponse[] => {
+  const convertToComprehensiveFormat = (simpleData: Record<string, string>): MEDDPICCResponse[] => {
     const responses: MEDDPICCResponse[] = []
     
     // Map simple field names to pillar IDs

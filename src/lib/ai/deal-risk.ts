@@ -33,8 +33,20 @@ export interface OpportunityData {
   createdAt: string
   updatedAt: string
   lastActivityAt?: string
-  activities?: any[]
-  contacts?: any[]
+  activities?: Array<{
+    id: string
+    type: string
+    description: string
+    createdAt: string
+    userId: string
+  }>
+  contacts?: Array<{
+    id: string
+    name: string
+    email: string
+    role: string
+    influence: number
+  }>
   competition?: string
   budget?: number
   decisionMaker?: string
@@ -112,7 +124,12 @@ export class DealRiskEngine {
         opportunityData,
         context
       )
-      const insightData = insight.insightData as any
+      const insightData = insight.insightData as {
+        riskScore: number
+        riskFactors: Record<string, number>
+        mitigationStrategies: string[]
+        confidence: number
+      }
 
       return {
         riskScore: insightData.riskScore || 0,

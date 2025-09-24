@@ -21,8 +21,20 @@ export interface OpportunityContext {
   closeDate: string
   createdAt: string
   lastActivityAt?: string
-  activities: any[]
-  contacts: any[]
+  activities: Array<{
+    id: string
+    type: string
+    description: string
+    createdAt: string
+    userId: string
+  }>
+  contacts: Array<{
+    id: string
+    name: string
+    email: string
+    role: string
+    influence: number
+  }>
   company?: string
   industry?: string
   competition?: string
@@ -179,10 +191,19 @@ export class NextActionsEngine {
         opportunityContext,
         context
       )
-      const insightData = insight.insightData as any
+      const insightData = insight.insightData as {
+        actions: Array<{
+          action: string
+          priority: string
+          reasoning: string
+          estimatedImpact: number
+          estimatedEffort: number
+          category: string
+        }>
+      }
 
       // Convert AI response to NextAction format
-      const aiActions: NextAction[] = (insightData.actions || []).map((action: any) => ({
+      const aiActions: NextAction[] = (insightData.actions || []).map((action) => ({
         action: action.action || '',
         priority: action.priority || 'medium',
         reasoning: action.reasoning || '',

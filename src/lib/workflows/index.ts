@@ -8,10 +8,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Core workflow engine
-export {
-  WorkflowEngine,
-  workflowEngine,
+// Re-export all interfaces from individual modules
+export type {
   EnterpriseWorkflow,
   WorkflowStep,
   WorkflowCondition,
@@ -25,27 +23,45 @@ export {
   WorkflowStepExecution,
 } from './workflow-engine';
 
-// Approval processes
-export {
-  ApprovalProcessManager,
-  approvalProcessManager,
+export type {
   ApprovalRequest,
   ApprovalUser,
   ApprovalResponse,
   ApprovalTemplate,
 } from './approval-processes';
 
+// Import types for use in this file
+import type {
+  EnterpriseWorkflow,
+  WorkflowExecution,
+} from './workflow-engine';
+
+// Core workflow engine
+export {
+  WorkflowEngine,
+  workflowEngine,
+} from './workflow-engine';
+
+// Import workflowEngine for use in WorkflowManager
+import { workflowEngine } from './workflow-engine';
+
+// Approval processes
+export {
+  ApprovalProcessManager,
+  approvalProcessManager,
+} from './approval-processes';
+
 // Workflow factory for creating workflow instances
 export class WorkflowFactory {
   static createWorkflow(
-    workflowType: string,
-    config: Record<string, any>
+    workflowType: 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom',
+    config: Partial<EnterpriseWorkflow>
   ): EnterpriseWorkflow {
     const baseWorkflow: EnterpriseWorkflow = {
       id: config.id || '',
       name: config.name || '',
       description: config.description || '',
-      workflowType: workflowType as any,
+      workflowType: workflowType,
       triggerConditions: config.triggerConditions || {},
       steps: config.steps || [],
       approvalConfig: config.approvalConfig || {
@@ -167,7 +183,7 @@ export class WorkflowManager {
 
   async updateWorkflow(workflowId: string, updates: Partial<EnterpriseWorkflow>): Promise<void> {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (updates.name) updateData.name = updates.name;
       if (updates.description) updateData.description = updates.description;
       if (updates.workflowType) updateData.workflow_type = updates.workflowType;
@@ -257,7 +273,7 @@ export class WorkflowManager {
     workflowId: string,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, string | number | boolean>
   ): Promise<WorkflowExecution> {
     return await workflowEngine.executeWorkflow(workflowId, entityType, entityId, triggerData);
   }

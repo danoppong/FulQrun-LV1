@@ -1,5 +1,5 @@
 // Simple test to check if Next.js is working
-const { createServer } = require('http')
+import { createServer } from 'http'
 
 const server = createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/html' })

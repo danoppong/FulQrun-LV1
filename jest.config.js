@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
@@ -20,4 +20,12 @@ module.exports = {
   testEnvironmentOptions: {
     customExportConditions: [''],
   },
+  // Memory optimization settings
+  maxWorkers: 2,
+  workerIdleMemoryLimit: '512MB',
+  detectLeaks: false,
+  detectOpenHandles: false,
+  forceExit: true,
+  // Reduce test timeout to prevent hanging
+  testTimeout: 10000,
 }

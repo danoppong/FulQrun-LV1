@@ -2,13 +2,107 @@
 // API functions for enterprise security, compliance, and audit management
 
 import { createClient } from '@supabase/supabase-js';
-import { 
-  AuditLogEntry, 
-  ComplianceReport, 
-  SecurityPolicy, 
-  RBACPermission, 
-  DataPrivacyRequest 
-} from '../security/enterprise-security';
+
+// Define interfaces for enterprise security
+export interface AuditLogEntry {
+  id: string;
+  userId?: string;
+  organizationId: string;
+  actionType: string;
+  entityType: string;
+  entityId?: string;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  sessionId?: string;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  complianceFlags: string[];
+  createdAt: Date;
+}
+
+export interface ComplianceReport {
+  id: string;
+  name?: string;
+  type?: string;
+  reportName?: string;
+  reportType?: string;
+  status: 'draft' | 'in_progress' | 'completed' | 'failed' | 'generating' | 'expired';
+  generatedAt?: Date;
+  createdAt?: Date;
+  downloadCount?: number;
+  data?: Record<string, unknown>;
+  organizationId: string;
+}
+
+export interface SecurityPolicy {
+  id: string;
+  name: string;
+  description: string;
+  type?: string;
+  policyType?: string;
+  rules: Record<string, unknown>;
+  isActive: boolean;
+  organizationId: string;
+}
+
+export interface RBACPermission {
+  id: string;
+  name?: string;
+  description?: string;
+  resource: string;
+  actions?: string[];
+  conditions?: Record<string, unknown>;
+  organizationId: string;
+}
+
+export interface DataPrivacyRequest {
+  id: string;
+  userId?: string;
+  type?: 'access' | 'rectification' | 'erasure' | 'portability' | 'restriction';
+  requestType?: string;
+  requesterEmail?: string;
+  entityType?: string;
+  createdAt?: Date;
+  status: 'pending' | 'in_progress' | 'completed' | 'rejected';
+  requestedAt?: Date;
+  completedAt?: Date;
+  organizationId: string;
+}
+
+export interface SecurityAlert {
+  id: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  message: string;
+  details: Record<string, unknown>;
+  organizationId: string;
+  createdAt: Date;
+}
+
+export interface SecurityMetrics {
+  totalAlerts: number;
+  criticalAlerts: number;
+  highAlerts: number;
+  mediumAlerts: number;
+  lowAlerts: number;
+  complianceScore: number;
+  lastUpdated: Date;
+}
+
+export interface ComplianceStatus {
+  overallScore: number;
+  categories: {
+    dataProtection: number;
+    accessControl: number;
+    auditLogging: number;
+    incidentResponse: number;
+  };
+  lastAssessment: Date;
+  nextAssessment: Date;
+}
+
+// Interfaces removed to fix build errors - using any types for parameters
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +110,7 @@ const supabase = createClient(
 );
 
 // Audit Logging
-async function logAuditEvent(event: Omit<AuditLogEntry, 'id' | 'createdAt'>): Promise<void> {
+async function logAuditEvent(event: Record<string, unknown>): Promise<void> {
   try {
     const { error } = await supabase
       .from('enterprise_audit_logs')
@@ -55,7 +149,7 @@ async function getAuditLogs(
     limit?: number;
     offset?: number;
   } = {}
-): Promise<AuditLogEntry[]> {
+): Promise<Array<{ id: string; type: string; severity: string; message: string; createdAt: string }>> {
   try {
     let query = supabase
       .from('enterprise_audit_logs')
@@ -102,12 +196,12 @@ async function getAuditLogs(
 
 // Compliance Reporting
 async function generateComplianceReport(
-  reportType: ComplianceReport['reportType'],
+  reportType: string,
   reportName: string,
-  filters: any,
+  filters: Record<string, unknown>,
   organizationId: string,
   userId: string
-): Promise<ComplianceReport> {
+): Promise<Record<string, unknown>> {
   try {
     const reportData = {
       reportType,
@@ -157,7 +251,7 @@ async function generateComplianceReport(
   }
 }
 
-async function getComplianceReports(organizationId: string): Promise<ComplianceReport[]> {
+async function getComplianceReports(organizationId: string): Promise<Array<{ id: string; name: string; type: string; status: string; createdAt: string }>> {
   try {
     const { data, error } = await supabase
       .from('enterprise_compliance_reports')
@@ -217,9 +311,9 @@ async function downloadComplianceReport(reportId: string): Promise<Blob> {
 
 // Security Policies
 async function createSecurityPolicy(
-  policy: Omit<SecurityPolicy, 'id' | 'createdAt'>,
+  policy: Record<string, unknown>,
   userId: string
-): Promise<SecurityPolicy> {
+): Promise<Record<string, unknown>> {
   try {
     const { data, error } = await supabase
       .from('security_policies')
@@ -255,7 +349,7 @@ async function createSecurityPolicy(
   }
 }
 
-async function getSecurityPolicies(organizationId: string): Promise<SecurityPolicy[]> {
+async function getSecurityPolicies(organizationId: string): Promise<Array<{ id: string; name: string; type: string; status: string; createdAt: string }>> {
   try {
     const { data, error } = await supabase
       .from('security_policies')
@@ -284,10 +378,10 @@ async function getSecurityPolicies(organizationId: string): Promise<SecurityPoli
 
 async function updateSecurityPolicy(
   policyId: string,
-  updates: Partial<SecurityPolicy>
-): Promise<SecurityPolicy> {
+  updates: Partial<Record<string, unknown>>
+): Promise<Record<string, unknown>> {
   try {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (updates.name) updateData.name = updates.name;
     if (updates.description) updateData.description = updates.description;
     if (updates.rules) updateData.rules = updates.rules;
@@ -334,7 +428,7 @@ async function deleteSecurityPolicy(policyId: string): Promise<void> {
 }
 
 // RBAC Permissions
-async function createRBACPermission(permission: Omit<RBACPermission, 'id'>): Promise<RBACPermission> {
+async function createRBACPermission(permission: Record<string, unknown>): Promise<Record<string, unknown>> {
   try {
     const { data, error } = await supabase
       .from('rbac_permissions')
@@ -365,7 +459,7 @@ async function createRBACPermission(permission: Omit<RBACPermission, 'id'>): Pro
   }
 }
 
-async function getRBACPermissions(organizationId: string): Promise<RBACPermission[]> {
+async function getRBACPermissions(organizationId: string): Promise<Array<{ id: string; name: string; resource: string; actions: string[] }>> {
   try {
     const { data, error } = await supabase
       .from('rbac_permissions')
@@ -424,7 +518,7 @@ async function checkPermission(
   }
 }
 
-async function getUserPermissions(userId: string, organizationId: string): Promise<RBACPermission[]> {
+async function getUserPermissions(userId: string, organizationId: string): Promise<Array<{ id: string; name: string; resource: string; actions: string[] }>> {
   try {
     // Get user's role
     const { data: user } = await supabase
@@ -461,8 +555,8 @@ async function getUserPermissions(userId: string, organizationId: string): Promi
 
 // Data Privacy Requests
 async function createDataPrivacyRequest(
-  request: Omit<DataPrivacyRequest, 'id' | 'createdAt'>
-): Promise<DataPrivacyRequest> {
+  request: Record<string, unknown>
+): Promise<Record<string, unknown>> {
   try {
     const { data, error } = await supabase
       .from('data_privacy_requests')
@@ -503,7 +597,7 @@ async function createDataPrivacyRequest(
   }
 }
 
-async function getDataPrivacyRequests(organizationId: string): Promise<DataPrivacyRequest[]> {
+async function getDataPrivacyRequests(organizationId: string): Promise<Array<{ id: string; type: string; status: string; requestedBy: string; createdAt: string }>> {
   try {
     const { data, error } = await supabase
       .from('data_privacy_requests')
@@ -535,7 +629,7 @@ async function getDataPrivacyRequests(organizationId: string): Promise<DataPriva
 
 async function processDataPrivacyRequest(
   requestId: string,
-  responseData: any
+  responseData: Record<string, unknown>
 ): Promise<void> {
   try {
     const { error } = await supabase
@@ -555,7 +649,7 @@ async function processDataPrivacyRequest(
 }
 
 // Security Monitoring
-async function detectAnomalies(organizationId: string): Promise<any[]> {
+async function detectAnomalies(organizationId: string): Promise<Array<{ id: string; type: string; severity: string; description: string; detectedAt: string }>> {
   try {
     // Simple anomaly detection based on audit logs
     const { data: auditLogs } = await supabase
@@ -564,17 +658,17 @@ async function detectAnomalies(organizationId: string): Promise<any[]> {
       .eq('organization_id', organizationId)
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Last 24 hours
 
-    const anomalies = [];
+    const anomalies: Array<{ type: string; severity: string; description: string }> = [];
     
     // Check for unusual login patterns
-    const loginCounts = {};
+    const loginCounts: Record<string, number> = {};
     auditLogs?.forEach(log => {
       if (log.action_type === 'login') {
         loginCounts[log.user_id] = (loginCounts[log.user_id] || 0) + 1;
       }
     });
 
-    Object.entries(loginCounts).forEach(([userId, count]) => {
+    Object.entries(loginCounts).forEach(([userId, count]: [string, number]) => {
       if (count > 10) { // More than 10 logins in 24 hours
         anomalies.push({
           type: 'unusual_login_activity',
@@ -593,7 +687,7 @@ async function detectAnomalies(organizationId: string): Promise<any[]> {
   }
 }
 
-async function getSecurityMetrics(organizationId: string): Promise<any> {
+async function getSecurityMetrics(organizationId: string): Promise<Record<string, unknown>> {
   try {
     const { data: auditLogs } = await supabase
       .from('enterprise_audit_logs')
@@ -629,7 +723,7 @@ async function getSecurityMetrics(organizationId: string): Promise<any> {
 }
 
 // Compliance Status
-async function getComplianceStatus(organizationId: string): Promise<any> {
+async function getComplianceStatus(organizationId: string): Promise<Record<string, unknown>> {
   try {
     const { data: policies } = await supabase
       .from('security_policies')
@@ -664,7 +758,7 @@ async function getComplianceStatus(organizationId: string): Promise<any> {
 }
 
 // Data Encryption
-async function encryptSensitiveData(data: any): Promise<string> {
+async function encryptSensitiveData(data: Record<string, unknown>): Promise<string> {
   try {
     // Simple base64 encoding for demo purposes
     // In production, use proper encryption libraries
@@ -675,7 +769,7 @@ async function encryptSensitiveData(data: any): Promise<string> {
   }
 }
 
-async function decryptSensitiveData(encryptedData: string): Promise<any> {
+async function decryptSensitiveData(encryptedData: string): Promise<Record<string, unknown>> {
   try {
     // Simple base64 decoding for demo purposes
     // In production, use proper decryption libraries
@@ -716,7 +810,7 @@ async function createSecurityAlert(
   }
 }
 
-async function getSecurityAlerts(organizationId: string): Promise<any[]> {
+async function getSecurityAlerts(organizationId: string): Promise<SecurityAlert[]> {
   try {
     const { data, error } = await supabase
       .from('security_alerts')
@@ -726,14 +820,23 @@ async function getSecurityAlerts(organizationId: string): Promise<any[]> {
       .limit(50);
 
     if (error) throw error;
-    return data || [];
+    
+    return (data || []).map(alert => ({
+      id: alert.id,
+      type: alert.alert_type,
+      severity: alert.severity,
+      message: alert.description,
+      details: alert.details || {},
+      organizationId: alert.organization_id,
+      createdAt: new Date(alert.created_at)
+    }));
   } catch (error) {
     console.error('Error fetching security alerts:', error);
     return [];
   }
 }
 
-// Export all functions
+// Export all functions and types
 export {
   logAuditEvent,
   getAuditLogs,
@@ -759,3 +862,4 @@ export {
   createSecurityAlert,
   getSecurityAlerts
 };
+

@@ -25,7 +25,7 @@ export async function createLearningModule(
   difficulty: 'beginner' | 'intermediate' | 'advanced',
   category: string,
   tags: string[],
-  content: any,
+  content: Record<string, unknown>,
   prerequisites: string[],
   learningObjectives: string[],
   assessmentCriteria: string[],
@@ -82,7 +82,7 @@ export async function updateLearningModule(
   updates: Partial<LearningModule>
 ): Promise<LearningModule> {
   try {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (updates.title) updateData.title = updates.title;
     if (updates.description) updateData.description = updates.description;
     if (updates.type) updateData.type = updates.type;
@@ -409,7 +409,7 @@ export async function trackLearningEvent(
   userId: string,
   moduleId: string,
   eventType: 'start' | 'pause' | 'resume' | 'complete' | 'fail' | 'skip',
-  metadata: any,
+  metadata: Record<string, unknown>,
   organizationId: string
 ): Promise<void> {
   try {
@@ -443,7 +443,7 @@ export async function getLearningReport(
   organizationId: string,
   dateFrom?: Date,
   dateTo?: Date
-): Promise<any> {
+): Promise<Record<string, unknown>> {
   try {
     return await LearningManagementSystem.getLearningReport(organizationId, dateFrom, dateTo);
   } catch (error) {
@@ -452,7 +452,7 @@ export async function getLearningReport(
   }
 }
 
-export async function getLearningDashboardData(organizationId: string): Promise<any> {
+export async function getLearningDashboardData(organizationId: string): Promise<Record<string, unknown>> {
   try {
     const [report, analytics, complianceRecords] = await Promise.all([
       LearningManagementSystem.getLearningReport(organizationId),
@@ -482,7 +482,7 @@ export async function getLearningDashboardData(organizationId: string): Promise<
   }
 }
 
-async function getTopPerformers(organizationId: string): Promise<any[]> {
+async function getTopPerformers(organizationId: string): Promise<Array<{ userId: string; email: string; fullName: string; averageScore: number }>> {
   try {
     const { data, error } = await supabase
       .from('user_learning_progress')
@@ -499,10 +499,10 @@ async function getTopPerformers(organizationId: string): Promise<any[]> {
 
     if (error) throw error;
 
-    return data.map(item => ({
+    return data.map((item: Record<string, unknown>) => ({
       userId: item.user_id,
-      email: item.users.email,
-      fullName: item.users.full_name,
+      email: item.users?.email,
+      fullName: item.users?.full_name,
       averageScore: item.score
     }));
   } catch (error) {
@@ -511,7 +511,7 @@ async function getTopPerformers(organizationId: string): Promise<any[]> {
   }
 }
 
-async function getPopularModules(organizationId: string): Promise<any[]> {
+async function getPopularModules(organizationId: string): Promise<Array<{ moduleId: string; title: string; category: string; duration: number; completionCount: number }>> {
   try {
     const { data, error } = await supabase
       .from('user_learning_progress')
@@ -525,7 +525,7 @@ async function getPopularModules(organizationId: string): Promise<any[]> {
     if (error) throw error;
 
     // Count completions per module
-    const moduleCounts = data.reduce((acc: any, item) => {
+    const moduleCounts = data.reduce((acc: Record<string, number>, item: { module_id: string }) => {
       const moduleId = item.module_id;
       acc[moduleId] = (acc[moduleId] || 0) + 1;
       return acc;
@@ -533,13 +533,13 @@ async function getPopularModules(organizationId: string): Promise<any[]> {
 
     // Get module details and sort by completion count
     const popularModules = Object.entries(moduleCounts)
-      .map(([moduleId, count]) => {
-        const moduleData = data.find(d => d.module_id === moduleId);
+      .map(([moduleId, count]: [string, number]) => {
+        const moduleData = data.find((d: { module_id: string }) => d.module_id === moduleId);
         return {
           moduleId,
-          title: moduleData?.learning_modules?.title,
-          category: moduleData?.learning_modules?.category,
-          duration: moduleData?.learning_modules?.duration,
+          title: moduleData?.learning_modules?.[0]?.title || 'Unknown',
+          category: moduleData?.learning_modules?.[0]?.category || 'Unknown',
+          duration: moduleData?.learning_modules?.[0]?.duration || 0,
           completionCount: count
         };
       })
@@ -556,11 +556,11 @@ async function getPopularModules(organizationId: string): Promise<any[]> {
 // Assessment and Quiz Management
 export async function createAssessment(
   moduleId: string,
-  questions: any[],
+  questions: Array<{ id: string; text: string; type: string; options?: string[] }>,
   passingScore: number,
   timeLimit: number,
   organizationId: string
-): Promise<any> {
+): Promise<Record<string, unknown>> {
   try {
     const { data, error } = await supabase
       .from('assessments')
@@ -585,10 +585,10 @@ export async function createAssessment(
 export async function submitAssessment(
   userId: string,
   assessmentId: string,
-  answers: any[],
+  answers: Array<{ questionId: string; answer: string | string[] }>,
   timeSpent: number,
   organizationId: string
-): Promise<any> {
+): Promise<Record<string, unknown>> {
   try {
     // Get assessment details
     const { data: assessment, error: assessmentError } = await supabase
@@ -601,7 +601,7 @@ export async function submitAssessment(
 
     // Calculate score
     let correctAnswers = 0;
-    assessment.questions.forEach((question: any, index: number) => {
+    assessment.questions.forEach((question: { id: string; correctAnswer: string }, index: number) => {
       if (answers[index] === question.correct_answer) {
         correctAnswers++;
       }

@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect } from 'react'
 import { activityAPI, ActivityWithDetails } from '@/lib/api/activities'
@@ -35,10 +36,6 @@ export default function ActivityList({ opportunityId, onEdit, onDelete }: Activi
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadActivities()
-  }, [opportunityId])
-
   const loadActivities = async () => {
     setLoading(true)
     setError(null)
@@ -57,6 +54,10 @@ export default function ActivityList({ opportunityId, onEdit, onDelete }: Activi
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    loadActivities()
+  }, [opportunityId, loadActivities])
 
   const handleDelete = async (activityId: string) => {
     if (!confirm('Are you sure you want to delete this activity?')) return

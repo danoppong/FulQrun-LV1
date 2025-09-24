@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Get SharePoint connection
     const { data: connection, error: connectionError } = await supabase
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     const folders = await sharepoint.getFolders(siteId, folderPath)
 
     return NextResponse.json(folders)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch SharePoint folders' },
       { status: 500 }
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Get SharePoint connection
     const { data: connection, error: connectionError } = await supabase
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     const folder = await sharepoint.createFolder(siteId, parentPath || '/', folderName)
 
     return NextResponse.json(folder)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to create folder' },
       { status: 500 }

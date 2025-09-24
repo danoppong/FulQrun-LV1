@@ -7,7 +7,7 @@ interface UsePerformanceTrackingOptions {
   componentName: string
   trackRenders?: boolean
   trackProps?: boolean
-  props?: Record<string, any>
+  props?: Record<string, unknown>
 }
 
 export function usePerformanceTracking({
@@ -88,7 +88,7 @@ export function usePerformanceTracking({
     })
   }, [componentName, props, trackProps])
 
-  const recordCustomMetric = useCallback((name: string, value: number, metadata?: Record<string, any>) => {
+  const recordCustomMetric = useCallback((name: string, value: number, metadata?: Record<string, unknown>) => {
     performanceMonitor.recordMetric({
       name,
       value,

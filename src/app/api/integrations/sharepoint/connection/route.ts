@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', existingConnection.id)
 
-      if (error) {
-        throw error
+      if (_error) {
+        throw _error
       }
 
       return NextResponse.json({
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       })
     } else {
       // Create new connection
-      const { data: newConnection, error } = await supabase
+      const { data: newConnection, error: insertError } = await supabase
         .from('integration_connections')
         .insert({
           organization_id: organizationId,
@@ -114,8 +114,8 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
 
-      if (error) {
-        throw error
+      if (insertError) {
+        throw insertError
       }
 
       return NextResponse.json({

@@ -42,7 +42,7 @@ export const supabase = (() => {
             single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
           })
         }),
-        insert: (data: any) => {
+        insert: (data: Record<string, unknown>) => {
           const result = { data: null, error: { message: 'Supabase not configured' } }
           const promise = Promise.resolve(result)
           return Object.assign(promise, {
@@ -62,7 +62,7 @@ export const supabase = (() => {
           eq: async () => ({ error: { message: 'Supabase not configured' } })
         })
       })
-    } as any
+    } as Record<string, unknown>
   }
   
   return supabaseInstance
@@ -100,7 +100,7 @@ export const createServerClient = () => {
             single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
           })
         }),
-        insert: (data: any) => {
+        insert: (data: Record<string, unknown>) => {
           const result = { data: null, error: { message: 'Supabase not configured' } }
           const promise = Promise.resolve(result)
           return Object.assign(promise, {
@@ -120,7 +120,7 @@ export const createServerClient = () => {
           eq: async () => ({ error: { message: 'Supabase not configured' } })
         })
       })
-    } as any
+    } as Record<string, unknown>
   }
 }
 
@@ -161,7 +161,7 @@ export interface Database {
           full_name: string | null
           role: 'rep' | 'manager' | 'admin'
           organization_id: string
-          learning_progress: Record<string, any>
+          learning_progress: Record<string, unknown>
           created_at: string
           updated_at: string
         }
@@ -171,7 +171,7 @@ export interface Database {
           full_name?: string | null
           role?: 'rep' | 'manager' | 'admin'
           organization_id: string
-          learning_progress?: Record<string, any>
+          learning_progress?: Record<string, unknown>
           created_at?: string
           updated_at?: string
         }
@@ -181,7 +181,7 @@ export interface Database {
           full_name?: string | null
           role?: 'rep' | 'manager' | 'admin'
           organization_id?: string
-          learning_progress?: Record<string, any>
+          learning_progress?: Record<string, unknown>
           created_at?: string
           updated_at?: string
         }

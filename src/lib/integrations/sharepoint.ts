@@ -129,7 +129,7 @@ export class SharePointIntegration {
     }
   }
 
-  async getPEAKDocuments(siteId: string, opportunityId: string): Promise<any[]> {
+  async getPEAKDocuments(siteId: string, opportunityId: string): Promise<Array<{ id: string; name: string; url: string; size: number; modified: string }>> {
     try {
       // Mock PEAK documents - in real implementation, this would fetch from SharePoint
       console.log('Fetching PEAK documents for opportunity:', opportunityId, 'from site:', siteId)
@@ -153,7 +153,7 @@ export class SharePointIntegration {
     }
   }
 
-  async getDocumentsFromSite(siteId: string, folderPath: string): Promise<any[]> {
+  async getDocumentsFromSite(siteId: string, folderPath: string): Promise<Array<{ id: string; name: string; url: string; size: number; modified: string }>> {
     try {
       // Mock documents - in real implementation, this would fetch from SharePoint
       console.log('Fetching documents from site:', siteId, 'folder:', folderPath)
@@ -205,7 +205,7 @@ export class SharePointIntegration {
     }
   }
 
-  async getFolders(siteId: string, folderPath: string): Promise<any[]> {
+  async getFolders(siteId: string, folderPath: string): Promise<Array<{ id: string; name: string; url: string }>> {
     try {
       // Mock folders - in real implementation, this would fetch from SharePoint
       console.log('Fetching folders from site:', siteId, 'folder:', folderPath)
@@ -281,7 +281,7 @@ export class SharePointIntegration {
     }
   }
 
-  async getSites(): Promise<any[]> {
+  async getSites(): Promise<Array<{ id: string; name: string; url: string; description?: string }>> {
     try {
       // Mock sites - in real implementation, this would fetch from SharePoint
       console.log('Fetching SharePoint sites')

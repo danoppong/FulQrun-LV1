@@ -17,8 +17,8 @@ export interface AIResponse {
 
 export interface AIInsightRequest {
   type: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance'
-  data: Record<string, any>
-  context?: Record<string, any>
+  data: Record<string, unknown>
+  context?: Record<string, unknown>
 }
 
 export class OpenAIClient {
@@ -69,7 +69,12 @@ export class OpenAIClient {
     source: string
     industry?: string
     companySize?: string
-    engagement?: any[]
+    engagement?: Array<{
+      id: string
+      type: string
+      timestamp: string
+      value: number
+    }>
   }): Promise<{
     score: number
     confidence: number
@@ -188,8 +193,20 @@ Respond in JSON format.`
     stage: string
     meddpiccScore: number
     lastActivity: string
-    activities: any[]
-    contacts: any[]
+    activities: Array<{
+      id: string
+      type: string
+      description: string
+      createdAt: string
+      userId: string
+    }>
+    contacts: Array<{
+      id: string
+      name: string
+      email: string
+      role: string
+      influence: number
+    }>
   }): Promise<{
     actions: Array<{
       action: string
@@ -245,8 +262,21 @@ Respond in JSON format.`
    * Generate sales forecasting insight
    */
   static async generateForecast(pipelineData: {
-    opportunities: any[]
-    historicalData: any[]
+    opportunities: Array<{
+      id: string
+      name: string
+      stage: string
+      value: number
+      probability: number
+      closeDate: string
+    }>
+    historicalData: Array<{
+      id: string
+      type: string
+      timestamp: string
+      value: number
+      context: Record<string, unknown>
+    }>
     timeRange: string
   }): Promise<{
     forecast: {

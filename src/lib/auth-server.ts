@@ -46,10 +46,10 @@ export const createServerComponentClient = () => {
       get(name: string) {
         return cookieStore.get(name)?.value
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: Record<string, unknown>) {
         cookieStore.set({ name, value, ...options })
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: Record<string, unknown>) {
         cookieStore.set({ name, value: '', ...options })
       },
     },
@@ -81,7 +81,7 @@ export const createMiddlewareClient = (request: NextRequest) => {
       get(name: string) {
         return request.cookies.get(name)?.value
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: Record<string, unknown>) {
         request.cookies.set({
           name,
           value,
@@ -98,7 +98,7 @@ export const createMiddlewareClient = (request: NextRequest) => {
           ...options,
         })
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: Record<string, unknown>) {
         request.cookies.set({
           name,
           value: '',

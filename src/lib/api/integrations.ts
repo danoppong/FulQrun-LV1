@@ -3,7 +3,7 @@ export interface IntegrationConnectionData {
   name: string
   type: string
   status: 'connected' | 'disconnected' | 'error'
-  config: Record<string, any>
+  config: Record<string, unknown>
   created_at: string
   updated_at: string
 }

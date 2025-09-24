@@ -4,7 +4,13 @@ import { AIInsightsAPI, AIInsightData, LeadScoringInsight, DealRiskInsight, Next
 export interface InsightContext {
   organizationId: string
   userId: string
-  historicalData?: any[]
+  historicalData?: Array<{
+    id: string
+    type: string
+    timestamp: string
+    value: number
+    context: Record<string, unknown>
+  }>
   benchmarks?: Record<string, number>
 }
 
@@ -14,7 +20,7 @@ export class AIInsightsEngine {
    */
   static async generateLeadScoring(
     leadId: string,
-    leadData: any,
+    leadData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData> {
     try {
@@ -52,7 +58,7 @@ export class AIInsightsEngine {
    */
   static async generateDealRiskAssessment(
     opportunityId: string,
-    opportunityData: any,
+    opportunityData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData> {
     try {
@@ -90,7 +96,7 @@ export class AIInsightsEngine {
    */
   static async generateNextActions(
     opportunityId: string,
-    opportunityData: any,
+    opportunityData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData> {
     try {
@@ -120,7 +126,7 @@ export class AIInsightsEngine {
    */
   static async generateForecasting(
     organizationId: string,
-    pipelineData: any,
+    pipelineData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData> {
     try {
@@ -150,7 +156,7 @@ export class AIInsightsEngine {
    */
   static async generatePerformanceInsights(
     userId: string,
-    performanceData: any,
+    performanceData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData> {
     try {
@@ -187,7 +193,7 @@ export class AIInsightsEngine {
     requests: Array<{
       type: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance'
       entityId: string
-      data: any
+      data: Record<string, unknown>
       context: InsightContext
     }>
   ): Promise<AIInsightData[]> {
@@ -260,7 +266,7 @@ export class AIInsightsEngine {
   static async refreshEntityInsights(
     entityType: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization',
     entityId: string,
-    entityData: any,
+    entityData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData[]> {
     const results: AIInsightData[] = []
@@ -337,7 +343,7 @@ export class AIInsightsEngine {
   /**
    * Validate insight data before processing
    */
-  private static validateInsightData(type: string, data: any): boolean {
+  private static validateInsightData(type: string, data: Record<string, unknown>): boolean {
     switch (type) {
       case 'lead_scoring':
         return data && (data.firstName || data.email || data.company)

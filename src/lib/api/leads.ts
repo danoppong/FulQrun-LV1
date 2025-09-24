@@ -45,7 +45,7 @@ export class LeadAPI {
       }
 
       // Calculate scores for each lead
-      const leadsWithScores = data?.map((lead: any) => {
+      const leadsWithScores = data?.map((lead: Record<string, unknown>) => {
         const leadData: LeadData = {
           first_name: lead.first_name,
           last_name: lead.last_name,
@@ -217,7 +217,7 @@ export class LeadAPI {
       }
 
       // Calculate scores for each lead
-      const leadsWithScores = data?.map((lead: any) => {
+      const leadsWithScores = data?.map((lead: Record<string, unknown>) => {
         const leadData: LeadData = {
           first_name: lead.first_name,
           last_name: lead.last_name,
@@ -247,7 +247,7 @@ export class LeadAPI {
     probability?: number
     contact_id?: string
     company_id?: string
-  }): Promise<ApiResponse<{ lead: Lead; opportunity: any }>> {
+  }): Promise<ApiResponse<{ lead: Lead; opportunity: Record<string, unknown> }>> {
     try {
       // Get the lead
       const { data: lead, error: leadError } = await this.supabase
@@ -339,7 +339,7 @@ export class LeadAPI {
         }
       }
 
-      data?.forEach((lead: any) => {
+      data?.forEach((lead: Record<string, unknown>) => {
         // Count by status
         const status = lead.status as keyof typeof stats.byStatus
         if (stats.byStatus[status] !== undefined) {
@@ -378,7 +378,7 @@ export class LeadAPI {
       }
 
       // Calculate scores for each lead
-      const leadsWithScores = data?.map((lead: any) => {
+      const leadsWithScores = data?.map((lead: Record<string, unknown>) => {
         const leadData: LeadData = {
           first_name: lead.first_name,
           last_name: lead.last_name,

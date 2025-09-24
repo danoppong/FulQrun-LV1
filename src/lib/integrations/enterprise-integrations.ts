@@ -6,7 +6,7 @@
 export * from './index';
 
 // Legacy compatibility - maintain existing API
-export {
+export type {
   BaseIntegration as EnterpriseIntegrationBase,
   SalesforceIntegration,
   WebhookManager,
