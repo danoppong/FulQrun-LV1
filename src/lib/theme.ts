@@ -248,6 +248,9 @@ export function getThemeCSS(theme: Theme): string {
 }
 
 export function applyTheme(theme: Theme) {
+  // Only apply theme on client side to prevent hydration mismatches
+  if (typeof window === 'undefined') return
+  
   const css = getThemeCSS(theme)
   
   // Remove existing theme style
