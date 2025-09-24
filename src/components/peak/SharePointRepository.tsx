@@ -89,8 +89,8 @@ export function SharePointRepository({
         sharepoint.getDocumentsFromSite(siteId, path)
       ])
 
-      setFolders(foldersData)
-      setDocuments(documentsData)
+      setFolders(foldersData.map(folder => ({ ...folder, path: folder.url })))
+      setDocuments(documentsData as any)
       setCurrentPath(path)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load folder contents')

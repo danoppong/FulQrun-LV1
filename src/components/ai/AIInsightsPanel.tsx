@@ -24,10 +24,6 @@ export function AIInsightsPanel({
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string>('')
 
-  useEffect(() => {
-    loadInsights()
-  }, [entityType, entityId, organizationId, loadInsights])
-
   const loadInsights = async () => {
     try {
       setIsLoading(true)
@@ -44,6 +40,10 @@ export function AIInsightsPanel({
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    loadInsights()
+  }, [entityType, entityId, organizationId, loadInsights])
 
   const handleRefreshInsights = async () => {
     if (!entityData) return
@@ -88,9 +88,9 @@ export function AIInsightsPanel({
       case 'next_action':
         return <NextActionInsight insight={insight.insightData as NextActionInsight} />
       case 'forecasting':
-        return <ForecastingInsight insight={insight.insightData as Record<string, unknown>} />
+        return <ForecastingInsight insight={insight.insightData as any} />
       case 'performance':
-        return <PerformanceInsight insight={insight.insightData as Record<string, unknown>} />
+        return <PerformanceInsight insight={insight.insightData as any} />
       default:
         return <div className="text-gray-500">Unknown insight type</div>
     }
@@ -354,28 +354,28 @@ function ForecastingInsight({ insight }: { insight: Record<string, unknown> }) {
         <div className="bg-blue-50 rounded-lg p-4">
           <h5 className="text-sm font-medium text-blue-900 mb-1">Short-term (30 days)</h5>
           <div className="text-2xl font-bold text-blue-600">
-            ${insight.forecast?.shortTerm?.toLocaleString() || 0}
+            ${(insight as any).forecast?.shortTerm?.toLocaleString() || 0}
           </div>
         </div>
         <div className="bg-green-50 rounded-lg p-4">
           <h5 className="text-sm font-medium text-green-900 mb-1">Long-term (90 days)</h5>
           <div className="text-2xl font-bold text-green-600">
-            ${insight.forecast?.longTerm?.toLocaleString() || 0}
+            ${(insight as any).forecast?.longTerm?.toLocaleString() || 0}
           </div>
         </div>
       </div>
 
-      {insight.trends && (
+      {(insight as any).trends && (
         <div className="bg-gray-50 rounded-lg p-4">
           <h5 className="text-sm font-medium text-gray-700 mb-2">Trends</h5>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Growth Rate</span>
-              <span className="text-sm font-medium">{insight.trends.growth}%</span>
+              <span className="text-sm font-medium">{(insight as any).trends.growth}%</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Seasonality</span>
-              <span className="text-sm font-medium">{insight.trends.seasonality}%</span>
+              <span className="text-sm font-medium">{(insight as any).trends.seasonality}%</span>
             </div>
           </div>
         </div>
@@ -401,11 +401,11 @@ function PerformanceInsight({ insight }: { insight: Record<string, unknown> }) {
         </div>
       </div>
 
-      {insight.recommendations && insight.recommendations.length > 0 && (
+      {(insight as any).recommendations && (insight as any).recommendations.length > 0 && (
         <div>
           <h5 className="text-sm font-medium text-gray-700 mb-2">Recommendations</h5>
           <ul className="space-y-1">
-            {insight.recommendations.map((rec: string, index: number) => (
+            {(insight as any).recommendations.map((rec: string, index: number) => (
               <li key={index} className="text-sm text-gray-600 flex items-start">
                 <svg className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />

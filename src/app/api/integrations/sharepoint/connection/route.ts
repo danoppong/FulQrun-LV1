@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Get SharePoint connection for the organization
     const { data: connection, error: _error } = await supabase
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       .eq('status', 'active')
       .single()
 
-    if (error || !connection) {
+    if (_error || !connection) {
       return NextResponse.json(
         { error: 'SharePoint not connected' },
         { status: 404 }
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Check if connection already exists
     const { data: existingConnection } = await supabase
@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', existingConnection.id)
 
-      if (error) {
-        throw error
+      if (_error) {
+        throw _error
       }
 
       return NextResponse.json({
@@ -114,8 +114,8 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
 
-      if (error) {
-        throw error
+      if (_error2) {
+        throw _error2
       }
 
       return NextResponse.json({
@@ -143,7 +143,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Deactivate SharePoint connection
     const { error } = await supabase

@@ -13,7 +13,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Deactivate Slack connection
     const { error } = await supabase

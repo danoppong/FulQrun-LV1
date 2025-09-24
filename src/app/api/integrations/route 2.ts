@@ -13,7 +13,7 @@ export async function GET(_request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Get all active integrations for the organization
     const { data: integrations, error: _error } = await supabase
@@ -22,8 +22,8 @@ export async function GET(_request: NextRequest) {
       .eq('organization_id', organizationId)
       .eq('status', 'active')
 
-    if (error) {
-      throw error
+    if (_error) {
+      throw _error
     }
 
     return NextResponse.json(integrations || [])

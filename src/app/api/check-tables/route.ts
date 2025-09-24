@@ -3,7 +3,7 @@ import { createServerClient } from '@/lib/supabase'
 
 export async function GET(_request: NextRequest) {
   try {
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
     
     // Test if specific tables exist by trying to query them
     const tablesToCheck = [

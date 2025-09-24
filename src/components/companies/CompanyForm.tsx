@@ -66,12 +66,6 @@ export default function CompanyForm({ company, companyId, mode }: CompanyFormPro
     } : {}
   })
 
-  useEffect(() => {
-    if (mode === 'edit' && companyId && !company) {
-      loadCompany()
-    }
-  }, [mode, companyId, company, loadCompany])
-
   const loadCompany = async () => {
     if (!companyId) return
     
@@ -97,6 +91,12 @@ export default function CompanyForm({ company, companyId, mode }: CompanyFormPro
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (mode === 'edit' && companyId && !company) {
+      loadCompany()
+    }
+  }, [mode, companyId, company, loadCompany])
 
   const onSubmit = async (data: CompanyFormData) => {
     setLoading(true)

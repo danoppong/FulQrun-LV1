@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Get SharePoint connection
     const { data: connection, error: connectionError } = await supabase
@@ -49,10 +49,12 @@ export async function GET(request: NextRequest) {
 
     if (opportunityId) {
       // Get PEAK process documents for specific opportunity
-      documents = await sharepoint.getPEAKDocuments(siteId, opportunityId)
+      const peakDocs = await sharepoint.getPEAKDocuments(siteId, opportunityId)
+      documents = peakDocs.map(doc => ({ ...doc, type: 'document' }))
     } else {
       // Get documents from specific folder
-      documents = await sharepoint.getDocumentsFromSite(siteId, folderPath)
+      const folderDocs = await sharepoint.getDocumentsFromSite(siteId, folderPath)
+      documents = folderDocs.map(doc => ({ ...doc, type: 'document' }))
     }
 
     // Store document references in database
@@ -63,11 +65,11 @@ export async function GET(request: NextRequest) {
         name: doc.name,
         url: doc.url,
         size: doc.size,
-        last_modified: doc.lastModified,
-        created_by: doc.createdBy,
-        web_url: doc.webUrl,
-        download_url: doc.downloadUrl,
-        thumbnail_url: doc.thumbnailUrl
+        last_modified: doc.modified,
+        created_by: (doc as any).createdBy || 'unknown',
+        web_url: (doc as any).webUrl || doc.url,
+        download_url: (doc as any).downloadUrl || doc.url,
+        thumbnail_url: (doc as any).thumbnailUrl || ''
       }))
 
       // Upsert document records
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Get SharePoint connection
     const { data: connection, error: connectionError } = await supabase
@@ -192,7 +194,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Get SharePoint connection
     const { data: connection, error: connectionError } = await supabase

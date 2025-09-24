@@ -71,7 +71,7 @@ export default function MEDDPICCQualification({
         
         if (opportunity) {
           // Get the current MEDDPICC score using the unified service
-          const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, opportunity)
+          const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, opportunity as any)
           
           // Convert opportunity MEDDPICC data to responses format
           const existingResponses = convertLegacyToComprehensive({

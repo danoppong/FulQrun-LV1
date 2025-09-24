@@ -63,10 +63,6 @@ export function EnhancedAnalyticsDashboard({
   const [error, setError] = useState<string | null>(null)
   const [selectedMetric, setSelectedMetric] = useState<string>('revenue')
 
-  useEffect(() => {
-    loadAnalyticsData()
-  }, [organizationId, userId, dateRange, loadAnalyticsData])
-
   const loadAnalyticsData = async () => {
     try {
       setIsLoading(true)
@@ -92,6 +88,10 @@ export function EnhancedAnalyticsDashboard({
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    loadAnalyticsData()
+  }, [organizationId, userId, dateRange, loadAnalyticsData])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {

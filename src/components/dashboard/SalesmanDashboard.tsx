@@ -284,24 +284,24 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-2xl font-bold text-gray-900">
-                {formatCurrency(data.achieved)}
+                {formatCurrency(data.achieved as number)}
               </span>
               <span className="text-sm text-gray-500">
-                of {formatCurrency(data.quota)}
+                of {formatCurrency(data.quota as number)}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className={`h-2 rounded-full ${getPerformanceBarColor(data.percentage)}`}
-                style={{ width: `${Math.min(data.percentage, 100)}%` }}
+                className={`h-2 rounded-full ${getPerformanceBarColor(data.percentage as number)}`}
+                style={{ width: `${Math.min(data.percentage as number, 100)}%` }}
               ></div>
             </div>
             <div className="flex items-center justify-between">
-              <span className={`text-sm font-medium ${getPerformanceColor(data.percentage)}`}>
-                {data.percentage.toFixed(1)}%
+              <span className={`text-sm font-medium ${getPerformanceColor(data.percentage as number)}`}>
+                {(data.percentage as number).toFixed(1)}%
               </span>
               <span className="text-xs text-gray-500">
-                {getTrendIcon(data.trend)}
+                {getTrendIcon(data.trend as "up" | "down" | "stable")}
               </span>
             </div>
           </div>
@@ -311,13 +311,13 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         return (
           <div className="space-y-2">
             <div className="text-3xl font-bold text-indigo-600">
-              {data.closed}
+              {data.closed as number}
             </div>
             <div className="text-sm text-gray-600">
               Deals Closed
             </div>
             <div className="text-xs text-gray-500">
-              {data.inPipeline} in pipeline
+              {data.inPipeline as number} in pipeline
             </div>
           </div>
         )
@@ -326,7 +326,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         return (
           <div className="space-y-3">
             <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(data.value)}
+              {formatCurrency(data.value as number)}
             </div>
             <div className="text-sm text-gray-600">
               Pipeline Value
@@ -334,11 +334,11 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <div className="text-gray-500">Deals</div>
-                <div className="font-medium">{data.deals}</div>
+                <div className="font-medium">{data.deals as number}</div>
               </div>
               <div>
                 <div className="text-gray-500">Avg Size</div>
-                <div className="font-medium">{formatCurrency(data.averageSize)}</div>
+                <div className="font-medium">{formatCurrency(data.averageSize as number)}</div>
               </div>
             </div>
           </div>
@@ -348,13 +348,13 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         return (
           <div className="space-y-2">
             <div className="text-3xl font-bold text-green-600">
-              {data.rate}%
+              {data.rate as number}%
             </div>
             <div className="text-sm text-gray-600">
               Conversion Rate
             </div>
             <div className="text-xs text-gray-500">
-              {data.calls} calls, {data.meetings} meetings
+              {data.calls as number} calls, {data.meetings as number} meetings
             </div>
           </div>
         )
@@ -364,7 +364,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           return (
             <div className="space-y-2">
               <div className="text-3xl font-bold text-purple-600">
-                {data.calls}
+                {data.calls as number}
               </div>
               <div className="text-sm text-gray-600">
                 Calls Made
@@ -376,7 +376,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           return (
             <div className="space-y-2">
               <div className="text-3xl font-bold text-orange-600">
-                {data.meetings}
+                {data.meetings as number}
               </div>
               <div className="text-sm text-gray-600">
                 Meetings Scheduled
@@ -388,7 +388,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           return (
             <div className="space-y-2">
               <div className="text-3xl font-bold text-teal-600">
-                {data.leads}
+                {data.leads as number}
               </div>
               <div className="text-sm text-gray-600">
                 Leads Generated
@@ -403,7 +403,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <div className="text-3xl font-bold text-yellow-600">
-                {data.score}
+                {data.score as number}
               </div>
               <div className="text-sm text-gray-500">
                 / 5.0
@@ -417,7 +417,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
                 <span
                   key={i}
                   className={`text-lg ${
-                    i < data.rating ? 'text-yellow-400' : 'text-gray-300'
+                    i < (data.rating as number) ? 'text-yellow-400' : 'text-gray-300'
                   }`}
                 >
                   ★
@@ -455,10 +455,10 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           <div className="space-y-2">
             <div className="text-sm font-medium text-gray-600">Top Product</div>
             <div className="text-lg font-bold text-gray-900">
-              {data.topProduct}
+              {data.topProduct as string}
             </div>
             <div className="text-xs text-gray-500">
-              {data.region} Region
+              {data.region as string} Region
             </div>
           </div>
         )

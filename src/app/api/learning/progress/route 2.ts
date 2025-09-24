@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     let query = supabase
       .from('user_learning_progress')
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Upsert learning progress
     const { data: progressData, error } = await supabase

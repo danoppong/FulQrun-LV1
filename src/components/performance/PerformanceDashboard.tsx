@@ -66,15 +66,15 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-blue-800">Total Metrics</h3>
-                  <p className="text-2xl font-bold text-blue-900">{report.summary.totalMetrics}</p>
+                  <p className="text-2xl font-bold text-blue-900">{(report.summary as any).totalMetrics}</p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-green-800">Last 5 Minutes</h3>
-                  <p className="text-2xl font-bold text-green-900">{report.summary.last5Minutes}</p>
+                  <p className="text-2xl font-bold text-green-900">{(report.summary as any).last5Minutes}</p>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-purple-800">Last Hour</h3>
-                  <p className="text-2xl font-bold text-purple-900">{report.summary.lastHour}</p>
+                  <p className="text-2xl font-bold text-purple-900">{(report.summary as any).lastHour}</p>
                 </div>
               </div>
 
@@ -82,16 +82,16 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Web Vitals</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {Object.entries(report.webVitals).map(([name, data]: [string, { value: number; score: string }]) => (
+                  {Object.entries(report.webVitals as any).map(([name, data]) => (
                     <div key={name} className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="text-sm font-medium text-gray-700">{name}</h4>
                       <div className="mt-2 space-y-1">
                         <p className="text-lg font-bold text-gray-900">
-                          {data.average ? `${data.average.toFixed(2)}ms` : 'N/A'}
+                          {(data as any).average ? `${(data as any).average.toFixed(2)}ms` : 'N/A'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Min: {data.min ? `${data.min.toFixed(2)}ms` : 'N/A'} | 
-                          Max: {data.max ? `${data.max.toFixed(2)}ms` : 'N/A'}
+                          Min: {(data as any).min ? `${(data as any).min.toFixed(2)}ms` : 'N/A'} | 
+                          Max: {(data as any).max ? `${(data as any).max.toFixed(2)}ms` : 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -121,28 +121,28 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {report.componentPerformance.map((comp: { name: string; renderTime: number; memoryUsage: number }, index: number) => (
+                      {(report.componentPerformance as any).map((comp: { name: string; renderTime: number; memoryUsage: number }, index: number) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {comp.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {comp.averageRenderTime.toFixed(2)}ms
+                            {(comp as any).averageRenderTime.toFixed(2)}ms
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {comp.updateCount}
+                            {(comp as any).updateCount}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              comp.averageRenderTime > 16 
+                              (comp as any).averageRenderTime > 16 
                                 ? 'bg-red-100 text-red-800' 
-                                : comp.isFrequentlyUpdating
+                                : (comp as any).isFrequentlyUpdating
                                 ? 'bg-yellow-100 text-yellow-800'
                                 : 'bg-green-100 text-green-800'
                             }`}>
-                              {comp.averageRenderTime > 16 
+                              {(comp as any).averageRenderTime > 16 
                                 ? 'Slow' 
-                                : comp.isFrequentlyUpdating
+                                : (comp as any).isFrequentlyUpdating
                                 ? 'Frequent Updates'
                                 : 'Good'
                               }
@@ -177,7 +177,7 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {report.apiPerformance.map((api: { endpoint: string; avgResponseTime: number; slowestCall: number }, index: number) => (
+                      {(report.apiPerformance as any).map((api: { endpoint: string; avgResponseTime: number; slowestCall: number }, index: number) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {api.endpoint}

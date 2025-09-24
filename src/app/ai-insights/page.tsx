@@ -27,7 +27,7 @@ function AIInsightsContent() {
           router.push('/auth/login')
           return
         }
-        setUser(user)
+        setUser({ id: user.id as string, email: user.email as string | undefined })
       } catch (_error) {
         router.push('/auth/login')
       } finally {

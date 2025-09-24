@@ -32,7 +32,7 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
   const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<number> => {
     try {
       // Use the optimized scoring service with opportunity data
-      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity)
+      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity as any)
       return scoreResult.score
     } catch (error) {
       console.error('Error getting MEDDPICC score:', error)

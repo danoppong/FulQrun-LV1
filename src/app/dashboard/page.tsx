@@ -47,7 +47,7 @@ const DashboardContent = () => {
         }
         
         setUser(user)
-        setUserName(user.email || 'User')
+        setUserName((user as any).email || 'User')
         
         // Load user role from database or user metadata
         const { data: userProfile } = await (supabase as any)

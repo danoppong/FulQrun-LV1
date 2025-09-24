@@ -21,7 +21,7 @@ export function CriticalErrorBoundary({ children, context }: CriticalErrorBounda
         if (typeof window !== 'undefined') {
           // Send to error reporting service immediately
           if ((window as Window & { gtag?: (command: string, action: string, parameters: Record<string, unknown>) => void }).gtag) {
-            (window as Window & { gtag: (command: string, action: string, parameters: Record<string, unknown>) => void }).gtag('event', 'exception', {
+            ((window as any).gtag)('event', 'exception', {
               description: error.message,
               fatal: true,
               custom_map: {

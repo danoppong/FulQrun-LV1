@@ -16,7 +16,7 @@ export async function GET(_request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServerClient() as any
 
     // Get revenue data
     const { data: revenueData } = await supabase

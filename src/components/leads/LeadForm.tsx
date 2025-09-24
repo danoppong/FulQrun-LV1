@@ -73,12 +73,6 @@ export default function LeadForm({ lead, leadId, mode }: LeadFormProps) {
 
   const watchedValues = watch()
 
-  useEffect(() => {
-    if (mode === 'edit' && leadId && !lead) {
-      loadLead()
-    }
-  }, [mode, leadId, lead, loadLead])
-
   const loadLead = async () => {
     if (!leadId) return
     
@@ -106,6 +100,12 @@ export default function LeadForm({ lead, leadId, mode }: LeadFormProps) {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (mode === 'edit' && leadId && !lead) {
+      loadLead()
+    }
+  }, [mode, leadId, lead, loadLead])
 
   const onSubmit = async (data: LeadFormData) => {
     setLoading(true)

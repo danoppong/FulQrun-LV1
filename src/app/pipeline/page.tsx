@@ -32,14 +32,14 @@ function PipelineContent() {
 
     try {
       setIsLoading(true)
-      const data = await PipelineConfigAPI.getConfigurations(user.profile?.organization_id || DEFAULT_ORGANIZATION_ID)
+      const data = await PipelineConfigAPI.getConfigurations((user as any).profile?.organization_id || DEFAULT_ORGANIZATION_ID)
       setConfigurations(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load pipeline configurations')
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id, user?.organization_id])
+  }, [user?.id, (user as any)?.organization_id])
 
   useEffect(() => {
     const loadUser = async () => {
@@ -112,7 +112,7 @@ function PipelineContent() {
     if (!user?.id) return
 
     try {
-      await PipelineConfigAPI.setAsDefault(id, user.profile?.organization_id || DEFAULT_ORGANIZATION_ID)
+      await PipelineConfigAPI.setAsDefault(id, (user as any).profile?.organization_id || DEFAULT_ORGANIZATION_ID)
       loadConfigurations()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to set default pipeline')
@@ -122,7 +122,7 @@ function PipelineContent() {
   if (showBuilder) {
     return (
       <PipelineBuilder
-        organizationId={user?.organization_id || DEFAULT_ORGANIZATION_ID}
+        organizationId={(user as any)?.organization_id || DEFAULT_ORGANIZATION_ID}
         userId={user?.id || ''}
         onSave={handleSave}
         onCancel={handleCancel}

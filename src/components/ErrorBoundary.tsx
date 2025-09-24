@@ -51,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     // Send to error reporting service (if configured)
     if (typeof window !== 'undefined' && (window as Window & { gtag?: (command: string, action: string, parameters: Record<string, unknown>) => void }).gtag) {
-      (window as Window & { gtag: (command: string, action: string, parameters: Record<string, unknown>) => void }).gtag('event', 'exception', {
+      ((window as any).gtag)('event', 'exception', {
         description: error.message,
         fatal: level === 'critical',
         custom_map: {
