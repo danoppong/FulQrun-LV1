@@ -46,14 +46,12 @@ export default function MEDDPICCQualification({
     register,
     handleSubmit,
     watch,
-    setValue,
-    formState: { errors }
+    formState: {}
   } = useForm<PillarFormData>({
     resolver: zodResolver(z.object({})), // Dynamic validation
     defaultValues: {}
   })
 
-  const watchedValues = watch()
 
   // Load existing opportunity data and current score
   useEffect(() => {
@@ -120,10 +118,10 @@ export default function MEDDPICCQualification({
       }, 100)
       return () => clearTimeout(timer)
     }
-  }, [opportunityId])
+  }, [opportunityId, convertLegacyToComprehensive])
 
   // Convert legacy MEDDPICC data to comprehensive format
-  const convertLegacyToComprehensive = (legacyData: any): MEDDPICCResponse[] => {
+  const convertLegacyToComprehensive = useCallback((legacyData: Record<string, string>): MEDDPICCResponse[] => {
     const responses: MEDDPICCResponse[] = []
     
     // Map simple field names to pillar IDs
@@ -151,7 +149,7 @@ export default function MEDDPICCQualification({
     })
     
     return responses
-  }
+  }, [])
 
   // Helper function to parse combined pillar text back into individual responses
   const parsePillarText = (text: string, pillarId: string): MEDDPICCResponse[] => {
@@ -285,7 +283,7 @@ export default function MEDDPICCQualification({
     setResponses(newResponses)
   }
 
-  const onSubmit = async (data: PillarFormData) => {
+  const onSubmit = async () => {
     setIsSubmitting(true)
     try {
       if (currentAssessment) {
@@ -391,7 +389,7 @@ export default function MEDDPICCQualification({
     return Math.round((answeredQuestions / totalQuestions) * 100)
   }, [responses])
 
-  const renderQuestion = (pillarId: string, question: any) => {
+  const renderQuestion = (pillarId: string, question: MEDDPICCQuestion) => {
     const currentResponse = responses.find(r => r.pillarId === pillarId && r.questionId === question.id)
     const currentAnswer = currentResponse?.answer || ''
 
@@ -412,7 +410,7 @@ export default function MEDDPICCQualification({
       case 'yes_no':
         return (
           <div className="mt-1 space-y-2">
-            {question.answers?.map((answer: any, index: number) => (
+            {question.answers?.map((answer: { text: string; points: number }, index: number) => (
               <label key={index} className="flex items-center">
                 <input
                   type="radio"

@@ -3,9 +3,21 @@ import { AuthClientService } from '@/lib/auth-client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import HierarchicalPerformanceDashboard from '@/components/dashboard/HierarchicalPerformanceDashboard'
-import SalesmanDashboard from '@/components/dashboard/SalesmanDashboard'
-import PipelineChart from '@/components/dashboard/PipelineChart'
+import dynamic from 'next/dynamic'
+
+// Dynamic imports for dashboard components
+const HierarchicalPerformanceDashboard = dynamic(() => import('@/components/dashboard/HierarchicalPerformanceDashboard'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>,
+  ssr: false
+})
+const SalesmanDashboard = dynamic(() => import('@/components/dashboard/SalesmanDashboard'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>,
+  ssr: false
+})
+const PipelineChart = dynamic(() => import('@/components/dashboard/PipelineChart'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>,
+  ssr: false
+})
 import { UserRole } from '@/lib/roles'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import AuthWrapper from '@/components/auth/AuthWrapper'

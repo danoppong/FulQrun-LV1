@@ -1,5 +1,6 @@
 import { createBrowserClient, createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { supabaseConfig } from '@/lib/config'
+import type { SupabaseClientType } from '@/lib/types/supabase'
 
 // Singleton client instance to prevent multiple GoTrueClient instances
 let supabaseInstance: ReturnType<typeof createBrowserClient> | null = null
@@ -80,7 +81,7 @@ function createMockClient() {
 }
 
 // Server-side client for API routes
-export const createServerClient = () => {
+export const createServerClient = (): SupabaseClientType => {
   // Only create client if Supabase is configured
   if (supabaseConfig.isConfigured) {
     try {

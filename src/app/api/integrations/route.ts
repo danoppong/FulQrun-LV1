@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       searchParams
     )
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get all active integrations for the organization
     const { data: integrations, error } = await supabase

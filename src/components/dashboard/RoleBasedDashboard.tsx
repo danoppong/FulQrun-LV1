@@ -1,8 +1,8 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { UserRole, getUserPermissions, canUserAccessLevel } from '@/lib/roles'
+import { UserRole, getUserPermissions } from '@/lib/roles'
 import { DashboardWidget, WidgetType, DEFAULT_WIDGETS, WIDGET_TEMPLATES } from '@/lib/dashboard-widgets'
-import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData } from '@/lib/types/dashboard'
+import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData, TeamMemberData, PipelineStageData, ActivityData, MEDDPICCOpportunityData } from '@/lib/types/dashboard'
 import { createClientComponentClient } from '@/lib/auth'
 import RoleSelector from '@/components/RoleSelector'
 
@@ -15,7 +15,6 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
   const [userRole, setUserRole] = useState<UserRole>(initialUserRole)
   const [widgets, setWidgets] = useState<DashboardWidget[]>(DEFAULT_WIDGETS)
   const [isEditMode, setIsEditMode] = useState(false)
-  const [draggedWidget, setDraggedWidget] = useState<string | null>(null)
   const supabase = createClientComponentClient()
 
   const permissions = getUserPermissions(userRole)
@@ -63,21 +62,6 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
     }
   }
 
-  const handleWidgetMove = (widgetId: string, newPosition: { x: number; y: number }) => {
-    const newWidgets = widgets.map(widget =>
-      widget.id === widgetId ? { ...widget, position: { ...widget.position, ...newPosition } } : widget
-    )
-    setWidgets(newWidgets)
-    saveDashboardLayout(newWidgets)
-  }
-
-  const handleWidgetResize = (widgetId: string, newSize: { w: number; h: number }) => {
-    const newWidgets = widgets.map(widget =>
-      widget.id === widgetId ? { ...widget, position: { ...widget.position, ...newSize } } : widget
-    )
-    setWidgets(newWidgets)
-    saveDashboardLayout(newWidgets)
-  }
 
   const addWidget = (widgetType: WidgetType) => {
     const template = WIDGET_TEMPLATES[widgetType]
@@ -149,10 +133,10 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
           <div className="flex justify-between items-center py-8">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                {userRole.replace('_', ' ').toUpperCase()} Dashboard
+                {userRole.replace(&apos;_&apos;, &apos; &apos;).toUpperCase()} Dashboard
               </h1>
               <p className="text-gray-600 mt-2">
-                {permissions.canViewTeamData ? 'Team & Regional View' : 'Personal View'}
+                {permissions.canViewTeamData ? &apos;Team & Regional View&apos; : &apos;Personal View&apos;}
               </p>
             </div>
             <div className="flex space-x-4">
@@ -169,7 +153,7 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
                       : 'bg-white/80 text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm'
                   }`}
                 >
-                  {isEditMode ? 'Save Layout' : 'Customize'}
+                  {isEditMode ? &apos;Save Layout&apos; : &apos;Customize&apos;}
                 </button>
               )}
               <button
@@ -267,7 +251,7 @@ const KPICardWidget = ({ widget }: { widget: DashboardWidget }) => {
   )
 }
 
-const SalesChartWidget = ({ widget }: { widget: DashboardWidget }) => (
+const SalesChartWidget = () => (
   <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
     <div className="text-center">
       <div className="text-4xl mb-2">📈</div>
@@ -281,7 +265,7 @@ const TeamPerformanceWidget = ({ widget }: { widget: DashboardWidget }) => {
   const teamData = widget.data as TeamPerformanceData | undefined
   return (
     <div className="space-y-3">
-      {teamData?.teamMembers?.map((member: any, index: number) => (
+      {teamData?.teamMembers?.map((member: TeamMemberData, index: number) => (
       <div key={index} className="flex items-center justify-between">
         <div>
           <div className="font-medium text-gray-900">{member.name}</div>
@@ -306,7 +290,7 @@ const PipelineOverviewWidget = ({ widget }: { widget: DashboardWidget }) => {
   const pipelineData = widget.data as PipelineOverviewData | undefined
   return (
     <div className="space-y-3">
-      {pipelineData?.stages?.map((stage: any, index: number) => {
+      {pipelineData?.stages?.map((stage: PipelineStageData, index: number) => {
       const count = typeof stage.count === 'number' ? stage.count : 0
       const value = typeof stage.value === 'number' ? stage.value : 0
       
@@ -328,7 +312,7 @@ const RecentActivityWidget = ({ widget }: { widget: DashboardWidget }) => {
   const activityData = widget.data as RecentActivityData | undefined
   return (
     <div className="space-y-2">
-      {activityData?.activities?.map((activity: any, index: number) => (
+      {activityData?.activities?.map((activity: ActivityData, index: number) => (
       <div key={index} className="flex items-start space-x-3">
         <div className="w-2 h-2 bg-indigo-600 rounded-full mt-2"></div>
         <div className="flex-1">
@@ -345,7 +329,7 @@ const MEDDPICCScoringWidget = ({ widget }: { widget: DashboardWidget }) => {
   const meddpiccData = widget.data as MEDDPICCScoringData | undefined
   return (
     <div className="space-y-3">
-      {meddpiccData?.opportunities?.map((opp: any, index: number) => (
+      {meddpiccData?.opportunities?.map((opp: MEDDPICCOpportunityData, index: number) => (
       <div key={index} className="flex items-center justify-between">
         <div className="font-medium text-gray-900">{opp.name}</div>
         <div className="text-right">

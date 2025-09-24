@@ -13,10 +13,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get SharePoint connection for the organization
-    const { data: connection, error: _error } = await supabase
+    const { data: connection, error } = await supabase
       .from('integration_connections')
       .select('*')
       .eq('organization_id', organizationId)
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       .eq('status', 'active')
       .single()
 
-    if (_error || !connection) {
+    if (error || !connection) {
       return NextResponse.json(
         { error: 'SharePoint not connected' },
         { status: 404 }
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Check if connection already exists
     const { data: existingConnection } = await supabase
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     if (existingConnection) {
       // Update existing connection
-      const { error: _error } = await supabase
+      const { error } = await supabase
         .from('integration_connections')
         .update({
           credentials: JSON.stringify(credentials),
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       })
     } else {
       // Create new connection
-      const { data: newConnection, error: _error2 } = await supabase
+      const { data: newConnection, error: insertError } = await supabase
         .from('integration_connections')
         .insert({
           organization_id: organizationId,
@@ -114,8 +114,8 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
 
-      if (_error2) {
-        throw _error2
+      if (insertError) {
+        throw insertError
       }
 
       return NextResponse.json({
@@ -143,7 +143,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Deactivate SharePoint connection
     const { error } = await supabase

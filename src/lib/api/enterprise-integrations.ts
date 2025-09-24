@@ -250,7 +250,25 @@ export async function getAvailableProviders(): Promise<string[]> {
 }
 
 // Get integration templates
-export async function getIntegrationTemplates(): Promise<any[]> {
+export interface IntegrationTemplateField {
+  name: string
+  label: string
+  type: 'text' | 'password' | 'url' | 'email' | 'number'
+  required: boolean
+}
+
+export interface IntegrationTemplate {
+  id: string
+  name: string
+  type: string
+  provider: string
+  description: string
+  configTemplate: Record<string, unknown>
+  fields: IntegrationTemplateField[]
+  supportedEntities: string[]
+}
+
+export async function getIntegrationTemplates(): Promise<IntegrationTemplate[]> {
   try {
     // Mock templates
     return [
@@ -296,7 +314,15 @@ export async function getIntegrationTemplates(): Promise<any[]> {
 }
 
 // Get integration statistics
-export async function getIntegrationStatistics(organizationId: string): Promise<any> {
+export interface IntegrationStatistics {
+  totalIntegrations: number
+  activeIntegrations: number
+  failedIntegrations: number
+  lastSyncTime?: Date
+  syncFrequency: number
+}
+
+export async function getIntegrationStatistics(organizationId: string): Promise<IntegrationStatistics> {
   try {
     const { data: integrations, error } = await supabase
       .from('enterprise_integrations')
@@ -420,7 +446,7 @@ export class EnterpriseIntegrationAPI {
     return getAvailableProviders();
   }
 
-  static async getTemplates(): Promise<any[]> {
+  static async getTemplates(): Promise<IntegrationTemplate[]> {
     return getIntegrationTemplates();
   }
 }

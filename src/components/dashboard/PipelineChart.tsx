@@ -1,7 +1,5 @@
 'use client'
-import React from 'react'
-
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { opportunityAPI } from '@/lib/api/opportunities'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
@@ -383,12 +381,12 @@ export default function PipelineChart() {
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Pie
-                data={data as any}
+                data={data}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ stage, count, percent }: any) => 
-                  (count as number) > 0 ? `${stage}: ${count} (${((percent as number) * 100).toFixed(0)}%)` : ''
+                label={({ stage, count, percent }: { stage: string; count: number; percent: number }) => 
+                  count > 0 ? `${stage}: ${count} (${(percent * 100).toFixed(0)}%)` : ''
                 }
                 outerRadius={100}
                 fill="#8884d8"

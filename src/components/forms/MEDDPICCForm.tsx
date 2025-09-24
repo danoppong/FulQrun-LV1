@@ -198,7 +198,7 @@ export default function MEDDPICCForm({
   }
 
   // Convert simple MEDDPICC data to comprehensive format
-  const convertToComprehensiveFormat = (simpleData: any): MEDDPICCResponse[] => {
+  const convertToComprehensiveFormat = (simpleData: Record<string, string>): MEDDPICCResponse[] => {
     const responses: MEDDPICCResponse[] = []
     
     // Map simple field names to pillar IDs

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { opportunityAPI, OpportunityWithDetails, OpportunityFormData, MEDDPICCData } from '@/lib/api/opportunities'
+import { opportunityAPI, OpportunityWithDetails, MEDDPICCData } from '@/lib/api/opportunities'
 
 type PEAKData = {
   peak_stage: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
@@ -72,7 +72,7 @@ export default function OpportunityFormEnhanced({
   })
   
   const [showComprehensiveMEDDPICC, setShowComprehensiveMEDDPICC] = useState(false)
-  const [meddpiccAssessment, setMeddpiccAssessment] = useState<MEDDPICCAssessment | undefined>(undefined)
+  const [meddpiccAssessment] = useState<MEDDPICCAssessment | undefined>(undefined)
 
   const {
     register,
@@ -81,7 +81,6 @@ export default function OpportunityFormEnhanced({
     watch,
     setValue,
     reset,
-    trigger
   } = useForm<LocalOpportunityFormData>({
     resolver: zodResolver(opportunitySchema),
     defaultValues: opportunity ? {
@@ -103,7 +102,7 @@ export default function OpportunityFormEnhanced({
 
   // Track form changes
   useEffect(() => {
-    const subscription = watch((value, { name, type }) => {
+    const subscription = watch((value, { type }) => {
       if (type === 'change') {
         setIsDirty(true)
       }
@@ -118,7 +117,7 @@ export default function OpportunityFormEnhanced({
     if (mode === 'edit' && opportunityId && !opportunity) {
       loadOpportunity()
     }
-  }, [mode, opportunityId, opportunity])
+  }, [mode, opportunityId, opportunity, loadOpportunity])
 
   // Auto-save functionality (every 30 seconds if dirty)
   useEffect(() => {
@@ -129,9 +128,9 @@ export default function OpportunityFormEnhanced({
 
       return () => clearTimeout(autoSaveTimer)
     }
-  }, [isDirty, mode, opportunityId])
+  }, [isDirty, mode, opportunityId, handleAutoSave])
 
-  const loadOpportunity = async () => {
+  const loadOpportunity = useCallback(async () => {
     if (!opportunityId) return
     
     try {
@@ -181,7 +180,7 @@ export default function OpportunityFormEnhanced({
     } finally {
       setLoading(false)
     }
-  }
+  }, [opportunityId])
 
   const loadContacts = async () => {
     try {
@@ -209,7 +208,7 @@ export default function OpportunityFormEnhanced({
     }
   }
 
-  const handleAutoSave = async () => {
+  const handleAutoSave = useCallback(async () => {
     if (!opportunityId || !isDirty) return
 
     try {
@@ -230,7 +229,7 @@ export default function OpportunityFormEnhanced({
     } catch (err) {
       console.error('Auto-save failed:', err)
     }
-  }
+  }, [opportunityId, isDirty, watchedValues, peakData, meddpiccData])
 
   const handlePeakSave = useCallback(async (data: PEAKData) => {
     setPeakData(data)
@@ -300,10 +299,6 @@ export default function OpportunityFormEnhanced({
     }
   }
 
-  const handleFieldChange = (field: string, value: any) => {
-    setValue(field as any, value)
-    setIsDirty(true)
-  }
 
   if (loading && mode === 'edit' && !opportunity) {
     return (

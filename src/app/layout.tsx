@@ -9,6 +9,9 @@ import ThemeProvider from '@/components/ThemeProvider';
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+  fallback: ["system-ui", "arial"],
+  preload: true,
 });
 
 export const metadata: Metadata = {

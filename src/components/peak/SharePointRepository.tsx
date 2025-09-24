@@ -14,7 +14,6 @@ interface SharePointSite {
   name: string
   url: string
 }
-import { IntegrationConnectionData } from '@/lib/api/integrations'
 
 interface SharePointRepositoryProps {
   opportunityId: string
@@ -54,7 +53,18 @@ export function SharePointRepository({
         throw new Error('SharePoint not connected')
       }
 
-      const connection: any = await response.json()
+      const connection: {
+        id: string
+        integration_type: string
+        status: string
+        credentials: {
+          access_token: string
+          refresh_token: string
+          expires_at: string
+        }
+        created_at: string
+        updated_at: string
+      } = await response.json()
       const accessToken = connection.credentials?.access_token
       
       if (!accessToken) {
