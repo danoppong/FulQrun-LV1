@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
@@ -35,7 +35,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
     }
   }
 
-  const fetchOpportunity = async () => {
+  const fetchOpportunity = useCallback(async () => {
     try {
       setLoading(true)
       const { data, error } = await opportunityAPI.getOpportunity(opportunityId)
@@ -55,11 +55,11 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
     } finally {
       setLoading(false)
     }
-  }
+  }, [opportunityId])
 
   useEffect(() => {
     fetchOpportunity()
-  }, [opportunityId, fetchOpportunity])
+  }, [fetchOpportunity])
 
   // Refresh data when returning from edit mode
   useEffect(() => {
@@ -100,7 +100,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
       window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
       window.removeEventListener('peakUpdated', handlePeakUpdate as EventListener)
     }
-  }, [opportunityId, fetchOpportunity])
+  }, [fetchOpportunity])
 
   if (loading) {
     return (
