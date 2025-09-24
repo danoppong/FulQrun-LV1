@@ -567,15 +567,18 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Widget Grid */}
-          <div className="grid grid-cols-12 gap-4 auto-rows-min">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 auto-rows-min">
             {widgets.map((widget) => (
               <div
                 key={widget.id}
                 className={`${
-                  widget.position.w === 3 ? 'col-span-3' :
-                  widget.position.w === 6 ? 'col-span-6' :
-                  widget.position.w === 9 ? 'col-span-9' :
-                  widget.position.w === 12 ? 'col-span-12' : 'col-span-3'
+                  // Mobile: full width
+                  'col-span-1 sm:col-span-2 lg:' + (
+                    widget.position.w === 3 ? 'col-span-3' :
+                    widget.position.w === 6 ? 'col-span-6' :
+                    widget.position.w === 9 ? 'col-span-9' :
+                    widget.position.w === 12 ? 'col-span-12' : 'col-span-3'
+                  )
                 } ${
                   widget.position.h === 2 ? 'row-span-2' :
                   widget.position.h === 3 ? 'row-span-3' :

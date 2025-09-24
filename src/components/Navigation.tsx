@@ -90,13 +90,14 @@ export default function Navigation() {
             </div>
             <button
               type="button"
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              className="p-3 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors touch-manipulation"
               onClick={() => setSidebarOpen(false)}
+              aria-label="Close navigation menu"
             >
               <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
-          <nav className="flex-1 space-y-2 px-4 py-6">
+          <nav className="flex-1 space-y-2 px-4 py-6 overflow-y-auto">
             {/* Core Navigation */}
             {navigation.map((item) => {
               const isActive = pathname === item.href
@@ -359,8 +360,9 @@ export default function Navigation() {
         <div className="flex h-16 items-center justify-between px-4 bg-card/80 backdrop-blur-xl border-b border-border/50">
           <button
             type="button"
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="p-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation menu"
           >
             <Bars3Icon className="h-6 w-6" />
           </button>

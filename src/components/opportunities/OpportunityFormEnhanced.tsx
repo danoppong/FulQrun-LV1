@@ -318,7 +318,7 @@ export default function OpportunityFormEnhanced({
 
   return (
     <div className="w-full">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header with save status */}
         <div className="mb-6 flex items-center justify-between">
           <div>
