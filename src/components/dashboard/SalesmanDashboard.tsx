@@ -85,38 +85,6 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
     }
   }, [userId, supabase])
 
-  useEffect(() => {
-    loadDashboardLayout()
-  }, [userId]) // Only depend on userId, not the function itself
-
-  // Auto-save when widgets change (but not on initial load)
-  useEffect(() => {
-    if (widgets.length > 0 && isEditMode) {
-      const timeoutId = setTimeout(() => {
-        saveDashboardLayout()
-      }, 2000) // Auto-save after 2 seconds of inactivity
-
-      return () => clearTimeout(timeoutId)
-    }
-  }, [widgets, isEditMode]) // Remove saveDashboardLayout from dependencies
-
-  // Auto-sync from localStorage to database when database becomes available
-  useEffect(() => {
-    if (storageMethod === 'localStorage' && !isSyncing) {
-      const syncInterval = setInterval(async () => {
-        await attemptSyncToDatabase()
-      }, 30000) // Try to sync every 30 seconds
-
-      // Also try to sync immediately if it's been a while since last attempt
-      const timeSinceLastAttempt = lastSyncAttempt ? Date.now() - lastSyncAttempt.getTime() : Infinity
-      if (timeSinceLastAttempt > 60000) { // If more than 1 minute since last attempt
-        attemptSyncToDatabase()
-      }
-
-      return () => clearInterval(syncInterval)
-    }
-  }, [storageMethod, isSyncing, attemptSyncToDatabase, lastSyncAttempt])
-
   const saveDashboardLayout = useCallback(async () => {
     try {
       // Try to save to database first
@@ -192,6 +160,38 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
       setIsSyncing(false)
     }
   }, [isSyncing, userId, supabase])
+
+  useEffect(() => {
+    loadDashboardLayout()
+  }, [userId]) // Only depend on userId, not the function itself
+
+  // Auto-save when widgets change (but not on initial load)
+  useEffect(() => {
+    if (widgets.length > 0 && isEditMode) {
+      const timeoutId = setTimeout(() => {
+        saveDashboardLayout()
+      }, 2000) // Auto-save after 2 seconds of inactivity
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [widgets, isEditMode, saveDashboardLayout]) // Add saveDashboardLayout to dependencies
+
+  // Auto-sync from localStorage to database when database becomes available
+  useEffect(() => {
+    if (storageMethod === 'localStorage' && !isSyncing) {
+      const syncInterval = setInterval(async () => {
+        await attemptSyncToDatabase()
+      }, 30000) // Try to sync every 30 seconds
+
+      // Also try to sync immediately if it's been a while since last attempt
+      const timeSinceLastAttempt = lastSyncAttempt ? Date.now() - lastSyncAttempt.getTime() : Infinity
+      if (timeSinceLastAttempt > 60000) { // If more than 1 minute since last attempt
+        attemptSyncToDatabase()
+      }
+
+      return () => clearInterval(syncInterval)
+    }
+  }, [storageMethod, isSyncing, attemptSyncToDatabase, lastSyncAttempt])
 
   const handleDragStart = (e: React.DragEvent, widgetId: string) => {
     setDraggedWidget(widgetId)
