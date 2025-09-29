@@ -87,7 +87,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
 
   useEffect(() => {
     loadDashboardLayout()
-  }, [loadDashboardLayout])
+  }, [userId]) // Only depend on userId, not the function itself
 
   // Auto-save when widgets change (but not on initial load)
   useEffect(() => {
@@ -98,7 +98,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
 
       return () => clearTimeout(timeoutId)
     }
-  }, [widgets, isEditMode, saveDashboardLayout])
+  }, [widgets, isEditMode]) // Remove saveDashboardLayout from dependencies
 
   // Auto-sync from localStorage to database when database becomes available
   useEffect(() => {
