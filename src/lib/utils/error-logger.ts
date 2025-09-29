@@ -2,11 +2,19 @@
 // Enterprise-grade error logging, reporting, and monitoring
 
 import { createClient } from '@supabase/supabase-js';
+import { supabaseConfig } from '@/lib/config';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Create Supabase client only if configured, otherwise use mock
+const supabase = supabaseConfig.isConfigured 
+  ? createClient(supabaseConfig.url!, supabaseConfig.anonKey!)
+  : {
+      from: () => ({
+        insert: () => ({ error: null }),
+        select: () => ({ error: null }),
+        update: () => ({ error: null }),
+        delete: () => ({ error: null })
+      })
+    } as any;
 
 // Error types and interfaces
 export interface ErrorLogEntry {

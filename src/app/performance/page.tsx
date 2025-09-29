@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { CSTPVDashboard } from '@/components/performance/CSTPVDashboard'
 import { createClientComponentClient } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
-import AuthWrapper from '@/components/auth/AuthWrapper'
+import { AuthWrapper } from '@/components/auth/AuthWrapper'
 import { DEFAULT_ORGANIZATION_ID } from '@/lib/config'
 
 export default function PerformancePage() {

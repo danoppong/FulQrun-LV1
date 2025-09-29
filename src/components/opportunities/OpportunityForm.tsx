@@ -257,7 +257,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
         setContacts(data || [])
       }
     } catch (_err) {
-      console.warn('Error loading contacts:', err)
+      console.warn('Error loading contacts:', _err)
     }
   }
 
@@ -270,7 +270,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
         setCompanies(data || [])
       }
     } catch (_err) {
-      console.warn('Error loading companies:', err)
+      console.warn('Error loading companies:', _err)
     }
   }
 
@@ -382,6 +382,9 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   }
 
   const onSubmit = async (data: LocalOpportunityFormData) => {
+    console.log('Form submission started with data:', data)
+    console.log('Form errors:', errors)
+    console.log('Form is valid:', Object.keys(errors).length === 0)
     const result = await handleAsyncOperation(
       async () => {
         // Calculate MEDDPICC score from current data
@@ -679,6 +682,13 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
               <button
                 type="submit"
                 disabled={loading}
+                data-testid="submit-opportunity-button"
+                onClick={() => {
+                  console.log('Submit button clicked')
+                  console.log('Button disabled:', loading)
+                  console.log('Form errors:', errors)
+                  console.log('Form is valid:', Object.keys(errors).length === 0)
+                }}
                 className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
               >
                 {loading ? 'Saving...' : mode === 'create' ? 'Create Opportunity' : 'Update Opportunity'}

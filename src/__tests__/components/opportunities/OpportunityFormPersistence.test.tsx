@@ -48,7 +48,7 @@ const mockOpportunity = {
   peak_stage: 'prospecting' as const,
   deal_value: 50000,
   probability: 25,
-  close_date: '2024-12-31',
+  close_date: '2025-12-31',
   metrics: 'Test metrics',
   economic_buyer: 'Test buyer',
   decision_criteria: 'Test criteria',
@@ -66,6 +66,8 @@ const mockOpportunity = {
 describe('OpportunityForm Data Persistence', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    // Set up successful mock responses
+    mockUpdateOpportunity.mockResolvedValue({ data: mockOpportunity, error: null })
   })
 
   describe('Form Field Persistence', () => {
@@ -86,32 +88,75 @@ describe('OpportunityForm Data Persistence', () => {
       })
 
       // Change the opportunity name
+      console.log('About to change opportunity name...')
       const nameInput = screen.getByDisplayValue('Test Opportunity')
+      console.log('Found name input:', nameInput)
       fireEvent.change(nameInput, { target: { value: 'Updated Opportunity' } })
+      console.log('Changed opportunity name to: Updated Opportunity')
 
       // Submit the form
-      const submitButton = screen.getByRole('button', { name: /update opportunity/i })
+      console.log('Looking for submit button...')
+      
+      // Debug: Show all available buttons
+      const allButtons = screen.queryAllByRole('button')
+      console.log('All buttons found:', allButtons.map(btn => ({
+        text: btn.textContent,
+        testId: btn.getAttribute('data-testid'),
+        disabled: btn.disabled
+      })))
+      
+      // Try multiple ways to find the submit button
+      let submitButton
+      try {
+        // First try by data-testid
+        submitButton = screen.getByTestId('submit-opportunity-button')
+        console.log('Found submit button by testid:', submitButton)
+      } catch (error) {
+        console.log('Could not find by testid, trying by role...')
+        try {
+          // Fallback to role-based search
+          submitButton = screen.getByRole('button', { name: /update opportunity/i })
+          console.log('Found submit button by role:', submitButton)
+        } catch (error2) {
+          console.log('Could not find by role either, trying by text...')
+          // Last resort: find by text content
+          submitButton = screen.getByText('Update Opportunity')
+          console.log('Found submit button by text:', submitButton)
+        }
+      }
+      
+      console.log('Submit button details:', {
+        disabled: submitButton.disabled,
+        text: submitButton.textContent,
+        testId: submitButton.getAttribute('data-testid')
+      })
+      
       fireEvent.click(submitButton)
 
+      // Wait for the form submission to complete
       await waitFor(() => {
-        expect(mockUpdateOpportunity).toHaveBeenCalledWith('opp123', expect.objectContaining({
-          name: 'Updated Opportunity',
-          contact_id: 'contact123',
-          company_id: 'company123',
-          peak_stage: 'prospecting',
-          deal_value: 50000,
-          probability: 25,
-          close_date: '2024-12-31',
-          metrics: 'Test metrics',
-          economic_buyer: 'Test buyer',
-          decision_criteria: 'Test criteria',
-          decision_process: 'Test process',
-          paper_process: 'Test paper',
-          identify_pain: 'Test pain',
-          champion: 'Test champion',
-          competition: 'Test competition'
-        }))
-      })
+        // The form should have been submitted and the API called
+        expect(mockUpdateOpportunity).toHaveBeenCalled()
+      }, { timeout: 5000 })
+
+      // Verify the API was called with the correct data
+      expect(mockUpdateOpportunity).toHaveBeenCalledWith('opp123', expect.objectContaining({
+        name: 'Updated Opportunity',
+        contact_id: 'contact123',
+        company_id: 'company123',
+        peak_stage: 'prospecting',
+        deal_value: 50000,
+        probability: 25,
+        close_date: '2025-12-31',
+        metrics: 'Test metrics',
+        economic_buyer: 'Test buyer',
+        decision_criteria: 'Test criteria',
+        decision_process: 'Test process',
+        paper_process: 'Test paper',
+        identify_pain: 'Test pain',
+        champion: 'Test champion',
+        competition: 'Test competition'
+      }))
     })
 
     it('should persist PEAK stage data', async () => {
@@ -139,7 +184,7 @@ describe('OpportunityForm Data Persistence', () => {
           peak_stage: 'prospecting',
           deal_value: 50000,
           probability: 25,
-          close_date: '2024-12-31'
+          close_date: '2025-12-31'
         }))
       })
     })

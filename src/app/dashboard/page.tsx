@@ -20,7 +20,7 @@ const PipelineChart = dynamic(() => import('@/components/dashboard/PipelineChart
 })
 import { UserRole } from '@/lib/roles'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import AuthWrapper from '@/components/auth/AuthWrapper'
+import { AuthWrapper } from '@/components/auth/AuthWrapper'
 
 const DashboardPage = () => {
   return (
