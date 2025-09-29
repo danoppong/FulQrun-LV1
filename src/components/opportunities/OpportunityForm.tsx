@@ -190,14 +190,6 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
 
   const _watchedValues = watch()
 
-  useEffect(() => {
-    loadContacts()
-    loadCompanies()
-    if (mode === 'edit' && opportunityId && !opportunity) {
-      loadOpportunity()
-    }
-  }, [mode, opportunityId, opportunity, loadOpportunity])
-
   const loadOpportunity = useCallback(async () => {
     if (!opportunityId) return
     
@@ -247,6 +239,14 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
       setLoading
     )
   }, [opportunityId, handleAsyncOperation, setError, setLoading, reset])
+
+  useEffect(() => {
+    loadContacts()
+    loadCompanies()
+    if (mode === 'edit' && opportunityId && !opportunity) {
+      loadOpportunity()
+    }
+  }, [mode, opportunityId, opportunity, loadOpportunity])
 
   const loadContacts = async () => {
     try {
