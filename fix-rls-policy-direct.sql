@@ -7,3 +7,5 @@ DROP POLICY IF EXISTS "Authenticated users can view users" ON users;
 -- Create the correct policy
 CREATE POLICY "Authenticated users can view users" ON users
     FOR ALL USING (auth.uid() IS NOT NULL);
+
+
