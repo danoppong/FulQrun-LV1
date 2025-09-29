@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 
 interface AuthWrapperProps {
   children: React.ReactNode
@@ -23,7 +23,6 @@ function AuthWrapper({
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const supabase = createClientComponentClient()
         const { data: { user }, error } = await supabase.auth.getUser()
         
         if (error || !user) {

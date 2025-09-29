@@ -29,10 +29,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/icon.svg", sizes: "any", type: "image/svg+xml" },
-      { url: "/icon-144x144.svg", sizes: "144x144", type: "image/svg+xml" },
     ],
     apple: [
-      { url: "/icon-144x144.svg", sizes: "144x144", type: "image/svg+xml" },
+      { url: "/icon.svg", sizes: "any", type: "image/svg+xml" },
     ],
   },
 };
