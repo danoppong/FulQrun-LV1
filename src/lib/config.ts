@@ -1,10 +1,10 @@
 // Centralized configuration check for Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-const isBuildTime = process.env.NODE_ENV === 'production' && 
-  (process.env.VERCEL === '1' || process.env.NEXT_PHASE === 'phase-production-build')
+const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build'
 
 // Check if Supabase is properly configured
+// Only exclude during actual build phase, not during runtime in production
 export const isSupabaseConfigured = !isBuildTime && supabaseUrl && supabaseAnonKey && 
   supabaseUrl !== 'your_supabase_project_url_here' && 
   supabaseAnonKey !== 'your_supabase_anon_key_here' &&
