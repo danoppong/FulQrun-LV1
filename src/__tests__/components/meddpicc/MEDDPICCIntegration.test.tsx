@@ -224,16 +224,17 @@ describe('MEDDPICC Integration', () => {
 
   describe('Backward Compatibility', () => {
     it('maintains compatibility with legacy MEDDPICC form', () => {
-      const _legacyData = {
-        metrics: 'Legacy metrics data',
-        economic_buyer: 'Legacy buyer data',
-        decision_criteria: 'Legacy criteria data',
-        decision_process: 'Legacy process data',
-        paper_process: 'Legacy paper data',
-        identify_pain: 'Legacy pain data',
-        champion: 'Legacy champion data',
-        competition: 'Legacy competition data'
-      }
+      // Legacy data structure for compatibility testing
+      // const _legacyData = {
+      //   metrics: 'Legacy metrics data',
+      //   economic_buyer: 'Legacy buyer data',
+      //   decision_criteria: 'Legacy criteria data',
+      //   decision_process: 'Legacy process data',
+      //   paper_process: 'Legacy paper data',
+      //   identify_pain: 'Legacy pain data',
+      //   champion: 'Legacy champion data',
+      //   competition: 'Legacy competition data'
+      // }
 
       // This should not throw any errors
       expect(() => {

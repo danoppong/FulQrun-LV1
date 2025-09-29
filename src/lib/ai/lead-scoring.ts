@@ -120,7 +120,7 @@ export class LeadScoringEngine {
         confidence: insightData.confidence || 0.5,
         recommendations: insightData.recommendations || []
       }
-    } catch (error) {
+    } catch (_error) {
       const ruleBased = this.calculateRuleBasedScore(leadData)
       return {
         ...ruleBased,
@@ -382,10 +382,10 @@ export class LeadScoringEngine {
    * Update lead score in database
    */
   static async updateLeadScore(
-    leadId: string,
-    score: number,
-    factors: LeadScoringFactors,
-    confidence: number
+    _leadId: string,
+    _score: number,
+    _factors: LeadScoringFactors,
+    _confidence: number
   ): Promise<void> {
     // This would typically update the lead record in the database
     // Implementation depends on your data access layer
@@ -432,7 +432,7 @@ export class LeadScoringEngine {
         }
 
         results.push(scoringResult)
-      } catch (error) {
+      } catch (_error) {
         // Add fallback scoring
         const fallback = this.calculateRuleBasedScore(lead)
         results.push({

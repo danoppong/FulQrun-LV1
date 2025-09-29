@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { SharePointIntegration, SharePointDocument } from '@/lib/integrations/sharepoint'
 
 interface SharePointFolder {
@@ -43,9 +43,9 @@ export function SharePointRepository({
 
   useEffect(() => {
     initializeSharePoint()
-  }, [organizationId])
+  }, [initializeSharePoint])
 
-  const initializeSharePoint = async () => {
+  const initializeSharePoint = useCallback(async () => {
     try {
       // Get SharePoint connection from integrations
       const response = await fetch(`/api/integrations/sharepoint/connection?organizationId=${organizationId}`)
@@ -85,9 +85,9 @@ export function SharePointRepository({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to initialize SharePoint')
     }
-  }
+  }, [organizationId, loadFolderContents])
 
-  const loadFolderContents = async (siteId: string, path: string) => {
+  const loadFolderContents = useCallback(async (siteId: string, path: string) => {
     if (!sharepoint) return
 
     try {
@@ -100,14 +100,14 @@ export function SharePointRepository({
       ])
 
       setFolders(foldersData.map(folder => ({ ...folder, path: folder.url })))
-      setDocuments(documentsData as any)
+      setDocuments(documentsData as Array<{ id: string; name: string; url: string; size?: number; modified?: string }>)
       setCurrentPath(path)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load folder contents')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [sharepoint])
 
   const handleSiteChange = async (site: SharePointSite) => {
     setSelectedSite(site)
@@ -144,7 +144,7 @@ export function SharePointRepository({
         await loadFolderContents(selectedSite.id, currentPath)
         setShowUpload(false)
         setUploadFile(null)
-        onDocumentUpload?.(result as any)
+        onDocumentUpload?.(result as { id: string; name: string; url: string; size?: number })
       } else {
         setError(result.error || 'Upload failed')
       }

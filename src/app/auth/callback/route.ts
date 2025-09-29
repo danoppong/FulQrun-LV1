@@ -2,7 +2,7 @@ import { createMiddlewareClient } from '@/lib/auth-server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const { supabase, response } = createMiddlewareClient(request)
+  const { supabase, response: _response } = createMiddlewareClient(request)
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
@@ -11,14 +11,14 @@ export async function GET(request: NextRequest) {
   if (code) {
     try {
       const result = await supabase.auth.exchangeCodeForSession(code)
-      const { data, error } = result as Record<string, unknown>
+      const { data: _data, error } = result as Record<string, unknown>
       
       if (error) {
         return NextResponse.redirect(`${origin}/auth/login?error=auth_callback_error`)
       }
       
       return NextResponse.redirect(`${origin}${next}`)
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.redirect(`${origin}/auth/login?error=auth_callback_exception`)
     }
   }

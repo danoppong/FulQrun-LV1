@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { UserRole, getUserPermissions } from '@/lib/roles'
 import { DashboardWidget, WidgetType, DEFAULT_WIDGETS, WIDGET_TEMPLATES } from '@/lib/dashboard-widgets'
 import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData, TeamMemberData, PipelineStageData, ActivityData, MEDDPICCOpportunityData } from '@/lib/types/dashboard'
@@ -19,10 +19,12 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
 
   const permissions = getUserPermissions(userRole)
 
+  const loadDashboardLayoutCallback = useCallback(loadDashboardLayout, [userId, supabase])
+
   useEffect(() => {
     // Load user's custom dashboard layout
-    loadDashboardLayout()
-  }, [userId])
+    loadDashboardLayoutCallback()
+  }, [loadDashboardLayoutCallback])
 
   const loadDashboardLayout = async () => {
     try {
@@ -133,10 +135,10 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
           <div className="flex justify-between items-center py-8">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                {userRole.replace(&apos;_&apos;, &apos; &apos;).toUpperCase()} Dashboard
+                {userRole.replace('_', ' ').toUpperCase()} Dashboard
               </h1>
               <p className="text-gray-600 mt-2">
-                {permissions.canViewTeamData ? &apos;Team & Regional View&apos; : &apos;Personal View&apos;}
+                {permissions.canViewTeamData ? 'Team & Regional View' : 'Personal View'}
               </p>
             </div>
             <div className="flex space-x-4">
@@ -153,7 +155,7 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
                       : 'bg-white/80 text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm'
                   }`}
                 >
-                  {isEditMode ? &apos;Save Layout&apos; : &apos;Customize&apos;}
+                  {isEditMode ? 'Save Layout' : 'Customize'}
                 </button>
               )}
               <button

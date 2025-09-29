@@ -27,16 +27,16 @@ interface ContactFormProps {
   opportunityId?: string
 }
 
-export default function ContactForm({ contact, contactId, mode, opportunityId }: ContactFormProps) {
+export default function ContactForm({ contact, contactId, mode, opportunityId: _opportunityId }: ContactFormProps) {
   const [loading, setLoading] = useState(false)
-  const [companies, setCompanies] = useState<any[]>([])
+  const [companies, setCompanies] = useState<{ id: string; name: string }[]>([])
   const router = useRouter()
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset: _reset
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
     defaultValues: contact ? {

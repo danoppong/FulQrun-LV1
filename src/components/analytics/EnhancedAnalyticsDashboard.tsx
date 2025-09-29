@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 
 interface AnalyticsData {
   revenue: {
@@ -111,9 +111,11 @@ export function EnhancedAnalyticsDashboard({
     }
   }
 
+  const loadAnalyticsDataCallback = useCallback(loadAnalyticsData, [organizationId, userId, dateRange])
+
   useEffect(() => {
-    loadAnalyticsData()
-  }, [organizationId, userId, dateRange, loadAnalyticsData])
+    loadAnalyticsDataCallback()
+  }, [loadAnalyticsDataCallback])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {

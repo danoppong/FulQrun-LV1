@@ -5,7 +5,6 @@ export async function GET(_request: NextRequest) {
   try {
     const { searchParams } = new URL(_request.url)
     const organizationId = searchParams.get('organizationId')
-    const _userId = searchParams.get('userId')
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
@@ -16,7 +15,7 @@ export async function GET(_request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get revenue data
     const { data: revenueData } = await supabase
@@ -111,7 +110,7 @@ export async function GET(_request: NextRequest) {
     }
 
     return NextResponse.json(analyticsData)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch analytics data' },
       { status: 500 }

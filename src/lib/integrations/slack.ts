@@ -1,4 +1,4 @@
-import { IntegrationConnectionData } from '@/lib/api/integrations'
+import { IntegrationConnectionData as _IntegrationConnectionData } from '@/lib/api/integrations'
 
 export interface SlackBlock {
   type: string
@@ -175,7 +175,7 @@ export class SlackIntegration {
       }
 
       return { success: true }
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to send message'
@@ -210,7 +210,7 @@ export class SlackIntegration {
         purpose: channel.purpose,
         num_members: channel.num_members
       }))
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to fetch Slack channels')
     }
   }
@@ -244,7 +244,7 @@ export class SlackIntegration {
           is_owner: (user as Record<string, unknown>).is_owner || false,
           is_bot: (user as Record<string, unknown>).is_bot || false
         }))
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to fetch Slack users')
     }
   }
@@ -518,19 +518,19 @@ export class SlackIntegration {
         fields: [
           {
             type: 'mrkdwn',
-            text: `*Task:* ${(task as any).title || 'N/A'}`
+            text: `*Task:* ${(task as { title?: string }).title || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Due:* ${new Date((task as any).due_date).toLocaleString()}`
+            text: `*Due:* ${new Date((task as { due_date: string }).due_date).toLocaleString()}`
           },
           {
             type: 'mrkdwn',
-            text: `*Priority:* ${(task as any).priority || 'Medium'}`
+            text: `*Priority:* ${(task as { priority?: string }).priority || 'Medium'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Status:* ${(task as any).status || 'Pending'}`
+            text: `*Status:* ${(task as { status?: string }).status || 'Pending'}`
           }
         ]
       },
@@ -538,7 +538,7 @@ export class SlackIntegration {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Description:* ${(task as any).description || 'No description'}\n*Assigned to:* ${(task as any).assigned_to || 'Unassigned'}`
+          text: `*Description:* ${(task as { description?: string }).description || 'No description'}\n*Assigned to:* ${(task as { assigned_to?: string }).assigned_to || 'Unassigned'}`
         }
       },
       {
@@ -559,7 +559,7 @@ export class SlackIntegration {
 
     return await this.sendMessage({
       channel,
-      text: `Task Due Soon: ${(task as any).title || 'N/A'}`,
+      text: `Task Due Soon: ${(task as { title?: string }).title || 'N/A'}`,
       blocks
     })
   }
@@ -578,7 +578,7 @@ export class SlackIntegration {
   /**
    * Get channel history
    */
-  async getChannelHistory(channel: string, limit: number = 100): Promise<any[]> {
+  async getChannelHistory(channel: string, limit: number = 100): Promise<unknown[]> {
     try {
       const response = await fetch(`${this.baseUrl}/conversations.history?channel=${channel}&limit=${limit}`, {
         headers: {
@@ -594,7 +594,7 @@ export class SlackIntegration {
       }
 
       return data.messages
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to fetch channel history')
     }
   }
@@ -625,11 +625,11 @@ export class SlackIntegration {
         team: {
           id: data.team_id,
           name: data.team,
-          domain: (data as any).domain || '',
+          domain: (data as { domain?: string }).domain || '',
           url: data.url || ''
         }
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Connection test failed'

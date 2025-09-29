@@ -157,7 +157,7 @@ export async function deleteEnterpriseIntegration(integrationId: string): Promis
 }
 
 // Test integration connection
-export async function testIntegrationConnection(integrationId: string): Promise<boolean> {
+export async function testIntegrationConnection(_integrationId: string): Promise<boolean> {
   try {
     // Mock connection test for now
     return Math.random() > 0.2; // 80% success rate
@@ -168,7 +168,7 @@ export async function testIntegrationConnection(integrationId: string): Promise<
 }
 
 // Sync integration data
-export async function syncIntegrationData(integrationId: string, entityType: string): Promise<SyncResult> {
+export async function syncIntegrationData(integrationId: string, _entityType: string): Promise<SyncResult> {
   try {
     const startTime = Date.now();
     
@@ -364,7 +364,7 @@ export async function getIntegrationStatistics(organizationId: string): Promise<
 }
 
 // Get integration health
-export async function getIntegrationHealth(organizationId: string): Promise<any> {
+export async function getIntegrationHealth(organizationId: string): Promise<{ totalIntegrations: number; activeIntegrations: number; failedIntegrations: number; healthScore: number; integrations: unknown[] }> {
   try {
     const { data: integrations, error } = await supabase
       .from('enterprise_integrations')

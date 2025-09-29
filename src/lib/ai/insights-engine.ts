@@ -48,7 +48,7 @@ export class AIInsightsEngine {
         modelVersion: 'gpt-4-v1',
         organizationId: context.organizationId
       })
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate lead scoring insight')
     }
   }
@@ -86,7 +86,7 @@ export class AIInsightsEngine {
         modelVersion: 'gpt-4-v1',
         organizationId: context.organizationId
       })
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate deal risk assessment')
     }
   }
@@ -116,7 +116,7 @@ export class AIInsightsEngine {
         modelVersion: 'gpt-4-v1',
         organizationId: context.organizationId
       })
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate next action recommendations')
     }
   }
@@ -127,7 +127,7 @@ export class AIInsightsEngine {
   static async generateForecasting(
     organizationId: string,
     pipelineData: Record<string, unknown>,
-    context: InsightContext
+    _context: InsightContext
   ): Promise<AIInsightData> {
     try {
       const forecast = await OpenAIClient.generateForecast(pipelineData)
@@ -146,7 +146,7 @@ export class AIInsightsEngine {
         modelVersion: 'gpt-4-v1',
         organizationId
       })
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate sales forecast')
     }
   }
@@ -181,7 +181,7 @@ export class AIInsightsEngine {
         modelVersion: 'gpt-4-v1',
         organizationId: context.organizationId
       })
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate performance insights')
     }
   }
@@ -245,7 +245,7 @@ export class AIInsightsEngine {
     entityId: string,
     organizationId: string
   ): Promise<AIInsightData[]> {
-    return await AIInsightsAPI.getInsights(entityType as any, entityId as any, organizationId as any)
+    return await AIInsightsAPI.getInsights(entityType as string, entityId as string, organizationId as string)
   }
 
   /**
@@ -255,7 +255,7 @@ export class AIInsightsEngine {
     entityType: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization',
     entityId: string,
     insightType: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance',
-    organizationId: string
+    _organizationId: string
   ): Promise<AIInsightData | null> {
     return await AIInsightsAPI.getLatestInsight(entityType, entityId, insightType)
   }
@@ -277,7 +277,7 @@ export class AIInsightsEngine {
         try {
           const leadScoring = await this.generateLeadScoring(entityId, entityData, context)
           results.push(leadScoring)
-        } catch (error) {
+        } catch (_error) {
         }
         break
 
@@ -288,7 +288,7 @@ export class AIInsightsEngine {
             this.generateNextActions(entityId, entityData, context)
           ])
           results.push(dealRisk, nextActions)
-        } catch (error) {
+        } catch (_error) {
         }
         break
 
@@ -296,7 +296,7 @@ export class AIInsightsEngine {
         try {
           const performance = await this.generatePerformanceInsights(entityId, entityData, context)
           results.push(performance)
-        } catch (error) {
+        } catch (_error) {
         }
         break
 
@@ -304,7 +304,7 @@ export class AIInsightsEngine {
         try {
           const forecasting = await this.generateForecasting(context.organizationId, entityData, context)
           results.push(forecasting)
-        } catch (error) {
+        } catch (_error) {
         }
         break
     }

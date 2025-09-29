@@ -531,7 +531,7 @@ export class ApprovalProcessManager {
 
   private async sendApprovalNotification(
     approver: ApprovalUser,
-    approvalRequest: ApprovalRequest
+    _approvalRequest: ApprovalRequest
   ): Promise<void> {
     // Send email/Slack notification to approver
     console.log(`Sending approval notification to ${approver.email}`);

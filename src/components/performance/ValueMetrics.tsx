@@ -12,9 +12,9 @@ interface ValueMetricsProps {
 
 const ValueMetrics = memo(function ValueMetrics({ 
   userId, 
-  organizationId, 
+  organizationId: _organizationId, 
   periodStart, 
-  periodEnd 
+  periodEnd: _periodEnd 
 }: ValueMetricsProps) {
   const [metrics, setMetrics] = useState<Array<{
     id: string

@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  AcademicCapIcon, 
   BookOpenIcon, 
   TrophyIcon, 
   ChartBarIcon,
@@ -11,8 +10,6 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   PlayIcon,
-  PauseIcon,
-  StopIcon,
   PlusIcon,
   CogIcon,
   DocumentTextIcon,
@@ -31,7 +28,7 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
   const [modules, setModules] = useState<LearningModule[]>([]);
   const [tracks, setTracks] = useState<CertificationTrack[]>([]);
   const [userProgress, setUserProgress] = useState<UserProgress[]>([]);
-  const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
+  const [_learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
   const [complianceRecords, setComplianceRecords] = useState<ComplianceRecord[]>([]);
   interface TopPerformer {
     userId: string
@@ -57,13 +54,13 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'modules' | 'tracks' | 'progress' | 'compliance' | 'analytics'>('modules');
-  const [showCreateModule, setShowCreateModule] = useState(false);
+  const [_showCreateModule, setShowCreateModule] = useState(false);
 
   useEffect(() => {
     loadData();
-  }, [organizationId, userId]);
+  }, [loadData]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [modulesData, tracksData, progressData, pathsData, complianceData, dashboardData] = await Promise.all([
@@ -86,7 +83,7 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId, userId]);
 
   const getModuleIcon = (type: string) => {
     switch (type) {
@@ -207,7 +204,7 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setSelectedTab(tab.id as any)}
+                  onClick={() => setSelectedTab(tab.id as string)}
                   className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
                     selectedTab === tab.id
                       ? 'border-blue-500 text-blue-600'
@@ -316,17 +313,17 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
               <h3 className="text-lg font-semibold text-gray-900">My Learning Progress</h3>
               <div className="space-y-3">
                 {userProgress.map((progress) => {
-                  const module = modules.find(m => m.id === progress.moduleId);
+                  const moduleData = modules.find(m => m.id === progress.moduleId);
                   const status = getProgressStatus(progress);
                   
                   return (
                     <div key={progress.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
-                          {module && getModuleIcon(module.type)}
+                          {moduleData && getModuleIcon(moduleData.type)}
                           <div>
-                            <h4 className="font-semibold text-gray-900">{module?.title || 'Unknown Module'}</h4>
-                            <p className="text-sm text-gray-500">{module?.category}</p>
+                            <h4 className="font-semibold text-gray-900">{moduleData?.title || 'Unknown Module'}</h4>
+                            <p className="text-sm text-gray-500">{moduleData?.category}</p>
                           </div>
                         </div>
                         <div className={`flex items-center space-x-2 ${status.color}`}>
@@ -365,7 +362,7 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
               <h3 className="text-lg font-semibold text-gray-900">Compliance Records</h3>
               <div className="space-y-3">
                 {complianceRecords.map((record) => {
-                  const module = modules.find(m => m.id === record.moduleId);
+                  const moduleData = modules.find(m => m.id === record.moduleId);
                   const isExpired = record.expiryDate && record.expiryDate < new Date();
                   
                   return (
@@ -374,7 +371,7 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
                         <div className="flex items-center space-x-3">
                           <CheckCircleIcon className={`h-5 w-5 ${isExpired ? 'text-red-600' : 'text-green-600'}`} />
                           <div>
-                            <h4 className="font-semibold text-gray-900">{module?.title || 'Unknown Module'}</h4>
+                            <h4 className="font-semibold text-gray-900">{moduleData?.title || 'Unknown Module'}</h4>
                             <p className="text-sm text-gray-500">Completed: {record.completedAt.toLocaleDateString()}</p>
                           </div>
                         </div>

@@ -198,7 +198,7 @@ export async function getRealTimeMetrics(organizationId: string): Promise<RealTi
 }
 
 // Query Execution
-export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<Record<string, unknown>> {
+export async function executeAnalyticsQuery(_query: AnalyticsQuery): Promise<Record<string, unknown>> {
   try {
     // Mock query execution for now
     return {
@@ -263,7 +263,7 @@ export async function getChartData(organizationId: string, chartType: string): P
 }
 
 // Analytics Insights
-export async function generateAnalyticsInsights(organizationId: string): Promise<Record<string, unknown>[]> {
+export async function generateAnalyticsInsights(_organizationId: string): Promise<Record<string, unknown>[]> {
   try {
     // Mock insights for now
     return [
@@ -319,7 +319,7 @@ export class EnterpriseAnalyticsAPI {
     return getKPITemplates(organizationId);
   }
 
-  static async generateForecast(organizationId: string, period: string): Promise<any> {
+  static async generateForecast(organizationId: string, period: string): Promise<{ predictions: unknown[]; confidence: number; trends: unknown[] }> {
     return generateForecast(organizationId, period);
   }
 
@@ -327,19 +327,19 @@ export class EnterpriseAnalyticsAPI {
     return getRealTimeMetrics(organizationId);
   }
 
-  static async executeQuery(query: AnalyticsQuery): Promise<any> {
+  static async executeQuery(query: AnalyticsQuery): Promise<{ data: unknown[]; columns: string[]; executionTime: number }> {
     return executeAnalyticsQuery(query);
   }
 
-  static async generateExecutiveReport(organizationId: string, period: string): Promise<any> {
+  static async generateExecutiveReport(organizationId: string, period: string): Promise<{ summary: unknown; charts: unknown[]; insights: string[]; recommendations: string[] }> {
     return generateExecutiveReport(organizationId, period);
   }
 
-  static async getChartData(organizationId: string, chartType: string): Promise<any> {
+  static async getChartData(organizationId: string, chartType: string): Promise<{ data: unknown[]; labels: string[]; chartType: string }> {
     return getChartData(organizationId, chartType);
   }
 
-  static async generateInsights(organizationId: string): Promise<any[]> {
+  static async generateInsights(organizationId: string): Promise<unknown[]> {
     return generateAnalyticsInsights(organizationId);
   }
 }

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { SupabaseClient, CookieOptions } from '@/lib/types/auth'
+import { SupabaseClient as _SupabaseClient, CookieOptions as _CookieOptions } from '@/lib/types/auth'
 import { supabaseConfig } from '@/lib/config'
 
 export const createServerComponentClient = () => {
@@ -11,7 +11,7 @@ export const createServerComponentClient = () => {
         getUser: async () => ({ data: { user: null }, error: null }),
         getSession: async () => ({ data: { session: null }, error: null })
       },
-      from: (table: string) => ({
+      from: (_table: string) => ({
         select: () => ({
           eq: () => ({
             single: async () => ({ data: null, error: { message: 'Database not configured' } })

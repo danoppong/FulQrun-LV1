@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get SharePoint connection
     const { data: connection, error: connectionError } = await supabase

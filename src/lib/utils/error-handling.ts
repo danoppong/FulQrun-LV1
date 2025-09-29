@@ -5,7 +5,7 @@
  */
 
 import { ApiError } from '@/lib/types/errors'
-import { logError, logWarning, logInfo, errorLogger } from './error-logger'
+import { errorLogger } from './error-logger'
 
 export interface ErrorHandlerOptions {
   showToast?: boolean
@@ -15,7 +15,7 @@ export interface ErrorHandlerOptions {
   function?: string
   organizationId?: string
   userId?: string
-  additionalData?: Record<string, any>
+  additionalData?: Record<string, unknown>
 }
 
 export class ErrorHandler {
@@ -40,7 +40,7 @@ export class ErrorHandler {
       if ('message' in error && typeof error.message === 'string') {
         errorMessage = error.message
       } else if ('details' in error && Array.isArray(error.details)) {
-        errorMessage = (error as any).details.join(', ')
+        errorMessage = (error as { details: string[] }).details.join(', ')
       }
     }
 

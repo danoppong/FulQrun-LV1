@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { WorkflowAutomationAPI, WorkflowAutomationData, WorkflowAction } from '@/lib/api/workflow-automation'
 import { PipelineStage } from '@/lib/api/pipeline-config'
 
@@ -21,7 +21,7 @@ export function WorkflowEditor({ organizationId, userId, stages }: WorkflowEdito
     loadWorkflows()
   }, [loadWorkflows])
 
-  const loadWorkflows = async () => {
+  const loadWorkflows = useCallback(async () => {
     try {
       setIsLoading(true)
       const data = await WorkflowAutomationAPI.getActiveAutomations(organizationId)
@@ -31,7 +31,7 @@ export function WorkflowEditor({ organizationId, userId, stages }: WorkflowEdito
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [organizationId])
 
   const handleCreateWorkflow = async (workflow: Omit<WorkflowAutomationData, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {

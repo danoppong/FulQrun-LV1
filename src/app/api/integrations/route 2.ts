@@ -13,7 +13,7 @@ export async function GET(_request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get all active integrations for the organization
     const { data: integrations, error: _error } = await supabase
@@ -27,7 +27,7 @@ export async function GET(_request: NextRequest) {
     }
 
     return NextResponse.json(integrations || [])
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch integrations' },
       { status: 500 }

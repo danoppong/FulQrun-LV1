@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     let query = supabase
       .from('user_learning_progress')
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(progress || [])
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch learning progress' },
       { status: 500 }
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Upsert learning progress
     const { data: progressData, error } = await supabase
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(progressData)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to update learning progress' },
       { status: 500 }

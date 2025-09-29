@@ -137,7 +137,7 @@ export class DealRiskEngine {
         confidence: insightData.confidence || 0.5,
         mitigationStrategies: insightData.mitigationStrategies || []
       }
-    } catch (error) {
+    } catch (_error) {
       const ruleBased = this.calculateRuleBasedRisk(opportunityData)
       return {
         ...ruleBased,
@@ -429,10 +429,10 @@ export class DealRiskEngine {
    * Update opportunity risk score in database
    */
   static async updateOpportunityRisk(
-    opportunityId: string,
-    riskScore: number,
-    factors: DealRiskFactors,
-    confidence: number
+    _opportunityId: string,
+    _riskScore: number,
+    _factors: DealRiskFactors,
+    _confidence: number
   ): Promise<void> {
     // This would typically update the opportunity record in the database
   }
@@ -481,7 +481,7 @@ export class DealRiskEngine {
         }
 
         results.push(riskResult)
-      } catch (error) {
+      } catch (_error) {
         // Add fallback assessment
         const fallback = this.calculateRuleBasedRisk(opportunity)
         results.push({

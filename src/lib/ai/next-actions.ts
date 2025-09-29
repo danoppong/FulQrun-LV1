@@ -218,7 +218,7 @@ export class NextActionsEngine {
       const mergedActions = this.mergeActions(aiActions, ruleBasedActions)
 
       return this.prioritizeActions(mergedActions)
-    } catch (error) {
+    } catch (_error) {
       return this.generateRuleBasedActions(opportunityContext)
     }
   }
@@ -478,8 +478,8 @@ export class NextActionsEngine {
    * Update opportunity with next actions
    */
   static async updateOpportunityActions(
-    opportunityId: string,
-    actions: NextAction[]
+    _opportunityId: string,
+    _actions: NextAction[]
   ): Promise<void> {
     // This would typically update the opportunity record in the database
   }
@@ -511,7 +511,7 @@ export class NextActionsEngine {
           opportunityId: opportunity.id,
           actions
         })
-      } catch (error) {
+      } catch (_error) {
         // Add fallback actions
         const fallbackActions = this.generateRuleBasedActions(opportunity)
         results.push({

@@ -48,11 +48,11 @@ class IntegrationAPIImpl implements IntegrationAPI {
     }
   }
 
-  async deleteConnection(id: string): Promise<void> {
+  async deleteConnection(_id: string): Promise<void> {
     // Mock implementation
   }
 
-  async testConnection(id: string): Promise<boolean> {
+  async testConnection(_id: string): Promise<boolean> {
     // Mock implementation
     return true
   }

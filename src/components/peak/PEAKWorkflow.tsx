@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { StageDocuments } from './StageDocuments'
 import { SharePointDocument } from '@/lib/integrations/sharepoint'
 
@@ -25,7 +25,7 @@ interface StageProgress {
 
 export function PEAKWorkflow({
   opportunityId,
-  opportunityName,
+  opportunityName: _opportunityName,
   currentStage,
   onStageChange,
   onDocumentUpload,
@@ -36,18 +36,18 @@ export function PEAKWorkflow({
   const [documents, setDocuments] = useState<Record<string, SharePointDocument[]>>({})
   const [selectedStage, setSelectedStage] = useState<string>(currentStage)
 
-  const peakStages = [
+  const peakStages = useMemo(() => [
     { id: 'prospecting', name: 'Prospecting', description: 'Research and initial contact' },
     { id: 'engaging', name: 'Engaging', description: 'Discovery and needs analysis' },
     { id: 'advancing', name: 'Advancing', description: 'Proposal and demonstration' },
     { id: 'key_decision', name: 'Key Decision', description: 'Final presentation and closing' }
-  ]
+  ], [])
 
   useEffect(() => {
     loadStageProgress()
-  }, [opportunityId])
+  }, [loadStageProgress])
 
-  const loadStageProgress = async () => {
+  const loadStageProgress = useCallback(async () => {
     try {
       // Simulate loading stage progress from API
       const mockProgress: StageProgress[] = peakStages.map((stage, index) => ({
@@ -61,9 +61,10 @@ export function PEAKWorkflow({
       }))
 
       setStages(mockProgress)
-    } catch (error) {
+    } catch (_error) {
+      // Handle error silently for now
     }
-  }
+  }, [currentStage, peakStages])
 
   const getRequiredDocumentCount = (stage: string): number => {
     const requirements: Record<string, number> = {
@@ -107,7 +108,7 @@ export function PEAKWorkflow({
         progress: peakStages.findIndex(s => s.id === stage.stage) < peakStages.findIndex(s => s.id === toStage) ? 100 : 
                  peakStages.findIndex(s => s.id === stage.stage) === peakStages.findIndex(s => s.id === toStage) ? 0 : stage.progress
       })))
-    } catch (error) {
+    } catch (_error) {
     }
   }
 

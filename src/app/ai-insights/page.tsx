@@ -22,12 +22,12 @@ function AIInsightsContent() {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser()
-        if (error || !user) {
+        const { data: { user: authUser }, error } = await supabase.auth.getUser()
+        if (error || !authUser) {
           router.push('/auth/login')
           return
         }
-        setUser({ id: user.id as string, email: user.email as string | undefined })
+        setUser({ id: authUser.id as string, email: authUser.email as string | undefined })
       } catch (_error) {
         router.push('/auth/login')
       } finally {

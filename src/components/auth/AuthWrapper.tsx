@@ -17,7 +17,7 @@ function AuthWrapper({
 }: AuthWrapperProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [_user, setUser] = useState<{ id: string; email?: string; role?: string } | null>(null)
   const router = useRouter()
 
   useEffect(() => {

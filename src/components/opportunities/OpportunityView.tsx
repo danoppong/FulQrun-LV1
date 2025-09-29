@@ -26,7 +26,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
   const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<void> => {
     try {
       // Use the unified scoring service - always calculate fresh score for consistency
-      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity as any)
+      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity as { id: string; name: string; [key: string]: unknown })
       setMeddpiccScore(scoreResult.score)
     } catch (error) {
       console.error('Error getting MEDDPICC score:', error)
@@ -100,7 +100,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
       window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
       window.removeEventListener('peakUpdated', handlePeakUpdate as EventListener)
     }
-  }, [fetchOpportunity])
+  }, [fetchOpportunity, opportunityId])
 
   if (loading) {
     return (

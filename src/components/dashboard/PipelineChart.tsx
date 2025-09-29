@@ -75,7 +75,7 @@ export default function PipelineChart() {
         
         setData(chartData)
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)

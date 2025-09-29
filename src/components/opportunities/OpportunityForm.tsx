@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { opportunityAPI, OpportunityWithDetails, OpportunityFormData } from '@/lib/api/opportunities'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
@@ -141,7 +141,7 @@ const calculateMEDDPICCScoreFromData = (data: Record<string, string>): number =>
 
 export default function OpportunityForm({ opportunity, opportunityId, mode }: OpportunityFormProps) {
   const router = useRouter()
-  const { handleError, handleLoadingError, handleAsyncOperation } = useErrorHandler()
+  const { handleError: _handleError, handleLoadingError: _handleLoadingError, handleAsyncOperation } = useErrorHandler()
   
   // Debug logging
   console.log('OpportunityForm rendered with:', { opportunity, opportunityId, mode })
@@ -150,7 +150,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
-  const [isDirty, setIsDirty] = useState(false)
+  const [_isDirty, setIsDirty] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [peakData, setPeakData] = useState({
     peak_stage: opportunity?.peak_stage || 'prospecting' as const,
@@ -170,14 +170,14 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     competition: opportunity?.competition || ''
   })
   const [showComprehensiveMEDDPICC, setShowComprehensiveMEDDPICC] = useState(false)
-  const [meddpiccAssessment, setMeddpiccAssessment] = useState<MEDDPICCAssessment | undefined>(undefined)
+  const [meddpiccAssessment, _setMeddpiccAssessment] = useState<MEDDPICCAssessment | undefined>(undefined)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
-    setValue,
+    setValue: _setValue,
     reset
   } = useForm<LocalOpportunityFormData>({
     resolver: zodResolver(opportunitySchema),
@@ -188,7 +188,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     } : {}
   })
 
-  const watchedValues = watch()
+  const _watchedValues = watch()
 
   useEffect(() => {
     loadContacts()
@@ -196,12 +196,12 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     if (mode === 'edit' && opportunityId && !opportunity) {
       loadOpportunity()
     }
-  }, [mode, opportunityId, opportunity])
+  }, [mode, opportunityId, opportunity, loadOpportunity])
 
-  const loadOpportunity = async () => {
+  const loadOpportunity = useCallback(async () => {
     if (!opportunityId) return
     
-    const result = await handleAsyncOperation(
+    const _result = await handleAsyncOperation(
       async () => {
         const { data, error } = await opportunityAPI.getOpportunity(opportunityId)
         
@@ -246,7 +246,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
       setError,
       setLoading
     )
-  }
+  }, [opportunityId, handleAsyncOperation, setError, setLoading, reset])
 
   const loadContacts = async () => {
     try {
@@ -256,7 +256,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
       } else {
         setContacts(data || [])
       }
-    } catch (err) {
+    } catch (_err) {
       console.warn('Error loading contacts:', err)
     }
   }
@@ -269,7 +269,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
       } else {
         setCompanies(data || [])
       }
-    } catch (err) {
+    } catch (_err) {
       console.warn('Error loading companies:', err)
     }
   }
@@ -290,7 +290,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
             detail: { opportunityId, data } 
           }))
         }
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to save PEAK data')
       }
     }
@@ -331,7 +331,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
             detail: { opportunityId, score: meddpiccScore } 
           }))
         }
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to save MEDDPICC data')
       }
     }
@@ -625,8 +625,8 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
                     assessment={meddpiccAssessment}
                     onStageAdvance={async (fromStage, toStage) => {
                       try {
-                        await opportunityAPI.updatePeakStage(opportunityId!, toStage as any)
-                        setPeakData(prev => ({ ...prev, peak_stage: toStage as any }))
+                        await opportunityAPI.updatePeakStage(opportunityId!, toStage as string)
+                        setPeakData(prev => ({ ...prev, peak_stage: toStage as string }))
                       } catch (error) {
                         console.error('Error advancing stage:', error)
                       }

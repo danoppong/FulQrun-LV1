@@ -61,7 +61,7 @@ const supabase = createClient(
 // Workflow Management
 async function createEnterpriseWorkflow(
   workflow: Omit<EnterpriseWorkflow, 'id' | 'createdAt'>,
-  userId: string
+  _userId: string
 ): Promise<EnterpriseWorkflow> {
   try {
     const workflowId = await workflowManager.createWorkflow(workflow);
@@ -151,7 +151,7 @@ async function executeEnterpriseWorkflow(
   entityType: string,
   entityId: string,
   executionData: Record<string, unknown>,
-  organizationId: string
+  _organizationId: string
 ): Promise<WorkflowExecution> {
   try {
     return await workflowManager.executeWorkflow(workflowId, entityType, entityId, executionData);
@@ -161,7 +161,7 @@ async function executeEnterpriseWorkflow(
   }
 }
 
-async function getWorkflowExecutions(organizationId: string): Promise<WorkflowExecution[]> {
+async function getWorkflowExecutions(_organizationId: string): Promise<WorkflowExecution[]> {
   try {
     // TODO: Implement getWorkflowExecutions
     return [];
@@ -171,7 +171,7 @@ async function getWorkflowExecutions(organizationId: string): Promise<WorkflowEx
   }
 }
 
-async function cancelWorkflowExecution(executionId: string): Promise<void> {
+async function cancelWorkflowExecution(_executionId: string): Promise<void> {
   try {
     // TODO: Implement cancelWorkflowExecution
     return;
@@ -181,7 +181,7 @@ async function cancelWorkflowExecution(executionId: string): Promise<void> {
   }
 }
 
-async function retryWorkflowExecution(executionId: string): Promise<void> {
+async function retryWorkflowExecution(_executionId: string): Promise<void> {
   try {
     // TODO: Implement retryWorkflowExecution
     return;
@@ -192,7 +192,7 @@ async function retryWorkflowExecution(executionId: string): Promise<void> {
 }
 
 // Workflow Templates
-async function getWorkflowTemplates(): Promise<any[]> {
+async function getWorkflowTemplates(): Promise<unknown[]> {
   try {
     // TODO: Implement getWorkflowTemplates
     return [];
@@ -204,7 +204,7 @@ async function getWorkflowTemplates(): Promise<any[]> {
 
 async function createWorkflowFromTemplate(
   templateId: string,
-  customizations: Record<string, any>,
+  customizations: Record<string, unknown>,
   organizationId: string,
   userId: string
 ): Promise<EnterpriseWorkflow> {
@@ -303,11 +303,11 @@ async function validateWorkflowSteps(steps: WorkflowStep[]): Promise<{ valid: bo
 
 async function testWorkflowStep(
   step: WorkflowStep,
-  testData: Record<string, any>
+  testData: Record<string, unknown>
 ): Promise<{ success: boolean; error?: string; result?: Record<string, unknown> }> {
   try {
     // Create a mock execution for testing
-    const mockExecution = {
+    const _mockExecution = {
       id: 'test-execution',
       workflowId: 'test-workflow',
       entityType: 'test',
@@ -331,7 +331,7 @@ async function testWorkflowStep(
 }
 
 // Workflow Analytics
-async function getWorkflowAnalytics(organizationId: string): Promise<any> {
+async function getWorkflowAnalytics(organizationId: string): Promise<{ totalExecutions: number; successRate: number; averageExecutionTime: number; topWorkflows: unknown[]; recentExecutions: unknown[] }> {
   try {
     const { data: executions } = await supabase
       .from('workflow_executions')
@@ -381,7 +381,7 @@ async function getWorkflowAnalytics(organizationId: string): Promise<any> {
     });
 
     analytics.mostUsedWorkflows = Array.from(workflowUsage.entries())
-      .map(([workflowId, count]: [string, any]) => {
+      .map(([workflowId, count]: [string, number]) => {
         const workflow = workflows?.find(w => w.id === workflowId);
         return {
           workflowId,
@@ -423,7 +423,7 @@ async function getWorkflowAnalytics(organizationId: string): Promise<any> {
 }
 
 // Workflow Monitoring
-async function getWorkflowHealth(organizationId: string): Promise<any> {
+async function getWorkflowHealth(organizationId: string): Promise<{ healthScore: number; activeWorkflows: number; failedWorkflows: number; issues: string[]; recommendations: string[] }> {
   try {
     const { data: executions } = await supabase
       .from('workflow_executions')

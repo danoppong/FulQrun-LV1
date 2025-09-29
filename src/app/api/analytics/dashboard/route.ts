@@ -4,12 +4,6 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(_request: NextRequest) {
   try {
-    const { searchParams } = new URL(_request.url)
-    const _organizationId = searchParams.get('organizationId')
-    const _userId = searchParams.get('userId')
-    const _startDate = searchParams.get('startDate')
-    const _endDate = searchParams.get('endDate')
-
     // Return mock data for now to test the API
     const analyticsData = {
       revenue: {

@@ -20,16 +20,16 @@ export interface MicrosoftGraphAPI {
 }
 
 class MicrosoftGraphAPIImpl implements MicrosoftGraphAPI {
-  async getEmails(folder?: string, limit?: number): Promise<GraphEmail[]> {
+  async getEmails(_folder?: string, _limit?: number): Promise<GraphEmail[]> {
     // Mock implementation
     return []
   }
 
-  async sendEmail(to: string[], subject: string, body: string): Promise<void> {
+  async sendEmail(_to: string[], _subject: string, _body: string): Promise<void> {
     // Mock implementation
   }
 
-  async markAsRead(emailId: string): Promise<void> {
+  async markAsRead(_emailId: string): Promise<void> {
     // Mock implementation
   }
 

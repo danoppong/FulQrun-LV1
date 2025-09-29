@@ -15,7 +15,7 @@ export async function GET(
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get specific learning module
     const { data: module, error } = await supabase
@@ -29,7 +29,7 @@ export async function GET(
     }
 
     return NextResponse.json(module)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch learning module' },
       { status: 500 }

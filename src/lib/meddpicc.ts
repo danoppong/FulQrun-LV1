@@ -548,13 +548,13 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
 
   const pillarScores: Record<string, number> = {}
   const pillarMaxScores: Record<string, number> = {}
-  const litmusTestResponses: MEDDPICCResponse[] = []
+  const _litmusTestResponses: MEDDPICCResponse[] = []
   
   // Calculate pillar scores using improved algorithm
   for (const pillar of MEDDPICC_CONFIG.pillars) {
     let pillarScore = 0
     let pillarMaxScore = 0
-    let answeredQuestions = 0
+    let _answeredQuestions = 0
     const totalQuestions = pillar.questions.length
     
     console.log(`\n--- Processing Pillar: ${pillar.id} ---`)
@@ -566,7 +566,7 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
       console.log(`Looking for response to question ${question.id}:`, response)
       
       if (response && response.answer && response.answer.toString().trim().length > 0) {
-        answeredQuestions++
+        _answeredQuestions++
         
         if (question.type === 'text') {
           // Text responses: Score based on content quality and completeness

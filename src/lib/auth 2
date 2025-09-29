@@ -29,20 +29,20 @@ export const createClientComponentClient = () => {
     // Return mock client if creation fails
     clientInstance = {
       auth: {
-        getUser: async () => ({ data: { user: null }, error: null } as any),
+        getUser: async () => ({ data: { user: null }, error: null } as { data: { user: null }; error: null }),
         signInWithPassword: async () => ({ 
           data: { user: null }, 
           error: null 
-        } as any),
+        } as { data: { user: null }; error: null }),
         signUp: async () => ({ 
           data: { user: null }, 
           error: null 
-        } as any),
-        signOut: async () => ({ error: null } as any),
+        } as { data: { user: null }; error: null }),
+        signOut: async () => ({ error: null } as { error: null }),
         signInWithOAuth: async () => ({ 
           error: null 
-        } as any)
-      } as any,
+        } as { error: null })
+      } as { getUser: () => Promise<{ data: { user: null }; error: null }>; signInWithPassword: () => Promise<{ data: { user: null }; error: null }>; signUp: () => Promise<{ data: { user: null }; error: null }>; signOut: () => Promise<{ error: null }>; signInWithOAuth: () => Promise<{ error: null }> },
       from: (table: string) => ({
         select: () => ({
           eq: () => ({
@@ -52,7 +52,7 @@ export const createClientComponentClient = () => {
             single: async () => ({ data: null, error: { message: 'Supabase client creation failed' } })
           })
         }),
-        insert: (data: any) => {
+        insert: (data: unknown) => {
           const result = { data: null, error: { message: 'Supabase client creation failed' } }
           const promise = Promise.resolve(result)
           return Object.assign(promise, {
@@ -72,7 +72,7 @@ export const createClientComponentClient = () => {
           eq: async () => ({ error: { message: 'Supabase client creation failed' } })
         })
       })
-    } as any
+    } as { auth: { getUser: () => Promise<{ data: { user: null }; error: null }>; signInWithPassword: () => Promise<{ data: { user: null }; error: null }>; signUp: () => Promise<{ data: { user: null }; error: null }>; signOut: () => Promise<{ error: null }>; signInWithOAuth: () => Promise<{ error: null }> }; from: (table: string) => { select: () => { eq: () => { single: () => Promise<{ data: null; error: { message: string } }> } }; insert: () => Promise<{ data: null; error: { message: string } }>; update: () => { eq: () => Promise<{ data: null; error: { message: string } }> }; delete: () => { eq: () => Promise<{ error: { message: string } }> } } }
   }
   return clientInstance
 }

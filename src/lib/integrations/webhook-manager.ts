@@ -255,7 +255,7 @@ export class WebhookManager {
     }
   }
 
-  private validateWebhookSignature(payload: WebhookPayload): boolean {
+  private validateWebhookSignature(_payload: WebhookPayload): boolean {
     // Implement webhook signature validation
     // This would typically involve HMAC validation
     return true; // Simplified for now
@@ -427,7 +427,7 @@ export class WebhookManager {
     }
   }
 
-  private generateSignature(payload: WebhookPayload, secretKey: string): string {
+  private generateSignature(payload: WebhookPayload, _secretKey: string): string {
     // Generate HMAC signature for webhook payload
     // This is a simplified implementation
     return `sha256=${Buffer.from(JSON.stringify(payload)).toString('base64')}`;

@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import { 
   MEDDPICC_CONFIG, 
-  MEDDPICCResponse, 
+  MEDDPICCResponse as _MEDDPICCResponse, 
   MEDDPICCAssessment,
-  calculateMEDDPICCScore
+  calculateMEDDPICCScore as _calculateMEDDPICCScore
 } from '@/lib/meddpicc'
 import { 
   CheckCircleIcon, 
@@ -24,7 +24,7 @@ interface MEDDPICCPEAKIntegrationProps {
 }
 
 export default function MEDDPICCPEAKIntegration({
-  opportunityId,
+  opportunityId: _opportunityId,
   currentPEAKStage,
   assessment,
   onStageAdvance,

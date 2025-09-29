@@ -483,7 +483,7 @@ class LearningManagementSystem {
     // Get user's existing progress and performance
     const userProgress = await this.getUserProgressByOrganization(userId, organizationId);
     const completedModules = userProgress.filter(p => p.status === 'completed');
-    const failedModules = userProgress.filter(p => p.status === 'failed');
+    const _failedModules = userProgress.filter(p => p.status === 'failed');
 
     // Analyze user's strengths and weaknesses
     const performanceAnalysis = this.analyzeUserPerformance(userProgress);
@@ -765,7 +765,7 @@ class LearningManagementSystem {
   }
 
   // Reporting
-  async getLearningReport(organizationId: string, dateFrom?: Date, dateTo?: Date): Promise<any> {
+  async getLearningReport(organizationId: string, dateFrom?: Date, dateTo?: Date): Promise<{ totalUsers: number; completedModules: number; averageProgress: number; topPerformers: unknown[]; strugglingUsers: unknown[] }> {
     let query = supabase
       .from('user_learning_progress')
       .select('*')
@@ -800,4 +800,5 @@ class LearningManagementSystem {
   }
 }
 
-export default new LearningManagementSystem();
+const learningManagementSystem = new LearningManagementSystem();
+export default learningManagementSystem;

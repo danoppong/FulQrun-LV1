@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       created_at: connection.created_at,
       updated_at: connection.updated_at
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to get SharePoint connection' },
       { status: 500 }
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     if (existingConnection) {
       // Update existing connection
-      const { error } = await supabase
+      const { error: _error } = await supabase
         .from('integration_connections')
         .update({
           credentials: JSON.stringify(credentials),
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         message: 'SharePoint connection created successfully'
       })
     }
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to save SharePoint connection' },
       { status: 500 }
@@ -162,7 +162,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       message: 'SharePoint connection deactivated successfully'
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to deactivate SharePoint connection' },
       { status: 500 }

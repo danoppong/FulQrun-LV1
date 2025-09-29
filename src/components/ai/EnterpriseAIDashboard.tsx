@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   ChartBarIcon, 
   LightBulbIcon, 
@@ -32,14 +32,14 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
   const [insights, setInsights] = useState<Record<string, unknown>[]>([]);
   const [coachingRecommendations, setCoachingRecommendations] = useState<CoachingRecommendation[]>([]);
   const [forecastData, setForecastData] = useState<ForecastingData | null>(null);
-  const [aiModels, setAiModels] = useState<AIModelConfig[]>([]);
+  const [aiModels, _setAiModels] = useState<AIModelConfig[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
-  }, [organizationId]);
+  }, [loadDashboardData]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       // Load real-time insights
@@ -58,7 +58,7 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId, userId]);
 
   const handleGenerateInsight = async (type: 'lead' | 'deal', entityId: string) => {
     setLoading(true);
@@ -238,24 +238,24 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
                 ) : (
                   <div className="space-y-4">
                     {insights.slice(0, 5).map((insight) => (
-                      <div key={(insight as any).id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div key={(insight as { id: string }).id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
-                          {getInsightIcon((insight as any).type)}
+                          {getInsightIcon((insight as { type: string }).type)}
                           <div>
                             <p className="text-sm font-medium text-gray-900">
-                              {(insight as any).type.replace('_', ' ').toUpperCase()}
+                              {(insight as { type: string }).type.replace('_', ' ').toUpperCase()}
                             </p>
                             <p className="text-sm text-gray-500">
-                              {(insight as any).entity_type}: {(insight as any).entity_id}
+                              {(insight as { entity_type: string; entity_id: string }).entity_type}: {(insight as { entity_type: string; entity_id: string }).entity_id}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium text-gray-900">
-                            {Math.round((insight as any).confidence_score * 100)}% confidence
+                            {Math.round((insight as { confidence_score: number }).confidence_score * 100)}% confidence
                           </p>
                           <p className="text-sm text-gray-500">
-                            {new Date((insight as any).created_at).toLocaleDateString()}
+                            {new Date((insight as { created_at: string }).created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
@@ -326,24 +326,24 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
                 ) : (
                   <div className="space-y-4">
                     {insights.map((insight) => (
-                      <div key={(insight as any).id} className="border border-gray-200 rounded-lg p-4">
+                      <div key={(insight as { id: string }).id} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-2">
-                            {getInsightIcon((insight as any).type)}
+                            {getInsightIcon((insight as { type: string }).type)}
                             <h4 className="font-medium text-gray-900">
-                              {(insight as any).type.replace('_', ' ').toUpperCase()}
+                              {(insight as { type: string }).type.replace('_', ' ').toUpperCase()}
                             </h4>
                           </div>
                           <span className="text-sm text-gray-500">
-                            {new Date((insight as any).created_at).toLocaleString()}
+                            {new Date((insight as { created_at: string }).created_at).toLocaleString()}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600 mb-2">
-                          Entity: {(insight as any).entity_type} - {(insight as any).entity_id}
+                          Entity: {(insight as { entity_type: string; entity_id: string }).entity_type} - {(insight as { entity_type: string; entity_id: string }).entity_id}
                         </p>
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-gray-900">
-                            Confidence: {Math.round((insight as any).confidence_score * 100)}%
+                            Confidence: {Math.round((insight as { confidence_score: number }).confidence_score * 100)}%
                           </span>
                           <button className="text-sm text-indigo-600 hover:text-indigo-800">
                             View Details

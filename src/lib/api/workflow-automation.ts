@@ -364,10 +364,10 @@ export class WorkflowAutomationAPI {
    * Execute send email action
    */
   private static async executeSendEmailAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, unknown>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would integrate with email service
   }
@@ -376,10 +376,10 @@ export class WorkflowAutomationAPI {
    * Execute create task action
    */
   private static async executeCreateTaskAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, unknown>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would create a task in the activities table
   }
@@ -388,10 +388,10 @@ export class WorkflowAutomationAPI {
    * Execute update field action
    */
   private static async executeUpdateFieldAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, unknown>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would update the specified field in the entity
   }
@@ -400,10 +400,10 @@ export class WorkflowAutomationAPI {
    * Execute send notification action
    */
   private static async executeSendNotificationAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, unknown>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would send notification via Slack, email, or in-app
   }
@@ -412,10 +412,10 @@ export class WorkflowAutomationAPI {
    * Execute create activity action
    */
   private static async executeCreateActivityAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, unknown>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would create an activity record
   }
@@ -424,10 +424,10 @@ export class WorkflowAutomationAPI {
    * Execute assign user action
    */
   private static async executeAssignUserAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, unknown>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would assign a user to the entity
   }
@@ -436,10 +436,10 @@ export class WorkflowAutomationAPI {
    * Execute webhook action
    */
   private static async executeWebhookAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, unknown>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would make HTTP request to webhook URL
   }

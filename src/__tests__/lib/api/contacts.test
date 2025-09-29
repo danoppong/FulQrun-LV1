@@ -122,7 +122,7 @@ describe('ContactAPI', () => {
         email: 'john.doe@example.com'
       }
 
-      const result = await contactAPI.createContact(incompleteData as any)
+      const result = await contactAPI.createContact(incompleteData as { name: string; email?: string; phone?: string; company_id?: string; organization_id: string })
       
       expect(result).toHaveProperty('data')
       expect(result).toHaveProperty('error')

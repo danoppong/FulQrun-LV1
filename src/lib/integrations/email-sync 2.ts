@@ -118,7 +118,7 @@ export class EmailSyncService {
     // 4. Store email metadata
 
     // Mock implementation for MVP
-    const activity: EmailActivity = {
+    const _activity: EmailActivity = {
       id: `email-${email.id}`,
       type: 'email',
       subject: email.subject,
@@ -126,7 +126,7 @@ export class EmailSyncService {
       organization_id: organizationId,
       created_by: userId,
       email_data: {
-        from: (email as any).from?.emailAddress?.address || '',
+        from: (email as { from?: { emailAddress?: { address: string } } }).from?.emailAddress?.address || '',
         to: (email as { toRecipients?: Array<{ emailAddress?: { address: string } }> }).toRecipients?.map((r: { emailAddress?: { address: string } }) => r.emailAddress?.address) || [],
         receivedDateTime: email.receivedDateTime,
         isRead: email.isRead,
@@ -143,8 +143,8 @@ export class EmailSyncService {
    * Find existing email activity by Graph email ID
    */
   private async findExistingEmailActivity(
-    emailId: string,
-    organizationId: string
+    _emailId: string,
+    _organizationId: string
   ): Promise<EmailActivity | null> {
     // In a real implementation, this would query the database
     // for an activity with the email ID in metadata
@@ -166,8 +166,8 @@ export class EmailSyncService {
    * Update existing email activity
    */
   private async updateEmailActivity(
-    activityId: string,
-    email: GraphEmail
+    _activityId: string,
+    _email: GraphEmail
   ): Promise<void> {
     // In a real implementation, this would update the database record
   }
@@ -191,7 +191,7 @@ export class EmailSyncService {
     contactEmail: string,
     organizationId: string,
     userId: string,
-    limit: number = 20
+    _limit: number = 20
   ): Promise<EmailSyncResult> {
     // In a real implementation, this would:
     // 1. Search for emails from/to the contact email
@@ -220,7 +220,7 @@ export class EmailSyncService {
     opportunityId: string,
     organizationId: string,
     userId: string,
-    limit: number = 20
+    _limit: number = 20
   ): Promise<EmailSyncResult> {
     // In a real implementation, this would:
     // 1. Get opportunity details (contact, company)
@@ -246,7 +246,7 @@ export class EmailSyncService {
   /**
    * Get email sync statistics
    */
-  async getSyncStats(organizationId: string): Promise<{
+  async getSyncStats(_organizationId: string): Promise<{
     totalEmails: number
     syncedEmails: number
     lastSyncDate: string | null

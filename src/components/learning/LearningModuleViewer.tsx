@@ -23,7 +23,7 @@ interface LearningModule {
 
 export function LearningModuleViewer({ 
   moduleId, 
-  userId, 
+  userId: _userId, 
   onProgressUpdate, 
   onModuleComplete 
 }: LearningModuleViewerProps) {

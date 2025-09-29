@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   ChartBarIcon, 
   ArrowTrendingUpIcon, 
@@ -11,19 +11,16 @@ import {
   ArrowPathIcon,
   DocumentTextIcon,
   PresentationChartLineIcon,
-  TableCellsIcon,
-  SparklesIcon
+  TableCellsIcon
 } from '@heroicons/react/24/outline';
 import { 
   getAnalyticsDashboards,
   createAnalyticsDashboard,
-  calculateKPIs,
   getKPITemplates,
   generateForecast,
   getRealTimeMetrics,
   executeAnalyticsQuery,
   generateExecutiveReport,
-  getChartData,
   generateAnalyticsInsights,
   AnalyticsDashboard,
   KPIMetric,
@@ -40,17 +37,17 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
   const [dashboards, setDashboards] = useState<AnalyticsDashboard[]>([]);
   const [kpis, setKpis] = useState<KPIMetric[]>([]);
   const [realTimeMetrics, setRealTimeMetrics] = useState<RealTimeMetric[]>([]);
-  const [insights, setInsights] = useState<any[]>([]);
+  const [insights, setInsights] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateDashboardModal, setShowCreateDashboardModal] = useState(false);
-  const [dashboardForm, setDashboardForm] = useState<any>({});
+  const [dashboardForm, setDashboardForm] = useState<Record<string, unknown>>({});
   const [selectedKPIs, setSelectedKPIs] = useState<string[]>([]);
 
   useEffect(() => {
     loadDashboardData();
-  }, [organizationId]);
+  }, [loadDashboardData]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       const [
@@ -74,7 +71,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId]);
 
   const handleCreateDashboard = async () => {
     try {
@@ -108,7 +105,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
     try {
       setLoading(true);
       const forecast = await generateForecast(organizationId, 'monthly');
-      alert(`Forecast generated: ${(forecast as any).predictions.length} predictions with ${Math.round((forecast as any).confidence * 100)}% confidence`);
+      alert(`Forecast generated: ${(forecast as { predictions: unknown[]; confidence: number }).predictions.length} predictions with ${Math.round((forecast as { predictions: unknown[]; confidence: number }).confidence * 100)}% confidence`);
     } catch (error) {
       console.error('Error generating forecast:', error);
       alert('Error generating forecast');
@@ -233,7 +230,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as string)}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'

@@ -70,7 +70,7 @@ export default function Navigation() {
     try {
       await supabase.auth.signOut()
       router.push('/auth/login')
-    } catch (error) {
+    } catch (_error) {
       // Handle sign out error
     }
   }

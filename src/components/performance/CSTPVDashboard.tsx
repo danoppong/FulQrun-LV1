@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { PerformanceAPI } from '@/lib/api/performance'
+import React, { useState, useEffect, useCallback } from 'react'
+import { PerformanceAPI as _PerformanceAPI } from '@/lib/api/performance'
 
 interface CSTPVScore {
   clarity: number
@@ -85,7 +85,7 @@ export function CSTPVDashboard({
     } finally {
       setIsLoading(false)
     }
-  }, [userId, organizationId, periodStart, periodEnd])
+  }, [])
 
   useEffect(() => {
     loadPerformanceData()
@@ -178,7 +178,7 @@ export function CSTPVDashboard({
               className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
                 activeTab === key ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
               }`}
-              onClick={() => setActiveTab(key as any)}
+              onClick={() => setActiveTab(key as string)}
             >
               <div className="text-center">
                 <div className={`text-3xl font-bold ${getScoreColor(score)}`}>
@@ -220,7 +220,7 @@ export function CSTPVDashboard({
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as string)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'

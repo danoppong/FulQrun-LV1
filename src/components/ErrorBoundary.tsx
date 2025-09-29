@@ -51,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     // Send to error reporting service (if configured)
     if (typeof window !== 'undefined' && (window as Window & { gtag?: (command: string, action: string, parameters: Record<string, unknown>) => void }).gtag) {
-      ((window as any).gtag)('event', 'exception', {
+      ((window as Window & { gtag?: (command: string, action: string, parameters: Record<string, unknown>) => void }).gtag)('event', 'exception', {
         description: error.message,
         fatal: level === 'critical',
         custom_map: {
@@ -92,7 +92,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      const { level = 'component', context, fallback } = this.props
+      const { level = 'component', context: _context, fallback } = this.props
       
       // Custom fallback UI
       if (fallback) {

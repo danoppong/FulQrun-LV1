@@ -21,7 +21,7 @@ export const createClientComponentClient = () => {
         error: { message: 'Please set up Supabase to enable authentication' }
       })
     },
-    from: (table: string) => ({
+    from: (_table: string) => ({
       select: () => ({
         eq: () => ({
           single: async () => ({ data: null, error: { message: 'Database not configured' } })
@@ -57,7 +57,7 @@ export const createServerComponentClient = () => {
         error: null
       })
     },
-    from: (table: string) => ({
+    from: (_table: string) => ({
       select: () => ({
         eq: () => ({
           single: async () => ({ data: null, error: { message: 'Database not configured' } })
@@ -85,7 +85,7 @@ export const createServerComponentClient = () => {
   }
 }
 
-export const createMiddlewareClient = (request: Request) => {
+export const createMiddlewareClient = (_request: Request) => {
   return {
     supabase: {
       auth: {

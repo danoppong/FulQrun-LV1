@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect, memo, useCallback } from 'react'
 import { usePerformanceTracking } from '@/hooks/usePerformanceTracking'
 import { createClientComponentClient } from '@/lib/auth'
 import { 
@@ -24,7 +24,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<'weekly' | 'monthly' | 'quarterly' | 'yearly'>('monthly')
 
   // Performance tracking
-  const { recordCustomMetric } = usePerformanceTracking({
+  const { recordCustomMetric: _recordCustomMetric } = usePerformanceTracking({
     componentName: 'SalesmanDashboard',
     trackRenders: true,
     trackProps: true,
@@ -35,39 +35,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
   const [lastSyncAttempt, setLastSyncAttempt] = useState<Date | null>(null)
   const supabase = createClientComponentClient()
 
-  useEffect(() => {
-    loadDashboardLayout()
-  }, [userId])
-
-  // Auto-save when widgets change (but not on initial load)
-  useEffect(() => {
-    if (widgets.length > 0 && isEditMode) {
-      const timeoutId = setTimeout(() => {
-        saveDashboardLayout()
-      }, 2000) // Auto-save after 2 seconds of inactivity
-
-      return () => clearTimeout(timeoutId)
-    }
-  }, [widgets, isEditMode])
-
-  // Auto-sync from localStorage to database when database becomes available
-  useEffect(() => {
-    if (storageMethod === 'localStorage' && !isSyncing) {
-      const syncInterval = setInterval(async () => {
-        await attemptSyncToDatabase()
-      }, 30000) // Try to sync every 30 seconds
-
-      // Also try to sync immediately if it's been a while since last attempt
-      const timeSinceLastAttempt = lastSyncAttempt ? Date.now() - lastSyncAttempt.getTime() : Infinity
-      if (timeSinceLastAttempt > 60000) { // If more than 1 minute since last attempt
-        attemptSyncToDatabase()
-      }
-
-      return () => clearInterval(syncInterval)
-    }
-  }, [storageMethod, isSyncing, lastSyncAttempt])
-
-  const loadDashboardLayout = async () => {
+  const loadDashboardLayout = useCallback(async () => {
     try {
       // Try to load from database first
       const { data, error } = await supabase
@@ -94,12 +62,12 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           const parsedLayout = JSON.parse(savedLayout)
           setWidgets(parsedLayout)
           setStorageMethod('localStorage')
-        } catch (parseError) {
+        } catch (_parseError) {
           // Handle localStorage parse error silently
         }
       } else {
       }
-    } catch (error) {
+    } catch (_error) {
       // Database unavailable, using localStorage fallback
       
       // Fallback to localStorage on database error
@@ -109,15 +77,47 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           const parsedLayout = JSON.parse(savedLayout)
           setWidgets(parsedLayout)
           setStorageMethod('localStorage')
-        } catch (parseError) {
+        } catch (_parseError) {
           // Handle localStorage parse error silently
         }
       } else {
       }
     }
-  }
+  }, [userId, supabase])
 
-  const saveDashboardLayout = async () => {
+  useEffect(() => {
+    loadDashboardLayout()
+  }, [loadDashboardLayout])
+
+  // Auto-save when widgets change (but not on initial load)
+  useEffect(() => {
+    if (widgets.length > 0 && isEditMode) {
+      const timeoutId = setTimeout(() => {
+        saveDashboardLayout()
+      }, 2000) // Auto-save after 2 seconds of inactivity
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [widgets, isEditMode, saveDashboardLayout])
+
+  // Auto-sync from localStorage to database when database becomes available
+  useEffect(() => {
+    if (storageMethod === 'localStorage' && !isSyncing) {
+      const syncInterval = setInterval(async () => {
+        await attemptSyncToDatabase()
+      }, 30000) // Try to sync every 30 seconds
+
+      // Also try to sync immediately if it's been a while since last attempt
+      const timeSinceLastAttempt = lastSyncAttempt ? Date.now() - lastSyncAttempt.getTime() : Infinity
+      if (timeSinceLastAttempt > 60000) { // If more than 1 minute since last attempt
+        attemptSyncToDatabase()
+      }
+
+      return () => clearInterval(syncInterval)
+    }
+  }, [storageMethod, isSyncing, attemptSyncToDatabase, lastSyncAttempt])
+
+  const saveDashboardLayout = useCallback(async () => {
     try {
       // Try to save to database first
       const { error: dbError } = await supabase
@@ -134,7 +134,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
 
       setStorageMethod('database')
       return true
-    } catch (error) {
+    } catch (_error) {
       // Database unavailable, using localStorage
       
       // Fallback to localStorage
@@ -142,14 +142,14 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         localStorage.setItem(`dashboard-layout-${userId}`, JSON.stringify(widgets))
         setStorageMethod('localStorage')
         return true
-      } catch (localStorageError) {
+      } catch (_localStorageError) {
         // Error saving to localStorage
         return false
       }
     }
-  }
+  }, [userId, widgets, supabase])
 
-  const attemptSyncToDatabase = async () => {
+  const attemptSyncToDatabase = useCallback(async () => {
     if (isSyncing) return // Prevent concurrent sync attempts
     
     setIsSyncing(true)
@@ -187,11 +187,11 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
       // localStorage.removeItem(`dashboard-layout-${userId}`)
       
       setIsSyncing(false)
-    } catch (error) {
+    } catch (_error) {
       // Sync attempt failed
       setIsSyncing(false)
     }
-  }
+  }, [isSyncing, userId, supabase])
 
   const handleDragStart = (e: React.DragEvent, widgetId: string) => {
     setDraggedWidget(widgetId)

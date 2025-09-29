@@ -7,11 +7,11 @@ export default function LearningPage() {
   const [userId] = useState('user-123') // This would come from auth context
   const [organizationId] = useState('org-123') // This would come from auth context
 
-  const handleProgressUpdate = (moduleId: string, progress: number) => {
+  const _handleProgressUpdate = (_moduleId: string, _progress: number) => {
     // Handle progress update
   }
 
-  const handleModuleComplete = (moduleId: string) => {
+  const _handleModuleComplete = (_moduleId: string) => {
     // Handle module completion
   }
 

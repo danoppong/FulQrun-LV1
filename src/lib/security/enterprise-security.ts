@@ -431,12 +431,12 @@ export class EnterpriseSecurityAPI {
 
   private static async generateComplianceCheckReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     // Generate compliance check report
-    const { data: auditLogs } = await supabase
+    const { data: _auditLogs } = await supabase
       .from('enterprise_audit_logs')
       .select('*')
       .eq('organization_id', organizationId);
 
-    const { data: users } = await supabase
+    const { data: _users } = await supabase
       .from('users')
       .select('*')
       .eq('organization_id', organizationId);
@@ -657,7 +657,7 @@ export class EnterpriseSecurityAPI {
   }
 
   // Security Monitoring
-  static async detectAnomalies(organizationId: string): Promise<any[]> {
+  static async detectAnomalies(organizationId: string): Promise<unknown[]> {
     try {
       const { data: auditLogs } = await supabase
         .from('enterprise_audit_logs')
@@ -676,7 +676,7 @@ export class EnterpriseSecurityAPI {
         return acc;
       }, {} as Record<string, unknown>);
 
-      Object.entries(loginCounts).forEach(([userId, count]: [string, any]) => {
+      Object.entries(loginCounts).forEach(([userId, count]: [string, number]) => {
         if (count > 10) { // More than 10 logins in 24 hours
           anomalies.push({
             type: 'unusual_login_activity',
@@ -716,14 +716,14 @@ export class EnterpriseSecurityAPI {
     return btoa(JSON.stringify(data));
   }
 
-  static async decryptSensitiveData(encryptedData: string): Promise<any> {
+  static async decryptSensitiveData(encryptedData: string): Promise<{ decryptedData: string; success: boolean }> {
     // In a real implementation, this would use proper decryption
     // For now, we'll use a simple base64 decoding as a placeholder
     return JSON.parse(atob(encryptedData));
   }
 
   // Compliance Status Check
-  static async getComplianceStatus(organizationId: string): Promise<any> {
+  static async getComplianceStatus(organizationId: string): Promise<{ isCompliant: boolean; complianceScore: number; violations: string[]; lastAudit: string }> {
     try {
       const { data: organization } = await supabase
         .from('organizations')

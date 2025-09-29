@@ -57,7 +57,7 @@ export class PerformanceAPI {
     }
   }
 
-  async getPerformanceSummary(userId: string): Promise<ApiResponse<PerformanceSummary>> {
+  async getPerformanceSummary(_userId: string): Promise<ApiResponse<PerformanceSummary>> {
     try {
       // Mock data for now - in real implementation, this would calculate from metrics
       const mockSummary: PerformanceSummary = {

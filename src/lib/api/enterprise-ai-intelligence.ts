@@ -356,62 +356,62 @@ export class EnterpriseAIIntelligence {
   }
 
   // Helper methods
-  private calculateDemographicScore(lead: Record<string, unknown>): number {
+  private calculateDemographicScore(_lead: Record<string, unknown>): number {
     // Implement demographic scoring logic
     return Math.floor(Math.random() * 40) + 60 // Placeholder
   }
 
-  private calculateBehavioralScore(lead: Record<string, unknown>): number {
+  private calculateBehavioralScore(_lead: Record<string, unknown>): number {
     // Implement behavioral scoring logic
     return Math.floor(Math.random() * 40) + 60 // Placeholder
   }
 
-  private calculateEngagementScore(lead: Record<string, unknown>): number {
+  private calculateEngagementScore(_lead: Record<string, unknown>): number {
     // Implement engagement scoring logic
     return Math.floor(Math.random() * 40) + 60 // Placeholder
   }
 
-  private calculateCompanyScore(company: Record<string, unknown>): number {
+  private calculateCompanyScore(_company: Record<string, unknown>): number {
     // Implement company scoring logic
     return Math.floor(Math.random() * 40) + 60 // Placeholder
   }
 
-  private calculateConfidence(lead: Record<string, unknown>): number {
+  private calculateConfidence(_lead: Record<string, unknown>): number {
     // Implement confidence calculation
     return Math.random() * 0.3 + 0.7 // Placeholder
   }
 
-  private generateLeadRecommendations(lead: Record<string, unknown>, score: number): string[] {
+  private generateLeadRecommendations(_lead: Record<string, unknown>, _score: number): string[] {
     // Implement recommendation generation
     return ['Follow up within 24 hours', 'Schedule discovery call', 'Send relevant case studies']
   }
 
-  private identifyRiskFactors(lead: Record<string, unknown>): string[] {
+  private identifyRiskFactors(_lead: Record<string, unknown>): string[] {
     // Implement risk factor identification
     return ['Long sales cycle', 'Budget constraints', 'Multiple decision makers']
   }
 
-  private calculateTimelineRisk(opportunity: Record<string, unknown>): number {
+  private calculateTimelineRisk(_opportunity: Record<string, unknown>): number {
     // Implement timeline risk calculation
     return Math.floor(Math.random() * 100) // Placeholder
   }
 
-  private calculateBudgetRisk(opportunity: Record<string, unknown>): number {
+  private calculateBudgetRisk(_opportunity: Record<string, unknown>): number {
     // Implement budget risk calculation
     return Math.floor(Math.random() * 100) // Placeholder
   }
 
-  private calculateDecisionMakerRisk(opportunity: Record<string, unknown>): number {
+  private calculateDecisionMakerRisk(_opportunity: Record<string, unknown>): number {
     // Implement decision maker risk calculation
     return Math.floor(Math.random() * 100) // Placeholder
   }
 
-  private calculateCompetitionRisk(opportunity: Record<string, unknown>): number {
+  private calculateCompetitionRisk(_opportunity: Record<string, unknown>): number {
     // Implement competition risk calculation
     return Math.floor(Math.random() * 100) // Placeholder
   }
 
-  private calculateRelationshipRisk(opportunity: Record<string, unknown>): number {
+  private calculateRelationshipRisk(_opportunity: Record<string, unknown>): number {
     // Implement relationship risk calculation
     return Math.floor(Math.random() * 100) // Placeholder
   }
@@ -423,17 +423,17 @@ export class EnterpriseAIIntelligence {
     return 'critical'
   }
 
-  private generateDealRecommendations(opportunity: Record<string, unknown>, riskLevel: string): string[] {
+  private generateDealRecommendations(_opportunity: Record<string, unknown>, _riskLevel: string): string[] {
     // Implement deal recommendation generation
     return ['Schedule stakeholder meeting', 'Prepare competitive analysis', 'Review budget approval process']
   }
 
-  private generateNextSteps(opportunity: Record<string, unknown>, riskLevel: string): string[] {
+  private generateNextSteps(_opportunity: Record<string, unknown>, _riskLevel: string): string[] {
     // Implement next steps generation
     return ['Follow up with decision maker', 'Prepare proposal', 'Schedule demo']
   }
 
-  private analyzeUserPerformance(user: Record<string, unknown>): Record<string, unknown> {
+  private analyzeUserPerformance(_user: Record<string, unknown>): Record<string, unknown> {
     // Implement user performance analysis
     return {
       skillGaps: ['Objection Handling', 'Closing Techniques'],
@@ -441,7 +441,7 @@ export class EnterpriseAIIntelligence {
     }
   }
 
-  private generateDealStrategyActions(opportunities: Array<Record<string, unknown>>): string[] {
+  private generateDealStrategyActions(_opportunities: Array<Record<string, unknown>>): string[] {
     // Implement deal strategy action generation
     return ['Review opportunity pipeline', 'Identify decision makers', 'Prepare competitive positioning']
   }
@@ -457,7 +457,7 @@ export class EnterpriseAIIntelligence {
     return ranges[period as keyof typeof ranges]?.toISOString() || ranges.monthly.toISOString()
   }
 
-  private calculateForecast(opportunities: Array<Record<string, unknown>>, period: string): Record<string, unknown> {
+  private calculateForecast(_opportunities: Array<Record<string, unknown>>, _period: string): Record<string, unknown> {
     // Implement forecast calculation
     return {
       predictions: {

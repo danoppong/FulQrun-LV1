@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get SharePoint connection
     const { data: connection, error: connectionError } = await supabase
@@ -66,10 +66,10 @@ export async function GET(request: NextRequest) {
         url: doc.url,
         size: doc.size,
         last_modified: doc.modified,
-        created_by: (doc as any).createdBy || 'unknown',
-        web_url: (doc as any).webUrl || doc.url,
-        download_url: (doc as any).downloadUrl || doc.url,
-        thumbnail_url: (doc as any).thumbnailUrl || ''
+        created_by: (doc as { createdBy?: string }).createdBy || 'unknown',
+        web_url: (doc as { webUrl?: string }).webUrl || doc.url,
+        download_url: (doc as { downloadUrl?: string }).downloadUrl || doc.url,
+        thumbnail_url: (doc as { thumbnailUrl?: string }).thumbnailUrl || ''
       }))
 
       // Upsert document records
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get SharePoint connection
     const { data: connection, error: connectionError } = await supabase
@@ -194,7 +194,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get SharePoint connection
     const { data: connection, error: connectionError } = await supabase

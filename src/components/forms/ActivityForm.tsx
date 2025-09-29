@@ -5,7 +5,7 @@ import { useState, useEffect, memo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { activityAPI } from '@/lib/api/activities'
+import { activityAPI as _activityAPI } from '@/lib/api/activities'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
 
 const activitySchema = z.object({
@@ -66,7 +66,7 @@ const ActivityForm = memo(function ActivityForm({
     handleSubmit,
     watch,
     formState: { errors },
-    setValue
+    setValue: _setValue
   } = useForm<ActivityFormData>({
     resolver: zodResolver(activitySchema),
     defaultValues: {
@@ -98,7 +98,7 @@ const ActivityForm = memo(function ActivityForm({
       } else if (data) {
         setContacts(data)
       }
-    } catch (error) {
+    } catch (_error) {
       const errorMessage = 'An unexpected error occurred while loading contacts'
       setContactsError(errorMessage)
     } finally {
@@ -109,16 +109,16 @@ const ActivityForm = memo(function ActivityForm({
   const onSubmit = async (data: ActivityFormData) => {
     try {
       await onSave(data)
-    } catch (error) {
+    } catch (_error) {
     }
   }
 
-  const getTypeIcon = (type: string) => {
+  const _getTypeIcon = (type: string) => {
     const activityType = activityTypes.find(t => t.value === type)
     return activityType?.icon || '📝'
   }
 
-  const getTypeDescription = (type: string) => {
+  const _getTypeDescription = (type: string) => {
     const activityType = activityTypes.find(t => t.value === type)
     return activityType?.description || ''
   }

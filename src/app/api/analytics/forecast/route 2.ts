@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get historical data for forecasting
     const { data: historicalData } = await supabase

@@ -35,7 +35,7 @@ function PerformanceContent() {
           return
         }
         setUser(user)
-      } catch (error) {
+      } catch (_error) {
         router.push('/auth/login')
       } finally {
         setLoading(false)
@@ -193,7 +193,7 @@ function PerformanceContent() {
         {/* CSTPV Dashboard */}
         <CSTPVDashboard
           userId={user.id}
-          organizationId={(user as any).profile?.organization_id || DEFAULT_ORGANIZATION_ID}
+          organizationId={user.profile?.organization_id || DEFAULT_ORGANIZATION_ID}
           periodStart={periodDates.start}
           periodEnd={periodDates.end}
         />

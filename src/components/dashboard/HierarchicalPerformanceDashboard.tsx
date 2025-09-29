@@ -1,7 +1,7 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { UserRole } from '@/lib/roles'
-import { PerformanceMetrics, getPerformanceDataForRole, calculateTeamPerformance, getDrillDownData } from '@/lib/performance-data'
+import { PerformanceMetrics, getPerformanceDataForRole, getDrillDownData } from '@/lib/performance-data'
 import RoleSelector from '@/components/RoleSelector'
 
 interface HierarchicalPerformanceDashboardProps {
@@ -24,14 +24,14 @@ const HierarchicalPerformanceDashboard = ({
   const [userRole, setUserRole] = useState<UserRole>(initialUserRole)
   const [performanceData, setPerformanceData] = useState<PerformanceMetrics[]>([])
   const [currentView, setCurrentView] = useState<ViewLevel>('individual')
-  const [selectedManager, setSelectedManager] = useState<string | null>(null)
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
+  const [_selectedManager, _setSelectedManager] = useState<string | null>(null)
+  const [_selectedRegion, _setSelectedRegion] = useState<string | null>(null)
 
   useEffect(() => {
     loadPerformanceData()
-  }, [userRole, userId, userRegion, userBusinessUnit, currentView, selectedManager, selectedRegion])
+  }, [loadPerformanceData])
 
-  const loadPerformanceData = () => {
+  const loadPerformanceData = useCallback(() => {
     let data: PerformanceMetrics[] = []
     
     if (currentView === 'individual') {
@@ -41,7 +41,7 @@ const HierarchicalPerformanceDashboard = ({
     }
     
     setPerformanceData(data)
-  }
+  }, [currentView, userId, userRole, userRegion, userBusinessUnit])
 
   const getViewTitle = () => {
     switch (currentView) {

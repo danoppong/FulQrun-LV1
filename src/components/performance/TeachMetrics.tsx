@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect, useCallback, memo } from 'react'
 import { performanceAPI } from '@/lib/api/performance'
 
 interface TeachMetricsProps {
@@ -12,9 +12,9 @@ interface TeachMetricsProps {
 
 const TeachMetrics = memo(function TeachMetrics({ 
   userId, 
-  organizationId, 
+  organizationId: _organizationId, 
   periodStart, 
-  periodEnd 
+  periodEnd: _periodEnd 
 }: TeachMetricsProps) {
   const [metrics, setMetrics] = useState<Array<{
     id: string
@@ -28,9 +28,9 @@ const TeachMetrics = memo(function TeachMetrics({
 
   useEffect(() => {
     loadTeachMetrics()
-  }, [userId, organizationId, periodStart, periodEnd, loadTeachMetrics])
+  }, [loadTeachMetrics])
 
-  const loadTeachMetrics = async () => {
+  const loadTeachMetrics = useCallback(async () => {
     try {
       setIsLoading(true)
       const { data, error } = await performanceAPI.getPerformanceMetrics(userId, periodStart)
@@ -44,7 +44,7 @@ const TeachMetrics = memo(function TeachMetrics({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [userId, periodStart])
 
   if (isLoading) {
     return <div className="animate-pulse h-64 bg-gray-200 rounded"></div>

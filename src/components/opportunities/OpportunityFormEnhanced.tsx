@@ -79,7 +79,7 @@ export default function OpportunityFormEnhanced({
     handleSubmit,
     formState: { errors },
     watch,
-    setValue,
+    setValue: _setValue,
     reset,
   } = useForm<LocalOpportunityFormData>({
     resolver: zodResolver(opportunitySchema),
@@ -180,7 +180,7 @@ export default function OpportunityFormEnhanced({
     } finally {
       setLoading(false)
     }
-  }, [opportunityId])
+  }, [opportunityId, reset])
 
   const loadContacts = async () => {
     try {
@@ -494,9 +494,9 @@ export default function OpportunityFormEnhanced({
                     assessment={meddpiccAssessment}
                     onStageAdvance={async (fromStage, toStage) => {
                       try {
-                        const { error } = await opportunityAPI.updatePeakStage(opportunityId!, toStage as any)
+                        const { error } = await opportunityAPI.updatePeakStage(opportunityId!, toStage as string)
                         if (!error) {
-                          setPeakData(prev => ({ ...prev, peak_stage: toStage as any }))
+                          setPeakData(prev => ({ ...prev, peak_stage: toStage as string }))
                           setIsDirty(true)
                         }
                       } catch (error) {

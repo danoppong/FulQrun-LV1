@@ -53,7 +53,7 @@ export class OpenAIClient {
         confidence,
         usage: response.usage
       }
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate AI insight')
     }
   }
@@ -81,7 +81,7 @@ export class OpenAIClient {
     factors: Record<string, number>
     recommendations: string[]
   }> {
-    const prompt = `Analyze this lead and provide a score from 0-100:
+    const _prompt = `Analyze this lead and provide a score from 0-100:
 
 Lead Information:
 - Name: ${leadData.firstName} ${leadData.lastName}
@@ -142,7 +142,7 @@ Respond in JSON format.`
     riskFactors: Record<string, number>
     mitigationStrategies: string[]
   }> {
-    const prompt = `Assess the risk level of this sales opportunity:
+    const _prompt = `Assess the risk level of this sales opportunity:
 
 Opportunity Information:
 - Name: ${opportunityData.name}
@@ -216,7 +216,7 @@ Respond in JSON format.`
     }>
     confidence: number
   }> {
-    const prompt = `Recommend the next best actions for this sales opportunity:
+    const _prompt = `Recommend the next best actions for this sales opportunity:
 
 Opportunity Information:
 - Name: ${opportunityData.name}
@@ -290,7 +290,7 @@ Respond in JSON format.`
       marketFactors: string[]
     }
   }> {
-    const prompt = `Generate sales forecast based on this pipeline data:
+    const _prompt = `Generate sales forecast based on this pipeline data:
 
 Pipeline Data:
 - Active Opportunities: ${pipelineData.opportunities?.length || 0}
@@ -339,7 +339,7 @@ Respond in JSON format.`
     strengths: string[]
     weaknesses: string[]
   }> {
-    const prompt = `Analyze this sales performance data:
+    const _prompt = `Analyze this sales performance data:
 
 Performance Metrics:
 ${Object.entries(performanceData.metrics).map(([key, value]) => `- ${key}: ${value}`).join('\n')}

@@ -5,11 +5,6 @@ export const revalidate = 300 // Cache for 5 minutes
 
 export async function GET(_request: NextRequest) {
   try {
-    const { searchParams } = new URL(_request.url)
-    const _organizationId = searchParams.get('organizationId')
-    const _startDate = searchParams.get('startDate')
-    const _endDate = searchParams.get('endDate')
-
     // Add a small delay to prevent resource exhaustion
     await new Promise(resolve => setTimeout(resolve, 100))
 

@@ -22,7 +22,7 @@ const LoginPage = () => {
     setError('')
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data: _data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -108,7 +108,7 @@ const LoginPage = () => {
               href="/auth/signup"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              Don't have an account? Sign up
+              Don&apos;t have an account? Sign up
             </Link>
           </div>
         </form>

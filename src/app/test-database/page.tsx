@@ -37,12 +37,12 @@ export default function TestDatabasePage() {
     setResults(testResults);
     setErrors(errorMessages);
 
-    let allTablesExist = true;
+    const _allTablesExist = true;
 
     for (const tableName of phase2Tables) {
       try {
         // Try to query the table (this will fail if table doesn't exist)
-        const { data, error } = await supabase
+        const { data: _data, error } = await supabase
           .from(tableName)
           .select('*')
           .limit(1);

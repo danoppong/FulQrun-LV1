@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { 
   MobileSession, 
   DeviceInfo, 
-  OfflineData, 
+  OfflineData as _OfflineData, 
   VoiceNote, 
   MobileAnalytics 
 } from '@/lib/mobile/mobile-app';
@@ -55,7 +55,7 @@ export async function createMobileSession(
   }
 }
 
-export async function getMobileSession(userId: string, deviceId: string): Promise<MobileSession | null> {
+export async function getMobileSession(_userId: string, _deviceId: string): Promise<MobileSession | null> {
   try {
     // TODO: Implement getMobileSession
     return null;
@@ -119,7 +119,7 @@ export async function deleteMobileSession(sessionId: string): Promise<void> {
 }
 
 // Offline Data Management
-export async function syncOfflineData(sessionId: string): Promise<any> {
+export async function syncOfflineData(_sessionId: string): Promise<{ success: boolean; syncedRecords: number }> {
   try {
     // TODO: Implement syncOfflineData
     return { success: true, syncedRecords: 0 };
@@ -130,9 +130,9 @@ export async function syncOfflineData(sessionId: string): Promise<any> {
 }
 
 export async function storeOfflineData(
-  sessionId: string,
-  entityType: string,
-  data: Array<Record<string, unknown>>
+  _sessionId: string,
+  _entityType: string,
+  _data: Array<Record<string, unknown>>
 ): Promise<void> {
   try {
     // TODO: Implement storeOfflineData
@@ -143,7 +143,7 @@ export async function storeOfflineData(
   }
 }
 
-export async function getOfflineData(sessionId: string, entityType: string): Promise<any[]> {
+export async function getOfflineData(_sessionId: string, _entityType: string): Promise<unknown[]> {
   try {
     // TODO: Implement getOfflineData
     return [];
@@ -194,7 +194,7 @@ export async function addPendingChange(
   }
 }
 
-export async function getPendingChanges(sessionId: string): Promise<any[]> {
+export async function getPendingChanges(sessionId: string): Promise<unknown[]> {
   try {
     const { data: session } = await supabase
       .from('mobile_sessions')
@@ -245,9 +245,9 @@ export async function createVoiceNote(
 }
 
 export async function getVoiceNotes(
-  userId: string,
-  entityType?: string,
-  entityId?: string
+  _userId: string,
+  _entityType?: string,
+  _entityId?: string
 ): Promise<VoiceNote[]> {
   try {
     // TODO: Implement getVoiceNotes
@@ -278,10 +278,10 @@ export async function trackMobileEvent(
   sessionId: string,
   eventType: string,
   eventData: Record<string, unknown>,
-  deviceInfo: DeviceInfo,
-  networkType: string,
-  appVersion: string,
-  organizationId: string
+  _deviceInfo: DeviceInfo,
+  _networkType: string,
+  _appVersion: string,
+  _organizationId: string
 ): Promise<void> {
   try {
     // TODO: Implement trackMobileEvent
@@ -295,8 +295,8 @@ export async function trackMobileEvent(
 export async function getMobileAnalytics(
   organizationId: string,
   userId?: string,
-  dateFrom?: Date,
-  dateTo?: Date
+  _dateFrom?: Date,
+  _dateTo?: Date
 ): Promise<MobileAnalytics> {
   try {
     // TODO: Implement getMobileAnalytics
@@ -328,7 +328,13 @@ export async function getMobileAnalytics(
   }
 }
 
-export async function getMobileAnalyticsSummary(organizationId: string): Promise<any> {
+export async function getMobileAnalyticsSummary(organizationId: string): Promise<{
+  totalEvents: number;
+  uniqueUsers: number;
+  uniqueSessions: number;
+  deviceTypes: Record<string, number>;
+  eventTypes: Record<string, number>;
+}> {
   try {
     const { data: analytics } = await supabase
       .from('mobile_analytics')
@@ -373,7 +379,7 @@ export async function sendPushNotification(
   userId: string,
   title: string,
   body: string,
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 ): Promise<void> {
   try {
     // TODO: Implement sendPushNotification
@@ -399,7 +405,7 @@ export async function registerPushToken(
   }
 }
 
-export async function getPushTokens(userId: string): Promise<any[]> {
+export async function getPushTokens(userId: string): Promise<unknown[]> {
   try {
     const { data, error } = await supabase
       .from('push_tokens')
@@ -416,7 +422,7 @@ export async function getPushTokens(userId: string): Promise<any[]> {
 }
 
 // Mobile App Configuration
-export async function getMobileAppConfig(organizationId: string): Promise<any> {
+export async function getMobileAppConfig(_organizationId: string): Promise<{ theme?: string; features?: string[]; settings?: Record<string, unknown> }> {
   try {
     // TODO: Implement getMobileAppConfig
     return {
@@ -450,7 +456,7 @@ export async function updateMobileAppConfig(
 export async function getDeviceCompliance(
   organizationId: string,
   deviceId: string
-): Promise<any> {
+): Promise<{ deviceId: string; complianceStatus: string; lastChecked: string }> {
   try {
     // TODO: Implement getDeviceCompliance
     return {
@@ -480,7 +486,7 @@ export async function enforceDevicePolicy(
   }
 }
 
-export async function getDevicePolicies(organizationId: string): Promise<any[]> {
+export async function getDevicePolicies(organizationId: string): Promise<unknown[]> {
   try {
     const { data, error } = await supabase
       .from('device_policies')
@@ -504,7 +510,7 @@ export async function resolveDataConflict(
   localData: Record<string, unknown>,
   serverData: Record<string, unknown>,
   resolutionStrategy: 'local_wins' | 'server_wins' | 'merge' | 'manual'
-): Promise<any> {
+): Promise<{ resolvedData: Record<string, unknown>; conflicts: string[]; resolution: string }> {
   try {
     // TODO: Implement resolveDataConflict
     return {
@@ -519,7 +525,7 @@ export async function resolveDataConflict(
   }
 }
 
-export async function getDataConflicts(sessionId: string): Promise<any[]> {
+export async function getDataConflicts(sessionId: string): Promise<unknown[]> {
   try {
     const { data: session } = await supabase
       .from('mobile_sessions')
@@ -537,7 +543,12 @@ export async function getDataConflicts(sessionId: string): Promise<any[]> {
 }
 
 // Mobile App Health
-export async function getMobileAppHealth(organizationId: string): Promise<any> {
+export async function getMobileAppHealth(organizationId: string): Promise<{
+  activeSessions: number;
+  totalEvents: number;
+  errorRate: number;
+  averageSessionDuration: number;
+}> {
   try {
     const { data: sessions } = await supabase
       .from('mobile_sessions')

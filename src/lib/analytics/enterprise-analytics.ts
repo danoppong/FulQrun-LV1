@@ -488,7 +488,7 @@ export class EnterpriseAnalyticsAPI {
       context: Record<string, unknown>
     }>,
     horizon: number,
-    period: string
+    _period: string
   ): Promise<Record<string, unknown>> {
     // Simple linear regression forecasting
     const dataPoints = historicalData.length;
@@ -721,7 +721,7 @@ export class EnterpriseAnalyticsAPI {
     }
   }
 
-  private static async getSalesPerformanceByUser(organizationId: string, parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
+  private static async getSalesPerformanceByUser(organizationId: string, _parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     const { data: users } = await supabase
       .from('users')
       .select('id, first_name, last_name')
@@ -752,7 +752,7 @@ export class EnterpriseAnalyticsAPI {
     return performance;
   }
 
-  private static async getConversionFunnel(organizationId: string, parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
+  private static async getConversionFunnel(organizationId: string, _parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     const { data: opportunities } = await supabase
       .from('opportunities')
       .select('stage')
@@ -780,7 +780,7 @@ export class EnterpriseAnalyticsAPI {
     return funnel;
   }
 
-  private static async getCustomerLifetimeValue(organizationId: string, parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
+  private static async getCustomerLifetimeValue(organizationId: string, _parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     const { data: opportunities } = await supabase
       .from('opportunities')
       .select('deal_value, company_id, closed_at')

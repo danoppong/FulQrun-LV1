@@ -37,11 +37,11 @@ export function getSupabaseClient() {
         signInWithOAuth: async () => ({ 
           error: { message: 'Supabase not configured' } 
         }),
-        onAuthStateChange: (callback: (event: string) => void) => ({
+        onAuthStateChange: (_callback: (event: string) => void) => ({
           data: { subscription: { unsubscribe: () => {} } }
         })
       },
-      from: (table: string) => ({
+      from: (_table: string) => ({
         select: () => ({
           eq: () => ({
             single: async () => ({ data: null, error: { message: 'Database not configured' } })
@@ -50,7 +50,7 @@ export function getSupabaseClient() {
             single: async () => ({ data: null, error: { message: 'Database not configured' } })
           })
         }),
-        insert: (data: Record<string, unknown>) => {
+        insert: (_data: Record<string, unknown>) => {
           const result = { data: null, error: { message: 'Database not configured' } }
           const promise = Promise.resolve(result)
           return Object.assign(promise, {
@@ -102,11 +102,11 @@ export function getSupabaseClient() {
         signInWithOAuth: async () => ({ 
           error: { message: 'Supabase client creation failed' } 
         }),
-        onAuthStateChange: (callback: (event: string) => void) => ({
+        onAuthStateChange: (_callback: (event: string) => void) => ({
           data: { subscription: { unsubscribe: () => {} } }
         })
       },
-      from: (table: string) => ({
+      from: (_table: string) => ({
         select: () => ({
           eq: () => ({
             single: async () => ({ data: null, error: { message: 'Database not configured' } })
@@ -115,7 +115,7 @@ export function getSupabaseClient() {
             single: async () => ({ data: null, error: { message: 'Database not configured' } })
           })
         }),
-        insert: (data: Record<string, unknown>) => {
+        insert: (_data: Record<string, unknown>) => {
           const result = { data: null, error: { message: 'Database not configured' } }
           const promise = Promise.resolve(result)
           return Object.assign(promise, {

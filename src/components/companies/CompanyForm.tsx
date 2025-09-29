@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
 import { useForm } from 'react-hook-form'
@@ -66,7 +66,7 @@ export default function CompanyForm({ company, companyId, mode }: CompanyFormPro
     } : {}
   })
 
-  const loadCompany = async () => {
+  const loadCompany = useCallback(async () => {
     if (!companyId) return
     
     setLoading(true)
@@ -85,12 +85,12 @@ export default function CompanyForm({ company, companyId, mode }: CompanyFormPro
         setValue('size', data.size || '')
         setValue('address', data.address || '')
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
-  }
+  }, [companyId, setValue])
 
   useEffect(() => {
     if (mode === 'edit' && companyId && !company) {
@@ -123,7 +123,7 @@ export default function CompanyForm({ company, companyId, mode }: CompanyFormPro
       } else {
         router.push('/companies')
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)

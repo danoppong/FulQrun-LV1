@@ -6,11 +6,11 @@ import { IntegrationHub } from '@/components/integrations/IntegrationHub'
 export default function IntegrationsPage() {
   const [organizationId] = useState('org-123') // This would come from auth context
 
-  const handleIntegrationConnect = (integration: any) => {
+  const handleIntegrationConnect = (_integration: { id: string; name: string; type: string }) => {
     // Handle integration connection
   }
 
-  const handleIntegrationDisconnect = (integrationId: string) => {
+  const handleIntegrationDisconnect = (_integrationId: string) => {
     // Handle integration disconnection
   }
 

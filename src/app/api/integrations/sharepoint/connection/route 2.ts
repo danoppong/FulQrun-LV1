@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Get SharePoint connection for the organization
     const { data: connection, error: _error } = await supabase
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       created_at: connection.created_at,
       updated_at: connection.updated_at
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to get SharePoint connection' },
       { status: 500 }
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Check if connection already exists
     const { data: existingConnection } = await supabase
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         message: 'SharePoint connection created successfully'
       })
     }
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to save SharePoint connection' },
       { status: 500 }
@@ -143,7 +143,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient() as any
+    const supabase = createServerClient()
 
     // Deactivate SharePoint connection
     const { error } = await supabase
@@ -162,7 +162,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       message: 'SharePoint connection deactivated successfully'
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to deactivate SharePoint connection' },
       { status: 500 }

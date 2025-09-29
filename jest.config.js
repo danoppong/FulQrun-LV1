@@ -1,4 +1,4 @@
-export default {
+const jestConfig = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
@@ -29,3 +29,5 @@ export default {
   // Reduce test timeout to prevent hanging
   testTimeout: 10000,
 }
+
+export default jestConfig

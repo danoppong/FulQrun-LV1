@@ -171,7 +171,7 @@ export class CompanyAPI {
     }
   }
 
-  async getCompanyContacts(companyId: string): Promise<ApiResponse<any[]>> {
+  async getCompanyContacts(companyId: string): Promise<ApiResponse<{ id: string; name: string; email?: string; phone?: string; company_id: string }[]>> {
     try {
       const { data, error } = await this.supabase
         .from('contacts')
@@ -185,7 +185,7 @@ export class CompanyAPI {
     }
   }
 
-  async getCompanyOpportunities(companyId: string): Promise<ApiResponse<any[]>> {
+  async getCompanyOpportunities(companyId: string): Promise<ApiResponse<{ id: string; name: string; value: number; stage: string; company_id: string }[]>> {
     try {
       const { data, error } = await this.supabase
         .from('opportunities')

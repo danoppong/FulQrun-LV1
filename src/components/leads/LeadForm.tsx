@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { leadAPI, LeadWithScore } from '@/lib/api/leads'
 import { useForm } from 'react-hook-form'
@@ -73,7 +73,7 @@ export default function LeadForm({ lead, leadId, mode }: LeadFormProps) {
 
   const watchedValues = watch()
 
-  const loadLead = async () => {
+  const loadLead = useCallback(async () => {
     if (!leadId) return
     
     setLoading(true)
@@ -94,12 +94,12 @@ export default function LeadForm({ lead, leadId, mode }: LeadFormProps) {
         setValue('source', data.source || '')
         setValue('status', data.status)
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
-  }
+  }, [leadId, setValue])
 
   useEffect(() => {
     if (mode === 'edit' && leadId && !lead) {
@@ -132,7 +132,7 @@ export default function LeadForm({ lead, leadId, mode }: LeadFormProps) {
       } else {
         router.push('/leads')
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)

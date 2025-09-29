@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClientComponentClient } from '@/lib/auth'
 import { AuthUser } from '@/lib/auth-client'
 
@@ -18,7 +18,7 @@ export function useAuth(): UseAuthReturn {
   const [error, setError] = useState<string | null>(null)
   const supabase = createClientComponentClient()
 
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -56,7 +56,7 @@ export function useAuth(): UseAuthReturn {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
 
   const signOut = async () => {
     try {

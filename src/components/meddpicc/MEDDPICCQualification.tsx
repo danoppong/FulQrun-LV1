@@ -45,7 +45,7 @@ export default function MEDDPICCQualification({
   const {
     register,
     handleSubmit,
-    watch,
+    watch: _watch,
     formState: {}
   } = useForm<PillarFormData>({
     resolver: zodResolver(z.object({})), // Dynamic validation
@@ -69,7 +69,7 @@ export default function MEDDPICCQualification({
         
         if (opportunity) {
           // Get the current MEDDPICC score using the unified service
-          const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, opportunity as any)
+          const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, opportunity as { id: string; name: string; [key: string]: unknown })
           
           // Convert opportunity MEDDPICC data to responses format
           const existingResponses = convertLegacyToComprehensive({

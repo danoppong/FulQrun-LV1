@@ -88,7 +88,7 @@ class EnterpriseAIIntelligence {
   private openai: OpenAI;
   // private anthropic: Anthropic;
 
-  constructor(supabaseUrl: string, supabaseKey: string, openaiApiKey: string, anthropicApiKey: string) {
+  constructor(supabaseUrl: string, supabaseKey: string, openaiApiKey: string, _anthropicApiKey: string) {
     this.supabase = createClient(supabaseUrl, supabaseKey);
     this.openai = new OpenAI({ apiKey: openaiApiKey });
     // this.anthropic = new Anthropic({ apiKey: anthropicApiKey });
@@ -537,7 +537,7 @@ class EnterpriseAIIntelligence {
     return seasonalScores[month];
   }
 
-  private async calculateMarketConditionsScore(industry: string): Promise<number> {
+  private async calculateMarketConditionsScore(_industry: string): Promise<number> {
     // This would integrate with external market data APIs
     // For now, return a base score
     return 0.7;
@@ -644,7 +644,7 @@ class EnterpriseAIIntelligence {
   }
 
   private calculateTimelineRisk(opportunity: Record<string, unknown>): number {
-    const daysSinceCreated = (Date.now() - new Date(opportunity.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    const _daysSinceCreated = (Date.now() - new Date(opportunity.created_at).getTime()) / (1000 * 60 * 60 * 24);
     const expectedCloseDate = new Date(opportunity.expected_close_date);
     const daysToClose = (expectedCloseDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     
@@ -654,7 +654,7 @@ class EnterpriseAIIntelligence {
     return 0.1; // Long timeline
   }
 
-  private async calculateCompetitionRisk(opportunity: Record<string, unknown>): Promise<number> {
+  private async calculateCompetitionRisk(_opportunity: Record<string, unknown>): Promise<number> {
     // This would integrate with competitive intelligence data
     return 0.4; // Base risk
   }
@@ -683,7 +683,7 @@ class EnterpriseAIIntelligence {
     return 0.2; // Good value alignment
   }
 
-  private async calculateMarketRisk(industry: string): Promise<number> {
+  private async calculateMarketRisk(_industry: string): Promise<number> {
     // This would integrate with market data
     return 0.3; // Base market risk
   }
@@ -818,7 +818,7 @@ class EnterpriseAIIntelligence {
     return strengths;
   }
 
-  private identifyOpportunities(opportunities: Array<Record<string, unknown>>, metrics: Array<Record<string, unknown>>): string[] {
+  private identifyOpportunities(opportunities: Array<Record<string, unknown>>, _metrics: Array<Record<string, unknown>>): string[] {
     const opportunities_list = [];
     
     const pipelineValue = opportunities.reduce((sum, opp) => sum + (opp.deal_value || 0), 0);
@@ -882,7 +882,7 @@ class EnterpriseAIIntelligence {
     return actions;
   }
 
-  private getSkillDevelopmentResources(skillGaps: string[]): string[] {
+  private getSkillDevelopmentResources(_skillGaps: string[]): string[] {
     return [
       'Advanced Sales Training Modules',
       'Role-playing Practice Sessions',
@@ -891,7 +891,7 @@ class EnterpriseAIIntelligence {
     ];
   }
 
-  private getProcessImprovementResources(processIssues: string[]): string[] {
+  private getProcessImprovementResources(_processIssues: string[]): string[] {
     return [
       'Process Optimization Templates',
       'Automation Tools Guide',
@@ -909,10 +909,10 @@ class EnterpriseAIIntelligence {
     ];
   }
 
-  private calculateAdvancedForecast(historicalData: Array<Record<string, unknown>>, currentPipeline: Array<Record<string, unknown>>, period: string): Record<string, unknown> {
+  private calculateAdvancedForecast(historicalData: Array<Record<string, unknown>>, currentPipeline: Array<Record<string, unknown>>, _period: string): Record<string, unknown> {
     // Advanced forecasting algorithm
     const historicalRevenue = historicalData.reduce((sum, opp) => sum + (opp.deal_value || 0), 0);
-    const avgDealSize = historicalRevenue / historicalData.length;
+    const _avgDealSize = historicalRevenue / historicalData.length;
     const conversionRate = historicalData.filter(opp => opp.stage === 'closed_won').length / historicalData.length;
     
     const pipelineValue = currentPipeline.reduce((sum, opp) => sum + (opp.deal_value || 0), 0);
