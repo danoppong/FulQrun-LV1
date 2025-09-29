@@ -9,8 +9,8 @@ interface AuthState {
     id: string;
   } | null;
   session: Record<string, string | number | boolean> | null;
-  sessionError: string | null;
-  userError: string | null;
+  sessionError: Error | string | null;
+  userError: Error | string | null;
   timestamp: string;
 }
 
@@ -61,12 +61,12 @@ const AuthDebug = () => {
         </div>
          {authState?.sessionError && (
            <div className="text-red-600">
-             <strong>Session Error:</strong> {authState.sessionError}
+             <strong>Session Error:</strong> {authState.sessionError.message || String(authState.sessionError)}
            </div>
          )}
          {authState?.userError && (
            <div className="text-red-600">
-             <strong>User Error:</strong> {authState.userError}
+             <strong>User Error:</strong> {authState.userError.message || String(authState.userError)}
            </div>
          )}
         <div className="text-gray-500">

@@ -23,22 +23,7 @@ const SignupPage = () => {
 
 
     try {
-      // First, create the organization
-      const { data: organization, error: orgError } = await (supabase as any)
-        .from('organizations')
-        .insert({
-          name: organizationName,
-        })
-        .select()
-        .single()
-
-
-      if (orgError) {
-        setError(`Failed to create organization: ${orgError.message}`)
-        return
-      }
-
-      // Then, sign up the user
+      // First, sign up the user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -47,13 +32,26 @@ const SignupPage = () => {
         }
       })
 
-
       if (authError) {
         setError(`Failed to create user: ${authError.message}`)
         return
       }
 
       if (authData.user) {
+        // Now that user is authenticated, create the organization
+        const { data: organization, error: orgError } = await (supabase as any)
+          .from('organizations')
+          .insert({
+            name: organizationName,
+          })
+          .select()
+          .single()
+
+        if (orgError) {
+          setError(`Failed to create organization: ${orgError.message}`)
+          return
+        }
+
         // Create user profile
         const { error: profileError } = await (supabase as any)
           .from('users')
@@ -64,7 +62,6 @@ const SignupPage = () => {
             role: 'admin', // First user is admin
             organization_id: organization.id,
           })
-
 
         if (profileError) {
           setError(`Failed to create user profile: ${profileError.message}`)

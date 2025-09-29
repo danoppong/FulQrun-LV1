@@ -306,6 +306,23 @@ CREATE TABLE IF NOT EXISTS sharepoint_documents (
 );
 
 -- =============================================================================
+-- DASHBOARD TABLES
+-- =============================================================================
+
+-- User dashboard layouts table
+CREATE TABLE IF NOT EXISTS user_dashboard_layouts (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    widgets JSONB NOT NULL DEFAULT '[]',
+    layout_config JSONB DEFAULT '{}',
+    is_default BOOLEAN DEFAULT false,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id)
+);
+
+-- =============================================================================
 -- ENTERPRISE TABLES (Phase 3)
 -- =============================================================================
 
@@ -486,20 +503,116 @@ CREATE INDEX IF NOT EXISTS idx_companies_organization_id ON companies(organizati
 CREATE INDEX IF NOT EXISTS idx_contacts_company_id ON contacts(company_id);
 CREATE INDEX IF NOT EXISTS idx_contacts_organization_id ON contacts(organization_id);
 CREATE INDEX IF NOT EXISTS idx_leads_organization_id ON leads(organization_id);
-CREATE INDEX IF NOT EXISTS idx_leads_assigned_to ON leads(assigned_to);
-CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
-CREATE INDEX IF NOT EXISTS idx_opportunities_company_id ON opportunities(company_id);
-CREATE INDEX IF NOT EXISTS idx_opportunities_contact_id ON opportunities(contact_id);
-CREATE INDEX IF NOT EXISTS idx_opportunities_organization_id ON opportunities(organization_id);
-CREATE INDEX IF NOT EXISTS idx_opportunities_assigned_to ON opportunities(assigned_to);
-CREATE INDEX IF NOT EXISTS idx_opportunities_stage ON opportunities(stage);
-CREATE INDEX IF NOT EXISTS idx_activities_organization_id ON activities(organization_id);
-CREATE INDEX IF NOT EXISTS idx_activities_assigned_to ON activities(assigned_to);
-CREATE INDEX IF NOT EXISTS idx_activities_type ON activities(type);
-CREATE INDEX IF NOT EXISTS idx_activities_status ON activities(status);
-CREATE INDEX IF NOT EXISTS idx_activities_priority ON activities(priority);
-CREATE INDEX IF NOT EXISTS idx_activities_due_date ON activities(due_date);
-CREATE INDEX IF NOT EXISTS idx_activities_related ON activities(related_type, related_id);
+-- Create indexes only if the columns exist
+DO $$ 
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'leads' AND column_name = 'assigned_to'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_leads_assigned_to ON leads(assigned_to);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'leads' AND column_name = 'status'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+    END IF;
+END $$;
+-- Create opportunity indexes only if columns exist
+DO $$ 
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'opportunities' AND column_name = 'company_id'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_opportunities_company_id ON opportunities(company_id);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'opportunities' AND column_name = 'contact_id'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_opportunities_contact_id ON opportunities(contact_id);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'opportunities' AND column_name = 'organization_id'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_opportunities_organization_id ON opportunities(organization_id);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'opportunities' AND column_name = 'assigned_to'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_opportunities_assigned_to ON opportunities(assigned_to);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'opportunities' AND column_name = 'stage'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_opportunities_stage ON opportunities(stage);
+    END IF;
+END $$;
+-- Create activity indexes only if columns exist
+DO $$ 
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'activities' AND column_name = 'organization_id'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_activities_organization_id ON activities(organization_id);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'activities' AND column_name = 'assigned_to'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_activities_assigned_to ON activities(assigned_to);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'activities' AND column_name = 'type'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_activities_type ON activities(type);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'activities' AND column_name = 'status'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_activities_status ON activities(status);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'activities' AND column_name = 'priority'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_activities_priority ON activities(priority);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'activities' AND column_name = 'due_date'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_activities_due_date ON activities(due_date);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'activities' AND column_name = 'related_type'
+    ) AND EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'activities' AND column_name = 'related_id'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_activities_related ON activities(related_type, related_id);
+    END IF;
+END $$;
 
 -- Phase 2 table indexes
 CREATE INDEX IF NOT EXISTS idx_pipeline_configurations_organization_id ON pipeline_configurations(organization_id);
@@ -519,6 +632,24 @@ CREATE INDEX IF NOT EXISTS idx_user_learning_progress_user_id ON user_learning_p
 CREATE INDEX IF NOT EXISTS idx_user_learning_progress_module_id ON user_learning_progress(module_id);
 CREATE INDEX IF NOT EXISTS idx_sharepoint_documents_opportunity_id ON sharepoint_documents(opportunity_id);
 CREATE INDEX IF NOT EXISTS idx_sharepoint_documents_stage_name ON sharepoint_documents(stage_name);
+
+-- Dashboard table indexes (only if columns exist)
+DO $$ 
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'user_dashboard_layouts' AND column_name = 'user_id'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_user_dashboard_layouts_user_id ON user_dashboard_layouts(user_id);
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'user_dashboard_layouts' AND column_name = 'organization_id'
+    ) THEN
+        CREATE INDEX IF NOT EXISTS idx_user_dashboard_layouts_organization_id ON user_dashboard_layouts(organization_id);
+    END IF;
+END $$;
 
 -- Enterprise table indexes
 CREATE INDEX IF NOT EXISTS idx_enterprise_audit_logs_organization_id ON enterprise_audit_logs(organization_id);
@@ -603,19 +734,33 @@ DECLARE
 BEGIN
     -- Get opportunity data with safe column access
     BEGIN
-        SELECT 
-            COALESCE(metrics, '') as metrics,
-            COALESCE(economic_buyer, '') as economic_buyer,
-            COALESCE(decision_criteria, '') as decision_criteria,
-            COALESCE(decision_process, '') as decision_process,
-            COALESCE(paper_process, '') as paper_process,
-            COALESCE(identify_pain, '') as identify_pain,
-            COALESCE(implicate_pain, '') as implicate_pain,
-            COALESCE(champion, '') as champion,
-            COALESCE(competition, '') as competition
-        INTO opp_record
-        FROM opportunities 
-        WHERE id = opp_id;
+        -- Check if MEDDPICC columns exist before trying to access them
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'metrics') THEN
+            SELECT 
+                COALESCE(metrics, '') as metrics,
+                COALESCE(economic_buyer, '') as economic_buyer,
+                COALESCE(decision_criteria, '') as decision_criteria,
+                COALESCE(decision_process, '') as decision_process,
+                COALESCE(paper_process, '') as paper_process,
+                COALESCE(identify_pain, '') as identify_pain,
+                COALESCE(implicate_pain, '') as implicate_pain,
+                COALESCE(champion, '') as champion,
+                COALESCE(competition, '') as competition
+            INTO opp_record
+            FROM opportunities 
+            WHERE id = opp_id;
+        ELSE
+            -- If MEDDPICC columns don't exist, initialize with empty strings
+            opp_record.metrics := '';
+            opp_record.economic_buyer := '';
+            opp_record.decision_criteria := '';
+            opp_record.decision_process := '';
+            opp_record.paper_process := '';
+            opp_record.identify_pain := '';
+            opp_record.implicate_pain := '';
+            opp_record.champion := '';
+            opp_record.competition := '';
+        END IF;
     EXCEPTION WHEN OTHERS THEN
         -- If any column doesn't exist, initialize with empty strings
         opp_record.metrics := '';
@@ -703,14 +848,21 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sync_opportunity_fields()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- If peak_stage is empty but stage has data, copy it
-    IF (NEW.peak_stage IS NULL OR NEW.peak_stage = '') AND NEW.stage IS NOT NULL THEN
-        NEW.peak_stage := NEW.stage;
+    -- Only sync if the columns exist
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'peak_stage')
+    AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'stage') THEN
+        -- If peak_stage is empty but stage has data, copy it
+        IF (NEW.peak_stage IS NULL OR NEW.peak_stage = '') AND NEW.stage IS NOT NULL THEN
+            NEW.peak_stage := NEW.stage;
+        END IF;
     END IF;
     
-    -- If deal_value is empty but value has data, copy it
-    IF (NEW.deal_value IS NULL) AND NEW.value IS NOT NULL THEN
-        NEW.deal_value := NEW.value;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'deal_value')
+    AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'value') THEN
+        -- If deal_value is empty but value has data, copy it
+        IF (NEW.deal_value IS NULL) AND NEW.value IS NOT NULL THEN
+            NEW.deal_value := NEW.value;
+        END IF;
     END IF;
     
     RETURN NEW;
@@ -751,6 +903,10 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_activities_updated_at') THEN
         CREATE TRIGGER update_activities_updated_at BEFORE UPDATE ON activities
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_user_dashboard_layouts_updated_at') THEN
+        CREATE TRIGGER update_user_dashboard_layouts_updated_at BEFORE UPDATE ON user_dashboard_layouts
             FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     END IF;
 END $$;
@@ -858,6 +1014,12 @@ BEGIN
             FOR ALL USING (auth.uid() IS NOT NULL);
     END IF;
     
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_dashboard_layouts') THEN
+        ALTER TABLE user_dashboard_layouts ENABLE ROW LEVEL SECURITY;
+        CREATE POLICY "Authenticated users can access user dashboard layouts" ON user_dashboard_layouts
+            FOR ALL USING (auth.uid() IS NOT NULL);
+    END IF;
+    
     -- Enterprise tables
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'enterprise_audit_logs') THEN
         ALTER TABLE enterprise_audit_logs ENABLE ROW LEVEL SECURITY;
@@ -921,27 +1083,36 @@ END $$;
 -- INITIAL DATA AND UPDATES
 -- =============================================================================
 
--- Update existing opportunities with calculated MEDDPICC scores (only if opportunities table exists)
+-- Update existing opportunities with calculated MEDDPICC scores (only if opportunities table exists and has required columns)
 DO $$ 
 BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'opportunities') THEN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'opportunities') 
+    AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'meddpicc_score') THEN
         UPDATE opportunities 
         SET meddpicc_score = calculate_meddpicc_score(id)
         WHERE id IS NOT NULL;
     END IF;
 END $$;
 
--- Sync field data for existing opportunities (only if opportunities table exists)
+-- Sync field data for existing opportunities (only if opportunities table exists and has required columns)
 DO $$ 
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'opportunities') THEN
-        UPDATE opportunities 
-        SET peak_stage = stage 
-        WHERE (peak_stage IS NULL OR peak_stage = '') AND stage IS NOT NULL;
+        -- Only sync if both columns exist
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'peak_stage')
+        AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'stage') THEN
+            UPDATE opportunities 
+            SET peak_stage = stage 
+            WHERE (peak_stage IS NULL OR peak_stage = '') AND stage IS NOT NULL;
+        END IF;
 
-        UPDATE opportunities 
-        SET deal_value = value 
-        WHERE deal_value IS NULL AND value IS NOT NULL;
+        -- Only sync if both columns exist
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'deal_value')
+        AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'value') THEN
+            UPDATE opportunities 
+            SET deal_value = value 
+            WHERE deal_value IS NULL AND value IS NOT NULL;
+        END IF;
     END IF;
 END $$;
 
@@ -965,6 +1136,7 @@ COMMENT ON TABLE integration_connections IS 'Third-party integration configurati
 COMMENT ON TABLE performance_metrics IS 'CSTPV framework performance metrics';
 COMMENT ON TABLE user_learning_progress IS 'User progress tracking for learning modules';
 COMMENT ON TABLE sharepoint_documents IS 'SharePoint document management for PEAK process';
+COMMENT ON TABLE user_dashboard_layouts IS 'User-specific dashboard widget layouts and configurations';
 COMMENT ON TABLE enterprise_audit_logs IS 'Enterprise audit logging for compliance';
 COMMENT ON TABLE ai_models IS 'AI/ML models configuration for enterprise features';
 COMMENT ON TABLE enterprise_integrations IS 'Enterprise-grade integrations with major systems';

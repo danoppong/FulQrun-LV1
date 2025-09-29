@@ -23,6 +23,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "FulQrun",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   icons: {
     icon: [
       { url: "/icon-144x144.png", sizes: "144x144", type: "image/png" },
