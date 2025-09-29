@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, memo, useCallback } from 'react'
 import { usePerformanceTracking } from '@/hooks/usePerformanceTracking'
-import { createClientComponentClient } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 import { 
   SalesmanKPIs, 
   SAMPLE_SALESMAN_DATA, 
@@ -33,7 +33,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
   const [storageMethod, setStorageMethod] = useState<'database' | 'localStorage' | 'unknown'>('unknown')
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastSyncAttempt, setLastSyncAttempt] = useState<Date | null>(null)
-  const supabase = createClientComponentClient()
+  // Using singleton supabase client
 
   const loadDashboardLayout = useCallback(async () => {
     try {

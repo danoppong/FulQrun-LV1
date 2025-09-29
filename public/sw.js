@@ -2,8 +2,8 @@
 // Provides offline capability and caching for the PWA
 
 // const _CACHE_NAME = 'fulqrun-v1.0.0' // Unused variable
-const STATIC_CACHE_NAME = 'fulqrun-static-v1.0.2'
-const DYNAMIC_CACHE_NAME = 'fulqrun-dynamic-v1.0.2'
+const STATIC_CACHE_NAME = 'fulqrun-static-v1.0.3'
+const DYNAMIC_CACHE_NAME = 'fulqrun-dynamic-v1.0.3'
 
 // Files to cache for offline functionality
 const STATIC_ASSETS = [

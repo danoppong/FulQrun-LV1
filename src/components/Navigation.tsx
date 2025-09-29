@@ -4,7 +4,7 @@ import React from 'react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { createClientComponentClient } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import {
   HomeIcon,
@@ -64,7 +64,7 @@ export default function Navigation() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  // Using singleton supabase client
 
   const handleLogout = async () => {
     try {
