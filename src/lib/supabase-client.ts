@@ -42,13 +42,20 @@ export function getSupabaseClient() {
         })
       },
       from: (_table: string) => ({
-        select: () => ({
+        select: (columns?: string) => ({
           eq: () => ({
             single: async () => ({ data: null, error: { message: 'Database not configured' } })
           }),
           order: () => ({
-            single: async () => ({ data: null, error: { message: 'Database not configured' } })
-          })
+            single: async () => ({ data: null, error: { message: 'Database not configured' } }),
+            then: (resolve: (value: any) => void) => {
+              resolve({ data: [], error: null })
+            }
+          }),
+          single: async () => ({ data: null, error: { message: 'Database not configured' } }),
+          then: (resolve: (value: any) => void) => {
+            resolve({ data: [], error: null })
+          }
         }),
         insert: (_data: Record<string, unknown>) => {
           const result = { data: null, error: { message: 'Database not configured' } }
@@ -107,13 +114,20 @@ export function getSupabaseClient() {
         })
       },
       from: (_table: string) => ({
-        select: () => ({
+        select: (columns?: string) => ({
           eq: () => ({
             single: async () => ({ data: null, error: { message: 'Database not configured' } })
           }),
           order: () => ({
-            single: async () => ({ data: null, error: { message: 'Database not configured' } })
-          })
+            single: async () => ({ data: null, error: { message: 'Database not configured' } }),
+            then: (resolve: (value: any) => void) => {
+              resolve({ data: [], error: null })
+            }
+          }),
+          single: async () => ({ data: null, error: { message: 'Database not configured' } }),
+          then: (resolve: (value: any) => void) => {
+            resolve({ data: [], error: null })
+          }
         }),
         insert: (_data: Record<string, unknown>) => {
           const result = { data: null, error: { message: 'Database not configured' } }
