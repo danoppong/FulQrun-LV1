@@ -111,13 +111,13 @@ describe('OpportunityForm Data Persistence', () => {
         // First try by data-testid
         submitButton = screen.getByTestId('submit-opportunity-button')
         console.log('Found submit button by testid:', submitButton)
-      } catch (error) {
+      } catch (_error) {
         console.log('Could not find by testid, trying by role...')
         try {
           // Fallback to role-based search
           submitButton = screen.getByRole('button', { name: /update opportunity/i })
           console.log('Found submit button by role:', submitButton)
-        } catch (error2) {
+        } catch (_error2) {
           console.log('Could not find by role either, trying by text...')
           // Last resort: find by text content
           submitButton = screen.getByText('Update Opportunity')

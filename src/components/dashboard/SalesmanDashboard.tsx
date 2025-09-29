@@ -17,7 +17,7 @@ interface SalesmanDashboardProps {
 }
 
 const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: SalesmanDashboardProps) {
-  const [salesmanData, setSalesmanData] = useState<SalesmanKPIs>(SAMPLE_SALESMAN_DATA)
+  const [salesmanData, _setSalesmanData] = useState<SalesmanKPIs>(SAMPLE_SALESMAN_DATA)
   const [widgets, setWidgets] = useState<PerformanceWidget[]>(DEFAULT_SALESMAN_WIDGETS)
   const [isEditMode, setIsEditMode] = useState(false)
   const [draggedWidget, setDraggedWidget] = useState<string | null>(null)
@@ -163,7 +163,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
 
   useEffect(() => {
     loadDashboardLayout()
-  }, [userId]) // Only depend on userId, not the function itself
+  }, [loadDashboardLayout]) // Include loadDashboardLayout in dependencies
 
   // Auto-save when widgets change (but not on initial load)
   useEffect(() => {

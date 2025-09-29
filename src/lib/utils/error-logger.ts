@@ -14,7 +14,7 @@ const supabase = supabaseConfig.isConfigured
         update: () => ({ error: null }),
         delete: () => ({ error: null })
       })
-    } as any;
+    } as unknown as ReturnType<typeof createClient>;
 
 // Error types and interfaces
 export interface ErrorLogEntry {
