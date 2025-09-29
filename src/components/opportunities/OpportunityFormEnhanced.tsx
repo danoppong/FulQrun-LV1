@@ -110,26 +110,6 @@ export default function OpportunityFormEnhanced({
     return () => subscription.unsubscribe()
   }, [watch])
 
-  // Load initial data
-  useEffect(() => {
-    loadContacts()
-    loadCompanies()
-    if (mode === 'edit' && opportunityId && !opportunity) {
-      loadOpportunity()
-    }
-  }, [mode, opportunityId, opportunity, loadOpportunity])
-
-  // Auto-save functionality (every 30 seconds if dirty)
-  useEffect(() => {
-    if (isDirty && mode === 'edit' && opportunityId) {
-      const autoSaveTimer = setTimeout(() => {
-        handleAutoSave()
-      }, 30000) // 30 seconds
-
-      return () => clearTimeout(autoSaveTimer)
-    }
-  }, [isDirty, mode, opportunityId, handleAutoSave])
-
   const loadOpportunity = useCallback(async () => {
     if (!opportunityId) return
     
@@ -181,6 +161,26 @@ export default function OpportunityFormEnhanced({
       setLoading(false)
     }
   }, [opportunityId, reset])
+
+  // Load initial data
+  useEffect(() => {
+    loadContacts()
+    loadCompanies()
+    if (mode === 'edit' && opportunityId && !opportunity) {
+      loadOpportunity()
+    }
+  }, [mode, opportunityId, opportunity, loadOpportunity])
+
+  // Auto-save functionality (every 30 seconds if dirty)
+  useEffect(() => {
+    if (isDirty && mode === 'edit' && opportunityId) {
+      const autoSaveTimer = setTimeout(() => {
+        handleAutoSave()
+      }, 30000) // 30 seconds
+
+      return () => clearTimeout(autoSaveTimer)
+    }
+  }, [isDirty, mode, opportunityId, handleAutoSave])
 
   const loadContacts = async () => {
     try {
