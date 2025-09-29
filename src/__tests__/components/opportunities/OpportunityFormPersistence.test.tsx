@@ -88,49 +88,11 @@ describe('OpportunityForm Data Persistence', () => {
       })
 
       // Change the opportunity name
-      console.log('About to change opportunity name...')
       const nameInput = screen.getByDisplayValue('Test Opportunity')
-      console.log('Found name input:', nameInput)
       fireEvent.change(nameInput, { target: { value: 'Updated Opportunity' } })
-      console.log('Changed opportunity name to: Updated Opportunity')
 
       // Submit the form
-      console.log('Looking for submit button...')
-      
-      // Debug: Show all available buttons
-      const allButtons = screen.queryAllByRole('button')
-      console.log('All buttons found:', allButtons.map(btn => ({
-        text: btn.textContent,
-        testId: btn.getAttribute('data-testid'),
-        disabled: btn.disabled
-      })))
-      
-      // Try multiple ways to find the submit button
-      let submitButton
-      try {
-        // First try by data-testid
-        submitButton = screen.getByTestId('submit-opportunity-button')
-        console.log('Found submit button by testid:', submitButton)
-      } catch (_error) {
-        console.log('Could not find by testid, trying by role...')
-        try {
-          // Fallback to role-based search
-          submitButton = screen.getByRole('button', { name: /update opportunity/i })
-          console.log('Found submit button by role:', submitButton)
-        } catch (_error2) {
-          console.log('Could not find by role either, trying by text...')
-          // Last resort: find by text content
-          submitButton = screen.getByText('Update Opportunity')
-          console.log('Found submit button by text:', submitButton)
-        }
-      }
-      
-      console.log('Submit button details:', {
-        disabled: submitButton.disabled,
-        text: submitButton.textContent,
-        testId: submitButton.getAttribute('data-testid')
-      })
-      
+      const submitButton = screen.getByTestId('submit-opportunity-button')
       fireEvent.click(submitButton)
 
       // Wait for the form submission to complete
@@ -176,7 +138,7 @@ describe('OpportunityForm Data Persistence', () => {
       })
 
       // Submit the form
-      const submitButton = screen.getByRole('button', { name: /update opportunity/i })
+      const submitButton = screen.getByTestId('submit-opportunity-button')
       fireEvent.click(submitButton)
 
       await waitFor(() => {
@@ -206,7 +168,7 @@ describe('OpportunityForm Data Persistence', () => {
       })
 
       // Submit the form
-      const submitButton = screen.getByRole('button', { name: /update opportunity/i })
+      const submitButton = screen.getByTestId('submit-opportunity-button')
       fireEvent.click(submitButton)
 
       await waitFor(() => {
@@ -235,11 +197,11 @@ describe('OpportunityForm Data Persistence', () => {
       )
 
       // Try to submit without filling required fields
-      const submitButton = screen.getByRole('button', { name: /create opportunity/i })
+      const submitButton = screen.getByTestId('submit-opportunity-button')
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText('Opportunity name is required')).toBeInTheDocument()
+        expect(screen.getByText(/Opportunity name is required/i)).toBeInTheDocument()
       })
     })
 
@@ -260,12 +222,12 @@ describe('OpportunityForm Data Persistence', () => {
       })
 
       // Submit the form
-      const submitButton = screen.getByRole('button', { name: /update opportunity/i })
+      const submitButton = screen.getByTestId('submit-opportunity-button')
       fireEvent.click(submitButton)
 
       // Should not show validation error for valid probability (25)
       await waitFor(() => {
-        expect(screen.queryByText('Probability must be between 0 and 100')).not.toBeInTheDocument()
+        expect(screen.queryByText(/Probability must be between 0 and 100/i)).not.toBeInTheDocument()
       })
     })
 
@@ -286,12 +248,12 @@ describe('OpportunityForm Data Persistence', () => {
       })
 
       // Submit the form
-      const submitButton = screen.getByRole('button', { name: /update opportunity/i })
+      const submitButton = screen.getByTestId('submit-opportunity-button')
       fireEvent.click(submitButton)
 
       // Should not show validation error for valid deal value (50000)
       await waitFor(() => {
-        expect(screen.queryByText('Deal value cannot be negative')).not.toBeInTheDocument()
+        expect(screen.queryByText(/Deal value cannot be negative/i)).not.toBeInTheDocument()
       })
     })
   })
@@ -317,11 +279,11 @@ describe('OpportunityForm Data Persistence', () => {
       })
 
       // Submit the form
-      const submitButton = screen.getByRole('button', { name: /update opportunity/i })
+      const submitButton = screen.getByTestId('submit-opportunity-button')
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText('Database connection failed')).toBeInTheDocument()
+        expect(screen.getByText(/Database connection failed/i)).toBeInTheDocument()
       })
     })
 
@@ -342,11 +304,11 @@ describe('OpportunityForm Data Persistence', () => {
       })
 
       // Submit the form
-      const submitButton = screen.getByRole('button', { name: /update opportunity/i })
+      const submitButton = screen.getByTestId('submit-opportunity-button')
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText('An unexpected error occurred')).toBeInTheDocument()
+        expect(screen.getByText(/An unexpected error occurred/i)).toBeInTheDocument()
       })
     })
   })

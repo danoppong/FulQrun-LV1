@@ -22,6 +22,51 @@ import { UserRole } from '@/lib/roles'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { AuthWrapper } from '@/components/auth/AuthWrapper'
 
+// Function to create user record when they don't exist in database
+async function createUserRecord(user: any, supabase: any) {
+  try {
+    // First, create a default organization if it doesn't exist
+    const { data: orgData, error: orgError } = await supabase
+      .from('organizations')
+      .upsert({
+        id: '00000000-0000-0000-0000-000000000001',
+        name: 'Default Organization',
+        domain: user.email?.split('@')[1] || 'example.com',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single()
+
+    if (orgError && !orgError.message.includes('duplicate key')) {
+      console.error('Error creating organization:', orgError)
+      return
+    }
+
+    // Create user record
+    const { error: userError } = await supabase
+      .from('users')
+      .upsert({
+        id: user.id,
+        email: user.email,
+        first_name: user.user_metadata?.full_name?.split(' ')[0] || 'User',
+        last_name: user.user_metadata?.full_name?.split(' ')[1] || '',
+        role: 'admin', // First user is admin
+        organization_id: '00000000-0000-0000-0000-000000000001',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+
+    if (userError && !userError.message.includes('duplicate key')) {
+      console.error('Error creating user:', userError)
+    } else {
+      console.log('User record created successfully')
+    }
+  } catch (error) {
+    console.error('Error in createUserRecord:', error)
+  }
+}
+
 const DashboardPage = () => {
   return (
     <AuthWrapper>
@@ -62,17 +107,34 @@ const DashboardContent = () => {
         setUserName(user.email || 'User')
         
         // Load user role from database or user metadata
-        const { data: userProfile } = await supabase
-          .from('users')
-          .select('role, full_name')
-          .eq('id', user.id)
-          .single()
-        
-        if (userProfile?.role) {
-          setUserRole(userProfile.role as UserRole)
-        }
-        if (userProfile?.full_name) {
-          setUserName(userProfile.full_name)
+        try {
+          const { data: userProfile, error: profileError } = await supabase
+            .from('users')
+            .select('role, full_name')
+            .eq('id', user.id)
+            .single()
+          
+          if (profileError) {
+            console.warn('Failed to load user profile:', profileError.message)
+            
+            // If user doesn't exist in database, create them
+            if (profileError.code === 'PGRST116' || profileError.message.includes('No rows found')) {
+              console.log('User not found in database, creating user record...')
+              await createUserRecord(user, supabase)
+            }
+            
+            // Continue with default values if profile loading fails
+          } else if (userProfile) {
+            if (userProfile.role) {
+              setUserRole(userProfile.role as UserRole)
+            }
+            if (userProfile.full_name) {
+              setUserName(userProfile.full_name)
+            }
+          }
+        } catch (profileError) {
+          console.warn('Error loading user profile:', profileError)
+          // Continue with default values
         }
         
         setLoading(false)

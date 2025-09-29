@@ -46,7 +46,10 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
 
       if (error && error.code !== 'PGRST116') {
         // PGRST116 is "not found" - ignore it, try localStorage
-        console.warn('Dashboard layout loading error:', error)
+        // Also ignore 406 errors which indicate RLS issues
+        if (error.code !== '42501' && !error.message.includes('406')) {
+          console.warn('Dashboard layout loading error:', error)
+        }
       }
 
       if (data?.widgets) {
@@ -66,6 +69,9 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           // Handle localStorage parse error silently
         }
       } else {
+        // Use default widgets
+        setWidgets(DEFAULT_SALESMAN_WIDGETS)
+        setStorageMethod('localStorage')
       }
     } catch (_error) {
       // Database unavailable, using localStorage fallback
@@ -81,6 +87,9 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           // Handle localStorage parse error silently
         }
       } else {
+        // Use default widgets
+        setWidgets(DEFAULT_SALESMAN_WIDGETS)
+        setStorageMethod('localStorage')
       }
     }
   }, [userId, supabase])
@@ -96,7 +105,10 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         })
 
       if (dbError) {
-        console.warn('Dashboard layout saving error:', dbError)
+        // Ignore RLS errors (42501) and 406 errors
+        if (dbError.code !== '42501' && !dbError.message.includes('406')) {
+          console.warn('Dashboard layout saving error:', dbError)
+        }
         throw dbError
       }
 

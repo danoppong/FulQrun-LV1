@@ -37,18 +37,24 @@ export function useAuth(): UseAuthReturn {
       }
 
       // Get user profile from our users table
-      const { data: profile, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single()
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authUser.id)
+          .single()
 
-      if (profileError) {
-        console.warn('Profile not found:', profileError.message)
+        if (profileError) {
+          console.warn('Profile not found:', profileError.message)
+          // Still set user even without profile
+          setUser({ ...authUser, profile: undefined } as AuthUser)
+        } else {
+          setUser({ ...authUser, profile } as AuthUser)
+        }
+      } catch (profileError) {
+        console.warn('Error loading user profile:', profileError)
         // Still set user even without profile
         setUser({ ...authUser, profile: undefined } as AuthUser)
-      } else {
-        setUser({ ...authUser, profile } as AuthUser)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')

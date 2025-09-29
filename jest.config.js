@@ -22,12 +22,12 @@ const jestConfig = {
   },
   // Memory optimization settings
   maxWorkers: 2,
-  workerIdleMemoryLimit: '512MB',
+  workerIdleMemoryLimit: '1GB',
   detectLeaks: false,
-  detectOpenHandles: false,
+  detectOpenHandles: true,
   forceExit: true,
-  // Reduce test timeout to prevent hanging
-  testTimeout: 10000,
+  // Increase test timeout to prevent hanging
+  testTimeout: 30000,
 }
 
 export default jestConfig

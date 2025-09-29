@@ -8,10 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --max-old-space-size=4096 node_modules/.bin/jest",
-    "test:watch": "node --max-old-space-size=4096 node_modules/.bin/jest --watch",
-    "test:coverage": "node --max-old-space-size=4096 node_modules/.bin/jest --coverage",
-    "test:ci": "node --max-old-space-size=4096 node_modules/.bin/jest --ci --coverage --watchAll=false"
+    "test": "node --max-old-space-size=8192 node_modules/.bin/jest",
+    "test:watch": "node --max-old-space-size=8192 node_modules/.bin/jest --watch",
+    "test:coverage": "node --max-old-space-size=8192 node_modules/.bin/jest --coverage",
+    "test:ci": "node --max-old-space-size=8192 node_modules/.bin/jest --ci --coverage --watchAll=false"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

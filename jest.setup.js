@@ -103,6 +103,13 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {}
 }
 
+// Mock crypto.randomUUID
+Object.defineProperty(global, 'crypto', {
+  value: {
+    randomUUID: () => 'mock-uuid-' + Math.random().toString(36).substr(2, 9)
+  }
+})
+
 // Suppress console warnings in tests
 const originalWarn = console.warn
 const originalError = console.error

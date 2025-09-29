@@ -18,14 +18,6 @@ const PEAKProcessContent = () => {
   const [_documents, setDocuments] = useState<Record<string, SharePointDocument[]>>({})
   const [selectedDocument, setSelectedDocument] = useState<SharePointDocument | null>(null)
 
-  const loadOpportunityDataCallback = useCallback(loadOpportunityData, [opportunityId])
-
-  useEffect(() => {
-    if (opportunityId) {
-      loadOpportunityDataCallback()
-    }
-  }, [opportunityId, loadOpportunityDataCallback])
-
   const loadOpportunityData = async () => {
     try {
       // Load opportunity data including current stage
@@ -37,6 +29,14 @@ const PEAKProcessContent = () => {
     } catch (_error) {
     }
   }
+
+  const loadOpportunityDataCallback = useCallback(loadOpportunityData, [opportunityId])
+
+  useEffect(() => {
+    if (opportunityId) {
+      loadOpportunityDataCallback()
+    }
+  }, [opportunityId, loadOpportunityDataCallback])
 
   const handleStageChange = async (newStage: string) => {
     try {
