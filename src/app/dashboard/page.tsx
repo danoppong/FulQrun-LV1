@@ -79,7 +79,7 @@ const DashboardContent = () => {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const [userRole, setUserRole] = useState<UserRole>(UserRole.SALESMAN)
   const [userName, setUserName] = useState<string>('User')
-  const [_userRegion, _setUserRegion] = useState<string>('North America')
+  const [userRegion, setUserRegion] = useState<string>('North America')
   const [_userBusinessUnit, _setUserBusinessUnit] = useState<string>('Enterprise')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

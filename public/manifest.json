@@ -12,26 +12,14 @@
   "categories": ["business", "productivity", "sales"],
   "icons": [
     {
-      "src": "/icon-16x16.png",
-      "sizes": "16x16",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
       "src": "/icon.svg",
       "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-144x144.svg",
+      "sizes": "144x144",
       "type": "image/svg+xml",
       "purpose": "any"
     }
@@ -44,8 +32,9 @@
       "url": "/dashboard",
       "icons": [
         {
-          "src": "/icon-144x144.png",
-          "sizes": "144x144"
+          "src": "/icon-144x144.svg",
+          "sizes": "144x144",
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -56,8 +45,9 @@
       "url": "/leads",
       "icons": [
         {
-          "src": "/icon-144x144.png",
-          "sizes": "144x144"
+          "src": "/icon-144x144.svg",
+          "sizes": "144x144",
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -68,8 +58,9 @@
       "url": "/opportunities",
       "icons": [
         {
-          "src": "/icon-144x144.png",
-          "sizes": "144x144"
+          "src": "/icon-144x144.svg",
+          "sizes": "144x144",
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -80,26 +71,11 @@
       "url": "/contacts",
       "icons": [
         {
-          "src": "/icon-144x144.png",
-          "sizes": "144x144"
+          "src": "/icon-144x144.svg",
+          "sizes": "144x144",
+          "type": "image/svg+xml"
         }
       ]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshot-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "FulQrun Dashboard Overview"
-    },
-    {
-      "src": "/screenshot-narrow.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "FulQrun Mobile View"
     }
   ],
   "prefer_related_applications": false,
