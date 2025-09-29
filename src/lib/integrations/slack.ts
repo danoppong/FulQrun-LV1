@@ -1,4 +1,4 @@
-import { IntegrationConnectionData } from '@/lib/api/integrations'
+import { IntegrationConnectionData as _IntegrationConnectionData } from '@/lib/api/integrations'
 
 export interface SlackBlock {
   type: string
@@ -210,7 +210,7 @@ export class SlackIntegration {
         purpose: channel.purpose,
         num_members: channel.num_members
       }))
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to fetch Slack channels')
     }
   }
@@ -240,11 +240,11 @@ export class SlackIntegration {
           name: user.name,
           real_name: user.real_name,
           profile: user.profile,
-          is_admin: (user as any).is_admin || false,
-          is_owner: (user as any).is_owner || false,
-          is_bot: (user as any).is_bot || false
+          is_admin: (user as Record<string, unknown>).is_admin || false,
+          is_owner: (user as Record<string, unknown>).is_owner || false,
+          is_bot: (user as Record<string, unknown>).is_bot || false
         }))
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to fetch Slack users')
     }
   }
@@ -270,7 +270,7 @@ export class SlackIntegration {
           },
           {
             type: 'mrkdwn',
-            text: `*Value:* $${(opportunity as any).value?.toLocaleString() || 'N/A'}`
+            text: `*Value:* $${(opportunity as Record<string, unknown>).value?.toLocaleString() || 'N/A'}`
           },
           {
             type: 'mrkdwn',
@@ -286,7 +286,7 @@ export class SlackIntegration {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Company:* ${(opportunity as any).company_name || 'N/A'}\n*Contact:* ${(opportunity as any).contact_name || 'N/A'}`
+          text: `*Company:* ${(opportunity as Record<string, unknown>).company_name || 'N/A'}\n*Contact:* ${(opportunity as Record<string, unknown>).contact_name || 'N/A'}`
         }
       },
       {
@@ -329,19 +329,19 @@ export class SlackIntegration {
         fields: [
           {
             type: 'mrkdwn',
-            text: `*Lead:* ${(lead as any).name || 'N/A'}`
+            text: `*Lead:* ${(lead as Record<string, unknown>).name || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Company:* ${(lead as any).company_name || 'N/A'}`
+            text: `*Company:* ${(lead as Record<string, unknown>).company_name || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Email:* ${(lead as any).email || 'N/A'}`
+            text: `*Email:* ${(lead as Record<string, unknown>).email || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Phone:* ${(lead as any).phone || 'N/A'}`
+            text: `*Phone:* ${(lead as Record<string, unknown>).phone || 'N/A'}`
           }
         ]
       },
@@ -349,7 +349,7 @@ export class SlackIntegration {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Assigned to:* <@${assignee}>\n*Source:* ${(lead as any).source || 'N/A'}\n*Score:* ${(lead as any).ai_score || 'N/A'}`
+          text: `*Assigned to:* <@${assignee}>\n*Source:* ${(lead as Record<string, unknown>).source || 'N/A'}\n*Score:* ${(lead as Record<string, unknown>).ai_score || 'N/A'}`
         }
       },
       {
@@ -370,7 +370,7 @@ export class SlackIntegration {
 
     return await this.sendMessage({
       channel,
-      text: `New Lead Assignment: ${(lead as any).name || 'N/A'}`,
+      text: `New Lead Assignment: ${(lead as Record<string, unknown>).name || 'N/A'}`,
       blocks
     })
   }
@@ -392,19 +392,19 @@ export class SlackIntegration {
         fields: [
           {
             type: 'mrkdwn',
-            text: `*Meeting:* ${(meeting as any).title || 'N/A'}`
+            text: `*Meeting:* ${(meeting as Record<string, unknown>).title || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Time:* ${new Date((meeting as any).start_time).toLocaleString()}`
+            text: `*Time:* ${new Date((meeting as Record<string, unknown>).start_time).toLocaleString()}`
           },
           {
             type: 'mrkdwn',
-            text: `*Duration:* ${(meeting as any).duration || 30} minutes`
+            text: `*Duration:* ${(meeting as Record<string, unknown>).duration || 30} minutes`
           },
           {
             type: 'mrkdwn',
-            text: `*Type:* ${(meeting as any).type || 'Meeting'}`
+            text: `*Type:* ${(meeting as Record<string, unknown>).type || 'Meeting'}`
           }
         ]
       },
@@ -412,7 +412,7 @@ export class SlackIntegration {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Description:* ${(meeting as any).description || 'No description'}\n*Location:* ${(meeting as any).location || 'TBD'}`
+          text: `*Description:* ${(meeting as Record<string, unknown>).description || 'No description'}\n*Location:* ${(meeting as Record<string, unknown>).location || 'TBD'}`
         }
       },
       {
@@ -424,7 +424,7 @@ export class SlackIntegration {
               type: 'plain_text',
               text: 'Join Meeting'
             },
-            url: (meeting as any).meeting_url || '#',
+            url: (meeting as Record<string, unknown>).meeting_url || '#',
             style: 'primary'
           }
         ]
@@ -433,7 +433,7 @@ export class SlackIntegration {
 
     return await this.sendMessage({
       channel,
-      text: `Meeting Reminder: ${(meeting as any).title || 'N/A'}`,
+      text: `Meeting Reminder: ${(meeting as Record<string, unknown>).title || 'N/A'}`,
       blocks
     })
   }
@@ -459,15 +459,15 @@ export class SlackIntegration {
           },
           {
             type: 'mrkdwn',
-            text: `*Value:* $${(opportunity as any).value?.toLocaleString() || 'N/A'}`
+            text: `*Value:* $${(opportunity as Record<string, unknown>).value?.toLocaleString() || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Company:* ${(opportunity as any).company_name || 'N/A'}`
+            text: `*Company:* ${(opportunity as Record<string, unknown>).company_name || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Closed by:* ${(opportunity as any).owner_name || 'N/A'}`
+            text: `*Closed by:* ${(opportunity as Record<string, unknown>).owner_name || 'N/A'}`
           }
         ]
       },
@@ -518,19 +518,19 @@ export class SlackIntegration {
         fields: [
           {
             type: 'mrkdwn',
-            text: `*Task:* ${(task as any).title || 'N/A'}`
+            text: `*Task:* ${(task as { title?: string }).title || 'N/A'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Due:* ${new Date((task as any).due_date).toLocaleString()}`
+            text: `*Due:* ${new Date((task as { due_date: string }).due_date).toLocaleString()}`
           },
           {
             type: 'mrkdwn',
-            text: `*Priority:* ${(task as any).priority || 'Medium'}`
+            text: `*Priority:* ${(task as { priority?: string }).priority || 'Medium'}`
           },
           {
             type: 'mrkdwn',
-            text: `*Status:* ${(task as any).status || 'Pending'}`
+            text: `*Status:* ${(task as { status?: string }).status || 'Pending'}`
           }
         ]
       },
@@ -538,7 +538,7 @@ export class SlackIntegration {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Description:* ${(task as any).description || 'No description'}\n*Assigned to:* ${(task as any).assigned_to || 'Unassigned'}`
+          text: `*Description:* ${(task as { description?: string }).description || 'No description'}\n*Assigned to:* ${(task as { assigned_to?: string }).assigned_to || 'Unassigned'}`
         }
       },
       {
@@ -559,7 +559,7 @@ export class SlackIntegration {
 
     return await this.sendMessage({
       channel,
-      text: `Task Due Soon: ${(task as any).title || 'N/A'}`,
+      text: `Task Due Soon: ${(task as { title?: string }).title || 'N/A'}`,
       blocks
     })
   }
@@ -578,7 +578,7 @@ export class SlackIntegration {
   /**
    * Get channel history
    */
-  async getChannelHistory(channel: string, limit: number = 100): Promise<any[]> {
+  async getChannelHistory(channel: string, limit: number = 100): Promise<unknown[]> {
     try {
       const response = await fetch(`${this.baseUrl}/conversations.history?channel=${channel}&limit=${limit}`, {
         headers: {
@@ -594,7 +594,7 @@ export class SlackIntegration {
       }
 
       return data.messages
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to fetch channel history')
     }
   }
@@ -625,7 +625,7 @@ export class SlackIntegration {
         team: {
           id: data.team_id,
           name: data.team,
-          domain: (data as any).domain || '',
+          domain: (data as { domain?: string }).domain || '',
           url: data.url || ''
         }
       }

@@ -129,7 +129,7 @@ export class SharePointIntegration {
     }
   }
 
-  async getPEAKDocuments(siteId: string, opportunityId: string): Promise<any[]> {
+  async getPEAKDocuments(siteId: string, opportunityId: string): Promise<Array<{ id: string; name: string; url: string; size: number; modified: string }>> {
     try {
       // Mock PEAK documents - in real implementation, this would fetch from SharePoint
       console.log('Fetching PEAK documents for opportunity:', opportunityId, 'from site:', siteId)
@@ -153,7 +153,7 @@ export class SharePointIntegration {
     }
   }
 
-  async getDocumentsFromSite(siteId: string, folderPath: string): Promise<any[]> {
+  async getDocumentsFromSite(siteId: string, folderPath: string): Promise<Array<{ id: string; name: string; url: string; size: number; modified: string }>> {
     try {
       // Mock documents - in real implementation, this would fetch from SharePoint
       console.log('Fetching documents from site:', siteId, 'folder:', folderPath)
@@ -181,8 +181,8 @@ export class SharePointIntegration {
     siteId: string,
     folderPath: string,
     fileName: string,
-    fileBuffer: ArrayBuffer,
-    mimeType: string
+    _fileBuffer: ArrayBuffer,
+    _mimeType: string
   ): Promise<{ success: boolean; documentId?: string; url?: string; error?: string }> {
     try {
       // Mock upload - in real implementation, this would upload to SharePoint
@@ -205,7 +205,7 @@ export class SharePointIntegration {
     }
   }
 
-  async getFolders(siteId: string, folderPath: string): Promise<any[]> {
+  async getFolders(siteId: string, folderPath: string): Promise<Array<{ id: string; name: string; url: string }>> {
     try {
       // Mock folders - in real implementation, this would fetch from SharePoint
       console.log('Fetching folders from site:', siteId, 'folder:', folderPath)
@@ -256,7 +256,7 @@ export class SharePointIntegration {
     }
   }
 
-  async createPEAKFolderStructure(siteId: string, opportunityId: string, opportunityName?: string): Promise<{ success: boolean; folders?: Record<string, string>; error?: string }> {
+  async createPEAKFolderStructure(siteId: string, opportunityId: string, _opportunityName?: string): Promise<{ success: boolean; folders?: Record<string, string>; error?: string }> {
     try {
       // Mock PEAK folder structure creation - in real implementation, this would create in SharePoint
       console.log('Creating PEAK folder structure for opportunity:', opportunityId, 'in site:', siteId)
@@ -281,7 +281,7 @@ export class SharePointIntegration {
     }
   }
 
-  async getSites(): Promise<any[]> {
+  async getSites(): Promise<Array<{ id: string; name: string; url: string; description?: string }>> {
     try {
       // Mock sites - in real implementation, this would fetch from SharePoint
       console.log('Fetching SharePoint sites')

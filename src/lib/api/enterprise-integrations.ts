@@ -11,10 +11,10 @@ export interface EnterpriseIntegration {
   name: string;
   integrationType: 'crm' | 'erp' | 'marketing' | 'analytics' | 'communication' | 'custom';
   provider: string;
-  config: Record<string, any>;
-  credentials: Record<string, any>;
-  webhookConfig: Record<string, any>;
-  syncConfig: Record<string, any>;
+  config: Record<string, unknown>;
+  credentials: Record<string, unknown>;
+  webhookConfig: Record<string, unknown>;
+  syncConfig: Record<string, unknown>;
   isActive: boolean;
   lastSyncAt?: Date;
   syncStatus: 'success' | 'error' | 'pending' | 'syncing' | 'never';
@@ -48,7 +48,7 @@ export async function getEnterpriseIntegrations(organizationId: string): Promise
     if (error) throw error;
     
     // Map database fields to interface
-    return (data || []).map(integration => ({
+    return (data || []).map((integration: Record<string, unknown>) => ({
       id: integration.id,
       name: integration.name,
       integrationType: integration.type,
@@ -112,7 +112,7 @@ export async function updateEnterpriseIntegration(
   updates: Partial<EnterpriseIntegration>
 ): Promise<EnterpriseIntegration> {
   try {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (updates.name) updateData.name = updates.name;
     if (updates.integrationType) updateData.type = updates.integrationType;
     if (updates.provider) updateData.provider = updates.provider;
@@ -157,7 +157,7 @@ export async function deleteEnterpriseIntegration(integrationId: string): Promis
 }
 
 // Test integration connection
-export async function testIntegrationConnection(integrationId: string): Promise<boolean> {
+export async function testIntegrationConnection(_integrationId: string): Promise<boolean> {
   try {
     // Mock connection test for now
     return Math.random() > 0.2; // 80% success rate
@@ -168,7 +168,7 @@ export async function testIntegrationConnection(integrationId: string): Promise<
 }
 
 // Sync integration data
-export async function syncIntegrationData(integrationId: string, entityType: string): Promise<SyncResult> {
+export async function syncIntegrationData(integrationId: string, _entityType: string): Promise<SyncResult> {
   try {
     const startTime = Date.now();
     
@@ -250,7 +250,25 @@ export async function getAvailableProviders(): Promise<string[]> {
 }
 
 // Get integration templates
-export async function getIntegrationTemplates(): Promise<any[]> {
+export interface IntegrationTemplateField {
+  name: string
+  label: string
+  type: 'text' | 'password' | 'url' | 'email' | 'number'
+  required: boolean
+}
+
+export interface IntegrationTemplate {
+  id: string
+  name: string
+  type: string
+  provider: string
+  description: string
+  configTemplate: Record<string, unknown>
+  fields: IntegrationTemplateField[]
+  supportedEntities: string[]
+}
+
+export async function getIntegrationTemplates(): Promise<IntegrationTemplate[]> {
   try {
     // Mock templates
     return [
@@ -296,7 +314,15 @@ export async function getIntegrationTemplates(): Promise<any[]> {
 }
 
 // Get integration statistics
-export async function getIntegrationStatistics(organizationId: string): Promise<any> {
+export interface IntegrationStatistics {
+  totalIntegrations: number
+  activeIntegrations: number
+  failedIntegrations: number
+  lastSyncTime?: Date
+  syncFrequency: number
+}
+
+export async function getIntegrationStatistics(organizationId: string): Promise<IntegrationStatistics> {
   try {
     const { data: integrations, error } = await supabase
       .from('enterprise_integrations')
@@ -306,15 +332,15 @@ export async function getIntegrationStatistics(organizationId: string): Promise<
     if (error) throw error;
 
     const total = integrations?.length || 0;
-    const active = integrations?.filter(i => i.is_active).length || 0;
+    const active = integrations?.filter((i: { is_active: boolean }) => i.is_active).length || 0;
     
-    const byStatus = integrations?.reduce((acc, integration) => {
+    const byStatus = integrations?.reduce((acc: Record<string, number>, integration: { sync_status?: string }) => {
       const status = integration.sync_status || 'never';
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>) || {};
 
-    const byType = integrations?.reduce((acc, integration) => {
+    const byType = integrations?.reduce((acc: Record<string, number>, integration: { type: string }) => {
       const type = integration.type || 'unknown';
       acc[type] = (acc[type] || 0) + 1;
       return acc;
@@ -338,7 +364,7 @@ export async function getIntegrationStatistics(organizationId: string): Promise<
 }
 
 // Get integration health
-export async function getIntegrationHealth(organizationId: string): Promise<any> {
+export async function getIntegrationHealth(organizationId: string): Promise<{ totalIntegrations: number; activeIntegrations: number; failedIntegrations: number; healthScore: number; integrations: unknown[] }> {
   try {
     const { data: integrations, error } = await supabase
       .from('enterprise_integrations')
@@ -354,7 +380,7 @@ export async function getIntegrationHealth(organizationId: string): Promise<any>
       lastSync: null as Date | null
     };
 
-    integrations?.forEach(integration => {
+    integrations?.forEach((integration: { last_sync_at?: string; sync_status?: string }) => {
       if (integration.sync_status === 'success') {
         health.healthy++;
       } else if (integration.sync_status === 'error') {
@@ -409,7 +435,7 @@ export class EnterpriseIntegrationAPI {
   }
 
   static async syncData(integrationId: string): Promise<SyncResult> {
-    return syncIntegrationData(integrationId);
+    return syncIntegrationData(integrationId, 'contacts');
   }
 
   static async getSyncHistory(integrationId: string): Promise<SyncResult[]> {
@@ -420,7 +446,7 @@ export class EnterpriseIntegrationAPI {
     return getAvailableProviders();
   }
 
-  static async getTemplates(): Promise<any[]> {
+  static async getTemplates(): Promise<IntegrationTemplate[]> {
     return getIntegrationTemplates();
   }
 }

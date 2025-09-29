@@ -1,7 +1,8 @@
 'use client'
+import React from 'react'
 
-import { useState, useEffect } from 'react'
-import { microsoftGraphAPI } from '@/lib/integrations/microsoft-graph'
+import { useState, useEffect, useCallback } from 'react'
+import { microsoftGraphAPI as _microsoftGraphAPI } from '@/lib/integrations/microsoft-graph'
 import { createClientComponentClient } from '@/lib/auth'
 import { CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
@@ -37,9 +38,9 @@ export default function MicrosoftSetup() {
 
   useEffect(() => {
     checkConfiguration()
-  }, [])
+  }, [checkConfiguration])
 
-  const checkConfiguration = async () => {
+  const checkConfiguration = useCallback(async () => {
     try {
       // Check if Microsoft Graph is configured
       const { data: integration } = await supabase
@@ -66,9 +67,9 @@ export default function MicrosoftSetup() {
           setIsAuthenticated(true)
         }
       }
-    } catch (error) {
+    } catch (_error) {
     }
-  }
+  }, [supabase])
 
   const handleConnect = async () => {
     if (!isConfigured || !config) {
@@ -80,7 +81,7 @@ export default function MicrosoftSetup() {
       // Mock auth URL - in real implementation, this would come from the API
       const authUrl = `https://login.microsoftonline.com/${config.tenantId}/oauth2/v2.0/authorize?client_id=${config.clientId}&response_type=code&redirect_uri=${config.redirectUri}&scope=${config.scopes.join(' ')}`
       window.location.href = authUrl
-    } catch (error) {
+    } catch (_error) {
       setError('Failed to initiate Microsoft Graph authentication')
     }
   }
@@ -97,7 +98,7 @@ export default function MicrosoftSetup() {
         errors: 0
       }
       setSyncResults(prev => ({ ...prev, contacts: result }))
-    } catch (error) {
+    } catch (_error) {
       setError('Failed to sync contacts')
     } finally {
       setLoading(false)
@@ -116,7 +117,7 @@ export default function MicrosoftSetup() {
         errors: 0
       }
       setSyncResults(prev => ({ ...prev, events: result }))
-    } catch (error) {
+    } catch (_error) {
       setError('Failed to sync events')
     } finally {
       setLoading(false)
@@ -135,7 +136,7 @@ export default function MicrosoftSetup() {
         errors: 1
       }
       setSyncResults(prev => ({ ...prev, emails: result }))
-    } catch (error) {
+    } catch (_error) {
       setError('Failed to sync emails')
     } finally {
       setLoading(false)
@@ -169,7 +170,7 @@ export default function MicrosoftSetup() {
         events: eventsResult,
         emails: emailsResult
       })
-    } catch (error) {
+    } catch (_error) {
       setError('Failed to sync data')
     } finally {
       setLoading(false)

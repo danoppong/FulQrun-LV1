@@ -21,7 +21,7 @@ export interface AIModelConfig {
   modelType: 'lead_scoring' | 'deal_prediction' | 'forecasting' | 'coaching' | 'content_generation' | 'sentiment_analysis';
   provider: 'openai' | 'anthropic' | 'azure' | 'aws' | 'custom';
   modelVersion: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   isActive: boolean;
   isEnterprise: boolean;
   organizationId: string;
@@ -73,7 +73,7 @@ export async function getAIModels(organizationId: string): Promise<AIModelConfig
 
     if (error) throw error;
 
-    return data.map(model => ({
+    return data.map((model: Record<string, unknown>) => ({
       id: model.id,
       name: model.name,
       modelType: model.model_type,
@@ -129,7 +129,7 @@ export async function createAIModel(modelConfig: AIModelConfig, userId: string):
 
 export async function updateAIModel(modelId: string, updates: Partial<AIModelConfig>): Promise<AIModelConfig> {
   try {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (updates.name) updateData.name = updates.name;
     if (updates.modelType) updateData.model_type = updates.modelType;
     if (updates.provider) updateData.provider = updates.provider;
@@ -330,7 +330,7 @@ export async function getForecastingInsights(organizationId: string) {
 }
 
 // AI Content Generation
-export async function generateAIContent(type: 'email' | 'proposal' | 'presentation' | 'follow_up', context: any): Promise<string> {
+export async function generateAIContent(type: 'email' | 'proposal' | 'presentation' | 'follow_up', context: Record<string, unknown>): Promise<string> {
   try {
     return await aiIntelligence.generateAIContent(type, context);
   } catch (error) {
@@ -381,7 +381,7 @@ export async function processBatchAIInsights(organizationId: string, entityType:
         }
         results.push({ entityId, success: true, insight });
       } catch (error) {
-        results.push({ entityId, success: false, error: error.message });
+        results.push({ entityId, success: false, error: (error as Error).message });
       }
     }
     
@@ -461,7 +461,7 @@ export async function getRealTimeInsights(organizationId: string, entityType?: s
 }
 
 // AI Model Configuration
-export async function configureAIModel(modelId: string, config: Record<string, any>) {
+export async function configureAIModel(modelId: string, config: Record<string, unknown>) {
   try {
     const { error } = await supabase
       .from('ai_models')

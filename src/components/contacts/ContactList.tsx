@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect } from 'react'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
@@ -29,7 +30,7 @@ export default function ContactList({ searchQuery = '' }: ContactListProps) {
       } else {
         setContacts(data || [])
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -50,7 +51,7 @@ export default function ContactList({ searchQuery = '' }: ContactListProps) {
       } else {
         setContacts(contacts.filter(contact => contact.id !== id))
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to delete contact')
     }
   }

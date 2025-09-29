@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, memo, useCallback } from 'react'
-import { performanceMonitor, PerformanceMetric } from '@/lib/performance-monitor'
+import { performanceMonitor } from '@/lib/performance-monitor'
 
 interface PerformanceDashboardProps {
   isOpen: boolean
@@ -12,7 +12,7 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
   isOpen, 
   onClose 
 }: PerformanceDashboardProps) {
-  const [report, setReport] = useState<any>(null)
+  const [report, setReport] = useState<Record<string, unknown> | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const refreshReport = useCallback(async () => {
@@ -66,15 +66,15 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-blue-800">Total Metrics</h3>
-                  <p className="text-2xl font-bold text-blue-900">{report.summary.totalMetrics}</p>
+                  <p className="text-2xl font-bold text-blue-900">{(report.summary as { totalMetrics: number }).totalMetrics}</p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-green-800">Last 5 Minutes</h3>
-                  <p className="text-2xl font-bold text-green-900">{report.summary.last5Minutes}</p>
+                  <p className="text-2xl font-bold text-green-900">{(report.summary as { last5Minutes: number }).last5Minutes}</p>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-purple-800">Last Hour</h3>
-                  <p className="text-2xl font-bold text-purple-900">{report.summary.lastHour}</p>
+                  <p className="text-2xl font-bold text-purple-900">{(report.summary as { lastHour: number }).lastHour}</p>
                 </div>
               </div>
 
@@ -82,7 +82,7 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Web Vitals</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {Object.entries(report.webVitals).map(([name, data]: [string, any]) => (
+                  {Object.entries(report.webVitals as Record<string, { average?: number; min?: number; max?: number }>).map(([name, data]) => (
                     <div key={name} className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="text-sm font-medium text-gray-700">{name}</h4>
                       <div className="mt-2 space-y-1">
@@ -121,7 +121,7 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {report.componentPerformance.map((comp: any, index: number) => (
+                      {(report.componentPerformance as Array<{ name: string; averageRenderTime: number; updateCount: number; isFrequentlyUpdating: boolean }>).map((comp, index: number) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {comp.name}
@@ -177,7 +177,7 @@ const PerformanceDashboard = memo(function PerformanceDashboard({
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {report.apiPerformance.map((api: any, index: number) => (
+                      {(report.apiPerformance as Array<{ endpoint: string; callCount: number; averageDuration: number; slowestCall: number }>).map((api, index: number) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {api.endpoint}

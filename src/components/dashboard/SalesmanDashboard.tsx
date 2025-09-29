@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect, memo, useCallback } from 'react'
 import { usePerformanceTracking } from '@/hooks/usePerformanceTracking'
 import { createClientComponentClient } from '@/lib/auth'
 import { 
@@ -17,14 +17,14 @@ interface SalesmanDashboardProps {
 }
 
 const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: SalesmanDashboardProps) {
-  const [salesmanData, setSalesmanData] = useState<SalesmanKPIs>(SAMPLE_SALESMAN_DATA)
+  const [salesmanData, _setSalesmanData] = useState<SalesmanKPIs>(SAMPLE_SALESMAN_DATA)
   const [widgets, setWidgets] = useState<PerformanceWidget[]>(DEFAULT_SALESMAN_WIDGETS)
   const [isEditMode, setIsEditMode] = useState(false)
   const [draggedWidget, setDraggedWidget] = useState<string | null>(null)
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<'weekly' | 'monthly' | 'quarterly' | 'yearly'>('monthly')
 
   // Performance tracking
-  const { recordCustomMetric } = usePerformanceTracking({
+  const { recordCustomMetric: _recordCustomMetric } = usePerformanceTracking({
     componentName: 'SalesmanDashboard',
     trackRenders: true,
     trackProps: true,
@@ -35,39 +35,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
   const [lastSyncAttempt, setLastSyncAttempt] = useState<Date | null>(null)
   const supabase = createClientComponentClient()
 
-  useEffect(() => {
-    loadDashboardLayout()
-  }, [userId])
-
-  // Auto-save when widgets change (but not on initial load)
-  useEffect(() => {
-    if (widgets.length > 0 && isEditMode) {
-      const timeoutId = setTimeout(() => {
-        saveDashboardLayout()
-      }, 2000) // Auto-save after 2 seconds of inactivity
-
-      return () => clearTimeout(timeoutId)
-    }
-  }, [widgets, isEditMode])
-
-  // Auto-sync from localStorage to database when database becomes available
-  useEffect(() => {
-    if (storageMethod === 'localStorage' && !isSyncing) {
-      const syncInterval = setInterval(async () => {
-        await attemptSyncToDatabase()
-      }, 30000) // Try to sync every 30 seconds
-
-      // Also try to sync immediately if it's been a while since last attempt
-      const timeSinceLastAttempt = lastSyncAttempt ? Date.now() - lastSyncAttempt.getTime() : Infinity
-      if (timeSinceLastAttempt > 60000) { // If more than 1 minute since last attempt
-        attemptSyncToDatabase()
-      }
-
-      return () => clearInterval(syncInterval)
-    }
-  }, [storageMethod, isSyncing, lastSyncAttempt])
-
-  const loadDashboardLayout = async () => {
+  const loadDashboardLayout = useCallback(async () => {
     try {
       // Try to load from database first
       const { data, error } = await supabase
@@ -94,12 +62,12 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           const parsedLayout = JSON.parse(savedLayout)
           setWidgets(parsedLayout)
           setStorageMethod('localStorage')
-        } catch (parseError) {
+        } catch (_parseError) {
           // Handle localStorage parse error silently
         }
       } else {
       }
-    } catch (error) {
+    } catch (_error) {
       // Database unavailable, using localStorage fallback
       
       // Fallback to localStorage on database error
@@ -109,15 +77,15 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           const parsedLayout = JSON.parse(savedLayout)
           setWidgets(parsedLayout)
           setStorageMethod('localStorage')
-        } catch (parseError) {
+        } catch (_parseError) {
           // Handle localStorage parse error silently
         }
       } else {
       }
     }
-  }
+  }, [userId, supabase])
 
-  const saveDashboardLayout = async () => {
+  const saveDashboardLayout = useCallback(async () => {
     try {
       // Try to save to database first
       const { error: dbError } = await supabase
@@ -134,7 +102,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
 
       setStorageMethod('database')
       return true
-    } catch (error) {
+    } catch (_error) {
       // Database unavailable, using localStorage
       
       // Fallback to localStorage
@@ -142,14 +110,14 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         localStorage.setItem(`dashboard-layout-${userId}`, JSON.stringify(widgets))
         setStorageMethod('localStorage')
         return true
-      } catch (localStorageError) {
+      } catch (_localStorageError) {
         // Error saving to localStorage
         return false
       }
     }
-  }
+  }, [userId, widgets, supabase])
 
-  const attemptSyncToDatabase = async () => {
+  const attemptSyncToDatabase = useCallback(async () => {
     if (isSyncing) return // Prevent concurrent sync attempts
     
     setIsSyncing(true)
@@ -187,11 +155,43 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
       // localStorage.removeItem(`dashboard-layout-${userId}`)
       
       setIsSyncing(false)
-    } catch (error) {
+    } catch (_error) {
       // Sync attempt failed
       setIsSyncing(false)
     }
-  }
+  }, [isSyncing, userId, supabase])
+
+  useEffect(() => {
+    loadDashboardLayout()
+  }, [loadDashboardLayout]) // Include loadDashboardLayout in dependencies
+
+  // Auto-save when widgets change (but not on initial load)
+  useEffect(() => {
+    if (widgets.length > 0 && isEditMode) {
+      const timeoutId = setTimeout(() => {
+        saveDashboardLayout()
+      }, 2000) // Auto-save after 2 seconds of inactivity
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [widgets, isEditMode, saveDashboardLayout]) // Add saveDashboardLayout to dependencies
+
+  // Auto-sync from localStorage to database when database becomes available
+  useEffect(() => {
+    if (storageMethod === 'localStorage' && !isSyncing) {
+      const syncInterval = setInterval(async () => {
+        await attemptSyncToDatabase()
+      }, 30000) // Try to sync every 30 seconds
+
+      // Also try to sync immediately if it's been a while since last attempt
+      const timeSinceLastAttempt = lastSyncAttempt ? Date.now() - lastSyncAttempt.getTime() : Infinity
+      if (timeSinceLastAttempt > 60000) { // If more than 1 minute since last attempt
+        attemptSyncToDatabase()
+      }
+
+      return () => clearInterval(syncInterval)
+    }
+  }, [storageMethod, isSyncing, attemptSyncToDatabase, lastSyncAttempt])
 
   const handleDragStart = (e: React.DragEvent, widgetId: string) => {
     setDraggedWidget(widgetId)
@@ -284,24 +284,24 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-2xl font-bold text-gray-900">
-                {formatCurrency(data.achieved)}
+                {formatCurrency(data.achieved as number)}
               </span>
               <span className="text-sm text-gray-500">
-                of {formatCurrency(data.quota)}
+                of {formatCurrency(data.quota as number)}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className={`h-2 rounded-full ${getPerformanceBarColor(data.percentage)}`}
-                style={{ width: `${Math.min(data.percentage, 100)}%` }}
+                className={`h-2 rounded-full ${getPerformanceBarColor(data.percentage as number)}`}
+                style={{ width: `${Math.min(data.percentage as number, 100)}%` }}
               ></div>
             </div>
             <div className="flex items-center justify-between">
-              <span className={`text-sm font-medium ${getPerformanceColor(data.percentage)}`}>
-                {data.percentage.toFixed(1)}%
+              <span className={`text-sm font-medium ${getPerformanceColor(data.percentage as number)}`}>
+                {(data.percentage as number).toFixed(1)}%
               </span>
               <span className="text-xs text-gray-500">
-                {getTrendIcon(data.trend)}
+                {getTrendIcon(data.trend as "up" | "down" | "stable")}
               </span>
             </div>
           </div>
@@ -311,13 +311,13 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         return (
           <div className="space-y-2">
             <div className="text-3xl font-bold text-indigo-600">
-              {data.closed}
+              {data.closed as number}
             </div>
             <div className="text-sm text-gray-600">
               Deals Closed
             </div>
             <div className="text-xs text-gray-500">
-              {data.inPipeline} in pipeline
+              {data.inPipeline as number} in pipeline
             </div>
           </div>
         )
@@ -326,7 +326,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         return (
           <div className="space-y-3">
             <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(data.value)}
+              {formatCurrency(data.value as number)}
             </div>
             <div className="text-sm text-gray-600">
               Pipeline Value
@@ -334,11 +334,11 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <div className="text-gray-500">Deals</div>
-                <div className="font-medium">{data.deals}</div>
+                <div className="font-medium">{data.deals as number}</div>
               </div>
               <div>
                 <div className="text-gray-500">Avg Size</div>
-                <div className="font-medium">{formatCurrency(data.averageSize)}</div>
+                <div className="font-medium">{formatCurrency(data.averageSize as number)}</div>
               </div>
             </div>
           </div>
@@ -348,13 +348,13 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         return (
           <div className="space-y-2">
             <div className="text-3xl font-bold text-green-600">
-              {data.rate}%
+              {data.rate as number}%
             </div>
             <div className="text-sm text-gray-600">
               Conversion Rate
             </div>
             <div className="text-xs text-gray-500">
-              {data.calls} calls, {data.meetings} meetings
+              {data.calls as number} calls, {data.meetings as number} meetings
             </div>
           </div>
         )
@@ -364,7 +364,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           return (
             <div className="space-y-2">
               <div className="text-3xl font-bold text-purple-600">
-                {data.calls}
+                {data.calls as number}
               </div>
               <div className="text-sm text-gray-600">
                 Calls Made
@@ -376,7 +376,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           return (
             <div className="space-y-2">
               <div className="text-3xl font-bold text-orange-600">
-                {data.meetings}
+                {data.meetings as number}
               </div>
               <div className="text-sm text-gray-600">
                 Meetings Scheduled
@@ -388,7 +388,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           return (
             <div className="space-y-2">
               <div className="text-3xl font-bold text-teal-600">
-                {data.leads}
+                {data.leads as number}
               </div>
               <div className="text-sm text-gray-600">
                 Leads Generated
@@ -403,7 +403,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <div className="text-3xl font-bold text-yellow-600">
-                {data.score}
+                {data.score as number}
               </div>
               <div className="text-sm text-gray-500">
                 / 5.0
@@ -417,7 +417,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
                 <span
                   key={i}
                   className={`text-lg ${
-                    i < data.rating ? 'text-yellow-400' : 'text-gray-300'
+                    i < (data.rating as number) ? 'text-yellow-400' : 'text-gray-300'
                   }`}
                 >
                   ★
@@ -455,10 +455,10 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
           <div className="space-y-2">
             <div className="text-sm font-medium text-gray-600">Top Product</div>
             <div className="text-lg font-bold text-gray-900">
-              {data.topProduct}
+              {data.topProduct as string}
             </div>
             <div className="text-xs text-gray-500">
-              {data.region} Region
+              {data.region as string} Region
             </div>
           </div>
         )
@@ -567,15 +567,18 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Widget Grid */}
-          <div className="grid grid-cols-12 gap-4 auto-rows-min">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 auto-rows-min">
             {widgets.map((widget) => (
               <div
                 key={widget.id}
                 className={`${
-                  widget.position.w === 3 ? 'col-span-3' :
-                  widget.position.w === 6 ? 'col-span-6' :
-                  widget.position.w === 9 ? 'col-span-9' :
-                  widget.position.w === 12 ? 'col-span-12' : 'col-span-3'
+                  // Mobile: full width
+                  'col-span-1 sm:col-span-2 lg:' + (
+                    widget.position.w === 3 ? 'col-span-3' :
+                    widget.position.w === 6 ? 'col-span-6' :
+                    widget.position.w === 9 ? 'col-span-9' :
+                    widget.position.w === 12 ? 'col-span-12' : 'col-span-3'
+                  )
                 } ${
                   widget.position.h === 2 ? 'row-span-2' :
                   widget.position.h === 3 ? 'row-span-3' :

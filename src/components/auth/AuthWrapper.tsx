@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@/lib/auth'
 
@@ -17,7 +17,7 @@ function AuthWrapper({
 }: AuthWrapperProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [_user, setUser] = useState<{ id: string; email?: string; role?: string } | null>(null)
   const router = useRouter()
 
   useEffect(() => {

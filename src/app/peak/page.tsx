@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
+import React, { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { PEAKWorkflow } from '@/components/peak/PEAKWorkflow'
 import { SharePointRepository } from '@/components/peak/SharePointRepository'
 import { SharePointDocument } from '@/lib/integrations/sharepoint'
@@ -14,14 +15,16 @@ const PEAKProcessContent = () => {
 
   const [currentStage, setCurrentStage] = useState('prospecting')
   const [activeTab, setActiveTab] = useState<'workflow' | 'repository'>('workflow')
-  const [documents, setDocuments] = useState<Record<string, SharePointDocument[]>>({})
+  const [_documents, setDocuments] = useState<Record<string, SharePointDocument[]>>({})
   const [selectedDocument, setSelectedDocument] = useState<SharePointDocument | null>(null)
+
+  const loadOpportunityDataCallback = useCallback(loadOpportunityData, [opportunityId])
 
   useEffect(() => {
     if (opportunityId) {
-      loadOpportunityData()
+      loadOpportunityDataCallback()
     }
-  }, [opportunityId])
+  }, [opportunityId, loadOpportunityDataCallback])
 
   const loadOpportunityData = async () => {
     try {
@@ -31,7 +34,7 @@ const PEAKProcessContent = () => {
         const opportunity = await response.json()
         setCurrentStage(opportunity.stage || 'prospecting')
       }
-    } catch (error) {
+    } catch (_error) {
     }
   }
 
@@ -51,7 +54,7 @@ const PEAKProcessContent = () => {
       } else {
         throw new Error('Failed to update opportunity stage')
       }
-    } catch (error) {
+    } catch (_error) {
     }
   }
 
@@ -92,12 +95,12 @@ const PEAKProcessContent = () => {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">PEAK Process</h1>
           <p className="text-gray-600 mb-8">Please select an opportunity to view the PEAK process workflow.</p>
-          <a
+          <Link
             href="/opportunities"
             className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             View Opportunities
-          </a>
+          </Link>
         </div>
       </div>
     )

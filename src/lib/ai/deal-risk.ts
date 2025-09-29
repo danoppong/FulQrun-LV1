@@ -33,8 +33,20 @@ export interface OpportunityData {
   createdAt: string
   updatedAt: string
   lastActivityAt?: string
-  activities?: any[]
-  contacts?: any[]
+  activities?: Array<{
+    id: string
+    type: string
+    description: string
+    createdAt: string
+    userId: string
+  }>
+  contacts?: Array<{
+    id: string
+    name: string
+    email: string
+    role: string
+    influence: number
+  }>
   competition?: string
   budget?: number
   decisionMaker?: string
@@ -112,7 +124,12 @@ export class DealRiskEngine {
         opportunityData,
         context
       )
-      const insightData = insight.insightData as any
+      const insightData = insight.insightData as {
+        riskScore: number
+        riskFactors: Record<string, number>
+        mitigationStrategies: string[]
+        confidence: number
+      }
 
       return {
         riskScore: insightData.riskScore || 0,
@@ -120,7 +137,7 @@ export class DealRiskEngine {
         confidence: insightData.confidence || 0.5,
         mitigationStrategies: insightData.mitigationStrategies || []
       }
-    } catch (error) {
+    } catch (_error) {
       const ruleBased = this.calculateRuleBasedRisk(opportunityData)
       return {
         ...ruleBased,
@@ -412,10 +429,10 @@ export class DealRiskEngine {
    * Update opportunity risk score in database
    */
   static async updateOpportunityRisk(
-    opportunityId: string,
-    riskScore: number,
-    factors: DealRiskFactors,
-    confidence: number
+    _opportunityId: string,
+    _riskScore: number,
+    _factors: DealRiskFactors,
+    _confidence: number
   ): Promise<void> {
     // This would typically update the opportunity record in the database
   }
@@ -464,7 +481,7 @@ export class DealRiskEngine {
         }
 
         results.push(riskResult)
-      } catch (error) {
+      } catch (_error) {
         // Add fallback assessment
         const fallback = this.calculateRuleBasedRisk(opportunity)
         results.push({

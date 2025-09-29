@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { opportunityAPI, OpportunityWithDetails, OpportunityFormData } from '@/lib/api/opportunities'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
@@ -8,9 +8,28 @@ import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import PEAKForm from '@/components/forms/PEAKForm'
-import MEDDPICCForm from '@/components/forms/MEDDPICCForm'
-import { MEDDPICCDashboard, MEDDPICCPEAKIntegration } from '@/components/meddpicc'
+import dynamic from 'next/dynamic'
+
+// Dynamic imports for heavy components
+const PEAKForm = dynamic(() => import('@/components/forms/PEAKForm'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  ssr: false
+})
+const MEDDPICCForm = dynamic(() => import('@/components/forms/MEDDPICCForm'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  ssr: false
+})
+const MEDDPICCDashboard = dynamic(() => import('@/components/meddpicc').then(mod => ({ default: mod.MEDDPICCDashboard })), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  ssr: false
+})
+const MEDDPICCPEAKIntegration = dynamic(() => import('@/components/meddpicc').then(mod => ({ default: mod.MEDDPICCPEAKIntegration })), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  ssr: false
+})
+
+import type { PEAKFormData } from '@/components/forms/PEAKForm'
+import type { MEDDPICCFormData } from '@/components/forms/MEDDPICCForm'
 import { MEDDPICCAssessment, calculateMEDDPICCScore } from '@/lib/meddpicc'
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -34,7 +53,7 @@ interface OpportunityFormProps {
 // PEAK stages moved to PEAKForm component
 
 // Helper function to calculate MEDDPICC score from simple data format
-const calculateMEDDPICCScoreFromData = (data: any): number => {
+const calculateMEDDPICCScoreFromData = (data: Record<string, string>): number => {
   try {
     // Convert simple data format to comprehensive format for scoring
     const responses = []
@@ -122,7 +141,7 @@ const calculateMEDDPICCScoreFromData = (data: any): number => {
 
 export default function OpportunityForm({ opportunity, opportunityId, mode }: OpportunityFormProps) {
   const router = useRouter()
-  const { handleError, handleLoadingError, handleAsyncOperation } = useErrorHandler()
+  const { handleError: _handleError, handleLoadingError: _handleLoadingError, handleAsyncOperation } = useErrorHandler()
   
   // Debug logging
   console.log('OpportunityForm rendered with:', { opportunity, opportunityId, mode })
@@ -131,7 +150,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
-  const [isDirty, setIsDirty] = useState(false)
+  const [_isDirty, setIsDirty] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [peakData, setPeakData] = useState({
     peak_stage: opportunity?.peak_stage || 'prospecting' as const,
@@ -151,14 +170,14 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     competition: opportunity?.competition || ''
   })
   const [showComprehensiveMEDDPICC, setShowComprehensiveMEDDPICC] = useState(false)
-  const [meddpiccAssessment, setMeddpiccAssessment] = useState<MEDDPICCAssessment | undefined>(undefined)
+  const [meddpiccAssessment, _setMeddpiccAssessment] = useState<MEDDPICCAssessment | undefined>(undefined)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
-    setValue,
+    setValue: _setValue,
     reset
   } = useForm<LocalOpportunityFormData>({
     resolver: zodResolver(opportunitySchema),
@@ -169,20 +188,12 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     } : {}
   })
 
-  const watchedValues = watch()
+  const _watchedValues = watch()
 
-  useEffect(() => {
-    loadContacts()
-    loadCompanies()
-    if (mode === 'edit' && opportunityId && !opportunity) {
-      loadOpportunity()
-    }
-  }, [mode, opportunityId, opportunity])
-
-  const loadOpportunity = async () => {
+  const loadOpportunity = useCallback(async () => {
     if (!opportunityId) return
     
-    const result = await handleAsyncOperation(
+    const _result = await handleAsyncOperation(
       async () => {
         const { data, error } = await opportunityAPI.getOpportunity(opportunityId)
         
@@ -227,7 +238,15 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
       setError,
       setLoading
     )
-  }
+  }, [opportunityId, handleAsyncOperation, setError, setLoading, reset])
+
+  useEffect(() => {
+    loadContacts()
+    loadCompanies()
+    if (mode === 'edit' && opportunityId && !opportunity) {
+      loadOpportunity()
+    }
+  }, [mode, opportunityId, opportunity, loadOpportunity])
 
   const loadContacts = async () => {
     try {
@@ -237,8 +256,8 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
       } else {
         setContacts(data || [])
       }
-    } catch (err) {
-      console.warn('Error loading contacts:', err)
+    } catch (_err) {
+      console.warn('Error loading contacts:', _err)
     }
   }
 
@@ -250,12 +269,12 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
       } else {
         setCompanies(data || [])
       }
-    } catch (err) {
-      console.warn('Error loading companies:', err)
+    } catch (_err) {
+      console.warn('Error loading companies:', _err)
     }
   }
 
-  const handlePeakSave = async (data: any) => {
+  const handlePeakSave = async (data: PEAKFormData) => {
     setPeakData(data)
     setIsDirty(true)
     
@@ -271,7 +290,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
             detail: { opportunityId, data } 
           }))
         }
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to save PEAK data')
       }
     }
@@ -282,7 +301,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     setError(null)
   }
 
-  const handleMeddpiccSave = async (data: any) => {
+  const handleMeddpiccSave = async (data: MEDDPICCFormData) => {
     setMeddpiccData(data)
     setIsDirty(true)
     
@@ -312,7 +331,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
             detail: { opportunityId, score: meddpiccScore } 
           }))
         }
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to save MEDDPICC data')
       }
     }
@@ -324,7 +343,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   }
 
   // Data validation function
-  const validateOpportunityData = (data: any) => {
+  const validateOpportunityData = (data: OpportunityFormData) => {
     const errors: string[] = []
 
     // Validate required fields
@@ -363,6 +382,9 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   }
 
   const onSubmit = async (data: LocalOpportunityFormData) => {
+    console.log('Form submission started with data:', data)
+    console.log('Form errors:', errors)
+    console.log('Form is valid:', Object.keys(errors).length === 0)
     const result = await handleAsyncOperation(
       async () => {
         // Calculate MEDDPICC score from current data
@@ -606,8 +628,8 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
                     assessment={meddpiccAssessment}
                     onStageAdvance={async (fromStage, toStage) => {
                       try {
-                        await opportunityAPI.updatePeakStage(opportunityId!, toStage as any)
-                        setPeakData(prev => ({ ...prev, peak_stage: toStage as any }))
+                        await opportunityAPI.updatePeakStage(opportunityId!, toStage as string)
+                        setPeakData(prev => ({ ...prev, peak_stage: toStage as string }))
                       } catch (error) {
                         console.error('Error advancing stage:', error)
                       }
@@ -660,6 +682,13 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
               <button
                 type="submit"
                 disabled={loading}
+                data-testid="submit-opportunity-button"
+                onClick={() => {
+                  console.log('Submit button clicked')
+                  console.log('Button disabled:', loading)
+                  console.log('Form errors:', errors)
+                  console.log('Form is valid:', Object.keys(errors).length === 0)
+                }}
                 className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
               >
                 {loading ? 'Saving...' : mode === 'create' ? 'Create Opportunity' : 'Update Opportunity'}

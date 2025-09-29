@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -20,7 +21,7 @@ interface LearningDashboardProps {
   organizationId: string
 }
 
-export function LearningDashboard({ userId, organizationId }: LearningDashboardProps) {
+export function LearningDashboard({ userId, organizationId: _organizationId }: LearningDashboardProps) {
   const [modules, setModules] = useState<LearningModule[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'not_started' | 'in_progress' | 'completed'>('all')
@@ -211,7 +212,7 @@ export function LearningDashboard({ userId, organizationId }: LearningDashboardP
             ].map(({ key, label }) => (
               <button
                 key={key}
-                onClick={() => setFilter(key as any)}
+                onClick={() => setFilter(key as string)}
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
                   filter === key
                     ? 'bg-primary text-primary-foreground'

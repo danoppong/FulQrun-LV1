@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect } from 'react'
 import { leadAPI, LeadWithScore } from '@/lib/api/leads'
@@ -46,7 +47,7 @@ export default function LeadList({ searchQuery = '', statusFilter = '' }: LeadLi
       } else {
         setLeads(result.data || [])
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -67,7 +68,7 @@ export default function LeadList({ searchQuery = '', statusFilter = '' }: LeadLi
       } else {
         setLeads(leads.filter(lead => lead.id !== id))
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to delete lead')
     }
   }
@@ -87,7 +88,7 @@ export default function LeadList({ searchQuery = '', statusFilter = '' }: LeadLi
         // Reload leads to update the status
         loadLeads(searchTerm, selectedStatus)
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to convert lead')
     }
   }

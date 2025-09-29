@@ -1,6 +1,7 @@
 'use client'
+import React from 'react'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 import Link from 'next/link'
@@ -31,7 +32,7 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
   const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<number> => {
     try {
       // Use the optimized scoring service with opportunity data
-      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity)
+      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity as { id: string; name: string; [key: string]: unknown })
       return scoreResult.score
     } catch (error) {
       console.error('Error getting MEDDPICC score:', error)
@@ -40,7 +41,7 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
     }
   }
 
-  const loadOpportunities = async (query: string = '', stage: string = '') => {
+  const loadOpportunities = useCallback(async (query: string = '', stage: string = '') => {
     setLoading(true)
     setError(null)
     
@@ -81,16 +82,16 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
         
         setMeddpiccScores(scores)
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadOpportunities(searchTerm, selectedStage)
-  }, [searchTerm, selectedStage])
+  }, [searchTerm, selectedStage, loadOpportunities])
 
   // Listen for MEDDPICC score updates to refresh the list
   useEffect(() => {
@@ -124,7 +125,7 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
       } else {
         setOpportunities(opportunities.filter(opp => opp.id !== id))
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to delete opportunity')
     }
   }

@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect } from 'react'
 
@@ -22,7 +23,7 @@ interface LearningModule {
 
 export function LearningModuleViewer({ 
   moduleId, 
-  userId, 
+  userId: _userId, 
   onProgressUpdate, 
   onModuleComplete 
 }: LearningModuleViewerProps) {

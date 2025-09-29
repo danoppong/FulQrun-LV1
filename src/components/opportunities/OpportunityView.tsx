@@ -1,6 +1,7 @@
 'use client'
+import React from 'react'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
@@ -16,7 +17,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [meddpiccScore, setMeddpiccScore] = useState<number>(0)
-  const router = useRouter()
+  const _router = useRouter()
 
   // Debug logging
   console.log('OpportunityView rendered with opportunityId:', opportunityId)
@@ -25,7 +26,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
   const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<void> => {
     try {
       // Use the unified scoring service - always calculate fresh score for consistency
-      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity)
+      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity as { id: string; name: string; [key: string]: unknown })
       setMeddpiccScore(scoreResult.score)
     } catch (error) {
       console.error('Error getting MEDDPICC score:', error)
@@ -34,7 +35,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
     }
   }
 
-  const fetchOpportunity = async () => {
+  const fetchOpportunity = useCallback(async () => {
     try {
       setLoading(true)
       const { data, error } = await opportunityAPI.getOpportunity(opportunityId)
@@ -54,11 +55,11 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
     } finally {
       setLoading(false)
     }
-  }
+  }, [opportunityId])
 
   useEffect(() => {
     fetchOpportunity()
-  }, [opportunityId])
+  }, [fetchOpportunity])
 
   // Refresh data when returning from edit mode
   useEffect(() => {
@@ -99,7 +100,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
       window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
       window.removeEventListener('peakUpdated', handlePeakUpdate as EventListener)
     }
-  }, [opportunityId])
+  }, [fetchOpportunity, opportunityId])
 
   if (loading) {
     return (
@@ -140,13 +141,13 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
 
   return (
     <ErrorBoundary context="OpportunityView">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{opportunity.name}</h1>
-              <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+            <div className="mb-4 sm:mb-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{opportunity.name}</h1>
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-gray-500">
                 <span className="flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd" />

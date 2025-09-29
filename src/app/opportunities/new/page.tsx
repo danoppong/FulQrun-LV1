@@ -1,5 +1,11 @@
-import OpportunityForm from '@/components/opportunities/OpportunityForm'
+import React from 'react';
+import OpportunityForm from '@/components/opportunities/OpportunityForm';
+import { AuthWrapper } from '@/components/auth/AuthWrapper';
 
 export default function NewOpportunityPage() {
-  return <OpportunityForm mode="create" />
+  return (
+    <AuthWrapper>
+      <OpportunityForm mode="create" />
+    </AuthWrapper>
+  );
 }

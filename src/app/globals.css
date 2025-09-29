@@ -143,6 +143,36 @@ body {
   background: var(--gradient-warning);
 }
 
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  /* Improve touch targets */
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing for mobile */
+  .mobile-spacing {
+    padding: 1rem;
+  }
+  
+  /* Improve table readability on mobile */
+  table {
+    font-size: 0.875rem;
+  }
+  
+  /* Better form spacing */
+  .form-mobile {
+    padding: 1rem;
+  }
+  
+  /* Improve card spacing */
+  .card-mobile {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+}
+
 /* Phase 3 Enterprise gradient utilities */
 .gradient-phase3-primary {
   background: var(--gradient-phase3-primary);

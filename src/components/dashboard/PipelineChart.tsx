@@ -1,6 +1,5 @@
 'use client'
-
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { opportunityAPI } from '@/lib/api/opportunities'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
@@ -76,7 +75,7 @@ export default function PipelineChart() {
         
         setData(chartData)
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -382,12 +381,12 @@ export default function PipelineChart() {
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Pie
-                data={data as any}
+                data={data}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ stage, count, percent }: any) => 
-                  (count as number) > 0 ? `${stage}: ${count} (${((percent as number) * 100).toFixed(0)}%)` : ''
+                label={({ stage, count, percent }: { stage: string; count: number; percent: number }) => 
+                  count > 0 ? `${stage}: ${count} (${(percent * 100).toFixed(0)}%)` : ''
                 }
                 outerRadius={100}
                 fill="#8884d8"
@@ -442,22 +441,22 @@ export default function PipelineChart() {
           <table className="min-w-full divide-y divide-gray-100">
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
               <tr>
-                <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 sm:px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Stage
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 sm:px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Count
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 sm:px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Total Value
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 sm:px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Weighted Value
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 sm:px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Avg Value
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 sm:px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Conversion
                 </th>
               </tr>
@@ -469,7 +468,7 @@ export default function PipelineChart() {
                 
                 return (
                   <tr key={item.stage} className="hover:bg-gray-50 transition-colors duration-200 group">
-                    <td className="px-8 py-6 whitespace-nowrap">
+                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                       <div className="flex items-center">
                         <div 
                           className="w-4 h-4 rounded-full mr-3 shadow-sm"
@@ -485,7 +484,7 @@ export default function PipelineChart() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap">
+                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                       <div className="flex items-center">
                         <span className="text-lg font-bold text-gray-900">
                           {typeof item.count === 'number' ? item.count : 0}
@@ -501,22 +500,22 @@ export default function PipelineChart() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap">
+                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                       <span className="text-sm font-semibold text-gray-900">
                         {formatCurrency(item.value)}
                       </span>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap">
+                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                       <span className="text-sm font-semibold text-emerald-600">
                         {formatCurrency(item.weightedValue)}
                       </span>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap">
+                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                       <span className="text-sm font-semibold text-gray-900">
                         {typeof item.count === 'number' && item.count > 0 ? formatCurrency(item.value / item.count) : '$0'}
                       </span>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap">
+                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-12 bg-gray-200 rounded-full h-2 mr-2">
                           <div 

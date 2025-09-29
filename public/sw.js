@@ -1,7 +1,7 @@
 // FulQrun Service Worker
 // Provides offline capability and caching for the PWA
 
-const CACHE_NAME = 'fulqrun-v1.0.0'
+// const _CACHE_NAME = 'fulqrun-v1.0.0' // Unused variable
 const STATIC_CACHE_NAME = 'fulqrun-static-v1.0.0'
 const DYNAMIC_CACHE_NAME = 'fulqrun-dynamic-v1.0.0'
 

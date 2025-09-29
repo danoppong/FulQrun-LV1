@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect, memo, useCallback } from 'react'
 import { performanceAPI } from '@/lib/api/performance'
 
 interface ValueMetricsProps {
@@ -12,19 +12,25 @@ interface ValueMetricsProps {
 
 const ValueMetrics = memo(function ValueMetrics({ 
   userId, 
-  organizationId, 
+  organizationId: _organizationId, 
   periodStart, 
-  periodEnd 
+  periodEnd: _periodEnd 
 }: ValueMetricsProps) {
-  const [metrics, setMetrics] = useState<any[]>([])
+  const [metrics, setMetrics] = useState<Array<{
+    id: string
+    metric_type: string
+    value: number
+    timestamp: string
+    context: Record<string, unknown>
+  }>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadValueMetrics()
-  }, [userId, organizationId, periodStart, periodEnd])
+  }, [loadValueMetrics])
 
-  const loadValueMetrics = async () => {
+  const loadValueMetrics = useCallback(async () => {
     try {
       setIsLoading(true)
       const { data, error } = await performanceAPI.getPerformanceMetrics(userId, periodStart)
@@ -38,7 +44,7 @@ const ValueMetrics = memo(function ValueMetrics({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [userId, periodStart])
 
   if (isLoading) {
     return <div className="animate-pulse h-64 bg-gray-200 rounded"></div>

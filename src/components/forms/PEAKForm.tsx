@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -72,7 +72,7 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
     }
   })
 
-  const watchedValues = watch()
+  const _watchedValues = watch()
 
   // Update form when initialData changes
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
 
   const handleStageSelect = (stage: string) => {
     setSelectedStage(stage as 'prospecting' | 'engaging' | 'advancing' | 'key_decision')
-    setValue('peak_stage', stage as any)
+    setValue('peak_stage', stage as 'prospecting' | 'engaging' | 'advancing' | 'key_decision')
   }
 
   const onSubmit = async (data: PEAKFormData) => {

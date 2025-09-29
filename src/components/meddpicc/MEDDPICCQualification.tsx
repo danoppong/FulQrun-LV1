@@ -27,6 +27,15 @@ interface PillarFormData {
   [key: string]: string | number
 }
 
+interface MEDDPICCQuestion {
+  id: string
+  text: string
+  type: 'text' | 'scale' | 'yes_no' | 'multiple_choice'
+  required?: boolean
+  tooltip?: string
+  answers?: { text: string; points: number }[]
+}
+
 export default function MEDDPICCQualification({
   opportunityId,
   initialData = [],
@@ -45,85 +54,15 @@ export default function MEDDPICCQualification({
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
-    formState: { errors }
+    watch: _watch,
+    formState: {}
   } = useForm<PillarFormData>({
     resolver: zodResolver(z.object({})), // Dynamic validation
     defaultValues: {}
   })
 
-  const watchedValues = watch()
-
-  // Load existing opportunity data and current score
-  useEffect(() => {
-    const loadOpportunityData = async () => {
-      try {
-        setIsLoading(true)
-        
-        // Get the opportunity data to load existing MEDDPICC information
-        const { data: opportunity, error } = await opportunityAPI.getOpportunity(opportunityId)
-        
-        if (error) {
-          console.error('Error loading opportunity:', error)
-          return
-        }
-        
-        if (opportunity) {
-          // Get the current MEDDPICC score using the unified service
-          const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, opportunity)
-          
-          // Convert opportunity MEDDPICC data to responses format
-          const existingResponses = convertLegacyToComprehensive({
-            metrics: opportunity.metrics,
-            economic_buyer: opportunity.economic_buyer,
-            decision_criteria: opportunity.decision_criteria,
-            decision_process: opportunity.decision_process,
-            paper_process: opportunity.paper_process,
-            identify_pain: opportunity.identify_pain,
-            implicate_pain: opportunity.implicate_pain,
-            champion: opportunity.champion,
-            competition: opportunity.competition
-          })
-          
-          setResponses(existingResponses)
-          
-          // Set the current assessment with the unified score
-          const assessment = {
-            responses: existingResponses,
-            pillarScores: scoreResult.pillarScores,
-            overallScore: scoreResult.score,
-            qualificationLevel: scoreResult.qualificationLevel,
-            litmusTestScore: 0, // Will be calculated if needed
-            nextActions: [],
-            stageGateReadiness: {}
-          }
-          
-          setCurrentAssessment(assessment)
-        }
-      } catch (error) {
-        console.error('Error loading opportunity data:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    
-    if (MEDDPICC_CONFIG && MEDDPICC_CONFIG.pillars) {
-      loadOpportunityData()
-    } else {
-      console.warn('MEDDPICC_CONFIG not available, retrying...')
-      // Retry after a short delay
-      const timer = setTimeout(() => {
-        if (MEDDPICC_CONFIG && MEDDPICC_CONFIG.pillars) {
-          loadOpportunityData()
-        }
-      }, 100)
-      return () => clearTimeout(timer)
-    }
-  }, [opportunityId])
-
   // Convert legacy MEDDPICC data to comprehensive format
-  const convertLegacyToComprehensive = (legacyData: any): MEDDPICCResponse[] => {
+  const convertLegacyToComprehensive = useCallback((legacyData: Record<string, string>): MEDDPICCResponse[] => {
     const responses: MEDDPICCResponse[] = []
     
     // Map simple field names to pillar IDs
@@ -151,7 +90,7 @@ export default function MEDDPICCQualification({
     })
     
     return responses
-  }
+  }, [])
 
   // Helper function to parse combined pillar text back into individual responses
   const parsePillarText = (text: string, pillarId: string): MEDDPICCResponse[] => {
@@ -203,6 +142,73 @@ export default function MEDDPICCQualification({
     
     return responses
   }
+
+  // Load existing opportunity data and current score
+  useEffect(() => {
+    const loadOpportunityData = async () => {
+      try {
+        setIsLoading(true)
+        
+        // Get the opportunity data to load existing MEDDPICC information
+        const { data: opportunity, error } = await opportunityAPI.getOpportunity(opportunityId)
+        
+        if (error) {
+          console.error('Error loading opportunity:', error)
+          return
+        }
+        
+        if (opportunity) {
+          // Get the current MEDDPICC score using the unified service
+          const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, opportunity as unknown as { id: string; name: string; [key: string]: unknown })
+          
+          // Convert opportunity MEDDPICC data to responses format
+          const existingResponses = convertLegacyToComprehensive({
+            metrics: opportunity.metrics,
+            economic_buyer: opportunity.economic_buyer,
+            decision_criteria: opportunity.decision_criteria,
+            decision_process: opportunity.decision_process,
+            paper_process: opportunity.paper_process,
+            identify_pain: opportunity.identify_pain,
+            implicate_pain: opportunity.implicate_pain,
+            champion: opportunity.champion,
+            competition: opportunity.competition
+          })
+          
+          setResponses(existingResponses)
+          
+          // Set the current assessment with the unified score
+          const assessment = {
+            responses: existingResponses,
+            pillarScores: scoreResult.pillarScores,
+            overallScore: scoreResult.score,
+            qualificationLevel: scoreResult.qualificationLevel,
+            litmusTestScore: 0, // Will be calculated if needed
+            nextActions: [],
+            stageGateReadiness: {}
+          }
+          
+          setCurrentAssessment(assessment)
+        }
+      } catch (error) {
+        console.error('Error loading opportunity data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    if (MEDDPICC_CONFIG && MEDDPICC_CONFIG.pillars) {
+      loadOpportunityData()
+    } else {
+      console.warn('MEDDPICC_CONFIG not available, retrying...')
+      // Retry after a short delay
+      const timer = setTimeout(() => {
+        if (MEDDPICC_CONFIG && MEDDPICC_CONFIG.pillars) {
+          loadOpportunityData()
+        }
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [opportunityId, convertLegacyToComprehensive])
 
   // Memoize the stage gate notification to prevent infinite loops
   const notifyStageGateReadiness = useCallback((assessment: MEDDPICCAssessment) => {
@@ -285,7 +291,7 @@ export default function MEDDPICCQualification({
     setResponses(newResponses)
   }
 
-  const onSubmit = async (data: PillarFormData) => {
+  const onSubmit = async () => {
     setIsSubmitting(true)
     try {
       if (currentAssessment) {
@@ -391,7 +397,7 @@ export default function MEDDPICCQualification({
     return Math.round((answeredQuestions / totalQuestions) * 100)
   }, [responses])
 
-  const renderQuestion = (pillarId: string, question: any) => {
+  const renderQuestion = (pillarId: string, question: MEDDPICCQuestion) => {
     const currentResponse = responses.find(r => r.pillarId === pillarId && r.questionId === question.id)
     const currentAnswer = currentResponse?.answer || ''
 
@@ -412,7 +418,7 @@ export default function MEDDPICCQualification({
       case 'yes_no':
         return (
           <div className="mt-1 space-y-2">
-            {question.answers?.map((answer: any, index: number) => (
+            {question.answers?.map((answer: { text: string; points: number }, index: number) => (
               <label key={index} className="flex items-center">
                 <input
                   type="radio"

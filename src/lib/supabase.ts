@@ -1,5 +1,6 @@
 import { createBrowserClient, createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { supabaseConfig } from '@/lib/config'
+import type { SupabaseClientType } from '@/lib/types/supabase'
 
 // Singleton client instance to prevent multiple GoTrueClient instances
 let supabaseInstance: ReturnType<typeof createBrowserClient> | null = null
@@ -11,85 +12,26 @@ export const supabase = (() => {
   
   // Only create client if Supabase is configured
   if (supabaseConfig.isConfigured) {
-    supabaseInstance = createBrowserClient(
-      supabaseConfig.url!, 
-      supabaseConfig.anonKey!
-    )
+    try {
+      supabaseInstance = createBrowserClient(
+        supabaseConfig.url!, 
+        supabaseConfig.anonKey!
+      )
+    } catch (error) {
+      console.warn('Failed to create Supabase client:', error)
+      supabaseInstance = createMockClient()
+    }
   } else {
     // Return a mock client if not configured
-    supabaseInstance = {
-      auth: {
-        getUser: async () => ({ data: { user: null }, error: null }),
-        getSession: async () => ({ data: { session: null }, error: null }),
-        signInWithPassword: async () => ({ 
-          data: { user: null }, 
-          error: { message: 'Supabase not configured' } 
-        }),
-        signUp: async () => ({ 
-          data: { user: null }, 
-          error: { message: 'Supabase not configured' } 
-        }),
-        signOut: async () => ({ error: null }),
-        signInWithOAuth: async () => ({ 
-          error: { message: 'Supabase not configured' } 
-        })
-      },
-      from: (table: string) => ({
-        select: () => ({
-          eq: () => ({
-            single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
-          }),
-          order: () => ({
-            single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
-          })
-        }),
-        insert: (data: any) => {
-          const result = { data: null, error: { message: 'Supabase not configured' } }
-          const promise = Promise.resolve(result)
-          return Object.assign(promise, {
-            select: () => ({
-              single: async () => result
-            })
-          })
-        },
-        update: () => ({
-          eq: () => ({
-            select: () => ({
-              single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
-            })
-          })
-        }),
-        delete: () => ({
-          eq: async () => ({ error: { message: 'Supabase not configured' } })
-        })
-      })
-    } as any
+    supabaseInstance = createMockClient()
   }
   
   return supabaseInstance
 })()
 
-// Server-side client for API routes
-export const createServerClient = () => {
-  // Only create client if Supabase is configured
-  if (supabaseConfig.isConfigured) {
-    // For server-side usage, cookies will be handled by the calling component
-    return createSupabaseServerClient(supabaseConfig.url!, supabaseConfig.anonKey!, {
-      cookies: {
-        get(name: string) {
-          return undefined // Will be handled by the calling component
-        },
-        set(name: string, value: string, options: any) {
-          // Will be handled by the calling component
-        },
-        remove(name: string, options: any) {
-          // Will be handled by the calling component
-        },
-      },
-    })
-  } else {
-    // Return a mock client if not configured
-    return {
+// Helper function to create a mock client
+function createMockClient() {
+  return {
       auth: {
         getUser: async () => ({ data: { user: null }, error: null }),
         getSession: async () => ({ data: { session: null }, error: null }),
@@ -106,7 +48,7 @@ export const createServerClient = () => {
           error: { message: 'Supabase not configured' } 
         })
       },
-      from: (table: string) => ({
+      from: (_table: string) => ({
         select: () => ({
           eq: () => ({
             single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
@@ -115,7 +57,7 @@ export const createServerClient = () => {
             single: async () => ({ data: null, error: { message: 'Supabase not configured' } })
           })
         }),
-        insert: (data: any) => {
+        insert: (_data: Record<string, unknown>) => {
           const result = { data: null, error: { message: 'Supabase not configured' } }
           const promise = Promise.resolve(result)
           return Object.assign(promise, {
@@ -135,7 +77,35 @@ export const createServerClient = () => {
           eq: async () => ({ error: { message: 'Supabase not configured' } })
         })
       })
-    } as any
+    } as Record<string, unknown>
+}
+
+// Server-side client for API routes
+export const createServerClient = (): SupabaseClientType => {
+  // Only create client if Supabase is configured
+  if (supabaseConfig.isConfigured) {
+    try {
+      // For server-side usage, cookies will be handled by the calling component
+      return createSupabaseServerClient(supabaseConfig.url!, supabaseConfig.anonKey!, {
+        cookies: {
+          get(_name: string) {
+            return undefined // Will be handled by the calling component
+          },
+          set(_name: string, _value: string, _options: Record<string, unknown>) {
+            // Will be handled by the calling component
+          },
+          remove(_name: string, _options: Record<string, unknown>) {
+            // Will be handled by the calling component
+          },
+        },
+      })
+    } catch (error) {
+      console.warn('Failed to create Supabase server client:', error)
+      return createMockClient()
+    }
+  } else {
+    // Return a mock client if not configured
+    return createMockClient()
   }
 }
 
@@ -176,7 +146,7 @@ export interface Database {
           full_name: string | null
           role: 'rep' | 'manager' | 'admin'
           organization_id: string
-          learning_progress: Record<string, any>
+          learning_progress: Record<string, unknown>
           created_at: string
           updated_at: string
         }
@@ -186,7 +156,7 @@ export interface Database {
           full_name?: string | null
           role?: 'rep' | 'manager' | 'admin'
           organization_id: string
-          learning_progress?: Record<string, any>
+          learning_progress?: Record<string, unknown>
           created_at?: string
           updated_at?: string
         }
@@ -196,7 +166,7 @@ export interface Database {
           full_name?: string | null
           role?: 'rep' | 'manager' | 'admin'
           organization_id?: string
-          learning_progress?: Record<string, any>
+          learning_progress?: Record<string, unknown>
           created_at?: string
           updated_at?: string
         }
@@ -471,7 +441,7 @@ export interface Database {
           id: string
           type: 'microsoft_graph' | 'quickbooks'
           name: string
-          config: Record<string, any>
+          config: Record<string, unknown>
           is_active: boolean
           organization_id: string
           created_by: string
@@ -482,7 +452,7 @@ export interface Database {
           id?: string
           type: 'microsoft_graph' | 'quickbooks'
           name: string
-          config: Record<string, any>
+          config: Record<string, unknown>
           is_active?: boolean
           organization_id: string
           created_by: string
@@ -493,7 +463,7 @@ export interface Database {
           id?: string
           type?: 'microsoft_graph' | 'quickbooks'
           name?: string
-          config?: Record<string, any>
+          config?: Record<string, unknown>
           is_active?: boolean
           organization_id?: string
           created_by?: string
@@ -506,7 +476,7 @@ export interface Database {
           id: string
           name: string
           description: string | null
-          stages: Record<string, any>[]
+          stages: Record<string, unknown>[]
           branch_specific: boolean
           role_specific: boolean
           branch_name: string | null
@@ -521,7 +491,7 @@ export interface Database {
           id?: string
           name: string
           description?: string | null
-          stages?: Record<string, any>[]
+          stages?: Record<string, unknown>[]
           branch_specific?: boolean
           role_specific?: boolean
           branch_name?: string | null
@@ -536,7 +506,7 @@ export interface Database {
           id?: string
           name?: string
           description?: string | null
-          stages?: Record<string, any>[]
+          stages?: Record<string, unknown>[]
           branch_specific?: boolean
           role_specific?: boolean
           branch_name?: string | null
@@ -554,8 +524,8 @@ export interface Database {
           name: string
           description: string | null
           trigger_type: 'stage_change' | 'field_update' | 'time_based' | 'manual'
-          trigger_conditions: Record<string, any>
-          actions: Record<string, any>[]
+          trigger_conditions: Record<string, unknown>
+          actions: Record<string, unknown>[]
           is_active: boolean
           branch_specific: boolean
           role_specific: boolean
@@ -571,8 +541,8 @@ export interface Database {
           name: string
           description?: string | null
           trigger_type: 'stage_change' | 'field_update' | 'time_based' | 'manual'
-          trigger_conditions?: Record<string, any>
-          actions?: Record<string, any>[]
+          trigger_conditions?: Record<string, unknown>
+          actions?: Record<string, unknown>[]
           is_active?: boolean
           branch_specific?: boolean
           role_specific?: boolean
@@ -588,8 +558,8 @@ export interface Database {
           name?: string
           description?: string | null
           trigger_type?: 'stage_change' | 'field_update' | 'time_based' | 'manual'
-          trigger_conditions?: Record<string, any>
-          actions?: Record<string, any>[]
+          trigger_conditions?: Record<string, unknown>
+          actions?: Record<string, unknown>[]
           is_active?: boolean
           branch_specific?: boolean
           role_specific?: boolean
@@ -607,7 +577,7 @@ export interface Database {
           type: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance'
           entity_type: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization'
           entity_id: string
-          insight_data: Record<string, any>
+          insight_data: Record<string, unknown>
           confidence_score: number | null
           model_version: string | null
           organization_id: string
@@ -619,7 +589,7 @@ export interface Database {
           type: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance'
           entity_type: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization'
           entity_id: string
-          insight_data?: Record<string, any>
+          insight_data?: Record<string, unknown>
           confidence_score?: number | null
           model_version?: string | null
           organization_id: string
@@ -631,7 +601,7 @@ export interface Database {
           type?: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance'
           entity_type?: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization'
           entity_id?: string
-          insight_data?: Record<string, any>
+          insight_data?: Record<string, unknown>
           confidence_score?: number | null
           model_version?: string | null
           organization_id?: string
@@ -697,8 +667,8 @@ export interface Database {
           id: string
           integration_type: 'slack' | 'docusign' | 'stripe' | 'gong' | 'sharepoint' | 'salesforce' | 'hubspot'
           name: string
-          config: Record<string, any>
-          credentials: Record<string, any>
+          config: Record<string, unknown>
+          credentials: Record<string, unknown>
           is_active: boolean
           last_sync_at: string | null
           sync_status: 'pending' | 'success' | 'error' | 'disabled'
@@ -712,8 +682,8 @@ export interface Database {
           id?: string
           integration_type: 'slack' | 'docusign' | 'stripe' | 'gong' | 'sharepoint' | 'salesforce' | 'hubspot'
           name: string
-          config?: Record<string, any>
-          credentials?: Record<string, any>
+          config?: Record<string, unknown>
+          credentials?: Record<string, unknown>
           is_active?: boolean
           last_sync_at?: string | null
           sync_status?: 'pending' | 'success' | 'error' | 'disabled'
@@ -727,8 +697,8 @@ export interface Database {
           id?: string
           integration_type?: 'slack' | 'docusign' | 'stripe' | 'gong' | 'sharepoint' | 'salesforce' | 'hubspot'
           name?: string
-          config?: Record<string, any>
-          credentials?: Record<string, any>
+          config?: Record<string, unknown>
+          credentials?: Record<string, unknown>
           is_active?: boolean
           last_sync_at?: string | null
           sync_status?: 'pending' | 'success' | 'error' | 'disabled'
@@ -750,7 +720,7 @@ export interface Database {
           period_start: string
           period_end: string
           calculation_method: string | null
-          raw_data: Record<string, any>
+          raw_data: Record<string, unknown>
           organization_id: string
           created_at: string
           updated_at: string
@@ -765,7 +735,7 @@ export interface Database {
           period_start: string
           period_end: string
           calculation_method?: string | null
-          raw_data?: Record<string, any>
+          raw_data?: Record<string, unknown>
           organization_id: string
           created_at?: string
           updated_at?: string
@@ -780,7 +750,7 @@ export interface Database {
           period_start?: string
           period_end?: string
           calculation_method?: string | null
-          raw_data?: Record<string, any>
+          raw_data?: Record<string, unknown>
           organization_id?: string
           created_at?: string
           updated_at?: string
@@ -797,7 +767,7 @@ export interface Database {
           last_accessed_at: string | null
           completed_at: string | null
           certification_date: string | null
-          quiz_scores: Record<string, any>
+          quiz_scores: Record<string, unknown>
           organization_id: string
           created_at: string
           updated_at: string
@@ -812,7 +782,7 @@ export interface Database {
           last_accessed_at?: string | null
           completed_at?: string | null
           certification_date?: string | null
-          quiz_scores?: Record<string, any>
+          quiz_scores?: Record<string, unknown>
           organization_id: string
           created_at?: string
           updated_at?: string
@@ -827,7 +797,7 @@ export interface Database {
           last_accessed_at?: string | null
           completed_at?: string | null
           certification_date?: string | null
-          quiz_scores?: Record<string, any>
+          quiz_scores?: Record<string, unknown>
           organization_id?: string
           created_at?: string
           updated_at?: string

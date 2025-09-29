@@ -247,7 +247,7 @@ export const SAMPLE_PERFORMANCE_DATA: PerformanceData = {
   }
 }
 
-export function getPerformanceDataForRole(userId: string, role: string, region?: string, businessUnit?: string): PerformanceMetrics[] {
+export function getPerformanceDataForRole(userId: string, role: string, region?: string, _businessUnit?: string): PerformanceMetrics[] {
   const data = SAMPLE_PERFORMANCE_DATA
   
   switch (role) {

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { opportunityAPI } from '@/lib/api/opportunities'
+import { opportunityAPI as _opportunityAPI } from '@/lib/api/opportunities'
 import { MEDDPICCQualification } from '@/components/meddpicc'
 import { MEDDPICCResponse, MEDDPICCAssessment, MEDDPICC_CONFIG, calculateMEDDPICCScore } from '@/lib/meddpicc'
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
@@ -41,7 +41,7 @@ export default function MEDDPICCForm({
   useComprehensiveView = false
 }: MEDDPICCFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [assessment, setAssessment] = useState<MEDDPICCAssessment | null>(null)
+  const [_assessment, setAssessment] = useState<MEDDPICCAssessment | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<MEDDPICCAssessment | null>(null)
   
@@ -198,7 +198,7 @@ export default function MEDDPICCForm({
   }
 
   // Convert simple MEDDPICC data to comprehensive format
-  const convertToComprehensiveFormat = (simpleData: any): MEDDPICCResponse[] => {
+  const convertToComprehensiveFormat = (simpleData: Record<string, string>): MEDDPICCResponse[] => {
     const responses: MEDDPICCResponse[] = []
     
     // Map simple field names to pillar IDs

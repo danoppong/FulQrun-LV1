@@ -4,7 +4,13 @@ import { AIInsightsAPI, AIInsightData, LeadScoringInsight, DealRiskInsight, Next
 export interface InsightContext {
   organizationId: string
   userId: string
-  historicalData?: any[]
+  historicalData?: Array<{
+    id: string
+    type: string
+    timestamp: string
+    value: number
+    context: Record<string, unknown>
+  }>
   benchmarks?: Record<string, number>
 }
 
@@ -14,7 +20,7 @@ export class AIInsightsEngine {
    */
   static async generateLeadScoring(
     leadId: string,
-    leadData: any,
+    leadData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData> {
     try {
@@ -42,7 +48,7 @@ export class AIInsightsEngine {
         modelVersion: 'gpt-4-v1',
         organizationId: context.organizationId
       })
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate lead scoring insight')
     }
   }
@@ -52,7 +58,7 @@ export class AIInsightsEngine {
    */
   static async generateDealRiskAssessment(
     opportunityId: string,
-    opportunityData: any,
+    opportunityData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData> {
     try {
@@ -80,7 +86,7 @@ export class AIInsightsEngine {
         modelVersion: 'gpt-4-v1',
         organizationId: context.organizationId
       })
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate deal risk assessment')
     }
   }
@@ -90,7 +96,7 @@ export class AIInsightsEngine {
    */
   static async generateNextActions(
     opportunityId: string,
-    opportunityData: any,
+    opportunityData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData> {
     try {
@@ -110,7 +116,7 @@ export class AIInsightsEngine {
         modelVersion: 'gpt-4-v1',
         organizationId: context.organizationId
       })
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate next action recommendations')
     }
   }
@@ -120,8 +126,8 @@ export class AIInsightsEngine {
    */
   static async generateForecasting(
     organizationId: string,
-    pipelineData: any,
-    context: InsightContext
+    pipelineData: Record<string, unknown>,
+    _context: InsightContext
   ): Promise<AIInsightData> {
     try {
       const forecast = await OpenAIClient.generateForecast(pipelineData)
@@ -140,7 +146,7 @@ export class AIInsightsEngine {
         modelVersion: 'gpt-4-v1',
         organizationId
       })
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate sales forecast')
     }
   }
@@ -150,7 +156,7 @@ export class AIInsightsEngine {
    */
   static async generatePerformanceInsights(
     userId: string,
-    performanceData: any,
+    performanceData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData> {
     try {
@@ -175,7 +181,7 @@ export class AIInsightsEngine {
         modelVersion: 'gpt-4-v1',
         organizationId: context.organizationId
       })
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to generate performance insights')
     }
   }
@@ -187,7 +193,7 @@ export class AIInsightsEngine {
     requests: Array<{
       type: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance'
       entityId: string
-      data: any
+      data: Record<string, unknown>
       context: InsightContext
     }>
   ): Promise<AIInsightData[]> {
@@ -239,7 +245,7 @@ export class AIInsightsEngine {
     entityId: string,
     organizationId: string
   ): Promise<AIInsightData[]> {
-    return await AIInsightsAPI.getInsights(entityType as any, entityId as any, organizationId as any)
+    return await AIInsightsAPI.getInsights(entityType as string, entityId as string, organizationId as string)
   }
 
   /**
@@ -249,7 +255,7 @@ export class AIInsightsEngine {
     entityType: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization',
     entityId: string,
     insightType: 'lead_scoring' | 'deal_risk' | 'next_action' | 'forecasting' | 'performance',
-    organizationId: string
+    _organizationId: string
   ): Promise<AIInsightData | null> {
     return await AIInsightsAPI.getLatestInsight(entityType, entityId, insightType)
   }
@@ -260,7 +266,7 @@ export class AIInsightsEngine {
   static async refreshEntityInsights(
     entityType: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization',
     entityId: string,
-    entityData: any,
+    entityData: Record<string, unknown>,
     context: InsightContext
   ): Promise<AIInsightData[]> {
     const results: AIInsightData[] = []
@@ -271,7 +277,7 @@ export class AIInsightsEngine {
         try {
           const leadScoring = await this.generateLeadScoring(entityId, entityData, context)
           results.push(leadScoring)
-        } catch (error) {
+        } catch (_error) {
         }
         break
 
@@ -282,7 +288,7 @@ export class AIInsightsEngine {
             this.generateNextActions(entityId, entityData, context)
           ])
           results.push(dealRisk, nextActions)
-        } catch (error) {
+        } catch (_error) {
         }
         break
 
@@ -290,7 +296,7 @@ export class AIInsightsEngine {
         try {
           const performance = await this.generatePerformanceInsights(entityId, entityData, context)
           results.push(performance)
-        } catch (error) {
+        } catch (_error) {
         }
         break
 
@@ -298,7 +304,7 @@ export class AIInsightsEngine {
         try {
           const forecasting = await this.generateForecasting(context.organizationId, entityData, context)
           results.push(forecasting)
-        } catch (error) {
+        } catch (_error) {
         }
         break
     }
@@ -337,7 +343,7 @@ export class AIInsightsEngine {
   /**
    * Validate insight data before processing
    */
-  private static validateInsightData(type: string, data: any): boolean {
+  private static validateInsightData(type: string, data: Record<string, unknown>): boolean {
     switch (type) {
       case 'lead_scoring':
         return data && (data.firstName || data.email || data.company)

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, memo } from 'react'
-import { PerformanceAPI } from '@/lib/api/performance'
+import { PerformanceAPI as _PerformanceAPI } from '@/lib/api/performance'
 
 interface ClarityMetricsProps {
   userId: string
@@ -16,7 +16,7 @@ const ClarityMetrics = memo(function ClarityMetrics({
   periodStart, 
   periodEnd 
 }: ClarityMetricsProps) {
-  const [metrics, setMetrics] = useState<any[]>([])
+  const [metrics, setMetrics] = useState<Array<{ id: string; metricType: string; metricName?: string; metricValue?: number; value?: number; timestamp: string; metadata?: Record<string, unknown> }>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

@@ -95,7 +95,7 @@ export class QuickBooksAPI {
   /**
    * Exchange authorization code for access token
    */
-  async exchangeCodeForToken(code: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async exchangeCodeForToken(_code: string): Promise<{ accessToken: string; refreshToken: string }> {
     if (!this.config) {
       throw new Error('QuickBooks not configured')
     }
@@ -273,7 +273,7 @@ export class QuickBooksAPI {
         updated: 0,
         errors: 0
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         imported: 0,
         updated: 0,
@@ -304,7 +304,7 @@ export class QuickBooksAPI {
         updated: 0,
         errors: 0
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         imported: 0,
         updated: 0,
@@ -343,7 +343,7 @@ export class QuickBooksAPI {
         totalCustomers,
         averageInvoiceValue
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         totalRevenue: 0,
         outstandingInvoices: 0,

@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect } from 'react'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
@@ -32,7 +33,7 @@ export default function ContactList({ opportunityId, onEdit, onDelete }: Contact
         // For now, we'll show all contacts, but this could be filtered by company
         setContacts(data || [])
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -49,7 +50,7 @@ export default function ContactList({ opportunityId, onEdit, onDelete }: Contact
         setContacts(contacts.filter(c => c.id !== contactId))
         if (onDelete) onDelete(contactId)
       }
-    } catch (err) {
+    } catch (_err) {
     }
   }
 

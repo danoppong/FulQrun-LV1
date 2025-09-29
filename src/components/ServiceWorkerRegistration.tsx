@@ -1,4 +1,5 @@
 'use client'
+// import React from 'react' // Unused import
 
 import { useEffect, useState } from 'react'
 
@@ -37,7 +38,7 @@ export default function ServiceWorkerRegistration() {
         }
       })
 
-    } catch (error) {
+    } catch (_error) {
     }
   }
 
@@ -66,7 +67,7 @@ export function useOnlineStatus() {
 
 // Hook for PWA install prompt
 export function usePWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null)
   const [isInstallable, setIsInstallable] = useState(false)
 
   useEffect(() => {

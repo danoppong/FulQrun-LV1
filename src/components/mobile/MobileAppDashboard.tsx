@@ -1,25 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   DevicePhoneMobileIcon, 
-  CloudIcon, 
   MicrophoneIcon, 
   ChartBarIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
   WifiIcon,
-  BellIcon,
-  CogIcon,
   ShieldCheckIcon,
   ArrowPathIcon,
-  PlayIcon,
-  PauseIcon,
-  StopIcon
+  PlayIcon
 } from '@heroicons/react/24/outline';
 import * as MobileAppAPI from '@/lib/api/mobile-app';
-import { MobileSession, DeviceInfo, VoiceNote, MobileAnalytics } from '@/lib/mobile/mobile-app';
+import { MobileSession, DeviceInfo as _DeviceInfo, VoiceNote, MobileAnalytics } from '@/lib/mobile/mobile-app';
 
 interface MobileAppDashboardProps {
   organizationId: string;
@@ -27,19 +22,19 @@ interface MobileAppDashboardProps {
 }
 
 export default function MobileAppDashboard({ organizationId, userId }: MobileAppDashboardProps) {
-  const [sessions, setSessions] = useState<MobileSession[]>([]);
-  const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
-  const [analytics, setAnalytics] = useState<MobileAnalytics[]>([]);
-  const [health, setHealth] = useState<any>(null);
+  const [_sessions, _setSessions] = useState<MobileSession[]>([]);
+  const [_voiceNotes, _setVoiceNotes] = useState<VoiceNote[]>([]);
+  const [_analytics, setAnalytics] = useState<MobileAnalytics | null>(null);
+  const [health, setHealth] = useState<{ deviceId: string; complianceStatus: string; lastChecked: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'sessions' | 'voice' | 'analytics' | 'health'>('sessions');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     loadData();
-  }, [organizationId, userId]);
+  }, [loadData]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [healthData, analyticsData] = await Promise.all([
@@ -54,7 +49,7 @@ export default function MobileAppDashboard({ organizationId, userId }: MobileApp
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId, userId]);
 
   const handleSync = async () => {
     try {
@@ -63,7 +58,7 @@ export default function MobileAppDashboard({ organizationId, userId }: MobileApp
       setSyncStatus('success');
       setTimeout(() => setSyncStatus('idle'), 2000);
       loadData();
-    } catch (error) {
+    } catch (_error) {
       setSyncStatus('error');
       setTimeout(() => setSyncStatus('idle'), 2000);
     }
@@ -222,7 +217,7 @@ export default function MobileAppDashboard({ organizationId, userId }: MobileApp
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setSelectedTab(tab.id as any)}
+                  onClick={() => setSelectedTab(tab.id as string)}
                   className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
                     selectedTab === tab.id
                       ? 'border-blue-500 text-blue-600'

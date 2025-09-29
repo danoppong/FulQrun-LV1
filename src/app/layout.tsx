@@ -9,6 +9,9 @@ import ThemeProvider from '@/components/ThemeProvider';
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+  fallback: ["system-ui", "arial"],
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -19,6 +22,9 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "FulQrun",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
   },
   icons: {
     icon: [
@@ -36,8 +42,8 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
   themeColor: "#4f46e5",
   viewportFit: "cover",
 };
@@ -53,87 +59,25 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // Apply theme immediately to prevent FOUC
-              (function() {
-                const theme = localStorage.getItem('theme') || 'light';
-                const themes = {
-                  light: {
-                    background: '#fafafa',
-                    foreground: '#0f172a',
-                    card: '#ffffff',
-                    'card-foreground': '#0f172a',
-                    popover: '#ffffff',
-                    'popover-foreground': '#0f172a',
-                    primary: '#3b82f6',
-                    'primary-foreground': '#f8fafc',
-                    secondary: '#f1f5f9',
-                    'secondary-foreground': '#0f172a',
-                    muted: '#f1f5f9',
-                    'muted-foreground': '#64748b',
-                    accent: '#f1f5f9',
-                    'accent-foreground': '#0f172a',
-                    destructive: '#ef4444',
-                    'destructive-foreground': '#f8fafc',
-                    border: '#e2e8f0',
-                    input: '#e2e8f0',
-                    ring: '#3b82f6',
-                    'gradient-primary': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    'gradient-secondary': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                    'gradient-success': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                    'gradient-warning': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
-                  },
-                  dark: {
-                    background: '#0f172a',
-                    foreground: '#f8fafc',
-                    card: '#1e293b',
-                    'card-foreground': '#f8fafc',
-                    popover: '#1e293b',
-                    'popover-foreground': '#f8fafc',
-                    primary: '#3b82f6',
-                    'primary-foreground': '#f8fafc',
-                    secondary: '#334155',
-                    'secondary-foreground': '#f8fafc',
-                    muted: '#334155',
-                    'muted-foreground': '#94a3b8',
-                    accent: '#334155',
-                    'accent-foreground': '#f8fafc',
-                    destructive: '#ef4444',
-                    'destructive-foreground': '#f8fafc',
-                    border: '#334155',
-                    input: '#334155',
-                    ring: '#3b82f6',
-                    'gradient-primary': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    'gradient-secondary': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                    'gradient-success': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                    'gradient-warning': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
-                  }
-                };
-                
-                const config = themes[theme] || themes.light;
-                const root = document.documentElement;
-                
-                Object.entries(config).forEach(([key, value]) => {
-                  root.style.setProperty('--' + key, value);
-                });
-              })();
-              
               // Prevent browser extensions from adding attributes that cause hydration mismatches
-              (function() {
-                const originalSetAttribute = Element.prototype.setAttribute;
-                Element.prototype.setAttribute = function(name, value) {
-                  // Block problematic attributes from being added to the body
-                  if (this === document.body && (
-                    name.startsWith('data-gr-') ||
-                    name.startsWith('data-gramm') ||
-                    name.startsWith('data-lastpass') ||
-                    name.startsWith('data-1password') ||
-                    name.startsWith('data-bitwarden')
-                  )) {
-                    return;
-                  }
-                  return originalSetAttribute.call(this, name, value);
-                };
-              })();
+              if (typeof window !== 'undefined') {
+                (function() {
+                  const originalSetAttribute = Element.prototype.setAttribute;
+                  Element.prototype.setAttribute = function(name, value) {
+                    // Block problematic attributes from being added to the body
+                    if (this === document.body && (
+                      name.startsWith('data-gr-') ||
+                      name.startsWith('data-gramm') ||
+                      name.startsWith('data-lastpass') ||
+                      name.startsWith('data-1password') ||
+                      name.startsWith('data-bitwarden')
+                    )) {
+                      return;
+                    }
+                    return originalSetAttribute.call(this, name, value);
+                  };
+                })();
+              }
             `,
           }}
         />

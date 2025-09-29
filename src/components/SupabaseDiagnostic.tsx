@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/lib/auth'
@@ -39,7 +40,7 @@ export default function SupabaseDiagnostic() {
         // Test connection
         try {
           const supabase = createClientComponentClient()
-          const { data, error } = await supabase.from('organizations').select('count').limit(1)
+          const { data: _data, error } = await supabase.from('organizations').select('count').limit(1)
           
           if (error) {
             results.connectionStatus = `❌ Connection failed: ${error.message}`

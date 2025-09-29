@@ -29,7 +29,7 @@ export async function GET(
     }
 
     return NextResponse.json(module)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch learning module' },
       { status: 500 }

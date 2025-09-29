@@ -38,14 +38,23 @@ export async function GET(request: NextRequest) {
     const credentials = JSON.parse(connection.credentials)
     const sharepoint = new SharePointIntegration(credentials.access_token)
 
-    let documents: any[] = []
+    let documents: Array<{
+      id: string
+      name: string
+      url: string
+      size: number
+      modified: string
+      type: string
+    }> = []
 
     if (opportunityId) {
       // Get PEAK process documents for specific opportunity
-      documents = await sharepoint.getPEAKDocuments(siteId, opportunityId)
+      const peakDocs = await sharepoint.getPEAKDocuments(siteId, opportunityId)
+      documents = peakDocs.map(doc => ({ ...doc, type: 'document' }))
     } else {
       // Get documents from specific folder
-      documents = await sharepoint.getDocumentsFromSite(siteId, folderPath)
+      const folderDocs = await sharepoint.getDocumentsFromSite(siteId, folderPath)
+      documents = folderDocs.map(doc => ({ ...doc, type: 'document' }))
     }
 
     // Store document references in database
@@ -56,11 +65,11 @@ export async function GET(request: NextRequest) {
         name: doc.name,
         url: doc.url,
         size: doc.size,
-        last_modified: doc.lastModified,
-        created_by: doc.createdBy,
-        web_url: doc.webUrl,
-        download_url: doc.downloadUrl,
-        thumbnail_url: doc.thumbnailUrl
+        last_modified: doc.modified,
+        created_by: (doc as { createdBy?: string }).createdBy || 'unknown',
+        web_url: (doc as { webUrl?: string }).webUrl || doc.url,
+        download_url: (doc as { downloadUrl?: string }).downloadUrl || doc.url,
+        thumbnail_url: (doc as { thumbnailUrl?: string }).thumbnailUrl || ''
       }))
 
       // Upsert document records
@@ -72,7 +81,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(documents)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch SharePoint documents' },
       { status: 500 }
@@ -162,7 +171,7 @@ export async function POST(request: NextRequest) {
         size: file.size
       }
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to upload document' },
       { status: 500 }
@@ -229,7 +238,7 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: 'Document deleted successfully'
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to delete document' },
       { status: 500 }

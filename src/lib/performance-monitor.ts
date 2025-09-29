@@ -9,7 +9,7 @@ export interface PerformanceMetric {
   value: number
   timestamp: number
   context?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface ComponentPerformanceData {
@@ -18,7 +18,7 @@ export interface ComponentPerformanceData {
   mountTime: number
   updateCount: number
   lastUpdate: number
-  props?: Record<string, any>
+  props?: Record<string, unknown>
 }
 
 export interface APIPerformanceData {
@@ -128,7 +128,7 @@ class PerformanceMonitor {
       return new Promise((resolve) => {
         const observer = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            resolve((entry as any).processingStart - entry.startTime)
+            resolve((entry as PerformanceEntry & { processingStart: number }).processingStart - entry.startTime)
           }
         })
         observer.observe({ entryTypes: ['first-input'] })
@@ -141,8 +141,8 @@ class PerformanceMonitor {
         let clsValue = 0
         const observer = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            if (!(entry as any).hadRecentInput) {
-              clsValue += (entry as any).value
+            if (!(entry as PerformanceEntry & { hadRecentInput: boolean }).hadRecentInput) {
+              clsValue += (entry as PerformanceEntry & { value: number }).value
             }
           }
           resolve(clsValue)
@@ -228,7 +228,7 @@ class PerformanceMonitor {
     this.sendToAnalytics(metric)
   }
 
-  public recordComponentRender(componentName: string, renderTime: number, props?: Record<string, any>) {
+  public recordComponentRender(componentName: string, renderTime: number, props?: Record<string, unknown>) {
     const existing = this.componentData.get(componentName)
     const now = Date.now()
 
@@ -297,7 +297,7 @@ class PerformanceMonitor {
 
   private getWebVitalsReport() {
     const webVitals = this.metrics.filter(m => m.context === 'web-vitals')
-    const report: Record<string, any> = {}
+    const report: Record<string, unknown> = {}
 
     webVitals.forEach(metric => {
       if (!report[metric.name]) {
@@ -393,8 +393,8 @@ class PerformanceMonitor {
   }
 
   private sendToAnalytics(metric: PerformanceMetric) {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'performance_metric', {
+    if (typeof window !== 'undefined' && (window as Window & { gtag?: (command: string, action: string, parameters: Record<string, unknown>) => void }).gtag) {
+      (window as Window & { gtag: (command: string, action: string, parameters: Record<string, unknown>) => void }).gtag('event', 'performance_metric', {
         metric_name: metric.name,
         metric_value: metric.value,
         metric_context: metric.context
@@ -423,7 +423,7 @@ class PerformanceMonitor {
 export const performanceMonitor = new PerformanceMonitor()
 
 // React hook for component performance tracking
-export function usePerformanceTracking(componentName: string, props?: Record<string, any>) {
+export function usePerformanceTracking(componentName: string, props?: Record<string, unknown>) {
   const startTime = performance.now()
 
   React.useEffect(() => {
@@ -447,7 +447,7 @@ export function withPerformanceTracking<P extends object>(
 ) {
   const WrappedComponent = (props: P) => {
     const name = componentName || Component.displayName || Component.name || 'Unknown'
-    const { recordRender } = usePerformanceTracking(name, props as Record<string, any>)
+    const { recordRender } = usePerformanceTracking(name, props as Record<string, unknown>)
     
     const startTime = performance.now()
     

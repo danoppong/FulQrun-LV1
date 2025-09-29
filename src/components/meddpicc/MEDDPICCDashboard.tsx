@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import { 
   MEDDPICC_CONFIG, 
-  MEDDPICCResponse, 
+  MEDDPICCResponse as _MEDDPICCResponse, 
   MEDDPICCAssessment,
-  calculateMEDDPICCScore,
+  calculateMEDDPICCScore as _calculateMEDDPICCScore,
   getMEDDPICCLevel
 } from '@/lib/meddpicc'
 import { 
@@ -23,7 +23,7 @@ interface MEDDPICCDashboardProps {
 }
 
 export default function MEDDPICCDashboard({
-  opportunityId,
+  opportunityId: _opportunityId,
   assessment,
   className = ''
 }: MEDDPICCDashboardProps) {

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { SharePointIntegration, SharePointDocument } from '@/lib/integrations/sharepoint'
 
 interface SharePointFolder {
@@ -14,7 +14,6 @@ interface SharePointSite {
   name: string
   url: string
 }
-import { IntegrationConnectionData } from '@/lib/api/integrations'
 
 interface SharePointRepositoryProps {
   opportunityId: string
@@ -44,9 +43,9 @@ export function SharePointRepository({
 
   useEffect(() => {
     initializeSharePoint()
-  }, [organizationId])
+  }, [initializeSharePoint])
 
-  const initializeSharePoint = async () => {
+  const initializeSharePoint = useCallback(async () => {
     try {
       // Get SharePoint connection from integrations
       const response = await fetch(`/api/integrations/sharepoint/connection?organizationId=${organizationId}`)
@@ -54,7 +53,18 @@ export function SharePointRepository({
         throw new Error('SharePoint not connected')
       }
 
-      const connection: any = await response.json()
+      const connection: {
+        id: string
+        integration_type: string
+        status: string
+        credentials: {
+          access_token: string
+          refresh_token: string
+          expires_at: string
+        }
+        created_at: string
+        updated_at: string
+      } = await response.json()
       const accessToken = connection.credentials?.access_token
       
       if (!accessToken) {
@@ -70,14 +80,21 @@ export function SharePointRepository({
       
       if (sitesData.length > 0) {
         setSelectedSite(sitesData[0])
-        await loadFolderContents(sitesData[0].id, '/')
+        // Load folder contents after setting sharepoint state
+        const [foldersData, documentsData] = await Promise.all([
+          sp.getFolders(sitesData[0].id, '/'),
+          sp.getDocumentsFromSite(sitesData[0].id, '/')
+        ])
+        setFolders(foldersData.map(folder => ({ ...folder, path: folder.url })))
+        setDocuments(documentsData as Array<{ id: string; name: string; url: string; size?: number; modified?: string }>)
+        setCurrentPath('/')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to initialize SharePoint')
     }
-  }
+  }, [organizationId])
 
-  const loadFolderContents = async (siteId: string, path: string) => {
+  const loadFolderContents = useCallback(async (siteId: string, path: string) => {
     if (!sharepoint) return
 
     try {
@@ -89,15 +106,15 @@ export function SharePointRepository({
         sharepoint.getDocumentsFromSite(siteId, path)
       ])
 
-      setFolders(foldersData)
-      setDocuments(documentsData)
+      setFolders(foldersData.map(folder => ({ ...folder, path: folder.url })))
+      setDocuments(documentsData as Array<{ id: string; name: string; url: string; size?: number; modified?: string }>)
       setCurrentPath(path)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load folder contents')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [sharepoint])
 
   const handleSiteChange = async (site: SharePointSite) => {
     setSelectedSite(site)
@@ -134,7 +151,7 @@ export function SharePointRepository({
         await loadFolderContents(selectedSite.id, currentPath)
         setShowUpload(false)
         setUploadFile(null)
-        onDocumentUpload?.(result as any)
+        onDocumentUpload?.(result as { id: string; name: string; url: string; size?: number })
       } else {
         setError(result.error || 'Upload failed')
       }

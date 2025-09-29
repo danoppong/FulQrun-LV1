@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { PerformanceAPI } from '@/lib/api/performance'
+import React, { useState, useEffect, useCallback } from 'react'
+import { PerformanceAPI as _PerformanceAPI } from '@/lib/api/performance'
 
 interface ProblemMetricsProps {
   userId: string
@@ -11,12 +11,12 @@ interface ProblemMetricsProps {
 }
 
 export function ProblemMetrics({ 
-  userId, 
-  organizationId, 
-  periodStart, 
-  periodEnd 
+  userId: _userId, 
+  organizationId: _organizationId, 
+  periodStart: _periodStart, 
+  periodEnd: _periodEnd 
 }: ProblemMetricsProps) {
-  const [metrics, setMetrics] = useState<any[]>([])
+  const [metrics, setMetrics] = useState<Array<{ id: string; metricType: string; metricName?: string; metricValue?: number; value?: number; timestamp: string; metadata?: Record<string, unknown> }>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -47,7 +47,7 @@ export function ProblemMetrics({
     } finally {
       setIsLoading(false)
     }
-  }, [userId, periodStart, periodEnd])
+  }, [])
 
   useEffect(() => {
     loadProblemMetrics()

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       created_at: connection.created_at,
       updated_at: connection.updated_at
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to get SharePoint connection' },
       { status: 500 }
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     if (existingConnection) {
       // Update existing connection
-      const { error } = await supabase
+      const { error: _error } = await supabase
         .from('integration_connections')
         .update({
           credentials: JSON.stringify(credentials),
@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', existingConnection.id)
 
-      if (error) {
-        throw error
+      if (_error) {
+        throw _error
       }
 
       return NextResponse.json({
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       })
     } else {
       // Create new connection
-      const { data: newConnection, error } = await supabase
+      const { data: newConnection, error: insertError } = await supabase
         .from('integration_connections')
         .insert({
           organization_id: organizationId,
@@ -114,8 +114,8 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
 
-      if (error) {
-        throw error
+      if (insertError) {
+        throw insertError
       }
 
       return NextResponse.json({
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         message: 'SharePoint connection created successfully'
       })
     }
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to save SharePoint connection' },
       { status: 500 }
@@ -162,7 +162,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       message: 'SharePoint connection deactivated successfully'
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to deactivate SharePoint connection' },
       { status: 500 }

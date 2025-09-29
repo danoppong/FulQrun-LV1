@@ -18,7 +18,7 @@ export interface LearningModule {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   category: string;
   tags: string[];
-  content: any;
+  content: Record<string, unknown>;
   prerequisites: string[];
   learningObjectives: string[];
   assessmentCriteria: string[];
@@ -98,7 +98,7 @@ export interface LearningAnalytics {
   moduleId: string;
   eventType: 'start' | 'pause' | 'resume' | 'complete' | 'fail' | 'skip';
   timestamp: Date;
-  metadata: any;
+  metadata: Record<string, unknown>;
   organizationId: string;
 }
 
@@ -357,13 +357,21 @@ class LearningManagementSystem {
     score: number,
     timeSpent: number
   ): Promise<UserProgress> {
+    // Get existing progress first
+    const { data: existingProgress } = await supabase
+      .from('user_learning_progress')
+      .select('attempts')
+      .eq('user_id', userId)
+      .eq('module_id', moduleId)
+      .single();
+
     const { data, error } = await supabase
       .from('user_learning_progress')
       .update({
         status: 'completed',
         progress: 100,
         score,
-        attempts: supabase.raw('attempts + 1'),
+        attempts: (existingProgress?.attempts || 0) + 1,
         time_spent: timeSpent,
         completed_at: new Date().toISOString(),
         last_accessed_at: new Date().toISOString()
@@ -376,14 +384,15 @@ class LearningManagementSystem {
     if (error) throw error;
 
     // Create compliance record if required
-    const module = await this.getModule(moduleId);
-    if (module?.isComplianceRequired) {
+    const learningModule = await this.getModule(moduleId);
+    if (learningModule?.isComplianceRequired) {
       await this.createComplianceRecord({
         userId,
         moduleId,
         completedAt: new Date(),
         score,
-        organizationId: module.organizationId
+        organizationId: learningModule.organizationId,
+        isExpired: false
       });
     }
 
@@ -474,7 +483,7 @@ class LearningManagementSystem {
     // Get user's existing progress and performance
     const userProgress = await this.getUserProgressByOrganization(userId, organizationId);
     const completedModules = userProgress.filter(p => p.status === 'completed');
-    const failedModules = userProgress.filter(p => p.status === 'failed');
+    const _failedModules = userProgress.filter(p => p.status === 'failed');
 
     // Analyze user's strengths and weaknesses
     const performanceAnalysis = this.analyzeUserPerformance(userProgress);
@@ -518,7 +527,7 @@ class LearningManagementSystem {
     return learningPath;
   }
 
-  private analyzeUserPerformance(progress: UserProgress[]): any {
+  private analyzeUserPerformance(progress: UserProgress[]): Record<string, unknown> {
     const completed = progress.filter(p => p.status === 'completed');
     const failed = progress.filter(p => p.status === 'failed');
     
@@ -570,13 +579,13 @@ class LearningManagementSystem {
 
   private async generateAIRecommendedModules(
     availableModules: LearningModule[],
-    performanceAnalysis: any,
-    preferences: any
+    performanceAnalysis: Record<string, unknown>,
+    preferences: Record<string, unknown>
   ): Promise<LearningModule[]> {
     // This would integrate with AI service to generate recommendations
     // For now, return a simple algorithm-based recommendation
     
-    let recommendedModules = [...availableModules];
+    const recommendedModules = [...availableModules];
     
     // Sort by difficulty if user prefers structured learning
     if (preferences.learningStyle === 'reading') {
@@ -590,10 +599,10 @@ class LearningManagementSystem {
     let totalDuration = 0;
     const limitedModules = [];
     
-    for (const module of recommendedModules) {
-      if (totalDuration + module.duration <= preferences.estimatedDuration) {
-        limitedModules.push(module);
-        totalDuration += module.duration;
+    for (const learningModule of recommendedModules) {
+      if (totalDuration + learningModule.duration <= preferences.estimatedDuration) {
+        limitedModules.push(learningModule);
+        totalDuration += learningModule.duration;
       }
     }
     
@@ -756,7 +765,7 @@ class LearningManagementSystem {
   }
 
   // Reporting
-  async getLearningReport(organizationId: string, dateFrom?: Date, dateTo?: Date): Promise<any> {
+  async getLearningReport(organizationId: string, dateFrom?: Date, dateTo?: Date): Promise<{ totalUsers: number; completedModules: number; averageProgress: number; topPerformers: unknown[]; strugglingUsers: unknown[] }> {
     let query = supabase
       .from('user_learning_progress')
       .select('*')
@@ -791,4 +800,5 @@ class LearningManagementSystem {
   }
 }
 
-export default new LearningManagementSystem();
+const learningManagementSystem = new LearningManagementSystem();
+export default learningManagementSystem;

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { SupabaseClient, CookieOptions } from '@/lib/types/auth'
+import { SupabaseClient as _SupabaseClient, CookieOptions as _CookieOptions } from '@/lib/types/auth'
 import { supabaseConfig } from '@/lib/config'
 
 export const createServerComponentClient = () => {
@@ -11,7 +11,7 @@ export const createServerComponentClient = () => {
         getUser: async () => ({ data: { user: null }, error: null }),
         getSession: async () => ({ data: { session: null }, error: null })
       },
-      from: (table: string) => ({
+      from: (_table: string) => ({
         select: () => ({
           eq: () => ({
             single: async () => ({ data: null, error: { message: 'Database not configured' } })
@@ -46,10 +46,10 @@ export const createServerComponentClient = () => {
       get(name: string) {
         return cookieStore.get(name)?.value
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: Record<string, unknown>) {
         cookieStore.set({ name, value, ...options })
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: Record<string, unknown>) {
         cookieStore.set({ name, value: '', ...options })
       },
     },
@@ -81,7 +81,7 @@ export const createMiddlewareClient = (request: NextRequest) => {
       get(name: string) {
         return request.cookies.get(name)?.value
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: Record<string, unknown>) {
         request.cookies.set({
           name,
           value,
@@ -98,7 +98,7 @@ export const createMiddlewareClient = (request: NextRequest) => {
           ...options,
         })
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: Record<string, unknown>) {
         request.cookies.set({
           name,
           value: '',

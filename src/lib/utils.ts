@@ -15,5 +15,5 @@ export function toPascalCase(str: string): string {
 
 // Make toPascalCase available globally for lucide-react
 if (typeof window !== 'undefined') {
-  (window as any).toPascalCase = toPascalCase
+  (window as Window & { toPascalCase: typeof toPascalCase }).toPascalCase = toPascalCase
 }

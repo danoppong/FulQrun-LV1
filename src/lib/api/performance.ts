@@ -11,7 +11,7 @@ export interface PerformanceMetric {
   period_start: string
   period_end: string
   calculation_method: string | null
-  raw_data: Record<string, any>
+  raw_data: Record<string, unknown>
   organization_id: string
   created_at: string
   updated_at: string
@@ -57,7 +57,7 @@ export class PerformanceAPI {
     }
   }
 
-  async getPerformanceSummary(userId: string): Promise<ApiResponse<PerformanceSummary>> {
+  async getPerformanceSummary(_userId: string): Promise<ApiResponse<PerformanceSummary>> {
     try {
       // Mock data for now - in real implementation, this would calculate from metrics
       const mockSummary: PerformanceSummary = {

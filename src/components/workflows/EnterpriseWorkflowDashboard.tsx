@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   CogIcon, 
   PlayIcon, 
@@ -20,8 +20,6 @@ import {
 import { 
   getEnterpriseWorkflows,
   createEnterpriseWorkflow,
-  updateEnterpriseWorkflow,
-  deleteEnterpriseWorkflow,
   executeEnterpriseWorkflow,
   getWorkflowExecutions,
   cancelWorkflowExecution,
@@ -29,10 +27,54 @@ import {
   getWorkflowTemplates,
   createWorkflowFromTemplate,
   getWorkflowAnalytics,
-  getWorkflowHealth,
-  EnterpriseWorkflow,
-  WorkflowExecution
+  getWorkflowHealth
 } from '@/lib/api/enterprise-workflows';
+import type {
+  EnterpriseWorkflow,
+  WorkflowExecution,
+  WorkflowStep,
+} from '@/lib/workflows';
+
+// Define proper types for dashboard data
+interface WorkflowTemplate {
+  id: string;
+  name: string;
+  description: string;
+  workflowType: string;
+  steps: WorkflowStep[];
+}
+
+interface WorkflowAnalytics {
+  totalWorkflows: number;
+  totalExecutions: number;
+  successRate: number;
+  averageExecutionTime: number;
+  runningExecutions: number;
+  failedExecutions: number;
+  successfulExecutions: number;
+  executionTrends: Array<{
+    date: string;
+    successful: number;
+    failed: number;
+    executions: number;
+  }>;
+  mostUsedWorkflows: Array<{
+    workflowName: string;
+    executionCount: number;
+  }>;
+}
+
+interface WorkflowHealth {
+  status: 'healthy' | 'warning' | 'critical';
+  issues: string[];
+  recommendations: string[];
+}
+
+interface WorkflowFormData {
+  name: string;
+  description: string;
+  type: string;
+}
 
 interface EnterpriseWorkflowDashboardProps {
   organizationId: string;
@@ -43,20 +85,16 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
   const [activeTab, setActiveTab] = useState<'overview' | 'workflows' | 'executions' | 'templates' | 'analytics' | 'monitoring'>('overview');
   const [workflows, setWorkflows] = useState<EnterpriseWorkflow[]>([]);
   const [executions, setExecutions] = useState<WorkflowExecution[]>([]);
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [health, setHealth] = useState<any>(null);
+  const [templates, setTemplates] = useState<WorkflowTemplate[]>([]);
+  const [analytics, setAnalytics] = useState<WorkflowAnalytics | null>(null);
+  const [health, setHealth] = useState<WorkflowHealth | null>(null);
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [workflowForm, setWorkflowForm] = useState<any>({});
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [workflowForm, setWorkflowForm] = useState<Partial<WorkflowFormData>>({});
+  const [selectedTemplate, setSelectedTemplate] = useState<WorkflowTemplate | null>(null);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [organizationId]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       const [
@@ -72,7 +110,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
         getWorkflowAnalytics(organizationId),
         getWorkflowHealth(organizationId)
       ]);
-      
+
       setWorkflows(workflowsData);
       setExecutions(executionsData);
       setTemplates(templatesData);
@@ -83,41 +121,60 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const handleCreateWorkflow = async () => {
+    if (!workflowForm.name || !workflowForm.description || !workflowForm.type) {
+      console.error('Missing required workflow form data');
+      return;
+    }
+
     try {
       setLoading(true);
       const newWorkflow = await createEnterpriseWorkflow({
         name: workflowForm.name,
         description: workflowForm.description,
-        workflowType: workflowForm.type,
+        workflowType: workflowForm.type as 'approval' | 'notification' | 'data-processing' | 'integration' | 'custom',
         triggerConditions: {},
         steps: [],
         approvalConfig: {
           approvalType: 'sequential',
           approvers: [],
-          approvalCriteria: {},
-          escalationRules: [],
+          minApprovals: 1,
           timeoutHours: 24,
-          requireAllApprovers: false
+          escalationConfig: {
+            enabled: false,
+            escalationUsers: [],
+            escalationDelayMinutes: 0,
+            maxEscalations: 0
+          }
         },
         notificationConfig: {
           channels: ['email'],
           templates: {},
           recipients: [],
-          conditions: []
+          escalationConfig: {
+            enabled: false,
+            escalationUsers: [],
+            escalationDelayMinutes: 0,
+            maxEscalations: 0
+          }
         },
         isActive: true,
         priority: 1,
         timeoutHours: 24,
         retryConfig: {
-          maxRetries: 3,
-          retryIntervalMinutes: 5,
+          maxAttempts: 3,
+          delayMinutes: 5,
           backoffMultiplier: 2,
-          retryConditions: ['network_error', 'timeout']
+          maxDelayMinutes: 60
         },
-        organizationId
+        organizationId,
+        createdBy: userId
       }, userId);
       
       setWorkflows([newWorkflow, ...workflows]);
@@ -132,6 +189,11 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
   };
 
   const handleCreateFromTemplate = async () => {
+    if (!selectedTemplate) {
+      console.error('No template selected');
+      return;
+    }
+
     try {
       setLoading(true);
       const newWorkflow = await createWorkflowFromTemplate(
@@ -304,7 +366,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'overview' | 'workflows' | 'executions' | 'templates' | 'analytics' | 'settings')}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'
@@ -391,7 +453,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
                   <div className="mb-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Issues:</h4>
                     <ul className="list-disc list-inside text-sm text-gray-600">
-                      {health.issues.map((issue: string, index: number) => (
+                      {health.issues.map((issue, index) => (
                         <li key={index}>{issue}</li>
                       ))}
                     </ul>
@@ -402,7 +464,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Recommendations:</h4>
                     <ul className="list-disc list-inside text-sm text-gray-600">
-                      {health.recommendations.map((rec: string, index: number) => (
+                      {health.recommendations.map((rec, index) => (
                         <li key={index}>{rec}</li>
                       ))}
                     </ul>
@@ -436,7 +498,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-500">
                           <span>Started: {new Date(execution.startedAt).toLocaleString()}</span>
-                          <span>Steps: {execution.executedSteps.length}/{execution.executedSteps.length + execution.pendingSteps.length}</span>
+                          <span>Step: {execution.currentStepId || 'N/A'}</span>
                         </div>
                       </div>
                     ))}
@@ -569,7 +631,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-500">
                           <span>Started: {new Date(execution.startedAt).toLocaleString()}</span>
-                          <span>Progress: {execution.executedSteps.length}/{execution.executedSteps.length + execution.pendingSteps.length}</span>
+                          <span>Step: {execution.currentStepId || 'N/A'}</span>
                         </div>
                         {execution.errorMessage && (
                           <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-800">
@@ -613,7 +675,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
                       <div className="mb-4">
                         <p className="text-sm font-medium text-gray-500 mb-2">Steps: {template.steps.length}</p>
                         <div className="text-xs text-gray-500">
-                          {template.steps.map((step: any, index: number) => (
+                          {template.steps.map((step, index) => (
                             <span key={index} className="mr-2">
                               {step.stepType}
                               {index < template.steps.length - 1 && ' →'}
@@ -648,7 +710,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Execution Trends</h3>
                   <div className="space-y-2">
-                    {analytics.executionTrends.map((trend: any, index: number) => (
+                    {analytics.executionTrends.map((trend, index) => (
                       <div key={index} className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">{trend.date}</span>
                         <div className="flex items-center space-x-2">
@@ -664,7 +726,7 @@ export default function EnterpriseWorkflowDashboard({ organizationId, userId }: 
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Most Used Workflows</h3>
                   <div className="space-y-2">
-                    {analytics.mostUsedWorkflows.map((workflow: any, index: number) => (
+                    {analytics.mostUsedWorkflows.map((workflow, index) => (
                       <div key={index} className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">{workflow.workflowName}</span>
                         <span className="text-sm font-medium text-gray-900">{workflow.executionCount}</span>

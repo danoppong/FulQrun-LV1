@@ -2,13 +2,25 @@
 import { AuthClientService } from '@/lib/auth-client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import HierarchicalPerformanceDashboard from '@/components/dashboard/HierarchicalPerformanceDashboard'
-import SalesmanDashboard from '@/components/dashboard/SalesmanDashboard'
-import PipelineChart from '@/components/dashboard/PipelineChart'
+// import Link from 'next/link' // Unused import
+import dynamic from 'next/dynamic'
+
+// Dynamic imports for dashboard components
+const HierarchicalPerformanceDashboard = dynamic(() => import('@/components/dashboard/HierarchicalPerformanceDashboard'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>,
+  ssr: false
+})
+const SalesmanDashboard = dynamic(() => import('@/components/dashboard/SalesmanDashboard'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>,
+  ssr: false
+})
+const PipelineChart = dynamic(() => import('@/components/dashboard/PipelineChart'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>,
+  ssr: false
+})
 import { UserRole } from '@/lib/roles'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import AuthWrapper from '@/components/auth/AuthWrapper'
+import { AuthWrapper } from '@/components/auth/AuthWrapper'
 
 const DashboardPage = () => {
   return (
@@ -19,11 +31,11 @@ const DashboardPage = () => {
 }
 
 const DashboardContent = () => {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const [userRole, setUserRole] = useState<UserRole>(UserRole.SALESMAN)
   const [userName, setUserName] = useState<string>('User')
-  const [userRegion, setUserRegion] = useState<string>('North America')
-  const [userBusinessUnit, setUserBusinessUnit] = useState<string>('Enterprise')
+  const [_userRegion, _setUserRegion] = useState<string>('North America')
+  const [_userBusinessUnit, _setUserBusinessUnit] = useState<string>('Enterprise')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -50,7 +62,7 @@ const DashboardContent = () => {
         setUserName(user.email || 'User')
         
         // Load user role from database or user metadata
-        const { data: userProfile } = await (supabase as any)
+        const { data: userProfile } = await supabase
           .from('users')
           .select('role, full_name')
           .eq('id', user.id)
@@ -72,7 +84,7 @@ const DashboardContent = () => {
     }
     
     loadUserData()
-  }, [supabase])
+  }, [supabase, router])
 
   if (loading) {
     return (

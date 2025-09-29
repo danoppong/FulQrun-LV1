@@ -5,7 +5,7 @@ import { PipelineConfigAPI, PipelineConfigData } from '@/lib/api/pipeline-config
 import { PipelineBuilder } from '@/components/pipeline/PipelineBuilder'
 import { createClientComponentClient } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
-import AuthWrapper from '@/components/auth/AuthWrapper'
+import { AuthWrapper } from '@/components/auth/AuthWrapper'
 import { DEFAULT_ORGANIZATION_ID } from '@/lib/config'
 
 export default function PipelinePage() {
@@ -17,7 +17,7 @@ export default function PipelinePage() {
 }
 
 function PipelineContent() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [configurations, setConfigurations] = useState<PipelineConfigData[]>([])
   const [showBuilder, setShowBuilder] = useState(false)
@@ -39,7 +39,7 @@ function PipelineContent() {
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id, user?.organization_id])
+  }, [user?.id, user?.profile?.organization_id])
 
   useEffect(() => {
     const loadUser = async () => {
@@ -50,7 +50,7 @@ function PipelineContent() {
           return
         }
         setUser(user)
-      } catch (error) {
+      } catch (_error) {
         router.push('/auth/login')
       } finally {
         setLoading(false)
@@ -86,7 +86,7 @@ function PipelineContent() {
     setShowBuilder(true)
   }
 
-  const handleSave = (config: PipelineConfigData) => {
+  const handleSave = (_config: PipelineConfigData) => {
     setShowBuilder(false)
     setEditingConfig(null)
     loadConfigurations() // Refresh the list
@@ -122,7 +122,7 @@ function PipelineContent() {
   if (showBuilder) {
     return (
       <PipelineBuilder
-        organizationId={user?.organization_id || DEFAULT_ORGANIZATION_ID}
+        organizationId={user?.profile?.organization_id || DEFAULT_ORGANIZATION_ID}
         userId={user?.id || ''}
         onSave={handleSave}
         onCancel={handleCancel}

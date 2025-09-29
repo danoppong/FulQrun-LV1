@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { WorkflowAutomationAPI, WorkflowAutomationData, TriggerCondition, WorkflowAction } from '@/lib/api/workflow-automation'
+import React, { useState, useEffect, useCallback } from 'react'
+import { WorkflowAutomationAPI, WorkflowAutomationData, WorkflowAction } from '@/lib/api/workflow-automation'
 import { PipelineStage } from '@/lib/api/pipeline-config'
 
 interface WorkflowEditorProps {
@@ -19,9 +19,9 @@ export function WorkflowEditor({ organizationId, userId, stages }: WorkflowEdito
 
   useEffect(() => {
     loadWorkflows()
-  }, [])
+  }, [loadWorkflows])
 
-  const loadWorkflows = async () => {
+  const loadWorkflows = useCallback(async () => {
     try {
       setIsLoading(true)
       const data = await WorkflowAutomationAPI.getActiveAutomations(organizationId)
@@ -31,7 +31,7 @@ export function WorkflowEditor({ organizationId, userId, stages }: WorkflowEdito
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [organizationId])
 
   const handleCreateWorkflow = async (workflow: Omit<WorkflowAutomationData, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
@@ -307,7 +307,7 @@ function WorkflowForm({ organizationId, userId, stages, workflow, onSubmit, onCa
             </label>
             <select
               value={formData.triggerType}
-              onChange={(e) => setFormData(prev => ({ ...prev, triggerType: e.target.value as any }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, triggerType: e.target.value as 'stage_change' | 'field_update' | 'time_based' | 'manual' }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="stage_change">Stage Change</option>
@@ -437,7 +437,7 @@ function WorkflowForm({ organizationId, userId, stages, workflow, onSubmit, onCa
             <div className="flex space-x-2">
               <select
                 value={newAction.type}
-                onChange={(e) => setNewAction(prev => ({ ...prev, type: e.target.value as any }))}
+                onChange={(e) => setNewAction(prev => ({ ...prev, type: e.target.value as 'email' | 'notification' | 'task' | 'approval' | 'integration' }))}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {actionTypes.map(type => (

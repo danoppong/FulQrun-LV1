@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { SlackIntegration } from '@/lib/integrations/slack'
-import { DocuSignIntegration } from '@/lib/integrations/docusign'
-import { StripeIntegration } from '@/lib/integrations/stripe'
-import { GongIntegration } from '@/lib/integrations/gong'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { SlackIntegration as _SlackIntegration } from '@/lib/integrations/slack'
+import { DocuSignIntegration as _DocuSignIntegration } from '@/lib/integrations/docusign'
+import { StripeIntegration as _StripeIntegration } from '@/lib/integrations/stripe'
+import { GongIntegration as _GongIntegration } from '@/lib/integrations/gong'
 
 interface Integration {
   id: string
@@ -31,7 +31,7 @@ export function IntegrationHub({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const availableIntegrations: Integration[] = [
+  const availableIntegrations: Integration[] = useMemo(() => [
     {
       id: 'slack',
       name: 'Slack',
@@ -68,13 +68,13 @@ export function IntegrationHub({
       icon: '🎯',
       color: 'bg-orange-500'
     }
-  ]
+  ], [])
 
   useEffect(() => {
     loadIntegrations()
-  }, [organizationId])
+  }, [loadIntegrations])
 
-  const loadIntegrations = async () => {
+  const loadIntegrations = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -84,7 +84,7 @@ export function IntegrationHub({
       if (response.ok) {
         const connectedIntegrations = await response.json()
         const updatedIntegrations = availableIntegrations.map(integration => {
-          const connected = connectedIntegrations.find((ci: any) => ci.integration_type === integration.type)
+          const connected = connectedIntegrations.find((ci: { integration_type: string }) => ci.integration_type === integration.type)
           return {
             ...integration,
             status: (connected ? 'connected' : 'disconnected') as 'connected' | 'disconnected'
@@ -100,7 +100,7 @@ export function IntegrationHub({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [organizationId, availableIntegrations])
 
   const handleConnect = async (integration: Integration) => {
     try {

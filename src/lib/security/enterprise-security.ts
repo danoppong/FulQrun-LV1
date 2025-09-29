@@ -16,8 +16,8 @@ export interface AuditLogEntry {
   actionType: 'create' | 'read' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import' | 'admin_action';
   entityType: string;
   entityId?: string;
-  oldValues?: any;
-  newValues?: any;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   sessionId?: string;
@@ -30,8 +30,8 @@ export interface ComplianceReport {
   id: string;
   reportType: 'audit_log' | 'data_export' | 'user_activity' | 'security_scan' | 'compliance_check';
   reportName: string;
-  reportData: any;
-  filters: any;
+  reportData: Record<string, unknown>;
+  filters: Record<string, unknown>;
   dateRangeStart?: Date;
   dateRangeEnd?: Date;
   status: 'generating' | 'completed' | 'failed' | 'expired';
@@ -49,7 +49,7 @@ export interface SecurityPolicy {
   name: string;
   description: string;
   policyType: 'password' | 'session' | 'access' | 'data_retention' | 'encryption';
-  rules: any;
+  rules: Record<string, unknown>;
   isActive: boolean;
   organizationId: string;
   createdBy: string;
@@ -61,7 +61,7 @@ export interface RBACPermission {
   role: string;
   resource: string;
   action: string;
-  conditions?: any;
+  conditions?: Record<string, unknown>;
   organizationId: string;
 }
 
@@ -73,8 +73,8 @@ export interface DataPrivacyRequest {
   entityType: string;
   entityId?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
-  requestData: any;
-  responseData?: any;
+  requestData: Record<string, unknown>;
+  responseData?: Record<string, unknown>;
   organizationId: string;
   createdAt: Date;
   completedAt?: Date;
@@ -184,7 +184,7 @@ export class EnterpriseSecurityAPI {
   static async generateComplianceReport(
     reportType: ComplianceReport['reportType'],
     reportName: string,
-    filters: any,
+    filters: Record<string, unknown>,
     organizationId: string,
     userId: string
   ): Promise<ComplianceReport> {
@@ -240,11 +240,11 @@ export class EnterpriseSecurityAPI {
   private static async generateReportData(
     reportId: string,
     reportType: string,
-    filters: any,
+    filters: Record<string, unknown>,
     organizationId: string
   ): Promise<void> {
     try {
-      let reportData: any = {};
+      let reportData: Record<string, unknown> = {};
 
       switch (reportType) {
         case 'audit_log':
@@ -281,13 +281,13 @@ export class EnterpriseSecurityAPI {
         .from('enterprise_compliance_reports')
         .update({
           status: 'failed',
-          report_data: { error: error.message }
+          report_data: { error: (error as Error).message }
         })
         .eq('id', reportId);
     }
   }
 
-  private static async generateAuditLogReport(filters: any, organizationId: string): Promise<any> {
+  private static async generateAuditLogReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     const auditLogs = await this.getAuditLogs(organizationId, filters);
     
     return {
@@ -311,7 +311,7 @@ export class EnterpriseSecurityAPI {
     };
   }
 
-  private static async generateDataExportReport(filters: any, organizationId: string): Promise<any> {
+  private static async generateDataExportReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     // Generate data export report for GDPR/CCPA compliance
     const { data: users } = await supabase
       .from('users')
@@ -352,7 +352,7 @@ export class EnterpriseSecurityAPI {
     };
   }
 
-  private static async generateUserActivityReport(filters: any, organizationId: string): Promise<any> {
+  private static async generateUserActivityReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     const auditLogs = await this.getAuditLogs(organizationId, {
       ...filters,
       actionType: 'login'
@@ -374,7 +374,7 @@ export class EnterpriseSecurityAPI {
       if (log.ipAddress) acc[userId].ipAddresses.add(log.ipAddress);
       if (log.userAgent) acc[userId].userAgents.add(log.userAgent);
       return acc;
-    }, {} as any);
+    }, {} as Record<string, unknown>);
 
     return {
       summary: {
@@ -385,7 +385,7 @@ export class EnterpriseSecurityAPI {
           to: filters.dateTo
         }
       },
-      userActivity: Object.values(userActivity).map((activity: any) => ({
+      userActivity: Object.values(userActivity).map((activity: Record<string, unknown>) => ({
         ...activity,
         ipAddresses: Array.from(activity.ipAddresses),
         userAgents: Array.from(activity.userAgents)
@@ -393,7 +393,7 @@ export class EnterpriseSecurityAPI {
     };
   }
 
-  private static async generateSecurityScanReport(filters: any, organizationId: string): Promise<any> {
+  private static async generateSecurityScanReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     // Generate security scan report
     const { data: auditLogs } = await supabase
       .from('enterprise_audit_logs')
@@ -429,14 +429,14 @@ export class EnterpriseSecurityAPI {
     };
   }
 
-  private static async generateComplianceCheckReport(filters: any, organizationId: string): Promise<any> {
+  private static async generateComplianceCheckReport(filters: Record<string, unknown>, organizationId: string): Promise<Record<string, unknown>> {
     // Generate compliance check report
-    const { data: auditLogs } = await supabase
+    const { data: _auditLogs } = await supabase
       .from('enterprise_audit_logs')
       .select('*')
       .eq('organization_id', organizationId);
 
-    const { data: users } = await supabase
+    const { data: _users } = await supabase
       .from('users')
       .select('*')
       .eq('organization_id', organizationId);
@@ -586,7 +586,7 @@ export class EnterpriseSecurityAPI {
         .eq('action', action)
         .eq('organization_id', organizationId);
 
-      return permissions && permissions.length > 0;
+      return permissions ? permissions.length > 0 : false;
     } catch (error) {
       console.error('Error checking permission:', error);
       return false;
@@ -637,7 +637,7 @@ export class EnterpriseSecurityAPI {
 
   static async processDataPrivacyRequest(
     requestId: string,
-    responseData: any
+    responseData: Record<string, unknown>
   ): Promise<void> {
     try {
       const { error } = await supabase
@@ -657,7 +657,7 @@ export class EnterpriseSecurityAPI {
   }
 
   // Security Monitoring
-  static async detectAnomalies(organizationId: string): Promise<any[]> {
+  static async detectAnomalies(organizationId: string): Promise<unknown[]> {
     try {
       const { data: auditLogs } = await supabase
         .from('enterprise_audit_logs')
@@ -674,9 +674,9 @@ export class EnterpriseSecurityAPI {
         const userId = log.user_id || 'anonymous';
         acc[userId] = (acc[userId] || 0) + 1;
         return acc;
-      }, {} as any);
+      }, {} as Record<string, unknown>);
 
-      Object.entries(loginCounts).forEach(([userId, count]) => {
+      Object.entries(loginCounts).forEach(([userId, count]: [string, number]) => {
         if (count > 10) { // More than 10 logins in 24 hours
           anomalies.push({
             type: 'unusual_login_activity',
@@ -710,20 +710,20 @@ export class EnterpriseSecurityAPI {
   }
 
   // Data Encryption
-  static async encryptSensitiveData(data: any): Promise<string> {
+  static async encryptSensitiveData(data: Record<string, unknown>): Promise<string> {
     // In a real implementation, this would use proper encryption
     // For now, we'll use a simple base64 encoding as a placeholder
     return btoa(JSON.stringify(data));
   }
 
-  static async decryptSensitiveData(encryptedData: string): Promise<any> {
+  static async decryptSensitiveData(encryptedData: string): Promise<{ decryptedData: string; success: boolean }> {
     // In a real implementation, this would use proper decryption
     // For now, we'll use a simple base64 decoding as a placeholder
     return JSON.parse(atob(encryptedData));
   }
 
   // Compliance Status Check
-  static async getComplianceStatus(organizationId: string): Promise<any> {
+  static async getComplianceStatus(organizationId: string): Promise<{ isCompliant: boolean; complianceScore: number; violations: string[]; lastAudit: string }> {
     try {
       const { data: organization } = await supabase
         .from('organizations')

@@ -9,11 +9,11 @@ export default function LearningModulePage() {
   const moduleId = params.id as string
   const [userId] = useState('user-123') // This would come from auth context
 
-  const handleProgressUpdate = (moduleId: string, progress: number) => {
+  const handleProgressUpdate = (_moduleId: string, _progress: number) => {
     // Handle progress update
   }
 
-  const handleModuleComplete = (moduleId: string) => {
+  const handleModuleComplete = (_moduleId: string) => {
     // Handle module completion
   }
 

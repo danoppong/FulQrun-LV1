@@ -5,7 +5,7 @@
  */
 
 import { ApiError } from '@/lib/types/errors'
-import { logError, logWarning, logInfo, errorLogger } from './error-logger'
+import { errorLogger } from './error-logger'
 
 export interface ErrorHandlerOptions {
   showToast?: boolean
@@ -15,7 +15,7 @@ export interface ErrorHandlerOptions {
   function?: string
   organizationId?: string
   userId?: string
-  additionalData?: Record<string, any>
+  additionalData?: Record<string, unknown>
 }
 
 export class ErrorHandler {
@@ -40,13 +40,13 @@ export class ErrorHandler {
       if ('message' in error && typeof error.message === 'string') {
         errorMessage = error.message
       } else if ('details' in error && Array.isArray(error.details)) {
-        errorMessage = (error as any).details.join(', ')
+        errorMessage = (error as { details: string[] }).details.join(', ')
       }
     }
 
     if (logError) {
       // Use centralized error logging instead of console.error
-      await logError(errorMessage, {
+      await errorLogger.logError('error', errorMessage, {
         module,
         function: functionName,
         organizationId,
@@ -88,7 +88,7 @@ export class ErrorHandler {
       const data = await operation()
       return { data, error: null }
     } catch (error) {
-      const errorMessage = this.handleApiError(error as ApiError, options)
+      const errorMessage = await this.handleApiError(error as ApiError, options)
       return { data: null, error: errorMessage }
     }
   }
@@ -96,8 +96,8 @@ export class ErrorHandler {
   /**
    * Handle component state errors
    */
-  static handleComponentError(error: unknown, setError: (error: string) => void): void {
-    const errorMessage = this.handleApiError(error as ApiError, { logError: true })
+  static async handleComponentError(error: unknown, setError: (error: string) => void): Promise<void> {
+    const errorMessage = await this.handleApiError(error as ApiError, { logError: true })
     setError(errorMessage)
   }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect, useCallback, memo } from 'react'
 import { performanceAPI } from '@/lib/api/performance'
 
 interface ScoreMetricsProps {
@@ -12,19 +12,25 @@ interface ScoreMetricsProps {
 
 const ScoreMetrics = memo(function ScoreMetrics({ 
   userId, 
-  organizationId, 
+  organizationId: _organizationId, 
   periodStart, 
-  periodEnd 
+  periodEnd: _periodEnd 
 }: ScoreMetricsProps) {
-  const [metrics, setMetrics] = useState<any[]>([])
+  const [metrics, setMetrics] = useState<Array<{
+    id: string
+    metric_type: string
+    value: number
+    timestamp: string
+    context: Record<string, unknown>
+  }>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadScoreMetrics()
-  }, [userId, organizationId, periodStart, periodEnd])
+  }, [loadScoreMetrics])
 
-  const loadScoreMetrics = async () => {
+  const loadScoreMetrics = useCallback(async () => {
     try {
       setIsLoading(true)
       const { data, error } = await performanceAPI.getPerformanceMetrics(userId, periodStart)
@@ -38,7 +44,7 @@ const ScoreMetrics = memo(function ScoreMetrics({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [userId, periodStart])
 
   if (isLoading) {
     return <div className="animate-pulse h-64 bg-gray-200 rounded"></div>

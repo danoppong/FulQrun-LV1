@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   PlusIcon, 
   CogIcon, 
@@ -12,20 +12,19 @@ import {
   LinkIcon,
   TrashIcon,
   EyeIcon,
-  PlayIcon,
-  StopIcon
+  PlayIcon
 } from '@heroicons/react/24/outline';
 import { 
   getEnterpriseIntegrations,
   createEnterpriseIntegration,
-  updateEnterpriseIntegration,
   deleteEnterpriseIntegration,
   testIntegrationConnection,
   syncIntegrationData,
   getIntegrationTemplates,
   getIntegrationStatistics,
-  getIntegrationHealth,
-  EnterpriseIntegration
+  EnterpriseIntegration,
+  IntegrationTemplate,
+  IntegrationStatistics
 } from '@/lib/api/enterprise-integrations';
 
 interface EnterpriseIntegrationsDashboardProps {
@@ -35,19 +34,19 @@ interface EnterpriseIntegrationsDashboardProps {
 
 export default function EnterpriseIntegrationsDashboard({ organizationId, userId }: EnterpriseIntegrationsDashboardProps) {
   const [integrations, setIntegrations] = useState<EnterpriseIntegration[]>([]);
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [statistics, setStatistics] = useState<any>(null);
+  const [templates, setTemplates] = useState<IntegrationTemplate[]>([]);
+  const [statistics, setStatistics] = useState<IntegrationStatistics | null>(null);
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-  const [integrationForm, setIntegrationForm] = useState<any>({});
+  const [selectedTemplate, setSelectedTemplate] = useState<IntegrationTemplate | null>(null);
+  const [integrationForm, setIntegrationForm] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<'overview' | 'integrations' | 'templates'>('overview');
 
   useEffect(() => {
     loadDashboardData();
-  }, [organizationId]);
+  }, [loadDashboardData]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       const [integrationsData, templatesData, statisticsData] = await Promise.all([
@@ -64,7 +63,7 @@ export default function EnterpriseIntegrationsDashboard({ organizationId, userId
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId]);
 
   const handleCreateIntegration = async () => {
     try {
@@ -226,7 +225,7 @@ export default function EnterpriseIntegrationsDashboard({ organizationId, userId
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as string)}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'
@@ -510,7 +509,7 @@ export default function EnterpriseIntegrationsDashboard({ organizationId, userId
                     />
                   </div>
                   
-                  {selectedTemplate.fields.map((field: any) => (
+                  {selectedTemplate.fields.map((field) => (
                     <div key={field.name}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {field.label}

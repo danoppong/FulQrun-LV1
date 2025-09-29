@@ -53,8 +53,8 @@ export class CalendarSyncService {
   async syncEvents(
     organizationId: string,
     userId: string,
-    startDate?: string,
-    endDate?: string
+    _startDate?: string,
+    _endDate?: string
   ): Promise<CalendarSyncResult> {
     const result: CalendarSyncResult = {
       imported: 0,
@@ -137,7 +137,7 @@ export class CalendarSyncService {
     // 4. Store event metadata
 
     // Mock implementation for MVP
-    const activity: CalendarActivity = {
+    const _activity: CalendarActivity = {
       id: `event-${event.id}`,
       type: 'meeting',
       subject: event.subject,
@@ -163,8 +163,8 @@ export class CalendarSyncService {
    * Find existing event activity by Graph event ID
    */
   private async findExistingEventActivity(
-    eventId: string,
-    organizationId: string
+    _eventId: string,
+    _organizationId: string
   ): Promise<CalendarActivity | null> {
     // In a real implementation, this would query the database
     // for an activity with the event ID in metadata
@@ -190,8 +190,8 @@ export class CalendarSyncService {
    * Update existing event activity
    */
   private async updateEventActivity(
-    activityId: string,
-    event: GraphEvent
+    _activityId: string,
+    _event: GraphEvent
   ): Promise<void> {
     // In a real implementation, this would update the database record
   }
@@ -228,7 +228,7 @@ export class CalendarSyncService {
   /**
    * Extract meeting URL from event
    */
-  private extractMeetingUrl(event: GraphEvent): string | undefined {
+  private extractMeetingUrl(_event: GraphEvent): string | undefined {
     // In a real implementation, this would extract meeting URLs
     // from the event body or location
     return undefined
@@ -241,7 +241,7 @@ export class CalendarSyncService {
     contactEmail: string,
     organizationId: string,
     userId: string,
-    days: number = 30
+    _days: number = 30
   ): Promise<CalendarSyncResult> {
     // In a real implementation, this would:
     // 1. Search for events where the contact is an attendee
@@ -270,7 +270,7 @@ export class CalendarSyncService {
     opportunityId: string,
     organizationId: string,
     userId: string,
-    days: number = 30
+    _days: number = 30
   ): Promise<CalendarSyncResult> {
     // In a real implementation, this would:
     // 1. Get opportunity details (contact, company)
@@ -296,7 +296,7 @@ export class CalendarSyncService {
   /**
    * Get calendar sync statistics
    */
-  async getSyncStats(organizationId: string): Promise<{
+  async getSyncStats(_organizationId: string): Promise<{
     totalEvents: number
     syncedEvents: number
     lastSyncDate: string | null

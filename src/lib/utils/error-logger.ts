@@ -2,11 +2,19 @@
 // Enterprise-grade error logging, reporting, and monitoring
 
 import { createClient } from '@supabase/supabase-js';
+import { supabaseConfig } from '@/lib/config';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Create Supabase client only if configured, otherwise use mock
+const supabase = supabaseConfig.isConfigured 
+  ? createClient(supabaseConfig.url!, supabaseConfig.anonKey!)
+  : {
+      from: () => ({
+        insert: () => ({ error: null }),
+        select: () => ({ error: null }),
+        update: () => ({ error: null }),
+        delete: () => ({ error: null })
+      })
+    } as unknown as ReturnType<typeof createClient>;
 
 // Error types and interfaces
 export interface ErrorLogEntry {
@@ -14,7 +22,7 @@ export interface ErrorLogEntry {
   level: 'debug' | 'info' | 'warn' | 'error' | 'critical';
   message: string;
   stack?: string;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   userId?: string;
   organizationId: string;
   module: string;
@@ -92,7 +100,7 @@ export class ErrorLogger {
       function: string;
       userId?: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     },
     error?: Error
   ): Promise<string> {
@@ -147,7 +155,7 @@ export class ErrorLogger {
       module: string;
       function: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     }
   ): Promise<string> {
     return this.logError('debug', message, context);
@@ -162,7 +170,7 @@ export class ErrorLogger {
       module: string;
       function: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     }
   ): Promise<string> {
     return this.logError('info', message, context);
@@ -177,7 +185,7 @@ export class ErrorLogger {
       module: string;
       function: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     }
   ): Promise<string> {
     return this.logError('warn', message, context);
@@ -193,7 +201,7 @@ export class ErrorLogger {
       function: string;
       userId?: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     },
     error?: Error
   ): Promise<string> {
@@ -210,7 +218,7 @@ export class ErrorLogger {
       function: string;
       userId?: string;
       organizationId: string;
-      additionalData?: Record<string, any>;
+      additionalData?: Record<string, unknown>;
     },
     error?: Error
   ): Promise<string> {
@@ -505,7 +513,7 @@ export class ErrorReporter {
     }
   ): Promise<void> {
     try {
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
       };
 
@@ -602,7 +610,7 @@ export const logError = (
     function: string;
     userId?: string;
     organizationId: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   },
   error?: Error
 ) => errorLogger.error(message, context, error);
@@ -614,7 +622,7 @@ export const logCritical = (
     function: string;
     userId?: string;
     organizationId: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   },
   error?: Error
 ) => errorLogger.critical(message, context, error);
@@ -625,7 +633,7 @@ export const logWarning = (
     module: string;
     function: string;
     organizationId: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   }
 ) => errorLogger.warn(message, context);
 
@@ -635,7 +643,7 @@ export const logInfo = (
     module: string;
     function: string;
     organizationId: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   }
 ) => errorLogger.info(message, context);
 
@@ -645,6 +653,6 @@ export const logDebug = (
     module: string;
     function: string;
     organizationId: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   }
 ) => errorLogger.debug(message, context);

@@ -10,8 +10,8 @@ export interface WorkflowAutomationData {
   name: string
   description: string | null
   triggerType: 'stage_change' | 'field_update' | 'time_based' | 'manual'
-  triggerConditions: Record<string, any>
-  actions: Record<string, any>[]
+  triggerConditions: Record<string, unknown>
+  actions: Record<string, unknown>[]
   isActive: boolean
   branchSpecific: boolean
   roleSpecific: boolean
@@ -26,13 +26,13 @@ export interface WorkflowAutomationData {
 export interface TriggerCondition {
   field: string
   operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'is_empty' | 'is_not_empty'
-  value: any
+  value: Record<string, unknown>
   logicalOperator?: 'AND' | 'OR'
 }
 
 export interface WorkflowAction {
   type: 'send_email' | 'create_task' | 'update_field' | 'send_notification' | 'create_activity' | 'assign_user' | 'webhook'
-  config: Record<string, any>
+  config: Record<string, unknown>
   delay?: number // in minutes
 }
 
@@ -45,7 +45,7 @@ export interface WorkflowExecution {
   startedAt: string
   completedAt: string | null
   errorMessage: string | null
-  executionData: Record<string, any>
+  executionData: Record<string, unknown>
 }
 
 export class WorkflowAutomationAPI {
@@ -207,7 +207,7 @@ export class WorkflowAutomationAPI {
     workflowId: string,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<WorkflowExecution> {
     const workflow = await this.getAutomation(workflowId)
     if (!workflow) {
@@ -272,7 +272,7 @@ export class WorkflowAutomationAPI {
     action: WorkflowAction,
     entityType: string,
     entityId: string,
-    triggerData: Record<string, any>
+    triggerData: Record<string, unknown>
   ): Promise<void> {
     switch (action.type) {
       case 'send_email':
@@ -305,8 +305,8 @@ export class WorkflowAutomationAPI {
    * Evaluate trigger conditions
    */
   private static evaluateTriggerConditions(
-    conditions: Record<string, any>,
-    data: Record<string, any>
+    conditions: Record<string, unknown>,
+    data: Record<string, unknown>
   ): boolean {
     // Simple condition evaluation - can be enhanced with more complex logic
     for (const [field, condition] of Object.entries(conditions)) {
@@ -330,7 +330,7 @@ export class WorkflowAutomationAPI {
   /**
    * Evaluate a single condition
    */
-  private static evaluateCondition(fieldValue: any, operator: string, expectedValue: any): boolean {
+  private static evaluateCondition(fieldValue: unknown, operator: string, expectedValue: unknown): boolean {
     switch (operator) {
       case 'equals':
         return fieldValue === expectedValue
@@ -356,7 +356,7 @@ export class WorkflowAutomationAPI {
   /**
    * Get nested value from object using dot notation
    */
-  private static getNestedValue(obj: Record<string, any>, path: string): any {
+  private static getNestedValue(obj: Record<string, unknown>, path: string): unknown {
     return path.split('.').reduce((current, key) => current?.[key], obj)
   }
 
@@ -364,10 +364,10 @@ export class WorkflowAutomationAPI {
    * Execute send email action
    */
   private static async executeSendEmailAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, any>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would integrate with email service
   }
@@ -376,10 +376,10 @@ export class WorkflowAutomationAPI {
    * Execute create task action
    */
   private static async executeCreateTaskAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, any>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would create a task in the activities table
   }
@@ -388,10 +388,10 @@ export class WorkflowAutomationAPI {
    * Execute update field action
    */
   private static async executeUpdateFieldAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, any>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would update the specified field in the entity
   }
@@ -400,10 +400,10 @@ export class WorkflowAutomationAPI {
    * Execute send notification action
    */
   private static async executeSendNotificationAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, any>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would send notification via Slack, email, or in-app
   }
@@ -412,10 +412,10 @@ export class WorkflowAutomationAPI {
    * Execute create activity action
    */
   private static async executeCreateActivityAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, any>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would create an activity record
   }
@@ -424,10 +424,10 @@ export class WorkflowAutomationAPI {
    * Execute assign user action
    */
   private static async executeAssignUserAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, any>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would assign a user to the entity
   }
@@ -436,10 +436,10 @@ export class WorkflowAutomationAPI {
    * Execute webhook action
    */
   private static async executeWebhookAction(
-    action: WorkflowAction,
-    entityType: string,
-    entityId: string,
-    triggerData: Record<string, any>
+    _action: WorkflowAction,
+    _entityType: string,
+    _entityId: string,
+    _triggerData: Record<string, unknown>
   ): Promise<void> {
     // Implementation would make HTTP request to webhook URL
   }

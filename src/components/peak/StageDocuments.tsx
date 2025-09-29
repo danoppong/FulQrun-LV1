@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { SharePointDocument } from '@/lib/integrations/sharepoint'
 
 interface StageDocumentsProps {
@@ -28,7 +28,7 @@ export function StageDocuments({
   documents,
   onDocumentUpload,
   onDocumentDelete,
-  onDocumentOpen
+  onDocumentOpen: _onDocumentOpen
 }: StageDocumentsProps) {
   const [requirements, setRequirements] = useState<StageRequirement[]>([])
   const [showUpload, setShowUpload] = useState(false)
@@ -37,9 +37,9 @@ export function StageDocuments({
 
   useEffect(() => {
     loadStageRequirements()
-  }, [stage])
+  }, [loadStageRequirements])
 
-  const loadStageRequirements = () => {
+  const loadStageRequirements = useCallback(() => {
     // Define PEAK stage requirements
     const stageRequirements: Record<string, StageRequirement[]> = {
       'prospecting': [
@@ -165,7 +165,7 @@ export function StageDocuments({
     })
 
     setRequirements(updatedReqs)
-  }
+  }, [stage, documents])
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -209,7 +209,7 @@ export function StageDocuments({
       setShowUpload(false)
       setUploadFile(null)
       setSelectedRequirement(null)
-    } catch (error) {
+    } catch (_error) {
     }
   }
 

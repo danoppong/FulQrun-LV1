@@ -1,10 +1,8 @@
 import { 
   calculateMEDDPICCScore, 
-  calculateMEDDPICCScoreLegacy,
   getMEDDPICCLevel, 
   getPEAKStageInfo,
-  MEDDPICCData,
-  MEDDPICCResponse 
+  MEDDPICCData
 } from '@/lib/meddpicc'
 
 describe('MEDDPICC Scoring', () => {

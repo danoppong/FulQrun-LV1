@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect } from 'react'
 import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
@@ -29,7 +30,7 @@ export default function CompanyList({ searchQuery = '' }: CompanyListProps) {
       } else {
         setCompanies(data || [])
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -50,7 +51,7 @@ export default function CompanyList({ searchQuery = '' }: CompanyListProps) {
       } else {
         setCompanies(companies.filter(company => company.id !== id))
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to delete company')
     }
   }
@@ -192,7 +193,7 @@ export default function CompanyList({ searchQuery = '' }: CompanyListProps) {
                       <span className="text-muted-foreground">
                         {(typeof company.contact_count === 'number' 
                           ? company.contact_count 
-                          : (company.contact_count as any)?.count || 0)
+                          : (company.contact_count as { count: number })?.count || 0)
                         } contacts
                       </span>
                     </div>
@@ -201,7 +202,7 @@ export default function CompanyList({ searchQuery = '' }: CompanyListProps) {
                       <span className="text-muted-foreground">
                         {(typeof company.opportunity_count === 'number' 
                           ? company.opportunity_count 
-                          : (company.opportunity_count as any)?.count || 0)
+                          : (company.opportunity_count as { count: number })?.count || 0)
                         } opportunities
                       </span>
                     </div>

@@ -13,9 +13,9 @@ export interface AnalyticsDashboard {
   id: string;
   dashboardName: string;
   dashboardType: 'executive' | 'operational' | 'compliance' | 'custom' | 'real_time';
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   kpis: KPIMetric[];
-  filters: Record<string, any>;
+  filters: Record<string, unknown>;
   refreshFrequencyMinutes: number;
   isPublic: boolean;
   accessLevel: 'user' | 'department' | 'organization' | 'global';
@@ -45,7 +45,7 @@ export interface ForecastingModel {
   name: string;
   modelType: 'revenue' | 'deals' | 'conversion' | 'churn' | 'custom';
   algorithm: 'linear_regression' | 'time_series' | 'machine_learning' | 'custom';
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   accuracy: number;
   lastTrained: Date;
   isActive: boolean;
@@ -56,8 +56,8 @@ export interface AnalyticsQuery {
   id: string;
   name: string;
   query: string;
-  parameters: Record<string, any>;
-  result: any;
+  parameters: Record<string, unknown>;
+  result: Record<string, unknown>;
   executionTime: number;
   cached: boolean;
   organizationId: string;
@@ -70,7 +70,7 @@ export interface RealTimeMetric {
   metricName: string;
   value: number;
   timestamp: Date;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   organizationId: string;
 }
 
@@ -176,9 +176,9 @@ export class EnterpriseAnalyticsAPI {
         .select('kpis')
         .eq('organization_id', organizationId);
 
-      let kpiDefinition: any = null;
+      let kpiDefinition: Record<string, unknown> | null = null;
       dashboards?.forEach(dashboard => {
-        const kpi = dashboard.kpis.find((k: any) => k.id === kpiId);
+        const kpi = dashboard.kpis.find((k: { id: string }) => k.id === kpiId);
         if (kpi) kpiDefinition = kpi;
       });
 
@@ -393,7 +393,7 @@ export class EnterpriseAnalyticsAPI {
     forecastType: 'revenue' | 'deals' | 'conversion' | 'churn',
     period: 'weekly' | 'monthly' | 'quarterly' | 'yearly',
     horizon: number
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
       // Get historical data
       const historicalData = await this.getHistoricalData(organizationId, forecastType, period);
@@ -421,7 +421,7 @@ export class EnterpriseAnalyticsAPI {
     organizationId: string,
     forecastType: string,
     period: string
-  ): Promise<any[]> {
+  ): Promise<Array<Record<string, unknown>>> {
     const endDate = new Date();
     const startDate = new Date();
     
@@ -480,10 +480,16 @@ export class EnterpriseAnalyticsAPI {
   }
 
   private static async applyForecastingAlgorithm(
-    historicalData: any[],
+    historicalData: Array<{
+      id: string
+      type: string
+      timestamp: string
+      value: number
+      context: Record<string, unknown>
+    }>,
     horizon: number,
-    period: string
-  ): Promise<any> {
+    _period: string
+  ): Promise<Record<string, unknown>> {
     // Simple linear regression forecasting
     const dataPoints = historicalData.length;
     if (dataPoints < 2) {
@@ -531,7 +537,7 @@ export class EnterpriseAnalyticsAPI {
     };
   }
 
-  private static calculateAccuracy(actual: number[], predicted: any[]): number {
+  private static calculateAccuracy(actual: number[], predicted: Array<{ value: number }>): number {
     if (actual.length === 0 || predicted.length === 0) return 0;
     
     let totalError = 0;
@@ -614,7 +620,7 @@ export class EnterpriseAnalyticsAPI {
   // Custom Analytics Queries
   static async executeAnalyticsQuery(
     query: string,
-    parameters: Record<string, any>,
+    parameters: Record<string, unknown>,
     organizationId: string,
     userId: string
   ): Promise<AnalyticsQuery> {
@@ -622,7 +628,7 @@ export class EnterpriseAnalyticsAPI {
       const startTime = Date.now();
       
       // Execute query (simplified - in real implementation, this would be more sophisticated)
-      let result: any = {};
+      let result: Record<string, unknown> = {};
       
       if (query.includes('SELECT')) {
         // Parse and execute SQL-like query
@@ -672,9 +678,9 @@ export class EnterpriseAnalyticsAPI {
 
   private static async executeSQLQuery(
     query: string,
-    parameters: Record<string, any>,
+    parameters: Record<string, unknown>,
     organizationId: string
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     // Simplified SQL query execution
     // In a real implementation, this would parse SQL and execute against Supabase
     
@@ -699,9 +705,9 @@ export class EnterpriseAnalyticsAPI {
 
   private static async executeCustomAnalytics(
     query: string,
-    parameters: Record<string, any>,
+    parameters: Record<string, unknown>,
     organizationId: string
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     // Execute custom analytics functions
     switch (query) {
       case 'sales_performance_by_user':
@@ -715,7 +721,7 @@ export class EnterpriseAnalyticsAPI {
     }
   }
 
-  private static async getSalesPerformanceByUser(organizationId: string, parameters: any): Promise<any> {
+  private static async getSalesPerformanceByUser(organizationId: string, _parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     const { data: users } = await supabase
       .from('users')
       .select('id, first_name, last_name')
@@ -746,7 +752,7 @@ export class EnterpriseAnalyticsAPI {
     return performance;
   }
 
-  private static async getConversionFunnel(organizationId: string, parameters: any): Promise<any> {
+  private static async getConversionFunnel(organizationId: string, _parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     const { data: opportunities } = await supabase
       .from('opportunities')
       .select('stage')
@@ -774,7 +780,7 @@ export class EnterpriseAnalyticsAPI {
     return funnel;
   }
 
-  private static async getCustomerLifetimeValue(organizationId: string, parameters: any): Promise<any> {
+  private static async getCustomerLifetimeValue(organizationId: string, _parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     const { data: opportunities } = await supabase
       .from('opportunities')
       .select('deal_value, company_id, closed_at')
@@ -801,7 +807,7 @@ export class EnterpriseAnalyticsAPI {
     organizationId: string,
     reportType: 'monthly' | 'quarterly' | 'yearly',
     period: Date
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
       const report = {
         reportType,
@@ -809,8 +815,8 @@ export class EnterpriseAnalyticsAPI {
         generatedAt: new Date().toISOString(),
         summary: {},
         metrics: {},
-        insights: [],
-        recommendations: []
+        insights: [] as string[],
+        recommendations: [] as string[]
       };
 
       // Generate summary metrics
@@ -848,7 +854,7 @@ export class EnterpriseAnalyticsAPI {
     }
   }
 
-  private static async generateInsights(organizationId: string, metrics: any): Promise<string[]> {
+  private static async generateInsights(organizationId: string, metrics: Record<string, unknown>): Promise<string[]> {
     const insights = [];
 
     if (metrics.revenue.current > metrics.revenue.previous) {
@@ -866,7 +872,7 @@ export class EnterpriseAnalyticsAPI {
     return insights;
   }
 
-  private static async generateRecommendations(organizationId: string, metrics: any): Promise<string[]> {
+  private static async generateRecommendations(organizationId: string, metrics: Record<string, unknown>): Promise<string[]> {
     const recommendations = [];
 
     if (metrics.conversion.current < 20) {

@@ -1,4 +1,4 @@
-import { IntegrationConnectionData } from '@/lib/api/integrations'
+import { IntegrationConnectionData as _IntegrationConnectionData } from '@/lib/api/integrations'
 
 export interface StripeCustomer {
   id: string

@@ -27,7 +27,7 @@ export function securityMiddleware(request: NextRequest) {
 }
 
 // Security headers middleware
-export function securityHeadersMiddleware(request: NextRequest) {
+export function securityHeadersMiddleware(_request: NextRequest) {
   const response = NextResponse.next()
   
   // Security headers

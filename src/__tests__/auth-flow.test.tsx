@@ -57,7 +57,7 @@ describe('AuthWrapper', () => {
 
   it('redirects to login when user is not authenticated', async () => {
     // Mock unauthenticated user
-    const mockSupabase = require('@/lib/auth').createClientComponentClient()
+    const mockSupabase = (await import('@/lib/auth')).createClientComponentClient()
     mockSupabase.auth.getUser.mockResolvedValueOnce({
       data: { user: null },
       error: null
@@ -76,7 +76,7 @@ describe('AuthWrapper', () => {
 
   it('redirects to custom route when specified', async () => {
     // Mock unauthenticated user
-    const mockSupabase = require('@/lib/auth').createClientComponentClient()
+    const mockSupabase = (await import('@/lib/auth')).createClientComponentClient()
     mockSupabase.auth.getUser.mockResolvedValueOnce({
       data: { user: null },
       error: null
@@ -95,7 +95,7 @@ describe('AuthWrapper', () => {
 
   it('does not require auth when requireAuth is false', async () => {
     // Mock unauthenticated user
-    const mockSupabase = require('@/lib/auth').createClientComponentClient()
+    const mockSupabase = (await import('@/lib/auth')).createClientComponentClient()
     mockSupabase.auth.getUser.mockResolvedValueOnce({
       data: { user: null },
       error: null

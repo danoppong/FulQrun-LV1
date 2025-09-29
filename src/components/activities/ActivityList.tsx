@@ -1,6 +1,7 @@
 'use client'
+import React from 'react'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { activityAPI, ActivityWithDetails } from '@/lib/api/activities'
 
 interface ActivityListProps {
@@ -35,11 +36,7 @@ export default function ActivityList({ opportunityId, onEdit, onDelete }: Activi
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadActivities()
-  }, [opportunityId])
-
-  const loadActivities = async () => {
+  const loadActivities = useCallback(async () => {
     setLoading(true)
     setError(null)
     
@@ -51,12 +48,16 @@ export default function ActivityList({ opportunityId, onEdit, onDelete }: Activi
       } else {
         setActivities(data || [])
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
-  }
+  }, [opportunityId])
+
+  useEffect(() => {
+    loadActivities()
+  }, [loadActivities])
 
   const handleDelete = async (activityId: string) => {
     if (!confirm('Are you sure you want to delete this activity?')) return
@@ -72,7 +73,7 @@ export default function ActivityList({ opportunityId, onEdit, onDelete }: Activi
         setActivities(activities.filter(a => a.id !== activityId))
         if (onDelete) onDelete(activityId)
       }
-    } catch (err) {
+    } catch (_err) {
       const errorMessage = 'An unexpected error occurred while deleting activity'
       setDeleteError(errorMessage)
     } finally {
