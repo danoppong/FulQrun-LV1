@@ -258,10 +258,13 @@ export interface Database {
           email: string | null
           phone: string | null
           company: string | null
+          title: string | null
           source: string | null
           status: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted'
           score: number
           ai_score: number
+          notes: string | null
+          assigned_to: string | null
           organization_id: string
           created_by: string
           created_at: string
@@ -274,10 +277,13 @@ export interface Database {
           email?: string | null
           phone?: string | null
           company?: string | null
+          title?: string | null
           source?: string | null
           status?: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted'
           score?: number
           ai_score?: number
+          notes?: string | null
+          assigned_to?: string | null
           organization_id: string
           created_by: string
           created_at?: string
@@ -290,10 +296,13 @@ export interface Database {
           email?: string | null
           phone?: string | null
           company?: string | null
+          title?: string | null
           source?: string | null
           status?: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted'
           score?: number
           ai_score?: number
+          notes?: string | null
+          assigned_to?: string | null
           organization_id?: string
           created_by?: string
           created_at?: string

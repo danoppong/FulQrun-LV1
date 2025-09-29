@@ -98,8 +98,6 @@ export default function OpportunityFormEnhanced({
     }
   })
 
-  const watchedValues = watch()
-
   // Track form changes
   useEffect(() => {
     const subscription = watch((value, { type }) => {
@@ -212,7 +210,15 @@ export default function OpportunityFormEnhanced({
     if (!opportunityId || !isDirty) return
 
     try {
-      const formData = watchedValues
+      // Get current form values directly instead of using watchedValues
+      const formData = {
+        name: watch('name'),
+        contact_id: watch('contact_id'),
+        company_id: watch('company_id'),
+        description: watch('description'),
+        assigned_to: watch('assigned_to')
+      }
+      
       const opportunityData: Partial<LocalOpportunityFormData> = {
         ...formData,
         ...peakData,
@@ -229,21 +235,35 @@ export default function OpportunityFormEnhanced({
     } catch (err) {
       console.error('Auto-save failed:', err)
     }
-  }, [opportunityId, isDirty, watchedValues, peakData, meddpiccData])
+  }, [opportunityId, isDirty, peakData, meddpiccData, watch])
 
   const handlePeakSave = useCallback(async (data: PEAKData) => {
-    setPeakData(data)
-    setIsDirty(true)
-  }, [])
+    // Only update if data has actually changed
+    const hasChanged = Object.keys(data).some(key => 
+      peakData[key as keyof PEAKData] !== data[key as keyof PEAKData]
+    )
+    
+    if (hasChanged) {
+      setPeakData(data)
+      setIsDirty(true)
+    }
+  }, [peakData])
 
   const handlePeakSuccess = useCallback(() => {
     console.log('PEAK data saved successfully')
   }, [])
 
   const handleMeddpiccSave = useCallback((data: MEDDPICCData) => {
-    setMeddpiccData(data)
-    setIsDirty(true)
-  }, [])
+    // Only update if data has actually changed
+    const hasChanged = Object.keys(data).some(key => 
+      meddpiccData[key as keyof MEDDPICCData] !== data[key as keyof MEDDPICCData]
+    )
+    
+    if (hasChanged) {
+      setMeddpiccData(data)
+      setIsDirty(true)
+    }
+  }, [meddpiccData])
 
   const handleMeddpiccSuccess = useCallback(() => {
     console.log('MEDDPICC data saved successfully')
