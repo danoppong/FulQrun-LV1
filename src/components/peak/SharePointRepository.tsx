@@ -80,12 +80,19 @@ export function SharePointRepository({
       
       if (sitesData.length > 0) {
         setSelectedSite(sitesData[0])
-        await loadFolderContents(sitesData[0].id, '/')
+        // Load folder contents after setting sharepoint state
+        const [foldersData, documentsData] = await Promise.all([
+          sp.getFolders(sitesData[0].id, '/'),
+          sp.getDocumentsFromSite(sitesData[0].id, '/')
+        ])
+        setFolders(foldersData.map(folder => ({ ...folder, path: folder.url })))
+        setDocuments(documentsData as Array<{ id: string; name: string; url: string; size?: number; modified?: string }>)
+        setCurrentPath('/')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to initialize SharePoint')
     }
-  }, [organizationId, loadFolderContents])
+  }, [organizationId])
 
   const loadFolderContents = useCallback(async (siteId: string, path: string) => {
     if (!sharepoint) return

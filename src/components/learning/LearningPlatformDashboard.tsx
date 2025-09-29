@@ -56,10 +56,6 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
   const [selectedTab, setSelectedTab] = useState<'modules' | 'tracks' | 'progress' | 'compliance' | 'analytics'>('modules');
   const [_showCreateModule, setShowCreateModule] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
@@ -84,6 +80,10 @@ export default function LearningPlatformDashboard({ organizationId, userId }: Le
       setLoading(false);
     }
   }, [organizationId, userId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const getModuleIcon = (type: string) => {
     switch (type) {

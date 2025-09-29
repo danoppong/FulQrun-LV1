@@ -19,13 +19,6 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
 
   const permissions = getUserPermissions(userRole)
 
-  const loadDashboardLayoutCallback = useCallback(loadDashboardLayout, [userId, supabase])
-
-  useEffect(() => {
-    // Load user's custom dashboard layout
-    loadDashboardLayoutCallback()
-  }, [loadDashboardLayoutCallback])
-
   const loadDashboardLayout = async () => {
     try {
       const { data, error } = await supabase
@@ -45,6 +38,13 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
       console.warn('Dashboard layout loading error:', error)
     }
   }
+
+  const loadDashboardLayoutCallback = useCallback(loadDashboardLayout, [userId, supabase])
+
+  useEffect(() => {
+    // Load user's custom dashboard layout
+    loadDashboardLayoutCallback()
+  }, [loadDashboardLayoutCallback])
 
   const saveDashboardLayout = async (newWidgets: DashboardWidget[]) => {
     try {

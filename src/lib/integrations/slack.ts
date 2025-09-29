@@ -175,7 +175,7 @@ export class SlackIntegration {
       }
 
       return { success: true }
-    } catch (_error) {
+    } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to send message'
@@ -629,7 +629,7 @@ export class SlackIntegration {
           url: data.url || ''
         }
       }
-    } catch (_error) {
+    } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Connection test failed'

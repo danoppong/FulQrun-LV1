@@ -43,10 +43,6 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
   const [dashboardForm, setDashboardForm] = useState<Record<string, unknown>>({});
   const [selectedKPIs, setSelectedKPIs] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
-
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
@@ -72,6 +68,10 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
       setLoading(false);
     }
   }, [organizationId]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const handleCreateDashboard = async () => {
     try {

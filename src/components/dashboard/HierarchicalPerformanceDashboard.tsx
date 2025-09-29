@@ -27,10 +27,6 @@ const HierarchicalPerformanceDashboard = ({
   const [_selectedManager, _setSelectedManager] = useState<string | null>(null)
   const [_selectedRegion, _setSelectedRegion] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadPerformanceData()
-  }, [loadPerformanceData])
-
   const loadPerformanceData = useCallback(() => {
     let data: PerformanceMetrics[] = []
     
@@ -42,6 +38,10 @@ const HierarchicalPerformanceDashboard = ({
     
     setPerformanceData(data)
   }, [currentView, userId, userRole, userRegion, userBusinessUnit])
+
+  useEffect(() => {
+    loadPerformanceData()
+  }, [loadPerformanceData])
 
   const getViewTitle = () => {
     switch (currentView) {
