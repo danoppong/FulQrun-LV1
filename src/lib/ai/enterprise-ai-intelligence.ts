@@ -1,7 +1,7 @@
 // Enterprise AI Intelligence Engine
 // Advanced machine learning models for predictive analytics, automated coaching, and intelligent insights
 
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/lib/supabase-client';
 import OpenAI from 'openai';
 // import Anthropic from '@anthropic-ai/sdk';
 
@@ -73,23 +73,12 @@ export interface ForecastingData {
 }
 
 class EnterpriseAIIntelligence {
-  private supabase: {
-    from: (table: string) => {
-      select: (columns?: string) => {
-        eq: (column: string, value: string | number) => {
-          order: (column: string, options?: { ascending?: boolean }) => {
-            single: () => Promise<{ data: Record<string, unknown> | null; error: Error | null }>;
-          };
-        };
-        single: () => Promise<{ data: Record<string, unknown> | null; error: Error | null }>;
-      };
-    };
-  };
+  private supabase: ReturnType<typeof getSupabaseClient>;
   private openai: OpenAI;
   // private anthropic: Anthropic;
 
   constructor(supabaseUrl: string, supabaseKey: string, openaiApiKey: string, _anthropicApiKey: string) {
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+    this.supabase = getSupabaseClient();
     this.openai = new OpenAI({ apiKey: openaiApiKey });
     // this.anthropic = new Anthropic({ apiKey: anthropicApiKey });
   }

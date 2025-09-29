@@ -1,12 +1,9 @@
 // Workflow Engine Core
 // Core workflow execution engine for enterprise workflow automation
 
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/lib/supabase-client';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabase = getSupabaseClient();
 
 // Core workflow types
 export interface TriggerCondition {

@@ -1,12 +1,12 @@
 // Centralized Error Handling System
 // Enterprise-grade error logging, reporting, and monitoring
 
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/lib/supabase-client';
 import { supabaseConfig } from '@/lib/config';
 
-// Create Supabase client only if configured, otherwise use mock
+// Use centralized Supabase client
 const supabase = supabaseConfig.isConfigured 
-  ? createClient(supabaseConfig.url!, supabaseConfig.anonKey!)
+  ? getSupabaseClient()
   : {
       from: () => ({
         insert: () => ({ error: null }),
@@ -14,7 +14,7 @@ const supabase = supabaseConfig.isConfigured
         update: () => ({ error: null }),
         delete: () => ({ error: null })
       })
-    } as unknown as ReturnType<typeof createClient>;
+    } as unknown as ReturnType<typeof getSupabaseClient>;
 
 // Error types and interfaces
 export interface ErrorLogEntry {

@@ -2,17 +2,25 @@
 // API functions for enterprise AI intelligence features
 
 import { getSupabaseClient } from '@/lib/supabase-client';
-import EnterpriseAIIntelligence from './enterprise-ai-intelligence';
 
 const supabase = getSupabaseClient();
 
-// Initialize AI intelligence engine
-const aiIntelligence = new EnterpriseAIIntelligence(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  process.env.OPENAI_API_KEY!,
-  process.env.ANTHROPIC_API_KEY!
-);
+// Lazy initialization of AI intelligence engine to avoid circular dependencies
+let aiIntelligence: any = null;
+
+function getAIIntelligence() {
+  if (!aiIntelligence) {
+    // Dynamic import to avoid circular dependency
+    const EnterpriseAIIntelligence = require('./enterprise-ai-intelligence').default;
+    aiIntelligence = new EnterpriseAIIntelligence(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.OPENAI_API_KEY!,
+      process.env.ANTHROPIC_API_KEY!
+    );
+  }
+  return aiIntelligence;
+}
 
 // Types
 export interface AIModelConfig {
@@ -181,7 +189,7 @@ export async function deleteAIModel(modelId: string): Promise<void> {
 // Advanced Lead Scoring
 export async function generateAdvancedLeadScore(leadId: string, organizationId: string) {
   try {
-    return await aiIntelligence.generateAdvancedLeadScore(leadId, organizationId);
+    return await getAIIntelligence().generateAdvancedLeadScore(leadId, organizationId);
   } catch (error) {
     console.error('Error generating advanced lead score:', error);
     throw error;
@@ -211,7 +219,7 @@ export async function getLeadInsights(leadId: string, organizationId: string) {
 // Deal Risk Assessment
 export async function generateDealRiskAssessment(opportunityId: string, organizationId: string) {
   try {
-    return await aiIntelligence.generateDealRiskAssessment(opportunityId, organizationId);
+    return await getAIIntelligence().generateDealRiskAssessment(opportunityId, organizationId);
   } catch (error) {
     console.error('Error generating deal risk assessment:', error);
     throw error;
@@ -241,7 +249,7 @@ export async function getDealInsights(opportunityId: string, organizationId: str
 // AI-Powered Sales Coaching
 export async function generateCoachingRecommendations(userId: string, organizationId: string): Promise<CoachingRecommendation[]> {
   try {
-    return await aiIntelligence.generateCoachingRecommendations(userId, organizationId);
+    return await getAIIntelligence().generateCoachingRecommendations(userId, organizationId);
   } catch (error) {
     console.error('Error generating coaching recommendations:', error);
     throw error;
@@ -302,7 +310,7 @@ export async function saveCoachingRecommendation(recommendation: CoachingRecomme
 // Advanced Sales Forecasting
 export async function generateSalesForecast(organizationId: string, period: 'weekly' | 'monthly' | 'quarterly' | 'yearly'): Promise<ForecastingData> {
   try {
-    return await aiIntelligence.generateSalesForecast(organizationId, period);
+    return await getAIIntelligence().generateSalesForecast(organizationId, period);
   } catch (error) {
     console.error('Error generating sales forecast:', error);
     throw error;
@@ -332,7 +340,7 @@ export async function getForecastingInsights(organizationId: string) {
 // AI Content Generation
 export async function generateAIContent(type: 'email' | 'proposal' | 'presentation' | 'follow_up', context: Record<string, unknown>): Promise<string> {
   try {
-    return await aiIntelligence.generateAIContent(type, context);
+    return await getAIIntelligence().generateAIContent(type, context);
   } catch (error) {
     console.error('Error generating AI content:', error);
     throw error;
