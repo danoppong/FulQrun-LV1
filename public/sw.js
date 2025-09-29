@@ -2,8 +2,8 @@
 // Provides offline capability and caching for the PWA
 
 // const _CACHE_NAME = 'fulqrun-v1.0.0' // Unused variable
-const STATIC_CACHE_NAME = 'fulqrun-static-v1.0.1'
-const DYNAMIC_CACHE_NAME = 'fulqrun-dynamic-v1.0.1'
+const STATIC_CACHE_NAME = 'fulqrun-static-v1.0.2'
+const DYNAMIC_CACHE_NAME = 'fulqrun-dynamic-v1.0.2'
 
 // Files to cache for offline functionality
 const STATIC_ASSETS = [
@@ -53,10 +53,8 @@ self.addEventListener('activate', (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE_NAME && cacheName !== DYNAMIC_CACHE_NAME) {
-              console.log('Service Worker: Deleting old cache', cacheName)
-              return caches.delete(cacheName)
-            }
+            console.log('Service Worker: Deleting cache', cacheName)
+            return caches.delete(cacheName)
           })
         )
       })

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { UserRole, getUserPermissions } from '@/lib/roles'
 import { DashboardWidget, WidgetType, DEFAULT_WIDGETS, WIDGET_TEMPLATES } from '@/lib/dashboard-widgets'
 import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData, TeamMemberData, PipelineStageData, ActivityData, MEDDPICCOpportunityData } from '@/lib/types/dashboard'
-import { createClientComponentClient } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 import RoleSelector from '@/components/RoleSelector'
 
 interface RoleBasedDashboardProps {
@@ -15,7 +15,7 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
   const [userRole, setUserRole] = useState<UserRole>(initialUserRole)
   const [widgets, setWidgets] = useState<DashboardWidget[]>(DEFAULT_WIDGETS)
   const [isEditMode, setIsEditMode] = useState(false)
-  const supabase = createClientComponentClient()
+  // Using singleton supabase client
 
   const permissions = getUserPermissions(userRole)
 

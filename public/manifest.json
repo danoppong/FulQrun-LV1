@@ -1,5 +1,6 @@
 {
   "name": "FulQrun Sales Operations Platform",
+  "version": "1.0.2",
   "short_name": "FulQrun",
   "description": "PEAK + MEDDPICC embedded sales operations platform for modern sales teams",
   "start_url": "/",
