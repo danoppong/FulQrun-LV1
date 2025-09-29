@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { IntegrationHub } from '@/components/integrations/IntegrationHub'
 
 export default function IntegrationsPage() {
-  const [organizationId] = useState('org-123') // This would come from auth context
+  const [organizationId] = useState('00000000-0000-0000-0000-000000000001') // Default organization ID
 
   const handleIntegrationConnect = (_integration: { id: string; name: string; type: string }) => {
     // Handle integration connection

@@ -143,8 +143,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   const router = useRouter()
   const { handleError: _handleError, handleLoadingError: _handleLoadingError, handleAsyncOperation } = useErrorHandler()
   
-  // Debug logging
-  console.log('OpportunityForm rendered with:', { opportunity, opportunityId, mode })
+  // Debug logging removed to prevent infinite re-rendering
   const [contacts, setContacts] = useState<ContactWithCompany[]>([])
   const [companies, setCompanies] = useState<CompanyWithStats[]>([])
   const [loading, setLoading] = useState(false)

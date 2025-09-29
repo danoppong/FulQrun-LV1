@@ -117,10 +117,19 @@ const DashboardContent = () => {
           if (profileError) {
             console.warn('Failed to load user profile:', profileError.message)
             
-            // If user doesn't exist in database, create them
+            // If user doesn't exist in database, create them via API
             if (profileError.code === 'PGRST116' || profileError.message.includes('No rows found')) {
-              console.log('User not found in database, creating user record...')
-              await createUserRecord(user, supabase)
+              console.log('User not found in database, creating user record via API...')
+              try {
+                const response = await fetch('/api/setup-user', { method: 'POST' })
+                if (response.ok) {
+                  console.log('User record created successfully via API')
+                } else {
+                  console.warn('Failed to create user record via API:', await response.text())
+                }
+              } catch (apiError) {
+                console.warn('Error calling setup-user API:', apiError)
+              }
             }
             
             // Continue with default values if profile loading fails

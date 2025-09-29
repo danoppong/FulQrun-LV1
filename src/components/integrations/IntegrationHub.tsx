@@ -70,10 +70,6 @@ export function IntegrationHub({
     }
   ], [])
 
-  useEffect(() => {
-    loadIntegrations()
-  }, [loadIntegrations])
-
   const loadIntegrations = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -101,6 +97,10 @@ export function IntegrationHub({
       setIsLoading(false)
     }
   }, [organizationId, availableIntegrations])
+
+  useEffect(() => {
+    loadIntegrations()
+  }, [loadIntegrations])
 
   const handleConnect = async (integration: Integration) => {
     try {

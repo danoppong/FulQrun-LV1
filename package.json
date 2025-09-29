@@ -60,6 +60,6 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "typescript": "^5",
-    "vercel": "^48.1.4"
+    "vercel": "^48.1.6"
   }
 }
