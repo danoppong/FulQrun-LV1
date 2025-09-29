@@ -1,5 +1,5 @@
 'use client'
-import { AuthClientService } from '@/lib/auth-client'
+import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 // import Link from 'next/link' // Unused import
@@ -84,7 +84,7 @@ const DashboardContent = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = AuthClientService.getClient()
+  // Using singleton supabase client from lib/supabase.ts
 
   useEffect(() => {
     const loadUserData = async () => {

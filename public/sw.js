@@ -279,8 +279,8 @@ self.addEventListener('push', (event) => {
     
     const options = {
       body: data.body || 'New notification from FulQrun',
-      icon: '/icon-192x192.png',
-      badge: '/icon-72x72.png',
+      icon: '/icon.svg',
+      badge: '/icon.svg',
       tag: data.tag || 'fulqrun-notification',
       data: data.data || {}
     }
