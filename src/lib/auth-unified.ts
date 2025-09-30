@@ -1,9 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseConfig } from '@/lib/config'
 import { Database } from '@/lib/supabase'
+
+// Conditional import for server-side only
+let cookies: any = null
+if (typeof window === 'undefined') {
+  try {
+    cookies = require('next/headers').cookies
+  } catch (error) {
+    // cookies not available in client context
+  }
+}
 
 // Types for better type safety
 export type AuthUser = {
@@ -72,6 +81,11 @@ export class AuthService {
    */
   static getServerClient() {
     if (!supabaseConfig.isConfigured) {
+      return this.createMockClient()
+    }
+
+    if (!cookies) {
+      // If cookies not available (client-side), return mock client
       return this.createMockClient()
     }
 

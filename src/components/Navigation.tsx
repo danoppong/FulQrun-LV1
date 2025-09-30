@@ -26,7 +26,8 @@ import {
   CpuChipIcon,
   ShieldCheckIcon,
   DevicePhoneMobileIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  TrophyIcon
 } from '@heroicons/react/24/outline'
 
 const navigation = [
@@ -44,6 +45,7 @@ const phase2Navigation = [
   { name: 'AI Insights', href: '/ai-insights', icon: LightBulbIcon, badge: 'AI' },
   { name: 'PEAK Process', href: '/peak', icon: DocumentTextIcon, badge: 'PEAK' },
   { name: 'Performance', href: '/performance', icon: ChartPieIcon, badge: 'CSTPV' },
+  { name: 'Sales Performance', href: '/sales-performance', icon: TrophyIcon, badge: 'SPM' },
   { name: 'Integrations', href: '/integrations', icon: PuzzlePieceIcon, badge: 'HUB' },
   { name: 'Learning', href: '/learning', icon: AcademicCapIcon, badge: 'LMS' },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, badge: 'BI' },
