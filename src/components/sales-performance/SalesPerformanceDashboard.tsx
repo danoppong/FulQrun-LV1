@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { AuthService } from '@/lib/auth-unified'
 import { TerritoryManagement } from './TerritoryManagement'
 import { QuotaPlanning } from './QuotaPlanning'
 import { CompensationManagement } from './CompensationManagement'
@@ -9,19 +10,26 @@ import { CommissionApproval } from './CommissionApproval'
 import { ScenarioPlanning } from './ScenarioPlanning'
 import { GamificationDashboard } from './GamificationDashboard'
 
-interface SalesPerformanceDashboardProps {
-  user: any
-}
-
-export function SalesPerformanceDashboard({ user }: SalesPerformanceDashboardProps) {
+export function SalesPerformanceDashboard() {
   const [activeTab, setActiveTab] = useState('performance')
   const [organizationId, setOrganizationId] = useState<string>('')
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    if (user?.profile?.organization_id) {
-      setOrganizationId(user.profile.organization_id)
+    const getUser = async () => {
+      try {
+        const currentUser = await AuthService.getCurrentUser()
+        setUser(currentUser)
+        if (currentUser?.profile?.organization_id) {
+          setOrganizationId(currentUser.profile.organization_id)
+        }
+      } catch (error) {
+        console.error('Error getting user:', error)
+      }
     }
-  }, [user])
+
+    getUser()
+  }, [])
 
   const tabs = [
     { id: 'performance', name: 'Performance Tracking', icon: '📊' },

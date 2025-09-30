@@ -1,65 +1,84 @@
 'use client'
-import { createClientComponentClient } from '@/lib/auth'
-import { useEffect, useState } from 'react'
 
-const TestAuthPage = () => {
-  const [authState, setAuthState] = useState<{
-    session: Record<string, unknown> | null
-    sessionError: Error | null
-    user: Record<string, unknown> | null
-    userError: Error | null
-  } | null>(null)
+import { useState, useEffect } from 'react'
+import { AuthService } from '@/lib/auth-unified'
+
+export default function TestAuth() {
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  
+  const [error, setError] = useState(null)
+
   useEffect(() => {
     const testAuth = async () => {
-      const supabase = createClientComponentClient()
-      
-      // Test session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
-      // Test user
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
-      setAuthState({
-        session,
-        sessionError,
-        user,
-        userError
-      })
-      setLoading(false)
+      try {
+        console.log('Testing authentication...')
+        const currentUser = await AuthService.getCurrentUser()
+        console.log('Current user:', currentUser)
+        setUser(currentUser)
+      } catch (err) {
+        console.error('Auth error:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
     }
-    
+
     testAuth()
   }, [])
 
+  const testAPI = async () => {
+    try {
+      console.log('Testing API with auth...')
+      const response = await fetch('/api/sales-performance/metric-templates')
+      console.log('API Response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('API Data:', data)
+        alert(`Success! Found ${data.length} templates`)
+      } else {
+        const errorData = await response.json()
+        console.error('API Error:', errorData)
+        alert(`API Error: ${errorData.error}`)
+      }
+    } catch (err) {
+      console.error('API Test error:', err)
+      alert(`API Test Error: ${err.message}`)
+    }
+  }
+
   if (loading) {
-    return <div className="p-8">Loading...</div>
+    return <div>Loading...</div>
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <h3 className="font-bold">Authentication Error:</h3>
+        <p>{error}</p>
+        <button 
+          onClick={() => window.location.href = '/auth/login'}
+          className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Go to Login
+        </button>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Client-Side Auth Test</h1>
-        
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Session Info</h2>
-            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
-              {JSON.stringify({ session: authState?.session, sessionError: authState?.sessionError }, null, 2)}
-            </pre>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">User Info</h2>
-            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
-              {JSON.stringify({ user: authState?.user, userError: authState?.userError }, null, 2)}
-            </pre>
-          </div>
-        </div>
-      </div>
+    <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+      <h3 className="font-bold">Authentication Working!</h3>
+      <p>User: {user?.email}</p>
+      <p>Role: {user?.profile?.role}</p>
+      <p>Organization ID: {user?.profile?.organization_id}</p>
+      
+      <button 
+        onClick={testAPI}
+        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Test API Call
+      </button>
     </div>
   )
 }
-
-export default TestAuthPage

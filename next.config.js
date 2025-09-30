@@ -23,11 +23,24 @@ const nextConfig = {
   },
   
   // Webpack configuration to resolve toPascalCase function
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       '_shared_src_utils_js': path.resolve(__dirname, 'src/shared/src/utils.ts'),
     };
+    
+    // Suppress module resolution warnings in development
+    if (dev) {
+      config.infrastructureLogging = {
+        level: 'error',
+      };
+      
+      // Reduce noise from webpack warnings
+      config.stats = {
+        ...config.stats,
+        warnings: false,
+      };
+    }
     
     // Bundle optimization
     if (!isServer) {

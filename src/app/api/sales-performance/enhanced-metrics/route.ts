@@ -20,16 +20,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServerClient()
 
+    // Simplified query without problematic joins
     let query = supabase
       .from('enhanced_performance_metrics')
-      .select(`
-        *,
-        metric_template:metric_templates(*),
-        user:users(id, full_name, email),
-        territory:sales_territories(name, region),
-        quota_plan:quota_plans(name, target_revenue),
-        created_by_user:users!created_by(id, full_name, email)
-      `)
+      .select('*')
       .eq('organization_id', organizationId)
 
     if (userId) {
@@ -52,6 +46,39 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       throw error
+    }
+
+    // Enrich metrics with related data
+    if (metrics && metrics.length > 0) {
+      // Get user data
+      const userIds = [...new Set([
+        ...metrics.map(m => m.user_id),
+        ...metrics.map(m => m.created_by)
+      ].filter(Boolean))]
+
+      const { data: users } = await supabase
+        .from('users')
+        .select('id, full_name, email')
+        .in('id', userIds)
+
+      // Get metric template data
+      const metricTemplateIds = [...new Set(metrics.map(m => m.metric_template_id).filter(Boolean))]
+      const { data: templates } = await supabase
+        .from('metric_templates')
+        .select('id, name, description, category, metric_type, unit')
+        .in('id', metricTemplateIds)
+
+      const userMap = new Map(users?.map(u => [u.id, u]) || [])
+      const templateMap = new Map(templates?.map(t => [t.id, t]) || [])
+
+      const enrichedMetrics = metrics.map(metric => ({
+        ...metric,
+        user: userMap.get(metric.user_id) || null,
+        created_by_user: userMap.get(metric.created_by) || null,
+        metric_template: templateMap.get(metric.metric_template_id) || null
+      }))
+
+      return NextResponse.json(enrichedMetrics)
     }
 
     return NextResponse.json(metrics || [])

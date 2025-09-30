@@ -1,8 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseConfig } from '@/lib/config'
 import { Database } from '@/lib/supabase'
+import { getSupabaseBrowserClient, createSupabaseServerClient } from '@/lib/supabase-singleton'
 
 // Conditional import for server-side only
 let cookies: any = null
@@ -38,76 +38,42 @@ export type AuthSession = {
 
 // Unified authentication service
 export class AuthService {
-  private static clientInstance: ReturnType<typeof createClient> | null = null
-
   /**
-   * Get or create client-side Supabase client
-   * Uses singleton pattern to prevent multiple instances
+   * Get client-side Supabase client (singleton from global instance)
    */
   static getClient() {
-    if (this.clientInstance) {
-      return this.clientInstance
-    }
-
-    if (!supabaseConfig.isConfigured) {
-      // Return mock client for development
-      this.clientInstance = this.createMockClient()
-      return this.clientInstance
-    }
-
-    try {
-      this.clientInstance = createClient(
-        supabaseConfig.url!,
-        supabaseConfig.anonKey!,
-        {
-          auth: {
-            persistSession: true,
-            storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-            autoRefreshToken: true,
-            detectSessionInUrl: true
-          }
-        }
-      )
-    } catch (error) {
-      console.error('Failed to create Supabase client:', error)
-      this.clientInstance = this.createMockClient()
-    }
-
-    return this.clientInstance
+    return getSupabaseBrowserClient()
   }
 
   /**
    * Get server-side Supabase client for API routes
    */
   static getServerClient() {
-    if (!supabaseConfig.isConfigured) {
-      return this.createMockClient()
-    }
-
-    if (!cookies) {
-      // If cookies not available (client-side), return mock client
-      return this.createMockClient()
+    if (!supabaseConfig.isConfigured || !cookies) {
+      return getSupabaseBrowserClient() // Fall back to browser client if server context not available
     }
 
     const cookieStore = cookies()
     
-    return createServerClient<Database>(
-      supabaseConfig.url!,
-      supabaseConfig.anonKey!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          },
-          set(name: string, value: string, options: { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: string }) {
-            cookieStore.set({ name, value, ...options })
-          },
-          remove(name: string, options: { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: string }) {
-            cookieStore.set({ name, value: '', ...options })
-          },
-        },
-      }
-    )
+    return createSupabaseServerClient({
+      get(name: string) {
+        return cookieStore.get(name)
+      },
+      set(name: string, value: string, options: any) {
+        try {
+          cookieStore.set({ name, value, ...options })
+        } catch (error) {
+          // Cookie setting can fail in some contexts
+        }
+      },
+      remove(name: string, options: any) {
+        try {
+          cookieStore.set({ name, value: '', ...options })
+        } catch (error) {
+          // Cookie removal can fail in some contexts
+        }
+      },
+    })
   }
 
   /**
@@ -265,63 +231,6 @@ export class AuthService {
     return organization
   }
 
-  /**
-   * Create mock client for development/testing
-   */
-  private static createMockClient() {
-    return {
-      auth: {
-        getUser: async () => ({ 
-          data: { user: null }, 
-          error: { message: 'Supabase not configured' } 
-        }),
-        signInWithPassword: async () => ({ 
-          data: { user: null }, 
-          error: { message: 'Supabase not configured' } 
-        }),
-        signUp: async () => ({ 
-          data: { user: null }, 
-          error: { message: 'Supabase not configured' } 
-        }),
-        signOut: async () => ({ error: null }),
-        signInWithOAuth: async () => ({ 
-          error: { message: 'Supabase not configured' } 
-        }),
-        onAuthStateChange: (callback: (event: string, session: unknown) => void) => ({
-          data: { subscription: { unsubscribe: () => {} } }
-        })
-      },
-      from: (table: string) => ({
-        select: () => ({
-          eq: () => ({
-            single: async () => ({ data: null, error: { message: 'Database not configured' } })
-          }),
-          order: () => ({
-            single: async () => ({ data: null, error: { message: 'Database not configured' } })
-          })
-        }),
-        insert: (data: unknown) => {
-          const result = { data: null, error: { message: 'Database not configured' } }
-          const promise = Promise.resolve(result)
-          return Object.assign(promise, {
-            select: () => ({
-              single: async () => result
-            })
-          })
-        },
-        update: () => ({
-          eq: () => ({
-            select: () => ({
-              single: async () => ({ data: null, error: { message: 'Database not configured' } })
-            })
-          })
-        }),
-        delete: () => ({
-          eq: async () => ({ error: { message: 'Database not configured' } })
-        })
-      })
-    } as { from: (table: string) => { select: (columns: string) => { eq: (column: string, value: string) => Promise<{ data: unknown; error: { message: string } }> }; insert: (data: unknown) => Promise<{ data: unknown; error: { message: string } }>; update: (data: unknown) => { eq: (column: string, value: string) => Promise<{ data: unknown; error: { message: string } }> }; delete: () => { eq: (column: string, value: string) => Promise<{ error: { message: string } }> } } }
-  }
 }
 
 // Export convenience functions for backward compatibility

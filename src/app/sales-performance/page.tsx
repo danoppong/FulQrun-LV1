@@ -1,37 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { AuthService } from '@/lib/auth-unified'
 import { SalesPerformanceDashboard } from '@/components/sales-performance/SalesPerformanceDashboard'
 import { AuthWrapper } from '@/components/auth/AuthWrapper'
 
 export default function SalesPerformancePage() {
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const currentUser = await AuthService.getCurrentUser()
-        setUser(currentUser)
-      } catch (error) {
-        console.error('Error getting user:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    getUser()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-
   return (
     <AuthWrapper allowedRoles={['rep', 'manager', 'admin']}>
       <div className="min-h-screen bg-gray-50">
@@ -43,7 +15,7 @@ export default function SalesPerformancePage() {
             </p>
           </div>
           
-          <SalesPerformanceDashboard user={user} />
+          <SalesPerformanceDashboard />
         </div>
       </div>
     </AuthWrapper>
