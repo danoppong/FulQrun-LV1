@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { AuthService } from '@/lib/auth-unified'
-import { TerritoryManagement } from './TerritoryManagement'
-import { QuotaPlanning } from './QuotaPlanning'
+import { TerritoryManagementNew } from './TerritoryManagementNew'
+import { QuotaPlanningNew } from './QuotaPlanningNew'
 import { CompensationManagement } from './CompensationManagement'
 import { EnhancedPerformanceTracking } from './EnhancedPerformanceTracking'
 import { CommissionApproval } from './CommissionApproval'
@@ -46,9 +46,9 @@ export function SalesPerformanceDashboard() {
       case 'performance':
         return <EnhancedPerformanceTracking organizationId={organizationId} user={user} />
       case 'territories':
-        return <TerritoryManagement organizationId={organizationId} user={user} />
+        return <TerritoryManagementNew organizationId={organizationId} user={user} />
       case 'quotas':
-        return <QuotaPlanning organizationId={organizationId} user={user} />
+        return <QuotaPlanningNew organizationId={organizationId} user={user} />
       case 'compensation':
         return <CompensationManagement organizationId={organizationId} user={user} />
       case 'commissions':
