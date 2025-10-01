@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         territory:sales_territories(name, region),
-        user:users(id, full_name, email),
+        user:users!compensation_plans_user_id_fkey(id, full_name, email),
         commission_calculations(*)
       `)
       .eq('organization_id', organizationId)

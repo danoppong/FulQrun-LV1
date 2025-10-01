@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
       .from('commission_calculations')
       .select(`
         *,
-        user:users(id, full_name, email),
+        user:users!commission_calculations_user_id_fkey(id, full_name, email),
         compensation_plan:compensation_plans(name, plan_type, commission_rate),
-        approved_by_user:users!approved_by(id, full_name, email)
+        approved_by_user:users!commission_calculations_approved_by_fkey(id, full_name, email)
       `)
       .eq('organization_id', organizationId)
 

@@ -22,8 +22,7 @@ export async function GET(request: NextRequest) {
         *,
         assigned_user:users!assigned_user_id(id, full_name, email),
         manager:users!manager_id(id, full_name, email),
-        quota_plans(*),
-        compensation_plans(*)
+        quota_plans(*)
       `)
       .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
