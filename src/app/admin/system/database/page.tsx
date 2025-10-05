@@ -942,7 +942,7 @@ export default function DatabaseManagement() {
     { id: 'connections', name: 'Connections', icon: CircleStackIcon },
     { id: 'schemas', name: 'Schemas', icon: ServerIcon },
     { id: 'tables', name: 'Tables', icon: ChartBarIcon },
-    { id: 'queries', name: 'Saved Queries', icon: DocumentTextIcon },
+    { id: 'queries', name: 'Saved Queries', icon: ChartBarIcon },
     { id: 'migrations', name: 'Migrations', icon: ArrowPathIcon },
     { id: 'performance', name: 'Performance', icon: CogIcon }
   ];
@@ -986,7 +986,7 @@ export default function DatabaseManagement() {
         
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
-            <DocumentTextIcon className="h-8 w-8 text-purple-600" />
+            <ChartBarIcon className="h-8 w-8 text-purple-600" />
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-500">Saved Queries</p>
               <p className="text-2xl font-semibold text-gray-900">{totalQueries}</p>
