@@ -276,7 +276,11 @@ export function EnhancedPerformanceTracking({ organizationId, user }: EnhancedPe
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {metrics.map((metric) => {
           const attainment = calculateAttainment(metric.actual_value, metric.target_value)
-          const template = metric.metric_template
+          const template = metric.metric_template || {
+            name: 'Unknown Metric',
+            category: 'general',
+            description: 'No template information available'
+          }
 
           return (
             <Card key={metric.id} className="p-6">
@@ -290,6 +294,8 @@ export function EnhancedPerformanceTracking({ organizationId, user }: EnhancedPe
                     template.category === 'deals' ? 'bg-blue-100 text-blue-800' :
                     template.category === 'activities' ? 'bg-yellow-100 text-yellow-800' :
                     template.category === 'conversion' ? 'bg-purple-100 text-purple-800' :
+                    template.category === 'performance' ? 'bg-indigo-100 text-indigo-800' :
+                    template.category === 'outcome' ? 'bg-emerald-100 text-emerald-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
                     {template.category}
@@ -299,7 +305,7 @@ export function EnhancedPerformanceTracking({ organizationId, user }: EnhancedPe
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">User:</span>
-                    <span className="text-sm font-medium">{metric.user.full_name}</span>
+                    <span className="text-sm font-medium">{metric.user?.full_name || 'Unknown User'}</span>
                   </div>
                   
                   <div className="flex justify-between">

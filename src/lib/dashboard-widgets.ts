@@ -19,7 +19,15 @@ export enum WidgetType {
   REGIONAL_MAP = 'regional_map',
   QUOTA_TRACKER = 'quota_tracker',
   CONVERSION_FUNNEL = 'conversion_funnel',
-  MEDDPICC_SCORING = 'meddpicc_scoring'
+  MEDDPICC_SCORING = 'meddpicc_scoring',
+  
+  // Pharmaceutical BI Widgets
+  PHARMA_KPI_CARD = 'pharma_kpi_card',
+  TERRITORY_PERFORMANCE = 'territory_performance',
+  PRODUCT_PERFORMANCE = 'product_performance',
+  HCP_ENGAGEMENT = 'hcp_engagement',
+  SAMPLE_DISTRIBUTION = 'sample_distribution',
+  FORMULARY_ACCESS = 'formulary_access'
 }
 
 export const DEFAULT_WIDGETS: DashboardWidget[] = [
@@ -180,5 +188,43 @@ export const WIDGET_TEMPLATES = {
     description: 'Track opportunity qualification scores',
     defaultSize: { w: 4, h: 4 },
     icon: '📋'
+  },
+  
+  // Pharmaceutical BI Widget Templates
+  [WidgetType.PHARMA_KPI_CARD]: {
+    name: 'Pharmaceutical KPI',
+    description: 'Display pharmaceutical-specific KPIs (TRx, NRx, Market Share)',
+    defaultSize: { w: 3, h: 2 },
+    icon: '💊'
+  },
+  [WidgetType.TERRITORY_PERFORMANCE]: {
+    name: 'Territory Performance',
+    description: 'Territory-level pharmaceutical performance metrics',
+    defaultSize: { w: 6, h: 4 },
+    icon: '🗺️'
+  },
+  [WidgetType.PRODUCT_PERFORMANCE]: {
+    name: 'Product Performance',
+    description: 'Product-level sales and sample distribution metrics',
+    defaultSize: { w: 6, h: 4 },
+    icon: '📦'
+  },
+  [WidgetType.HCP_ENGAGEMENT]: {
+    name: 'HCP Engagement',
+    description: 'Healthcare provider engagement and interaction metrics',
+    defaultSize: { w: 4, h: 4 },
+    icon: '👨‍⚕️'
+  },
+  [WidgetType.SAMPLE_DISTRIBUTION]: {
+    name: 'Sample Distribution',
+    description: 'Sample distribution effectiveness and ROI analysis',
+    defaultSize: { w: 4, h: 4 },
+    icon: '📋'
+  },
+  [WidgetType.FORMULARY_ACCESS]: {
+    name: 'Formulary Access',
+    description: 'Formulary access metrics and payer coverage analysis',
+    defaultSize: { w: 4, h: 4 },
+    icon: '🏥'
   }
 }

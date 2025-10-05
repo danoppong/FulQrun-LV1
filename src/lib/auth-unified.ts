@@ -4,14 +4,15 @@ import { supabaseConfig } from '@/lib/config'
 import { Database } from '@/lib/supabase'
 import { getSupabaseBrowserClient, createSupabaseServerClient } from '@/lib/supabase-singleton'
 
-// Conditional import for server-side only
+// Safe import for server-side only
 let cookies: any = null
-if (typeof window === 'undefined') {
-  try {
+try {
+  if (typeof window === 'undefined') {
     cookies = require('next/headers').cookies
-  } catch (error) {
-    // cookies not available in client context
   }
+} catch (error) {
+  // cookies not available in client context or server context
+  console.warn('Cookies not available:', error)
 }
 
 // Types for better type safety
@@ -49,31 +50,50 @@ export class AuthService {
    * Get server-side Supabase client for API routes
    */
   static getServerClient() {
-    if (!supabaseConfig.isConfigured || !cookies) {
-      return getSupabaseBrowserClient() // Fall back to browser client if server context not available
+    if (!supabaseConfig.isConfigured) {
+      return getSupabaseBrowserClient() // Fall back to browser client if not configured
     }
 
-    const cookieStore = cookies()
-    
-    return createSupabaseServerClient({
-      get(name: string) {
-        return cookieStore.get(name)
-      },
-      set(name: string, value: string, options: any) {
-        try {
-          cookieStore.set({ name, value, ...options })
-        } catch (error) {
-          // Cookie setting can fail in some contexts
+    // Check if cookies are available
+    if (!cookies) {
+      console.warn('Cookies not available, falling back to browser client')
+      return getSupabaseBrowserClient()
+    }
+
+    try {
+      const cookieStore = cookies()
+      
+      return createServerClient(
+        supabaseConfig.url!,
+        supabaseConfig.anonKey!,
+        {
+          cookies: {
+            get(name: string) {
+              return cookieStore.get(name)?.value
+            },
+            set(name: string, value: string, options: any) {
+              try {
+                cookieStore.set({ name, value, ...options })
+              } catch (error) {
+                // Cookie setting can fail in some contexts
+                console.warn('Failed to set cookie:', name, error)
+              }
+            },
+            remove(name: string, options: any) {
+              try {
+                cookieStore.set({ name, value: '', ...options })
+              } catch (error) {
+                // Cookie removal can fail in some contexts
+                console.warn('Failed to remove cookie:', name, error)
+              }
+            },
+          },
         }
-      },
-      remove(name: string, options: any) {
-        try {
-          cookieStore.set({ name, value: '', ...options })
-        } catch (error) {
-          // Cookie removal can fail in some contexts
-        }
-      },
-    })
+      )
+    } catch (error) {
+      console.warn('Failed to create server client, falling back to browser client:', error)
+      return getSupabaseBrowserClient()
+    }
   }
 
   /**

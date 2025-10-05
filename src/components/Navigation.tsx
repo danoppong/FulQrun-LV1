@@ -101,6 +101,7 @@ const navigation: MenuItem[] = [
     submenu: [
       { name: 'Reports', href: '/analytics' },
       { name: 'AI Insights', href: '/ai-insights' },
+      { name: 'Pharmaceutical BI', href: '/pharmaceutical-bi' },
     ]
   },
   { 
@@ -143,8 +144,17 @@ const navigation: MenuItem[] = [
   },
   { 
     name: 'Administration', 
-    href: '/settings', 
-    icon: Cog6ToothIcon 
+    icon: Cog6ToothIcon,
+    submenu: [
+      { name: 'Admin Dashboard', href: '/admin' },
+      { name: 'Organization Settings', href: '/admin/organization/settings' },
+      { name: 'User Management', href: '/admin/users/list' },
+      { name: 'Module Configuration', href: '/admin/modules/crm' },
+      { name: 'Security & Compliance', href: '/admin/security/authentication' },
+      { name: 'System Administration', href: '/admin/system/database' },
+      { name: 'Customization', href: '/admin/customization/fields' },
+      { name: 'Legacy Settings', href: '/settings' },
+    ]
   },
 ]
 

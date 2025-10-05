@@ -2,9 +2,17 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { UserRole, getUserPermissions } from '@/lib/roles'
 import { DashboardWidget, WidgetType, DEFAULT_WIDGETS, WIDGET_TEMPLATES } from '@/lib/dashboard-widgets'
-import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData, TeamMemberData, PipelineStageData, ActivityData, MEDDPICCOpportunityData } from '@/lib/types/dashboard'
+import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData, TeamMemberData, PipelineStageData, ActivityData, MEDDPICCOpportunityData, PharmaKPICardData, TerritoryPerformanceData, ProductPerformanceData, HCPEngagementData, SampleDistributionData, FormularyAccessData } from '@/lib/types/dashboard'
 import { supabase } from '@/lib/supabase'
 import RoleSelector from '@/components/RoleSelector'
+
+// Import pharmaceutical widget components
+import { PharmaKPICardWidget } from '@/components/dashboard/widgets/PharmaKPICardWidget'
+import { TerritoryPerformanceWidget } from '@/components/dashboard/widgets/TerritoryPerformanceWidget'
+import { ProductPerformanceWidget } from '@/components/dashboard/widgets/ProductPerformanceWidget'
+import { HCPEngagementWidget } from '@/components/dashboard/widgets/HCPEngagementWidget'
+import { SampleDistributionWidget } from '@/components/dashboard/widgets/SampleDistributionWidget'
+import { FormularyAccessWidget } from '@/components/dashboard/widgets/FormularyAccessWidget'
 
 interface RoleBasedDashboardProps {
   userRole: UserRole
@@ -122,6 +130,21 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
         return <RecentActivityWidget widget={widget} />
       case WidgetType.MEDDPICC_SCORING:
         return <MEDDPICCScoringWidget widget={widget} />
+      
+      // Pharmaceutical BI Widgets
+      case WidgetType.PHARMA_KPI_CARD:
+        return <PharmaKPICardWidget widget={widget} data={widget.data as PharmaKPICardData} />
+      case WidgetType.TERRITORY_PERFORMANCE:
+        return <TerritoryPerformanceWidget widget={widget} data={widget.data as TerritoryPerformanceData} />
+      case WidgetType.PRODUCT_PERFORMANCE:
+        return <ProductPerformanceWidget widget={widget} data={widget.data as ProductPerformanceData} />
+      case WidgetType.HCP_ENGAGEMENT:
+        return <HCPEngagementWidget widget={widget} data={widget.data as HCPEngagementData} />
+      case WidgetType.SAMPLE_DISTRIBUTION:
+        return <SampleDistributionWidget widget={widget} data={widget.data as SampleDistributionData} />
+      case WidgetType.FORMULARY_ACCESS:
+        return <FormularyAccessWidget widget={widget} data={widget.data as FormularyAccessData} />
+      
       default:
         return <div>Unknown widget type</div>
     }

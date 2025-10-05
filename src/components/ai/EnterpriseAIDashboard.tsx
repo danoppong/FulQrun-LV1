@@ -35,10 +35,6 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
   const [aiModels, _setAiModels] = useState<AIModelConfig[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
-
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
@@ -59,6 +55,10 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
       setLoading(false);
     }
   }, [organizationId, userId]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const handleGenerateInsight = async (type: 'lead' | 'deal', entityId: string) => {
     setLoading(true);

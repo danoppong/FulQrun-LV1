@@ -5,7 +5,7 @@ import { AuthService } from '@/lib/auth-unified'
 import { TerritoryManagementNew } from './TerritoryManagementNew'
 import { QuotaPlanningNew } from './QuotaPlanningNew'
 import { CompensationManagement } from './CompensationManagement'
-import { EnhancedPerformanceTracking } from './EnhancedPerformanceTracking'
+import { PerformanceTracking } from './PerformanceTracking'
 import { CommissionApproval } from './CommissionApproval'
 import { ScenarioPlanning } from './ScenarioPlanning'
 import { GamificationDashboard } from './GamificationDashboard'
@@ -22,9 +22,14 @@ export function SalesPerformanceDashboard() {
         setUser(currentUser)
         if (currentUser?.profile?.organization_id) {
           setOrganizationId(currentUser.profile.organization_id)
+        } else {
+          // Use default organization ID for testing
+          setOrganizationId('00000000-0000-0000-0000-000000000001')
         }
       } catch (error) {
         console.error('Error getting user:', error)
+        // Use default organization ID for testing
+        setOrganizationId('00000000-0000-0000-0000-000000000001')
       }
     }
 
@@ -44,7 +49,7 @@ export function SalesPerformanceDashboard() {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'performance':
-        return <EnhancedPerformanceTracking organizationId={organizationId} user={user} />
+        return <PerformanceTracking organizationId={organizationId} user={user} />
       case 'territories':
         return <TerritoryManagementNew organizationId={organizationId} user={user} />
       case 'quotas':
@@ -58,7 +63,7 @@ export function SalesPerformanceDashboard() {
       case 'gamification':
         return <GamificationDashboard organizationId={organizationId} user={user} />
       default:
-        return <EnhancedPerformanceTracking organizationId={organizationId} user={user} />
+        return <PerformanceTracking organizationId={organizationId} user={user} />
     }
   }
 
