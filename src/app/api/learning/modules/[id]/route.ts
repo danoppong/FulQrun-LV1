@@ -3,10 +3,10 @@ import { createServerClient } from '@/lib/supabase-server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const moduleId = params.id
+    const { id: moduleId } = await params
 
     if (!moduleId) {
       return NextResponse.json(

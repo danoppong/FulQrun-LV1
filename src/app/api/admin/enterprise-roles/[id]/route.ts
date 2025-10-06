@@ -106,13 +106,13 @@ function getPermissionsForRole(role: string): string[] {
 // PUT /api/admin/enterprise-roles/[id] - Update enterprise role
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user, supabase } = await getAuthenticatedUser(request);
     const organizationId = await checkSuperAdminPermission(supabase, user.id);
 
-    const userId = params.id;
+    const { id: userId } = await params;
     const body = await request.json();
     const { enterpriseRole } = body;
 
@@ -196,13 +196,13 @@ export async function PUT(
 // DELETE /api/admin/enterprise-roles/[id] - Remove enterprise role
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user, supabase } = await getAuthenticatedUser(request);
     const organizationId = await checkSuperAdminPermission(supabase, user.id);
 
-    const userId = params.id;
+    const { id: userId } = await params;
 
     console.log('🗑️ Removing enterprise role:', userId);
 

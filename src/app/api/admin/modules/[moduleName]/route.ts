@@ -76,7 +76,7 @@ async function checkAdminPermission(userId: string, permission: string) {
 // GET /api/admin/modules/[moduleName]
 export async function GET(
   request: NextRequest,
-  { params }: { params: { moduleName: string } }
+  { params }: { params: Promise<{ moduleName: string }> }
 ) {
   try {
     const user = await getAuthenticatedUser(request);
@@ -88,15 +88,16 @@ export async function GET(
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
+    const { moduleName } = await params;
     const configService = new ConfigurationService(organizationId, user.id);
     const [features, parameters] = await Promise.all([
-      configService.getModuleFeatures(params.moduleName as any),
-      configService.getModuleParameters(params.moduleName as any)
+      configService.getModuleFeatures(moduleName as any),
+      configService.getModuleParameters(moduleName as any)
     ]);
 
     return NextResponse.json({ 
       module: {
-        name: params.moduleName,
+        name: moduleName,
         features,
         parameters
       }
@@ -114,7 +115,7 @@ export async function GET(
 // PUT /api/admin/modules/[moduleName]
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { moduleName: string } }
+  { params }: { params: Promise<{ moduleName: string }> }
 ) {
   try {
     const user = await getAuthenticatedUser(request);
@@ -126,6 +127,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
+    const { moduleName } = await params;
     const body = await request.json();
     const validatedData = ModuleUpdateSchema.parse(body);
 
@@ -135,7 +137,7 @@ export async function PUT(
     if (validatedData.parameters) {
       for (const param of validatedData.parameters) {
         await configService.setModuleParameter(
-          params.moduleName as any,
+          moduleName as any,
           param.parameterKey,
           param.value,
           {
@@ -154,7 +156,7 @@ export async function PUT(
     if (validatedData.features) {
       for (const feature of validatedData.features) {
         await configService.toggleModuleFeature(
-          params.moduleName as any,
+          moduleName as any,
           feature.featureKey,
           feature.isEnabled,
           feature.reason

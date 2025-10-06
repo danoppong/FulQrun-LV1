@@ -630,6 +630,633 @@ function RoleForm({
 }
 
 // =============================================================================
+// PERMISSION MANAGEMENT COMPONENT
+// =============================================================================
+
+function PermissionManagement({ 
+  permissions, 
+  onPermissionCreated 
+}: {
+  permissions: Permission[];
+  onPermissionCreated: () => void;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    permissionKey: '',
+    permissionName: '',
+    permissionCategory: '',
+    description: '',
+    moduleName: '',
+    parentPermissionId: ''
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+
+  const categories = Array.from(new Set(permissions.map(p => p.permissionCategory)));
+  const modules = Array.from(new Set(permissions.map(p => p.moduleName)));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/admin/permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          permissionKey: formData.permissionKey,
+          permissionName: formData.permissionName,
+          permissionCategory: formData.permissionCategory,
+          description: formData.description || null,
+          moduleName: formData.moduleName,
+          parentPermissionId: formData.parentPermissionId || null
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to create permission');
+      }
+
+      console.log('✅ Permission created successfully');
+      alert(`Permission "${formData.permissionName}" created successfully!`);
+      
+      // Reset form and reload data
+      setFormData({
+        permissionKey: '',
+        permissionName: '',
+        permissionCategory: '',
+        description: '',
+        moduleName: '',
+        parentPermissionId: ''
+      });
+      setShowForm(false);
+      onPermissionCreated();
+    } catch (error) {
+      console.error('❌ Error creating permission:', error);
+      alert(`Error creating permission: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Permission Management</h3>
+            <p className="text-sm text-gray-500">Create and manage custom permissions</p>
+          </div>
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Create Permission
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm font-medium text-gray-500">Total Permissions</div>
+            <div className="text-2xl font-semibold text-gray-900">{permissions.length}</div>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm font-medium text-gray-500">Categories</div>
+            <div className="text-2xl font-semibold text-gray-900">{categories.length}</div>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm font-medium text-gray-500">Modules</div>
+            <div className="text-2xl font-semibold text-gray-900">{modules.length}</div>
+          </div>
+        </div>
+
+        {/* Permission Categories Overview */}
+        <div className="mt-6">
+          <h4 className="text-sm font-medium text-gray-900 mb-3">Permission Categories</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {categories.map(category => {
+              const categoryPermissions = permissions.filter(p => p.permissionCategory === category);
+              return (
+                <div key={category} className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="text-sm font-medium text-gray-900">{category}</div>
+                  <div className="text-xs text-gray-500">{categoryPermissions.length} permissions</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Permission Creation Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-4/5 max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Permission</h3>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Permission Key</label>
+                    <input
+                      type="text"
+                      value={formData.permissionKey}
+                      onChange={(e) => setFormData({ ...formData, permissionKey: e.target.value })}
+                      placeholder="module.action.resource"
+                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                        errors.permissionKey ? 'border-red-300' : ''
+                      }`}
+                      required
+                    />
+                    {errors.permissionKey && <p className="mt-1 text-sm text-red-600">{errors.permissionKey}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Permission Name</label>
+                    <input
+                      type="text"
+                      value={formData.permissionName}
+                      onChange={(e) => setFormData({ ...formData, permissionName: e.target.value })}
+                      placeholder="Action Resource"
+                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                        errors.permissionName ? 'border-red-300' : ''
+                      }`}
+                      required
+                    />
+                    {errors.permissionName && <p className="mt-1 text-sm text-red-600">{errors.permissionName}</p>}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <select
+                      value={formData.permissionCategory}
+                      onChange={(e) => setFormData({ ...formData, permissionCategory: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      required
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map(category => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Module</label>
+                    <select
+                      value={formData.moduleName}
+                      onChange={(e) => setFormData({ ...formData, moduleName: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      required
+                    >
+                      <option value="">Select Module</option>
+                      {modules.map(module => (
+                        <option key={module} value={module}>{module}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                    placeholder="Describe what this permission allows..."
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {loading ? 'Creating...' : 'Create Permission'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RBACConfiguration({ 
+  roles, 
+  permissions, 
+  matrix, 
+  onPermissionChange 
+}: {
+  roles: Role[];
+  permissions: Permission[];
+  matrix: PermissionMatrix;
+  onPermissionChange: (roleKey: string, permissionKey: string, granted: boolean) => void;
+}) {
+  const [rbacSettings, setRbacSettings] = useState({
+    enableRbac: true,
+    strictMode: false,
+    auditLogging: true,
+    sessionTimeout: 30,
+    maxFailedAttempts: 5,
+    lockoutDuration: 15
+  });
+
+  const [testUser, setTestUser] = useState('');
+  const [testPermission, setTestPermission] = useState('');
+  const [testResult, setTestResult] = useState<any>(null);
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [loadingTest, setLoadingTest] = useState(false);
+
+  // Load RBAC settings on component mount
+  useEffect(() => {
+    loadRbacSettings();
+  }, []);
+
+  const loadRbacSettings = async () => {
+    try {
+      setLoadingSettings(true);
+      
+      const response = await fetch('/api/admin/rbac/settings', {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRbacSettings({
+          enableRbac: data.settings.enableRbac,
+          strictMode: data.settings.strictMode,
+          auditLogging: data.settings.auditLogging,
+          sessionTimeout: data.settings.sessionTimeoutMinutes,
+          maxFailedAttempts: data.settings.maxFailedAttempts,
+          lockoutDuration: data.settings.lockoutDurationMinutes
+        });
+      }
+    } catch (error) {
+      console.error('Error loading RBAC settings:', error);
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  const handleRbacSettingChange = async (key: string, value: any) => {
+    const newSettings = { ...rbacSettings, [key]: value };
+    setRbacSettings(newSettings);
+
+    try {
+      const response = await fetch('/api/admin/rbac/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          enableRbac: newSettings.enableRbac,
+          strictMode: newSettings.strictMode,
+          auditLogging: newSettings.auditLogging,
+          sessionTimeoutMinutes: newSettings.sessionTimeout,
+          maxFailedAttempts: newSettings.maxFailedAttempts,
+          lockoutDurationMinutes: newSettings.lockoutDuration
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to update RBAC settings');
+      }
+
+      console.log('✅ RBAC settings updated successfully');
+    } catch (error) {
+      console.error('❌ Error updating RBAC settings:', error);
+      alert(`Error updating RBAC settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Revert the change
+      setRbacSettings(rbacSettings);
+    }
+  };
+
+  const testPermissionAccess = async () => {
+    if (!testUser || !testPermission) {
+      alert('Please enter both user and permission to test');
+      return;
+    }
+
+    try {
+      setLoadingTest(true);
+      
+      const response = await fetch('/api/admin/rbac/test-permission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          testUserId: testUser,
+          permissionKey: testPermission
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to test permission');
+      }
+
+      const data = await response.json();
+      setTestResult(data.result);
+      
+      console.log('✅ Permission test completed:', data.result);
+    } catch (error) {
+      console.error('❌ Error testing permission:', error);
+      alert(`Error testing permission: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setLoadingTest(false);
+    }
+  };
+
+  const rbacPolicies = [
+    {
+      id: '1',
+      name: 'Admin Access Policy',
+      description: 'Controls access to administrative functions',
+      roles: ['admin', 'super_admin'],
+      permissions: ['admin.*'],
+      isActive: true
+    },
+    {
+      id: '2',
+      name: 'User Management Policy',
+      description: 'Controls user management operations',
+      roles: ['admin', 'manager'],
+      permissions: ['admin.users.*'],
+      isActive: true
+    },
+    {
+      id: '3',
+      name: 'Organization Settings Policy',
+      description: 'Controls organization configuration access',
+      roles: ['admin'],
+      permissions: ['admin.organization.*'],
+      isActive: true
+    }
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* RBAC Status */}
+      <div className="bg-white rounded-lg shadow border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">RBAC Status</h3>
+          <div className="flex items-center">
+            <div className={`h-3 w-3 rounded-full mr-2 ${rbacSettings.enableRbac ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-sm font-medium text-gray-700">
+              {rbacSettings.enableRbac ? 'Enabled' : 'Disabled'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm font-medium text-gray-500">Active Roles</div>
+            <div className="text-2xl font-semibold text-gray-900">{roles.filter(r => r.isActive).length}</div>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm font-medium text-gray-500">Total Permissions</div>
+            <div className="text-2xl font-semibold text-gray-900">{permissions.length}</div>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm font-medium text-gray-500">RBAC Policies</div>
+            <div className="text-2xl font-semibold text-gray-900">{rbacPolicies.length}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* RBAC Settings */}
+      <div className="bg-white rounded-lg shadow border p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">RBAC Configuration</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">Enable RBAC</label>
+              <input
+                type="checkbox"
+                checked={rbacSettings.enableRbac}
+                onChange={(e) => handleRbacSettingChange('enableRbac', e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">Strict Mode</label>
+              <input
+                type="checkbox"
+                checked={rbacSettings.strictMode}
+                onChange={(e) => handleRbacSettingChange('strictMode', e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">Audit Logging</label>
+              <input
+                type="checkbox"
+                checked={rbacSettings.auditLogging}
+                onChange={(e) => handleRbacSettingChange('auditLogging', e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Session Timeout (minutes)</label>
+              <input
+                type="number"
+                value={rbacSettings.sessionTimeout}
+                onChange={(e) => handleRbacSettingChange('sessionTimeout', parseInt(e.target.value))}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Failed Attempts</label>
+              <input
+                type="number"
+                value={rbacSettings.maxFailedAttempts}
+                onChange={(e) => handleRbacSettingChange('maxFailedAttempts', parseInt(e.target.value))}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lockout Duration (minutes)</label>
+              <input
+                type="number"
+                value={rbacSettings.lockoutDuration}
+                onChange={(e) => handleRbacSettingChange('lockoutDuration', parseInt(e.target.value))}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-6 flex justify-end">
+          <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            Save RBAC Settings
+          </button>
+        </div>
+      </div>
+
+      {/* RBAC Policies */}
+      <div className="bg-white rounded-lg shadow border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">RBAC Policies</h3>
+          <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            <PlusIcon className="h-4 w-4 mr-2 inline" />
+            Add Policy
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          {rbacPolicies.map((policy) => (
+            <div key={policy.id} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">{policy.name}</h4>
+                  <p className="text-sm text-gray-500">{policy.description}</p>
+                  <div className="mt-2 flex items-center space-x-4">
+                    <span className="text-xs text-gray-500">
+                      Roles: {policy.roles.join(', ')}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Permissions: {policy.permissions.join(', ')}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    policy.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {policy.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                  <button className="text-blue-600 hover:text-blue-900">
+                    <PencilIcon className="h-4 w-4" />
+                  </button>
+                  <button className="text-red-600 hover:text-red-900">
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Permission Testing */}
+      <div className="bg-white rounded-lg shadow border p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Permission Testing</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Test User</label>
+            <input
+              type="text"
+              value={testUser}
+              onChange={(e) => setTestUser(e.target.value)}
+              placeholder="Enter user email or ID"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Test Permission</label>
+            <input
+              type="text"
+              value={testPermission}
+              onChange={(e) => setTestPermission(e.target.value)}
+              placeholder="Enter permission key"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            />
+          </div>
+        </div>
+        
+        <button
+          onClick={testPermissionAccess}
+          disabled={loadingTest}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loadingTest ? 'Testing...' : 'Test Permission Access'}
+        </button>
+        
+        {testResult && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <h4 className="text-sm font-medium text-gray-900 mb-2">Test Result</h4>
+            <div className="text-sm text-gray-600">
+              <p><strong>User:</strong> {testResult.user}</p>
+              <p><strong>Permission:</strong> {testResult.permission}</p>
+              <p><strong>Access:</strong> 
+                <span className={`ml-1 ${testResult.hasAccess ? 'text-green-600' : 'text-red-600'}`}>
+                  {testResult.hasAccess ? 'Granted' : 'Denied'}
+                </span>
+              </p>
+              <p><strong>Reason:</strong> {testResult.reason}</p>
+              <p><strong>Timestamp:</strong> {new Date(testResult.timestamp).toLocaleString()}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* RBAC Audit Log */}
+      <div className="bg-white rounded-lg shadow border p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent RBAC Activity</h3>
+        
+        <div className="space-y-3">
+          {[
+            { action: 'Permission Check', user: 'danoppong@gmail.com', permission: 'admin.users.view', result: 'Granted', timestamp: '2 minutes ago' },
+            { action: 'Role Assignment', user: 'admin@example.com', role: 'manager', result: 'Success', timestamp: '15 minutes ago' },
+            { action: 'Permission Denied', user: 'user@example.com', permission: 'admin.settings.edit', result: 'Denied', timestamp: '1 hour ago' },
+            { action: 'RBAC Settings Update', user: 'danoppong@gmail.com', setting: 'strictMode', result: 'Updated', timestamp: '2 hours ago' }
+          ].map((log, index) => (
+            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className={`h-2 w-2 rounded-full ${
+                  log.result === 'Granted' || log.result === 'Success' ? 'bg-green-500' : 'bg-red-500'
+                }`}></div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{log.action}</p>
+                  <p className="text-xs text-gray-500">{log.user} • {log.permission || log.role || log.setting}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className={`text-xs font-medium ${
+                  log.result === 'Granted' || log.result === 'Success' ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {log.result}
+                </p>
+                <p className="text-xs text-gray-500">{log.timestamp}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // MAIN ROLE MANAGEMENT COMPONENT
 // =============================================================================
 
@@ -641,7 +1268,7 @@ export default function RoleManagement() {
   const [showForm, setShowForm] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | undefined>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<Role | undefined>();
-  const [activeTab, setActiveTab] = useState<'roles' | 'permissions'>('roles');
+  const [activeTab, setActiveTab] = useState<'roles' | 'permissions' | 'rbac'>('roles');
 
   useEffect(() => {
     loadData();
@@ -651,126 +1278,89 @@ export default function RoleManagement() {
     try {
       setLoading(true);
       
-      // Mock data - in real implementation, this would fetch from API
-      const mockPermissions: Permission[] = [
-        {
-          id: '1',
-          permissionKey: 'admin.organization.view',
-          permissionName: 'View Organization Settings',
-          permissionCategory: 'Organization Management',
-          description: 'View organization settings and configuration',
-          moduleName: 'admin',
-          isSystemPermission: true,
-          createdAt: new Date()
-        },
-        {
-          id: '2',
-          permissionKey: 'admin.organization.edit',
-          permissionName: 'Edit Organization Settings',
-          permissionCategory: 'Organization Management',
-          description: 'Edit organization settings and configuration',
-          moduleName: 'admin',
-          isSystemPermission: true,
-          createdAt: new Date()
-        },
-        {
-          id: '3',
-          permissionKey: 'admin.users.view',
-          permissionName: 'View Users',
-          permissionCategory: 'User Management',
-          description: 'View user list and details',
-          moduleName: 'admin',
-          isSystemPermission: true,
-          createdAt: new Date()
-        },
-        {
-          id: '4',
-          permissionKey: 'admin.users.create',
-          permissionName: 'Create Users',
-          permissionCategory: 'User Management',
-          description: 'Create new users',
-          moduleName: 'admin',
-          isSystemPermission: true,
-          createdAt: new Date()
-        },
-        {
-          id: '5',
-          permissionKey: 'admin.modules.view',
-          permissionName: 'View Module Configuration',
-          permissionCategory: 'Module Configuration',
-          description: 'View module settings',
-          moduleName: 'admin',
-          isSystemPermission: true,
-          createdAt: new Date()
-        }
-      ];
+      // Fetch roles and permissions from API
+      const [rolesResponse, permissionsResponse] = await Promise.all([
+        fetch('/api/admin/roles', { credentials: 'include' }),
+        fetch('/api/admin/permissions', { credentials: 'include' })
+      ]);
 
-      const mockRoles: Role[] = [
-        {
-          id: '1',
-          roleKey: 'super_admin',
-          roleName: 'Super Administrator',
-          description: 'Full system access with all permissions',
-          isActive: true,
-          isSystemRole: true,
-          userCount: 1,
-          permissions: mockPermissions.map(p => p.permissionKey),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: '2',
-          roleKey: 'admin',
-          roleName: 'Administrator',
-          description: 'Administrative access to most system functions',
-          isActive: true,
-          isSystemRole: true,
-          userCount: 2,
-          permissions: mockPermissions.filter(p => !p.permissionKey.includes('super')).map(p => p.permissionKey),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: '3',
-          roleKey: 'manager',
-          roleName: 'Manager',
-          description: 'Management access to team and performance data',
-          isActive: true,
-          isSystemRole: true,
-          userCount: 5,
-          permissions: ['admin.users.view', 'admin.modules.view'],
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: '4',
-          roleKey: 'sales_manager',
-          roleName: 'Sales Manager',
-          description: 'Custom role for sales team management',
-          inheritsFrom: 'manager',
-          isActive: true,
-          isSystemRole: false,
-          userCount: 3,
-          permissions: ['admin.users.view', 'admin.modules.view'],
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      ];
+      if (!rolesResponse.ok) {
+        const errorData = await rolesResponse.json();
+        throw new Error(errorData.details || 'Failed to load roles');
+      }
+
+      if (!permissionsResponse.ok) {
+        const errorData = await permissionsResponse.json();
+        throw new Error(errorData.details || 'Failed to load permissions');
+      }
+
+      const rolesData = await rolesResponse.json();
+      const permissionsData = await permissionsResponse.json();
+
+      // Transform API data to match our interfaces
+      const transformedRoles: Role[] = rolesData.roles.map((r: any) => ({
+        id: r.id,
+        roleKey: r.role_key,
+        roleName: r.role_name,
+        description: r.description,
+        inheritsFrom: r.inherits_from,
+        isActive: r.is_active,
+        isSystemRole: r.is_system_role,
+        userCount: r.userCount || 0,
+        permissions: [], // Will be loaded separately
+        createdAt: new Date(r.created_at),
+        updatedAt: new Date(r.updated_at)
+      }));
+
+      const transformedPermissions: Permission[] = permissionsData.permissions.map((p: any) => ({
+        id: p.id,
+        permissionKey: p.permission_key,
+        permissionName: p.permission_name,
+        permissionCategory: p.permission_category,
+        description: p.description,
+        moduleName: p.module_name,
+        isSystemPermission: p.is_system_permission,
+        parentPermissionId: p.parent_permission_id,
+        createdAt: new Date(p.created_at)
+      }));
+
+      // Load permissions for each role
+      const rolesWithPermissions = await Promise.all(
+        transformedRoles.map(async (role) => {
+          try {
+            const rolePermissionsResponse = await fetch(`/api/admin/roles/${role.id}/permissions`, {
+              credentials: 'include'
+            });
+            
+            if (rolePermissionsResponse.ok) {
+              const rolePermissionsData = await rolePermissionsResponse.json();
+              const rolePermissionKeys = rolePermissionsData.permissions.map((p: any) => p.permission_key);
+              return { ...role, permissions: rolePermissionKeys };
+            }
+          } catch (error) {
+            console.error(`Error loading permissions for role ${role.roleName}:`, error);
+          }
+          return { ...role, permissions: [] };
+        })
+      );
 
       // Build permission matrix
       const matrix: PermissionMatrix = {};
-      mockRoles.forEach(role => {
+      rolesWithPermissions.forEach(role => {
         matrix[role.roleKey] = {};
-        mockPermissions.forEach(permission => {
+        transformedPermissions.forEach(permission => {
           matrix[role.roleKey][permission.permissionKey] = role.permissions.includes(permission.permissionKey);
         });
       });
 
-      setPermissions(mockPermissions);
-      setRoles(mockRoles);
+      setPermissions(transformedPermissions);
+      setRoles(rolesWithPermissions);
       setPermissionMatrix(matrix);
+      
+      console.log(`✅ Loaded ${transformedRoles.length} roles and ${transformedPermissions.length} permissions from database`);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('❌ Error loading data:', error);
+      alert(`Error loading data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -789,45 +1379,40 @@ export default function RoleManagement() {
   const handleSaveRole = async (roleData: RoleFormData) => {
     try {
       if (editingRole) {
-        // Update existing role
-        const updatedRoles = roles.map(role => 
-          role.id === editingRole.id 
-            ? { ...role, ...roleData, updatedAt: new Date() }
-            : role
-        );
-        setRoles(updatedRoles);
-        
-        // Update permission matrix
-        const newMatrix = { ...permissionMatrix };
-        permissions.forEach(permission => {
-          newMatrix[roleData.roleKey][permission.permissionKey] = roleData.permissions.includes(permission.permissionKey);
-        });
-        setPermissionMatrix(newMatrix);
+        // Update existing role - implement PUT endpoint
+        console.log('✏️ Updating role:', editingRole.id);
+        // TODO: Implement PUT /api/admin/roles/[id] endpoint
+        alert('Role update functionality will be implemented with the PUT endpoint');
       } else {
         // Create new role
-        const newRole: Role = {
-          id: Date.now().toString(),
-          ...roleData,
-          isSystemRole: false,
-          userCount: 0,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        setRoles([...roles, newRole]);
+        console.log('➕ Creating new role:', roleData);
         
-        // Add to permission matrix
-        const newMatrix = { ...permissionMatrix };
-        newMatrix[roleData.roleKey] = {};
-        permissions.forEach(permission => {
-          newMatrix[roleData.roleKey][permission.permissionKey] = roleData.permissions.includes(permission.permissionKey);
+        const response = await fetch('/api/admin/roles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(roleData)
         });
-        setPermissionMatrix(newMatrix);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.details || 'Failed to create role');
+        }
+
+        const data = await response.json();
+        
+        // Reload data to get the new role with all details
+        await loadData();
+        
+        console.log('✅ Role created successfully:', data.role.roleName);
+        alert(`Role "${data.role.roleName}" created successfully!`);
       }
       
       setShowForm(false);
       setEditingRole(undefined);
     } catch (error) {
-      console.error('Error saving role:', error);
+      console.error('❌ Error saving role:', error);
+      alert(`Error saving role: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -861,23 +1446,52 @@ export default function RoleManagement() {
 
   const handlePermissionChange = async (roleKey: string, permissionKey: string, granted: boolean) => {
     try {
+      console.log('🔄 Updating permission:', { roleKey, permissionKey, granted });
+      
+      // Find the role ID
+      const role = roles.find(r => r.roleKey === roleKey);
+      if (!role) {
+        throw new Error('Role not found');
+      }
+
+      // Update permission matrix optimistically
       const newMatrix = { ...permissionMatrix };
       newMatrix[roleKey][permissionKey] = granted;
       setPermissionMatrix(newMatrix);
       
-      // Update role permissions
-      const updatedRoles = roles.map(role => {
-        if (role.roleKey === roleKey) {
+      // Update role permissions optimistically
+      const updatedRoles = roles.map(r => {
+        if (r.roleKey === roleKey) {
           const newPermissions = granted
-            ? [...role.permissions, permissionKey]
-            : role.permissions.filter(p => p !== permissionKey);
-          return { ...role, permissions: newPermissions, updatedAt: new Date() };
+            ? [...r.permissions, permissionKey]
+            : r.permissions.filter(p => p !== permissionKey);
+          return { ...r, permissions: newPermissions, updatedAt: new Date() };
         }
-        return role;
+        return r;
       });
       setRoles(updatedRoles);
+
+      // Update permissions via API
+      const response = await fetch(`/api/admin/roles/${role.id}/permissions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ permissions: updatedRoles.find(r => r.roleKey === roleKey)?.permissions || [] })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to update role permissions');
+      }
+
+      console.log('✅ Permission updated successfully:', { roleKey, permissionKey, granted });
     } catch (error) {
-      console.error('Error updating permission:', error);
+      console.error('❌ Error updating permission:', error);
+      
+      // Revert optimistic updates on error
+      await loadData();
+      
+      alert(`Error updating permission: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -966,6 +1580,16 @@ export default function RoleManagement() {
           >
             Permission Matrix
           </button>
+          <button
+            onClick={() => setActiveTab('rbac')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'rbac'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            RBAC Configuration
+          </button>
         </nav>
       </div>
 
@@ -977,10 +1601,20 @@ export default function RoleManagement() {
           onDelete={(role) => setShowDeleteConfirm(role)}
           onToggleActive={handleToggleActive}
         />
+      ) : activeTab === 'permissions' ? (
+        <div className="space-y-6">
+          <PermissionMatrix
+            permissions={permissions}
+            roles={roles}
+            matrix={permissionMatrix}
+            onPermissionChange={handlePermissionChange}
+          />
+          <PermissionManagement permissions={permissions} onPermissionCreated={loadData} />
+        </div>
       ) : (
-        <PermissionMatrix
-          permissions={permissions}
+        <RBACConfiguration
           roles={roles}
+          permissions={permissions}
           matrix={permissionMatrix}
           onPermissionChange={handlePermissionChange}
         />
