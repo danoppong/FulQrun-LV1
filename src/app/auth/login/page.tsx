@@ -22,14 +22,29 @@ const LoginForm = () => {
     setError('')
 
     try {
-      const { data: _data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
         setError(`Login failed: ${error.message}`)
-      } else {
+      } else if (data.session) {
+        // Sync session to HTTP cookies for server-side access
+        try {
+          await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              access_token: data.session.access_token,
+              refresh_token: data.session.refresh_token,
+            }),
+          })
+        } catch (syncError) {
+          console.warn('Failed to sync session to cookies:', syncError)
+          // Continue anyway - client-side auth is working
+        }
+
         router.push(redirectUrl)
         router.refresh()
       }

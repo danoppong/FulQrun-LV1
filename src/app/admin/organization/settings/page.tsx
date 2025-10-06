@@ -852,64 +852,91 @@ export default function OrganizationSettings() {
     try {
       setLoading(true);
       
-      // Load organization settings from configuration service
-      // This would typically fetch from the ConfigurationService
-      // For now, we'll use mock data
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock settings data
-      const mockSettings: OrganizationSettings = {
+      // Get current user and organization
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data: userData } = await supabase
+        .from('users')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!userData?.organization_id) {
+        throw new Error('Organization not found');
+      }
+
+      // Load organization basic info
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', userData.organization_id)
+        .single();
+
+      if (orgError) throw orgError;
+
+      // Load organization settings
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('organization_settings')
+        .select('settings')
+        .eq('organization_id', userData.organization_id)
+        .maybeSingle();
+
+      // Merge organization data with settings, using defaults if not found
+      const loadedSettings: OrganizationSettings = {
         basic: {
-          name: 'Acme Corporation',
-          domain: 'acme.com',
-          timezone: 'America/New_York',
-          currency: 'USD',
-          dateFormat: 'MM/DD/YYYY',
-          timeFormat: '12',
-          fiscalYearStart: '01-01',
-          language: 'en',
-          region: 'US'
+          name: orgData?.name || 'Default Organization',
+          domain: settingsData?.settings?.basic?.domain || '',
+          timezone: settingsData?.settings?.basic?.timezone || 'UTC',
+          currency: settingsData?.settings?.basic?.currency || 'USD',
+          dateFormat: settingsData?.settings?.basic?.dateFormat || 'MM/DD/YYYY',
+          timeFormat: settingsData?.settings?.basic?.timeFormat || '12',
+          fiscalYearStart: settingsData?.settings?.basic?.fiscalYearStart || '01-01',
+          language: settingsData?.settings?.basic?.language || 'en',
+          region: settingsData?.settings?.basic?.region || 'US'
         },
-        licensing: {
-          tier: 'enterprise',
-          maxUsers: 500,
-          maxStorage: 1000,
-          modules: ['crm', 'sales_performance', 'kpi', 'learning'],
-          expiresAt: new Date('2025-12-31'),
+        licensing: settingsData?.settings?.licensing || {
+          tier: 'standard',
+          maxUsers: 50,
+          maxStorage: 100,
+          modules: [],
+          expiresAt: new Date(),
           isTrialActive: false,
-          trialEndsAt: new Date('2025-12-31')
+          trialEndsAt: new Date()
         },
-        features: {
-          enabledModules: ['crm', 'sales_performance', 'kpi'],
-          betaFeatures: ['ai_lead_scoring'],
+        features: settingsData?.settings?.features || {
+          enabledModules: [],
+          betaFeatures: [],
           experimentalFeatures: [],
           disabledFeatures: []
         },
-        compliance: {
-          complianceLevel: 'soc2',
+        compliance: settingsData?.settings?.compliance || {
+          complianceLevel: 'standard',
           dataResidency: 'US',
-          retentionPolicyDays: 2555, // 7 years
+          retentionPolicyDays: 365,
           enableAuditLogging: true,
-          enableDataEncryption: true,
-          gdprCompliant: true,
+          enableDataEncryption: false,
+          gdprCompliant: false,
           hipaaCompliant: false
         },
-        branding: {
-          logoUrl: 'https://acme.com/logo.png',
-          faviconUrl: 'https://acme.com/favicon.ico',
-          primaryColor: '#1E40AF',
-          secondaryColor: '#059669',
-          customCSS: '/* Custom styles */',
-          emailHeaderLogo: 'https://acme.com/email-logo.png',
-          emailFooterText: 'Thank you for choosing Acme Corporation'
+        branding: settingsData?.settings?.branding || {
+          logoUrl: '',
+          faviconUrl: '',
+          primaryColor: '#3B82F6',
+          secondaryColor: '#10B981',
+          customCSS: '',
+          emailHeaderLogo: '',
+          emailFooterText: ''
         }
       };
       
-      setSettings(mockSettings);
+      setSettings(loadedSettings);
     } catch (error) {
       console.error('Error loading settings:', error);
+      // Set default settings on error
+      setSettings(settings);
     } finally {
       setLoading(false);
     }
@@ -919,18 +946,60 @@ export default function OrganizationSettings() {
     try {
       setSaving(true);
       
-      // Save settings using ConfigurationService
-      // This would typically call the API to save changes
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get current user and organization
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data: userData } = await supabase
+        .from('users')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!userData?.organization_id) {
+        throw new Error('Organization not found');
+      }
+
+      // Update organization basic info
+      const { error: orgError } = await supabase
+        .from('organizations')
+        .update({
+          name: updatedSettings.basic.name,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userData.organization_id);
+
+      if (orgError) throw orgError;
+
+      // Update organization settings JSON
+      const { error: settingsError } = await supabase
+        .from('organization_settings')
+        .upsert({
+          organization_id: userData.organization_id,
+          settings: {
+            basic: updatedSettings.basic,
+            licensing: updatedSettings.licensing,
+            features: updatedSettings.features,
+            compliance: updatedSettings.compliance,
+            branding: updatedSettings.branding
+          },
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'organization_id'  // Use organization_id for conflict resolution
+        });
+
+      if (settingsError) throw settingsError;
       
       setSettings(updatedSettings);
       
       // Show success message
-      console.log('Settings saved successfully');
+      console.log('Settings saved successfully to database');
+      alert('Settings saved successfully!');
     } catch (error) {
       console.error('Error saving settings:', error);
+      alert(`Error saving settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }

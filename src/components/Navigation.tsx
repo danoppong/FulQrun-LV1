@@ -148,7 +148,8 @@ const navigation: MenuItem[] = [
     submenu: [
       { name: 'Admin Dashboard', href: '/admin' },
       { name: 'Organization Settings', href: '/admin/organization/settings' },
-      { name: 'User Management', href: '/admin/users/list' },
+      { name: 'User Management', href: '/admin/users' },
+      { name: 'Enterprise Roles', href: '/admin/users/enterprise-roles' },
       { name: 'Module Configuration', href: '/admin/modules/crm' },
       { name: 'Security & Compliance', href: '/admin/security/authentication' },
       { name: 'System Administration', href: '/admin/system/database' },

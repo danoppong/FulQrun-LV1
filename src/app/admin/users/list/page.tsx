@@ -34,7 +34,8 @@ interface User {
   id: string;
   email: string;
   fullName: string;
-  role: 'rep' | 'manager' | 'admin' | 'super_admin';
+  role: 'rep' | 'manager' | 'admin';
+  enterpriseRole?: 'user' | 'manager' | 'admin' | 'super_admin';
   organizationId: string;
   lastLoginAt?: Date;
   isActive: boolean;
@@ -48,7 +49,7 @@ interface User {
 interface UserFormData {
   email: string;
   fullName: string;
-  role: 'rep' | 'manager' | 'admin' | 'super_admin';
+  role: 'rep' | 'manager' | 'admin';
   isActive: boolean;
   department?: string;
   managerId?: string;
@@ -76,7 +77,7 @@ interface UserTableColumn {
 const UserFormSchema = z.object({
   email: z.string().email('Invalid email address'),
   fullName: z.string().min(1, 'Full name is required'),
-  role: z.enum(['rep', 'manager', 'admin', 'super_admin']),
+  role: z.enum(['rep', 'manager', 'admin']),
   isActive: z.boolean(),
   department: z.string().optional(),
   managerId: z.string().optional(),
@@ -126,15 +127,26 @@ function UserTable({
       key: 'role',
       label: 'Role',
       sortable: true,
-      render: (value) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          value === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-          value === 'admin' ? 'bg-red-100 text-red-800' :
-          value === 'manager' ? 'bg-blue-100 text-blue-800' :
-          'bg-green-100 text-green-800'
-        }`}>
-          {value.replace('_', ' ').toUpperCase()}
-        </span>
+      render: (value, user) => (
+        <div className="space-y-1">
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            value === 'admin' ? 'bg-red-100 text-red-800' :
+            value === 'manager' ? 'bg-blue-100 text-blue-800' :
+            'bg-green-100 text-green-800'
+          }`}>
+            {value.replace('_', ' ').toUpperCase()}
+          </span>
+          {user.enterpriseRole && (
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              user.enterpriseRole === 'super_admin' ? 'bg-purple-100 text-purple-800' :
+              user.enterpriseRole === 'admin' ? 'bg-red-100 text-red-800' :
+              user.enterpriseRole === 'manager' ? 'bg-blue-100 text-blue-800' :
+              'bg-green-100 text-green-800'
+            }`}>
+              {user.enterpriseRole.replace('_', ' ').toUpperCase()} (Enterprise)
+            </span>
+          )}
+        </div>
       )
     },
     {
@@ -282,8 +294,7 @@ function UserFilters({
     { value: '', label: 'All Roles' },
     { value: 'rep', label: 'Sales Rep' },
     { value: 'manager', label: 'Manager' },
-    { value: 'admin', label: 'Admin' },
-    { value: 'super_admin', label: 'Super Admin' }
+    { value: 'admin', label: 'Admin' }
   ];
 
   const departments = [
@@ -474,7 +485,6 @@ function UserForm({
                 <option value="rep">Sales Rep</option>
                 <option value="manager">Manager</option>
                 <option value="admin">Admin</option>
-                <option value="super_admin">Super Admin</option>
               </select>
             </div>
 
@@ -545,52 +555,39 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // Mock user data - in real implementation, this would fetch from API
-      const mockUsers: User[] = [
-        {
-          id: '1',
-          email: 'john.doe@acme.com',
-          fullName: 'John Doe',
-          role: 'admin',
-          organizationId: 'org-1',
-          lastLoginAt: new Date('2024-10-01'),
-          isActive: true,
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-10-01'),
-          department: 'Sales',
-          permissions: ['admin.users.view', 'admin.users.edit']
-        },
-        {
-          id: '2',
-          email: 'jane.smith@acme.com',
-          fullName: 'Jane Smith',
-          role: 'manager',
-          organizationId: 'org-1',
-          lastLoginAt: new Date('2024-09-28'),
-          isActive: true,
-          createdAt: new Date('2024-02-20'),
-          updatedAt: new Date('2024-09-28'),
-          department: 'Sales',
-          permissions: ['admin.users.view']
-        },
-        {
-          id: '3',
-          email: 'bob.wilson@acme.com',
-          fullName: 'Bob Wilson',
-          role: 'rep',
-          organizationId: 'org-1',
-          lastLoginAt: new Date('2024-09-25'),
-          isActive: false,
-          createdAt: new Date('2024-03-10'),
-          updatedAt: new Date('2024-09-25'),
-          department: 'Sales',
-          permissions: []
-        }
-      ];
+      const response = await fetch('/api/admin/users', {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to load users');
+      }
+
+      const data = await response.json();
       
-      setUsers(mockUsers);
+      // Transform API data to match our User interface
+      const transformedUsers: User[] = data.users.map((u: any) => ({
+        id: u.id,
+        email: u.email,
+        fullName: u.fullName || '',
+        role: u.role || 'rep',
+        enterpriseRole: u.enterpriseRole,
+        organizationId: u.organizationId,
+        lastLoginAt: u.lastLoginAt ? new Date(u.lastLoginAt) : undefined,
+        isActive: u.isActive !== false,
+        createdAt: new Date(u.createdAt),
+        updatedAt: new Date(u.updatedAt),
+        department: u.department,
+        managerId: u.managerId,
+        permissions: [] // We'll handle permissions later with RBAC
+      }));
+      
+      setUsers(transformedUsers);
+      console.log(`✅ Loaded ${transformedUsers.length} users from database`);
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error('❌ Error loading users:', error);
+      alert(`Error loading users: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -636,60 +633,135 @@ export default function UserManagement() {
     try {
       if (editingUser) {
         // Update existing user
-        const updatedUsers = users.map(user => 
-          user.id === editingUser.id 
-            ? { ...user, ...userData, updatedAt: new Date() }
-            : user
-        );
-        setUsers(updatedUsers);
+        console.log('📤 Sending update request:', userData);
+        
+        const response = await fetch(`/api/admin/users/${editingUser.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(userData)
+        });
+
+        console.log('📥 Update response status:', response.status);
+
+        if (!response.ok) {
+          let errorData;
+          try {
+            errorData = await response.json();
+            console.error('❌ Error response:', errorData);
+          } catch (jsonError) {
+            // Response might not be JSON
+            const text = await response.text();
+            console.error('❌ Non-JSON error response:', text);
+            throw new Error(`Failed to update user: ${response.statusText} - ${text}`);
+          }
+          throw new Error(errorData.details || errorData.error || 'Failed to update user');
+        }
+
+        console.log('✅ User updated successfully');
+        await loadUsers(); // Reload users to get updated data
       } else {
         // Create new user
-        const newUser: User = {
-          id: Date.now().toString(),
-          ...userData,
-          organizationId: 'org-1',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        setUsers([...users, newUser]);
+        console.log('📤 Sending create request:', userData);
+        
+        const response = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(userData)
+        });
+
+        console.log('📥 Create response status:', response.status);
+
+        if (!response.ok) {
+          let errorData;
+          try {
+            errorData = await response.json();
+            console.error('❌ Error response:', errorData);
+          } catch (jsonError) {
+            // Response might not be JSON
+            const text = await response.text();
+            console.error('❌ Non-JSON error response:', text);
+            throw new Error(`Failed to create user: ${response.statusText} - ${text}`);
+          }
+          throw new Error(errorData.details || errorData.error || 'Failed to create user');
+        }
+
+        console.log('✅ User created successfully');
+        await loadUsers(); // Reload users to get new user
       }
       
       setShowForm(false);
       setEditingUser(undefined);
     } catch (error) {
-      console.error('Error saving user:', error);
+      console.error('❌ Error saving user:', error);
+      alert(`Error saving user: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleDeleteUser = async (user: User) => {
     try {
-      setUsers(users.filter(u => u.id !== user.id));
+      const response = await fetch(`/api/admin/users/${user.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to delete user');
+      }
+
+      console.log('✅ User deleted successfully');
+      await loadUsers(); // Reload users to reflect deletion
       setShowDeleteConfirm(undefined);
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('❌ Error deleting user:', error);
+      alert(`Error deleting user: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleToggleActive = async (user: User) => {
     try {
-      const updatedUsers = users.map(u => 
-        u.id === user.id 
-          ? { ...u, isActive: !u.isActive, updatedAt: new Date() }
-          : u
-      );
-      setUsers(updatedUsers);
+      const newStatus = !user.isActive;
+      
+      const response = await fetch(`/api/admin/users/${user.id}/toggle-active`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ isActive: newStatus })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to toggle user status');
+      }
+
+      console.log(`✅ User status toggled to ${newStatus ? 'active' : 'inactive'}`);
+      await loadUsers(); // Reload users to reflect status change
     } catch (error) {
-      console.error('Error toggling user status:', error);
+      console.error('❌ Error toggling user status:', error);
+      alert(`Error toggling user status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleResetPassword = async (user: User) => {
     try {
-      // In real implementation, this would call the API to reset password
-      console.log('Reset password for user:', user.email);
-      alert(`Password reset email sent to ${user.email}`);
+      const response = await fetch(`/api/admin/users/${user.id}/reset-password`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to reset password');
+      }
+
+      const data = await response.json();
+      console.log('✅ Password reset email sent');
+      alert(data.message || `Password reset email sent to ${user.email}`);
     } catch (error) {
-      console.error('Error resetting password:', error);
+      console.error('❌ Error resetting password:', error);
+      alert(`Error resetting password: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -750,7 +822,7 @@ export default function UserManagement() {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-500">Admins</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {users.filter(u => u.role === 'admin' || u.role === 'super_admin').length}
+                {users.filter(u => u.role === 'admin').length}
               </p>
             </div>
           </div>

@@ -164,7 +164,7 @@ function PermissionMatrix({
                     <div className="flex items-center">
                       <span className="text-lg mr-2">{getCategoryIcon(category)}</span>
                       <span className="text-sm font-medium text-gray-900">{category}</span>
-                      <ArrowUpDownIcon className="h-4 w-4 ml-2 text-gray-400" />
+                      <ArrowsUpDownIcon className="h-4 w-4 ml-2 text-gray-400" />
                     </div>
                   </td>
                   {roles.map(role => (

@@ -292,8 +292,11 @@ function BreadcrumbNav() {
     const segments = pathname.split('/').filter(Boolean);
     const breadcrumbs = [{ name: 'Admin', href: '/admin' }];
     
+    // Skip the first segment if it's 'admin' to avoid duplication
+    const pathSegments = segments[0] === 'admin' ? segments.slice(1) : segments;
+    
     let currentPath = '/admin';
-    segments.forEach((segment, index) => {
+    pathSegments.forEach((segment, index) => {
       currentPath += `/${segment}`;
       const name = segment.charAt(0).toUpperCase() + segment.slice(1).replace('-', ' ');
       breadcrumbs.push({ name, href: currentPath });
@@ -337,25 +340,14 @@ function BreadcrumbNav() {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <AdminSidebar />
+    <div className="flex flex-col min-h-screen">
+      {/* Breadcrumb */}
+      <BreadcrumbNav />
       
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <AdminHeader />
-        
-        {/* Breadcrumb */}
-        <BreadcrumbNav />
-        
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="p-6">
-            {children}
-          </div>
-        </main>
-      </div>
+      {/* Page Content */}
+      <main className="flex-1 bg-gray-50 p-6">
+        {children}
+      </main>
     </div>
   );
 }
