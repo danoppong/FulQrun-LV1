@@ -71,6 +71,7 @@ const navigation: MenuItem[] = [
     icon: UserPlusIcon,
     submenu: [
       { name: 'Leads Listing', href: '/leads' },
+      { name: 'AI Lead Management', href: '/leads/ai-management' },
       { name: 'Qualification', href: '/leads/qualification' },
       { name: 'Progression', href: '/leads/progression' },
       { name: 'Analytics', href: '/leads/analytics' },

@@ -157,6 +157,24 @@ export interface Database {
           created_by: string
           created_at: string
           updated_at: string
+          // AI Lead Management fields
+          lead_type: 'account' | 'contact' | null
+          account_id: string | null
+          contact_id: string | null
+          geography: 'US' | 'EU' | 'UK' | 'APAC' | null
+          industry: string | null
+          revenue_band: string | null
+          employee_band: string | null
+          entity_type: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER' | null
+          technographics: string[]
+          installed_tools_hints: string[]
+          intent_keywords: string[]
+          time_horizon: string | null
+          icp_profile_id: string | null
+          sources: string[]
+          risk_flags: string[]
+          compliance: Record<string, any>
+          postprocessing: Record<string, any>
         }
         Insert: {
           id?: string
@@ -176,6 +194,24 @@ export interface Database {
           created_by: string
           created_at?: string
           updated_at?: string
+          // AI Lead Management fields
+          lead_type?: 'account' | 'contact' | null
+          account_id?: string | null
+          contact_id?: string | null
+          geography?: 'US' | 'EU' | 'UK' | 'APAC' | null
+          industry?: string | null
+          revenue_band?: string | null
+          employee_band?: string | null
+          entity_type?: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER' | null
+          technographics?: string[]
+          installed_tools_hints?: string[]
+          intent_keywords?: string[]
+          time_horizon?: string | null
+          icp_profile_id?: string | null
+          sources?: string[]
+          risk_flags?: string[]
+          compliance?: Record<string, any>
+          postprocessing?: Record<string, any>
         }
         Update: {
           id?: string
@@ -195,6 +231,24 @@ export interface Database {
           created_by?: string
           created_at?: string
           updated_at?: string
+          // AI Lead Management fields
+          lead_type?: 'account' | 'contact' | null
+          account_id?: string | null
+          contact_id?: string | null
+          geography?: 'US' | 'EU' | 'UK' | 'APAC' | null
+          industry?: string | null
+          revenue_band?: string | null
+          employee_band?: string | null
+          entity_type?: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER' | null
+          technographics?: string[]
+          installed_tools_hints?: string[]
+          intent_keywords?: string[]
+          time_horizon?: string | null
+          icp_profile_id?: string | null
+          sources?: string[]
+          risk_flags?: string[]
+          compliance?: Record<string, any>
+          postprocessing?: Record<string, any>
         }
       }
       opportunities: {
@@ -255,6 +309,11 @@ export interface Database {
           created_by: string
           created_at: string
           updated_at: string
+          // AI Lead Management fields
+          lead_id: string | null
+          before_data: Record<string, any> | null
+          after_data: Record<string, any> | null
+          reason: string | null
         }
         Insert: {
           id?: string
@@ -269,6 +328,11 @@ export interface Database {
           created_by: string
           created_at?: string
           updated_at?: string
+          // AI Lead Management fields
+          lead_id?: string | null
+          before_data?: Record<string, any> | null
+          after_data?: Record<string, any> | null
+          reason?: string | null
         }
         Update: {
           id?: string
@@ -283,6 +347,11 @@ export interface Database {
           created_by?: string
           created_at?: string
           updated_at?: string
+          // AI Lead Management fields
+          lead_id?: string | null
+          before_data?: Record<string, any> | null
+          after_data?: Record<string, any> | null
+          reason?: string | null
         }
       }
       // Sales Performance Module Tables
@@ -1020,6 +1089,456 @@ export interface Database {
           chart_type?: 'line' | 'bar' | 'pie' | 'area' | 'gauge' | 'table'
           chart_config?: Record<string, any>
           created_at?: string
+        }
+      }
+      // AI Lead Management Tables
+      icp_profiles: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          criteria: Record<string, any>
+          organization_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          criteria?: Record<string, any>
+          organization_id: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          criteria?: Record<string, any>
+          organization_id?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+      }
+      lead_briefs: {
+        Row: {
+          id: string
+          lead_type: 'account' | 'contact'
+          geography: 'US' | 'EU' | 'UK' | 'APAC'
+          industry: string | null
+          revenue_band: string | null
+          employee_band: string | null
+          entity_type: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER'
+          technographics: string[]
+          installed_tools_hints: string[]
+          intent_keywords: string[]
+          time_horizon: string | null
+          notes: string | null
+          icp_profile_id: string
+          status: 'draft' | 'submitted' | 'orchestrated'
+          organization_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          lead_type: 'account' | 'contact'
+          geography: 'US' | 'EU' | 'UK' | 'APAC'
+          industry?: string | null
+          revenue_band?: string | null
+          employee_band?: string | null
+          entity_type: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER'
+          technographics?: string[]
+          installed_tools_hints?: string[]
+          intent_keywords?: string[]
+          time_horizon?: string | null
+          notes?: string | null
+          icp_profile_id: string
+          status?: 'draft' | 'submitted' | 'orchestrated'
+          organization_id: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          lead_type?: 'account' | 'contact'
+          geography?: 'US' | 'EU' | 'UK' | 'APAC'
+          industry?: string | null
+          revenue_band?: string | null
+          employee_band?: string | null
+          entity_type?: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER'
+          technographics?: string[]
+          installed_tools_hints?: string[]
+          intent_keywords?: string[]
+          time_horizon?: string | null
+          notes?: string | null
+          icp_profile_id?: string
+          status?: 'draft' | 'submitted' | 'orchestrated'
+          organization_id?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+      }
+      ai_accounts: {
+        Row: {
+          id: string
+          legal_name: string
+          known_as: string | null
+          domain: string | null
+          registry_ids: Record<string, any> | null
+          country: string | null
+          region: 'US' | 'EU' | 'UK' | 'APAC' | null
+          industry_code: string | null
+          revenue_band: string | null
+          employee_band: string | null
+          entity_type: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER' | null
+          account_embedding: number[] | null
+          provenance: Record<string, any>
+          organization_id: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          legal_name: string
+          known_as?: string | null
+          domain?: string | null
+          registry_ids?: Record<string, any> | null
+          country?: string | null
+          region?: 'US' | 'EU' | 'UK' | 'APAC' | null
+          industry_code?: string | null
+          revenue_band?: string | null
+          employee_band?: string | null
+          entity_type?: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER' | null
+          account_embedding?: number[] | null
+          provenance?: Record<string, any>
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          legal_name?: string
+          known_as?: string | null
+          domain?: string | null
+          registry_ids?: Record<string, any> | null
+          country?: string | null
+          region?: 'US' | 'EU' | 'UK' | 'APAC' | null
+          industry_code?: string | null
+          revenue_band?: string | null
+          employee_band?: string | null
+          entity_type?: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER' | null
+          account_embedding?: number[] | null
+          provenance?: Record<string, any>
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+      }
+      ai_contacts: {
+        Row: {
+          id: string
+          account_id: string | null
+          full_name: string
+          title: string | null
+          seniority: 'C-LEVEL' | 'VP' | 'DIR' | 'IC' | null
+          dept: string | null
+          linkedin_url: string | null
+          email_pattern_hint: string | null
+          email_status: 'UNVERIFIED' | 'VERIFIED' | 'UNKNOWN'
+          phone_hint: string | null
+          contact_embedding: number[] | null
+          provenance: Record<string, any>
+          organization_id: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          account_id?: string | null
+          full_name: string
+          title?: string | null
+          seniority?: 'C-LEVEL' | 'VP' | 'DIR' | 'IC' | null
+          dept?: string | null
+          linkedin_url?: string | null
+          email_pattern_hint?: string | null
+          email_status?: 'UNVERIFIED' | 'VERIFIED' | 'UNKNOWN'
+          phone_hint?: string | null
+          contact_embedding?: number[] | null
+          provenance?: Record<string, any>
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          account_id?: string | null
+          full_name?: string
+          title?: string | null
+          seniority?: 'C-LEVEL' | 'VP' | 'DIR' | 'IC' | null
+          dept?: string | null
+          linkedin_url?: string | null
+          email_pattern_hint?: string | null
+          email_status?: 'UNVERIFIED' | 'VERIFIED' | 'UNKNOWN'
+          phone_hint?: string | null
+          contact_embedding?: number[] | null
+          provenance?: Record<string, any>
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+      }
+      lead_qualifications: {
+        Row: {
+          id: string
+          lead_id: string
+          framework: 'BANT' | 'CHAMP' | 'GPCTBA/C&I' | 'SPICED' | 'ANUM' | 'FAINT' | 'NEAT' | 'PACT' | 'JTBD_FIT' | 'FIVE_FIT' | 'ABM' | 'TARGETING'
+          status: 'NOT_STARTED' | 'IN_PROGRESS' | 'QUALIFIED' | 'DISQUALIFIED'
+          data: Record<string, any>
+          organization_id: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          framework: 'BANT' | 'CHAMP' | 'GPCTBA/C&I' | 'SPICED' | 'ANUM' | 'FAINT' | 'NEAT' | 'PACT' | 'JTBD_FIT' | 'FIVE_FIT' | 'ABM' | 'TARGETING'
+          status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'QUALIFIED' | 'DISQUALIFIED'
+          data?: Record<string, any>
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          framework?: 'BANT' | 'CHAMP' | 'GPCTBA/C&I' | 'SPICED' | 'ANUM' | 'FAINT' | 'NEAT' | 'PACT' | 'JTBD_FIT' | 'FIVE_FIT' | 'ABM' | 'TARGETING'
+          status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'QUALIFIED' | 'DISQUALIFIED'
+          data?: Record<string, any>
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+      }
+      framework_evidence: {
+        Row: {
+          id: string
+          lead_id: string
+          framework: string
+          field: string
+          value: Record<string, any>
+          confidence: number | null
+          source: string | null
+          actor_user_id: string | null
+          justification: string | null
+          organization_id: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          framework: string
+          field: string
+          value: Record<string, any>
+          confidence?: number | null
+          source?: string | null
+          actor_user_id?: string | null
+          justification?: string | null
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          framework?: string
+          field?: string
+          value?: Record<string, any>
+          confidence?: number | null
+          source?: string | null
+          actor_user_id?: string | null
+          justification?: string | null
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+      }
+      enhanced_lead_scores: {
+        Row: {
+          id: string
+          lead_id: string
+          fit: number
+          intent: number
+          engagement: number
+          viability: number
+          recency: number
+          composite: number
+          weights: Record<string, any>
+          segment: Record<string, any>
+          organization_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          fit: number
+          intent: number
+          engagement: number
+          viability: number
+          recency: number
+          composite: number
+          weights: Record<string, any>
+          segment: Record<string, any>
+          organization_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          fit?: number
+          intent?: number
+          engagement?: number
+          viability?: number
+          recency?: number
+          composite?: number
+          weights?: Record<string, any>
+          segment?: Record<string, any>
+          organization_id?: string
+          created_at?: string
+        }
+      }
+      integration_providers: {
+        Row: {
+          id: string
+          provider: 'CLEARBIT' | 'ZOOMINFO' | 'OPPORTUNITY' | 'COMPLIANCE'
+          config: Record<string, any>
+          organization_id: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          provider: 'CLEARBIT' | 'ZOOMINFO' | 'OPPORTUNITY' | 'COMPLIANCE'
+          config: Record<string, any>
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          provider?: 'CLEARBIT' | 'ZOOMINFO' | 'OPPORTUNITY' | 'COMPLIANCE'
+          config?: Record<string, any>
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+      }
+      conversion_jobs: {
+        Row: {
+          id: string
+          lead_id: string
+          status: 'PENDING' | 'IN_PROGRESS' | 'SUCCEEDED' | 'FAILED' | 'ROLLED_BACK'
+          idempotency_key: string
+          correlation_id: string | null
+          request_payload: Record<string, any>
+          response_payload: Record<string, any> | null
+          organization_id: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          status: 'PENDING' | 'IN_PROGRESS' | 'SUCCEEDED' | 'FAILED' | 'ROLLED_BACK'
+          idempotency_key: string
+          correlation_id?: string | null
+          request_payload: Record<string, any>
+          response_payload?: Record<string, any> | null
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          status?: 'PENDING' | 'IN_PROGRESS' | 'SUCCEEDED' | 'FAILED' | 'ROLLED_BACK'
+          idempotency_key?: string
+          correlation_id?: string | null
+          request_payload?: Record<string, any>
+          response_payload?: Record<string, any> | null
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+      }
+      opportunity_references: {
+        Row: {
+          id: string
+          lead_id: string
+          external_opportunity_id: string
+          external_account_id: string | null
+          external_contact_id: string | null
+          mapping: Record<string, any>
+          organization_id: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          external_opportunity_id: string
+          external_account_id?: string | null
+          external_contact_id?: string | null
+          mapping?: Record<string, any>
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          external_opportunity_id?: string
+          external_account_id?: string | null
+          external_contact_id?: string | null
+          mapping?: Record<string, any>
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
         }
       }
     }
