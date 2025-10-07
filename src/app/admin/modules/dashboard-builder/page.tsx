@@ -24,8 +24,8 @@ import {
   CogIcon,
   PaintBrushIcon,
   ShareIcon,
-  DownloadIcon,
-  UploadIcon,
+  ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
   AdjustmentsHorizontalIcon,
@@ -373,7 +373,7 @@ function DashboardCanvas({
                 <ShareIcon className="h-5 w-5" />
               </button>
               <button className="p-2 text-gray-400 hover:text-gray-600">
-                <DownloadIcon className="h-5 w-5" />
+                <ArrowDownTrayIcon className="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -1012,11 +1012,11 @@ export default function DashboardBuilder() {
           </div>
           <div className="flex items-center space-x-3">
             <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-              <UploadIcon className="h-4 w-4 mr-2" />
+              <ArrowUpTrayIcon className="h-4 w-4 mr-2" />
               Import
             </button>
             <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-              <DownloadIcon className="h-4 w-4 mr-2" />
+              <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
               Export
             </button>
             <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
