@@ -230,7 +230,7 @@ export class WorkflowAutomationAPI {
 
     // Create execution record
     const execution: WorkflowExecution = {
-      id: `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       workflowId,
       entityType,
       entityId,

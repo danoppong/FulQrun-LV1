@@ -1,5 +1,5 @@
 'use client'
-import React from 'react';
+import React, { memo } from 'react';
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -12,18 +12,15 @@ interface OpportunityViewProps {
   opportunityId: string
 }
 
-export default function OpportunityView({ opportunityId }: OpportunityViewProps) {
+const OpportunityView = memo(function OpportunityView({ opportunityId }: OpportunityViewProps) {
   const [opportunity, setOpportunity] = useState<OpportunityWithDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [meddpiccScore, setMeddpiccScore] = useState<number>(0)
   const _router = useRouter()
 
-  // Debug logging
-  console.log('OpportunityView rendered with opportunityId:', opportunityId)
-
   // Function to get MEDDPICC score for an opportunity using the unified service
-  const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<void> => {
+  const getOpportunityMEDDPICCScore = useCallback(async (opportunity: OpportunityWithDetails): Promise<void> => {
     try {
       // Use the unified scoring service - always calculate fresh score for consistency
       const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity as { id: string; name: string; [key: string]: unknown })
@@ -33,7 +30,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
       // Fallback to database score if available
       setMeddpiccScore(opportunity.meddpicc_score || 0)
     }
-  }
+  }, [])
 
   const fetchOpportunity = useCallback(async () => {
     try {
@@ -59,7 +56,7 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
 
   useEffect(() => {
     fetchOpportunity()
-  }, [fetchOpportunity])
+  }, [opportunityId]) // Only depend on opportunityId, not the function
 
   // Refresh data when returning from edit mode
   useEffect(() => {
@@ -177,10 +174,6 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
               <Link
                 href={`/opportunities/${opportunityId}/edit`}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                onClick={() => {
-                  console.log('Link clicked, opportunityId:', opportunityId)
-                  console.log('Navigating to:', `/opportunities/${opportunityId}/edit`)
-                }}
                 style={{ cursor: 'pointer' }}
               >
                 Edit
@@ -377,4 +370,6 @@ export default function OpportunityView({ opportunityId }: OpportunityViewProps)
       </div>
     </ErrorBoundary>
   )
-}
+})
+
+export default OpportunityView

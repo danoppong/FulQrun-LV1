@@ -5,6 +5,7 @@ import ConditionalLayout from "@/components/ConditionalLayout";
 import { CriticalErrorBoundary } from '@/components/error-boundaries/CriticalErrorBoundary'
 import { PerformanceToggle } from '@/components/performance/PerformanceToggle'
 import ThemeProvider from '@/components/ThemeProvider';
+import DevelopmentBanner from '@/components/DevelopmentBanner';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -85,6 +86,7 @@ export default function RootLayout({
       >
         <CriticalErrorBoundary context="Application Root">
           <ThemeProvider>
+            <DevelopmentBanner />
             <ConditionalLayout>
               {children}
             </ConditionalLayout>

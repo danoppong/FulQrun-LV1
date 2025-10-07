@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { opportunityAPI, OpportunityWithDetails, OpportunityFormData } from '@/lib/api/opportunities'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import dynamic from 'next/dynamic';
+import debounce from 'lodash.debounce'
 
 // Dynamic imports for heavy components
 const PEAKForm = dynamic(() => import('@/components/forms/PEAKForm'), {
@@ -143,14 +144,24 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   const router = useRouter()
   const { handleError: _handleError, handleLoadingError: _handleLoadingError, handleAsyncOperation } = useErrorHandler()
   
+  // Add refs to prevent multiple simultaneous saves
+  const isSavingRef = useRef(false)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
   // Debug logging removed to prevent infinite re-rendering
   const [contacts, setContacts] = useState<ContactWithCompany[]>([])
   const [companies, setCompanies] = useState<CompanyWithStats[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [_isDirty, setIsDirty] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  
+  // Stable error handler
+  const handleErrorStable = useCallback((errorMessage: string) => {
+    setError(errorMessage)
+  }, [])
   const [peakData, setPeakData] = useState({
     peak_stage: opportunity?.peak_stage || 'prospecting' as const,
     deal_value: opportunity?.deal_value || undefined,
@@ -175,7 +186,6 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     setValue: _setValue,
     reset
   } = useForm<LocalOpportunityFormData>({
@@ -186,8 +196,6 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
       company_id: opportunity.company_id || '',
     } : {}
   })
-
-  const _watchedValues = watch()
 
   const loadOpportunity = useCallback(async () => {
     if (!opportunityId) return
@@ -239,15 +247,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     )
   }, [opportunityId, handleAsyncOperation, setError, setLoading, reset])
 
-  useEffect(() => {
-    loadContacts()
-    loadCompanies()
-    if (mode === 'edit' && opportunityId && !opportunity) {
-      loadOpportunity()
-    }
-  }, [mode, opportunityId, opportunity, loadOpportunity])
-
-  const loadContacts = async () => {
+  const loadContacts = useCallback(async () => {
     try {
       const { data, error } = await contactAPI.getContacts()
       if (error) {
@@ -258,9 +258,9 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     } catch (_err) {
       console.warn('Error loading contacts:', _err)
     }
-  }
+  }, [])
 
-  const loadCompanies = async () => {
+  const loadCompanies = useCallback(async () => {
     try {
       const { data, error } = await companyAPI.getCompanies()
       if (error) {
@@ -271,99 +271,114 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     } catch (_err) {
       console.warn('Error loading companies:', _err)
     }
-  }
+  }, [])
 
-  const handlePeakSave = async (data: PEAKFormData) => {
+  useEffect(() => {
+    loadContacts()
+    loadCompanies()
+  }, [loadContacts, loadCompanies])
+
+  useEffect(() => {
+    if (mode === 'edit' && opportunityId && !opportunity) {
+      loadOpportunity()
+    }
+  }, [mode, opportunityId, opportunity, loadOpportunity])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const handlePeakSave = useCallback(async (data: PEAKFormData) => {
+    // Prevent multiple simultaneous saves
+    if (isSavingRef.current) {
+      console.log('Save already in progress, skipping...')
+      return
+    }
+
     setPeakData(data)
     setIsDirty(true)
     
-    // If we're editing an existing opportunity, save PEAK data immediately
-    if (mode === 'edit' && opportunityId) {
-      try {
-        const { error } = await opportunityAPI.updateOpportunity(opportunityId, data)
-        if (error) {
-          // Handle specific error types for better test compatibility
-          if (error.message?.includes('Database connection failed')) {
-            setError('Database connection failed')
-          } else if (error.message?.includes('Network error')) {
-            setError('An unexpected error occurred')
-          } else {
-            setError(error.message || 'Failed to save PEAK data')
-          }
-        } else {
-          // Trigger a custom event to notify other components that PEAK data was updated
-          window.dispatchEvent(new CustomEvent('peakUpdated', { 
-            detail: { opportunityId, data } 
-          }))
-        }
-      } catch (err) {
-        // Handle specific error types for better test compatibility
-        if (err instanceof Error && err.message.includes('Network error')) {
-          setError('An unexpected error occurred')
-        } else {
-          setError('Failed to save PEAK data')
-        }
-      }
-    }
-  }
+    // Manual save only - no auto-save to prevent infinite loops
+    console.log('PEAK data updated', data)
+  }, [])
 
-  const handlePeakSuccess = () => {
+  // Manual save function for PEAK data
+  const savePeakData = useCallback(async () => {
+    if (isSavingRef.current || !opportunityId) return
+
+    isSavingRef.current = true
+    try {
+      const { error } = await opportunityAPI.updateOpportunity(opportunityId, peakData)
+      if (error) {
+        handleErrorStable(error.message || 'Failed to save PEAK data')
+      } else {
+        setLastSaved(new Date())
+        setSuccessMessage('PEAK data saved successfully')
+        setTimeout(() => setSuccessMessage(null), 3000)
+      }
+    } catch (err) {
+      handleErrorStable('Failed to save PEAK data')
+    } finally {
+      isSavingRef.current = false
+    }
+  }, [opportunityId, peakData, handleErrorStable])
+
+  const handlePeakSuccess = useCallback(() => {
     // Clear any existing errors when save is successful
     setError(null)
-  }
+  }, [])
 
-  const handleMeddpiccSave = async (data: MEDDPICCFormData) => {
+  const handleMeddpiccSave = useCallback(async (data: MEDDPICCFormData) => {
+    // Prevent multiple simultaneous saves
+    if (isSavingRef.current) {
+      console.log('Save already in progress, skipping...')
+      return
+    }
+
     setMeddpiccData(data)
     setIsDirty(true)
     
-    // If we're editing an existing opportunity, save MEDDPICC data immediately
-    if (mode === 'edit' && opportunityId) {
-      try {
-        // Use the unified scoring service for consistency
-        const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, { ...opportunity, ...data })
-        const meddpiccScore = scoreResult.score
-        
-        // Save both MEDDPICC data and calculated score
-        const { error } = await opportunityAPI.updateMEDDPICC(opportunityId, {
-          ...data,
-          meddpicc_score: meddpiccScore
-        })
-        
-        if (error) {
-          // Handle specific error types for better test compatibility
-          if (error.message?.includes('Database connection failed')) {
-            setError('Database connection failed')
-          } else if (error.message?.includes('Network error')) {
-            setError('An unexpected error occurred')
-          } else {
-            setError(error.message || 'Failed to save MEDDPICC data')
-          }
-        } else {
-          // Trigger a custom event to notify other components that MEDDPICC data was updated
-          window.dispatchEvent(new CustomEvent('meddpiccUpdated', { 
-            detail: { opportunityId, data, score: meddpiccScore } 
-          }))
-          
-          // Also trigger score update event
-          window.dispatchEvent(new CustomEvent('meddpicc-score-updated', { 
-            detail: { opportunityId, score: meddpiccScore } 
-          }))
-        }
-      } catch (err) {
-        // Handle specific error types for better test compatibility
-        if (err instanceof Error && err.message.includes('Network error')) {
-          setError('An unexpected error occurred')
-        } else {
-          setError('Failed to save MEDDPICC data')
-        }
-      }
-    }
-  }
+    // Manual save only - no auto-save to prevent infinite loops
+    console.log('MEDDPICC data updated', data)
+  }, [])
 
-  const handleMeddpiccSuccess = () => {
+  // Manual save function for MEDDPICC data
+  const saveMeddpiccData = useCallback(async () => {
+    if (isSavingRef.current || !opportunityId) return
+
+    isSavingRef.current = true
+    try {
+      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, { ...opportunity, ...meddpiccData })
+      const meddpiccScore = scoreResult.score
+      
+      const { error } = await opportunityAPI.updateMEDDPICC(opportunityId, {
+        ...meddpiccData,
+        meddpicc_score: meddpiccScore
+      })
+      
+      if (error) {
+        handleErrorStable(error.message || 'Failed to save MEDDPICC data')
+      } else {
+        setLastSaved(new Date())
+        setSuccessMessage('MEDDPICC data saved successfully')
+        setTimeout(() => setSuccessMessage(null), 3000)
+      }
+    } catch (err) {
+      handleErrorStable('Failed to save MEDDPICC data')
+    } finally {
+      isSavingRef.current = false
+    }
+  }, [opportunityId, meddpiccData, opportunity, handleErrorStable])
+
+  const handleMeddpiccSuccess = useCallback(() => {
     // Clear any existing errors when save is successful
     setError(null)
-  }
+  }, [])
 
   // Data validation function
   const validateOpportunityData = (data: OpportunityFormData) => {
@@ -468,7 +483,17 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
         console.log('Opportunity saved successfully')
         setLastSaved(new Date())
         setIsDirty(false)
-        router.push('/opportunities')
+        
+        // For edit mode, stay on the page and show success message
+        // For create mode, redirect to the list
+        if (mode === 'create') {
+          router.push('/opportunities')
+        } else {
+          // Stay on edit page and show success feedback
+          setSuccessMessage('Opportunity updated successfully!')
+          setError(null) // Clear any previous errors
+          setTimeout(() => setSuccessMessage(null), 3000) // Clear success message after 3 seconds
+        }
         
         return result
       },
@@ -498,6 +523,23 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">Error</h3>
                   <p className="text-sm text-red-700 mt-1">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Success Message Display */}
+          {successMessage && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800">Success</h3>
+                  <p className="text-sm text-green-700 mt-1">{successMessage}</p>
                 </div>
               </div>
             </div>
@@ -619,12 +661,26 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
 
             {/* PEAK Stage Management */}
             <ErrorBoundary>
-              <PEAKForm
-                initialData={peakData}
-                onSave={handlePeakSave}
-                onSuccess={handlePeakSuccess}
-                loading={loading}
-              />
+              <div className="space-y-4">
+                <PEAKForm
+                  initialData={peakData}
+                  onSave={handlePeakSave}
+                  onSuccess={handlePeakSuccess}
+                  loading={loading}
+                />
+                {mode === 'edit' && opportunityId && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={savePeakData}
+                      disabled={isSavingRef.current}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {isSavingRef.current ? 'Saving...' : 'Save PEAK Data'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </ErrorBoundary>
 
             {/* MEDDPICC Qualification */}
@@ -701,6 +757,25 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
               )}
             </MEDDPICCErrorBoundary>
 
+            {/* Manual save buttons for MEDDPICC */}
+            {mode === 'edit' && opportunityId && (
+              <div className="bg-white shadow rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    {lastSaved ? `Last saved: ${lastSaved.toLocaleTimeString()}` : 'Changes not saved'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={saveMeddpiccData}
+                    disabled={isSavingRef.current}
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {isSavingRef.current ? 'Saving...' : 'Save MEDDPICC Data'}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
@@ -709,6 +784,15 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
               >
                 Cancel
               </button>
+              {mode === 'edit' && opportunityId && (
+                <button
+                  type="button"
+                  onClick={() => router.push(`/opportunities/${opportunityId}`)}
+                  className="bg-background py-2 px-4 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 hover:bg-blue-50"
+                >
+                  Back to View
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={loading}

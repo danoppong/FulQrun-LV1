@@ -1526,9 +1526,9 @@ function EmailLayouts({ config, onUpdate }: { config: EmailTemplatesConfiguratio
                           </div>
                         `}
                         className="w-full h-64 border-0"
-                        title=&quot;Layout Preview&quot;
+                        title="Layout Preview"
                       />
-                    </
+                    </div>
                   </div>
                 </div>
 

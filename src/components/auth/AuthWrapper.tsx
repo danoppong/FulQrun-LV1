@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase';
+import { getSupabaseBrowserClient } from '@/lib/supabase-singleton';
+import { supabaseConfig } from '@/lib/config';
 
 interface AuthWrapperProps {
   children: React.ReactNode
@@ -23,6 +24,15 @@ function AuthWrapper({
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Check if Supabase is configured
+        if (!supabaseConfig.isConfigured) {
+          console.log('Supabase not configured, skipping auth check')
+          setIsAuthenticated(!requireAuth) // Allow access if auth not required
+          setIsLoading(false)
+          return
+        }
+
+        const supabase = getSupabaseBrowserClient()
         const { data: { user }, error } = await supabase.auth.getUser()
         
         if (error || !user) {
@@ -35,8 +45,8 @@ function AuthWrapper({
           setUser(user)
           
           // Check role permissions if specified
-          if (allowedRoles.length > 0 && user.profile) {
-            if (!allowedRoles.includes(user.profile.role)) {
+          if (allowedRoles.length > 0 && user.user_metadata?.role) {
+            if (!allowedRoles.includes(user.user_metadata.role)) {
               router.push('/dashboard') // Redirect to dashboard if insufficient permissions
               return
             }

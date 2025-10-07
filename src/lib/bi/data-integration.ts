@@ -230,7 +230,7 @@ export class DataIntegrationService {
     const errors: string[] = [];
     let recordsProcessed = 0;
     let recordsInserted = 0;
-    let recordsUpdated = 0;
+    const recordsUpdated = 0;
     let recordsSkipped = 0;
 
     try {
@@ -296,7 +296,7 @@ export class DataIntegrationService {
     const errors: string[] = [];
     let recordsProcessed = 0;
     let recordsInserted = 0;
-    let recordsUpdated = 0;
+    const recordsUpdated = 0;
     let recordsSkipped = 0;
 
     try {

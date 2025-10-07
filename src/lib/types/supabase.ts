@@ -1,5 +1,3 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-
 // Define the database schema types
 export interface Database {
   public: {
@@ -1539,6 +1537,258 @@ export interface Database {
           created_at?: string
           updated_at?: string
           deleted_at?: string | null
+        }
+      }
+      enterprise_workflows: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          workflow_type: 'approval' | 'notification' | 'data_sync' | 'ai_trigger' | 'compliance' | 'custom'
+          trigger_conditions: Record<string, unknown>
+          steps: Record<string, unknown>[]
+          approval_config: Record<string, unknown>
+          notification_config: Record<string, unknown>
+          is_active: boolean
+          priority: number
+          timeout_hours: number
+          retry_config: Record<string, unknown>
+          organization_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          workflow_type: 'approval' | 'notification' | 'data_sync' | 'ai_trigger' | 'compliance' | 'custom'
+          trigger_conditions?: Record<string, unknown>
+          steps?: Record<string, unknown>[]
+          approval_config?: Record<string, unknown>
+          notification_config?: Record<string, unknown>
+          is_active?: boolean
+          priority?: number
+          timeout_hours?: number
+          retry_config?: Record<string, unknown>
+          organization_id: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          workflow_type?: 'approval' | 'notification' | 'data_sync' | 'ai_trigger' | 'compliance' | 'custom'
+          trigger_conditions?: Record<string, unknown>
+          steps?: Record<string, unknown>[]
+          approval_config?: Record<string, unknown>
+          notification_config?: Record<string, unknown>
+          is_active?: boolean
+          priority?: number
+          timeout_hours?: number
+          retry_config?: Record<string, unknown>
+          organization_id?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      workflow_executions: {
+        Row: {
+          id: string
+          workflow_id: string
+          entity_type: string
+          entity_id: string
+          status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' | 'paused'
+          current_step_id: string | null
+          execution_data: Record<string, unknown>
+          started_at: string
+          completed_at: string | null
+          error_message: string | null
+          organization_id: string
+        }
+        Insert: {
+          id?: string
+          workflow_id: string
+          entity_type: string
+          entity_id: string
+          status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' | 'paused'
+          current_step_id?: string | null
+          execution_data?: Record<string, unknown>
+          started_at?: string
+          completed_at?: string | null
+          error_message?: string | null
+          organization_id: string
+        }
+        Update: {
+          id?: string
+          workflow_id?: string
+          entity_type?: string
+          entity_id?: string
+          status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' | 'paused'
+          current_step_id?: string | null
+          execution_data?: Record<string, unknown>
+          started_at?: string
+          completed_at?: string | null
+          error_message?: string | null
+          organization_id?: string
+        }
+      }
+      workflow_step_executions: {
+        Row: {
+          id: string
+          execution_id: string
+          step_id: string
+          status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+          started_at: string | null
+          completed_at: string | null
+          error_message: string | null
+          result: Record<string, unknown> | null
+        }
+        Insert: {
+          id?: string
+          execution_id: string
+          step_id: string
+          status?: 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+          started_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+          result?: Record<string, unknown> | null
+        }
+        Update: {
+          id?: string
+          execution_id?: string
+          step_id?: string
+          status?: 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+          started_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+          result?: Record<string, unknown> | null
+        }
+      }
+      error_reports: {
+        Row: {
+          id: string
+          error_id: string
+          report_type: string
+          description: string
+          impact: string
+          status: string
+          assigned_to: string | null
+          priority: string
+          tags: string[]
+          organization_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          error_id: string
+          report_type: string
+          description: string
+          impact: string
+          status?: string
+          assigned_to?: string | null
+          priority: string
+          tags?: string[]
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          error_id?: string
+          report_type?: string
+          description?: string
+          impact?: string
+          status?: string
+          assigned_to?: string | null
+          priority?: string
+          tags?: string[]
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      ai_models: {
+        Row: {
+          id: string
+          name: string
+          model_type: 'lead_scoring' | 'deal_prediction' | 'forecasting' | 'coaching' | 'content_generation' | 'sentiment_analysis'
+          provider: 'openai' | 'anthropic' | 'azure' | 'aws' | 'custom'
+          configuration: Record<string, unknown>
+          is_active: boolean
+          performance_metrics: Record<string, unknown>
+          organization_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          model_type: 'lead_scoring' | 'deal_prediction' | 'forecasting' | 'coaching' | 'content_generation' | 'sentiment_analysis'
+          provider: 'openai' | 'anthropic' | 'azure' | 'aws' | 'custom'
+          configuration?: Record<string, unknown>
+          is_active?: boolean
+          performance_metrics?: Record<string, unknown>
+          organization_id: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          model_type?: 'lead_scoring' | 'deal_prediction' | 'forecasting' | 'coaching' | 'content_generation' | 'sentiment_analysis'
+          provider?: 'openai' | 'anthropic' | 'azure' | 'aws' | 'custom'
+          configuration?: Record<string, unknown>
+          is_active?: boolean
+          performance_metrics?: Record<string, unknown>
+          organization_id?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      ai_insights: {
+        Row: {
+          id: string
+          type: string
+          entity_type: string
+          entity_id: string
+          insight_data: Record<string, unknown>
+          confidence_score: number
+          model_version: string
+          organization_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          type: string
+          entity_type: string
+          entity_id: string
+          insight_data: Record<string, unknown>
+          confidence_score: number
+          model_version: string
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          type?: string
+          entity_type?: string
+          entity_id?: string
+          insight_data?: Record<string, unknown>
+          confidence_score?: number
+          model_version?: string
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
         }
       }
     }

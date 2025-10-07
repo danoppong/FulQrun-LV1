@@ -527,10 +527,14 @@ export interface MEDDPICCAssessment {
 }
 
 export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCAssessment => {
-  console.log('=== MEDDPICC Scoring Debug ===')
-  console.log('Input responses:', responses)
-  console.log('MEDDPICC_CONFIG available:', !!MEDDPICC_CONFIG)
-  console.log('MEDDPICC_CONFIG pillars:', MEDDPICC_CONFIG?.pillars?.length)
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  
+  if (isDevelopment) {
+    console.log('=== MEDDPICC Scoring Debug ===')
+    console.log('Input responses:', responses)
+    console.log('MEDDPICC_CONFIG available:', !!MEDDPICC_CONFIG)
+    console.log('MEDDPICC_CONFIG pillars:', MEDDPICC_CONFIG?.pillars?.length)
+  }
   
   // Safety check for MEDDPICC_CONFIG
   if (!MEDDPICC_CONFIG || !MEDDPICC_CONFIG.pillars) {
@@ -557,13 +561,17 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
     let _answeredQuestions = 0
     const totalQuestions = pillar.questions.length
     
-    console.log(`\n--- Processing Pillar: ${pillar.id} ---`)
-    console.log('Pillar questions:', pillar.questions.map(q => ({ id: q.id, text: q.text })))
-    console.log('Available responses for this pillar:', responses.filter(r => r.pillarId === pillar.id))
+    if (isDevelopment) {
+      console.log(`\n--- Processing Pillar: ${pillar.id} ---`)
+      console.log('Pillar questions:', pillar.questions.map(q => ({ id: q.id, text: q.text })))
+      console.log('Available responses for this pillar:', responses.filter(r => r.pillarId === pillar.id))
+    }
     
     for (const question of pillar.questions) {
       const response = responses.find(r => r.pillarId === pillar.id && r.questionId === question.id)
-      console.log(`Looking for response to question ${question.id}:`, response)
+      if (isDevelopment) {
+        console.log(`Looking for response to question ${question.id}:`, response)
+      }
       
       if (response && response.answer && response.answer.toString().trim().length > 0) {
         _answeredQuestions++
@@ -572,8 +580,6 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
           // Text responses: Score based on content quality and completeness
           const answerText = response.answer.toString().trim()
           let points = 0
-          
-          console.log(`Scoring text answer: "${answerText}" (length: ${answerText.length})`)
           
           // More generous scoring for any non-empty response
           if (answerText.length > 0) points += 3  // Any content gets base points
@@ -619,7 +625,9 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
       const normalizedScore = pillarMaxScore > 0 ? (pillarScore / pillarMaxScore) * 100 : 0
       pillarScores[pillar.id] = Math.round(normalizedScore)
       pillarMaxScores[pillar.id] = 100
-      console.log(`Pillar ${pillar.id} final: ${pillarScore}/${pillarMaxScore} = ${Math.round(normalizedScore)}%`)
+      if (isDevelopment) {
+        console.log(`Pillar ${pillar.id} final: ${pillarScore}/${pillarMaxScore} = ${Math.round(normalizedScore)}%`)
+      }
     }
   }
   
@@ -644,8 +652,10 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
   let totalWeightedScore = 0
   let totalWeight = 0
   
-  console.log('\n=== Overall Score Calculation ===')
-  console.log('Pillar scores:', pillarScores)
+  if (isDevelopment) {
+    console.log('\n=== Overall Score Calculation ===')
+    console.log('Pillar scores:', pillarScores)
+  }
   
   for (const pillar of MEDDPICC_CONFIG.pillars) {
     const pillarScore = pillarScores[pillar.id] || 0  // Already normalized to 0-100
@@ -656,16 +666,20 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
     totalWeightedScore += weightedScore
     totalWeight += pillarWeight
     
-    console.log(`Pillar ${pillar.id}: ${pillarScore}% × ${pillarWeight} = ${weightedScore.toFixed(2)}`)
+    if (isDevelopment) {
+      console.log(`Pillar ${pillar.id}: ${pillarScore}% × ${pillarWeight} = ${weightedScore.toFixed(2)}`)
+    }
   }
   
   // Calculate final score as percentage of total possible weighted score
   const overallScore = totalWeight > 0 ? Math.round((totalWeightedScore / totalWeight) * 100) : 0
   const litmusTestScore = Math.round((litmusScore / litmusMaxScore) * 100)
   
-  console.log(`Total weighted score: ${totalWeightedScore.toFixed(2)}`)
-  console.log(`Total weight: ${totalWeight}`)
-  console.log(`Overall score: ${overallScore}%`)
+  if (isDevelopment) {
+    console.log(`Total weighted score: ${totalWeightedScore.toFixed(2)}`)
+    console.log(`Total weight: ${totalWeight}`)
+    console.log(`Overall score: ${overallScore}%`)
+  }
   
   // Determine qualification level
   const qualificationLevel = getMEDDPICCLevel(overallScore).level

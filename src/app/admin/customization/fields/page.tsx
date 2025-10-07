@@ -11,7 +11,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   MagnifyingGlassIcon,
-  ArrowUpDownIcon,
+  ArrowsUpDownIcon,
   EyeIcon,
   EyeSlashIcon,
   ClockIcon,

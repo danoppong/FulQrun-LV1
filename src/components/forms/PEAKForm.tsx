@@ -60,19 +60,17 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
     register,
     handleSubmit,
     formState: { errors },
-    watch,
-    setValue
+    setValue,
+    reset
   } = useForm<PEAKFormData>({
-    resolver: zodResolver(peakFormSchema),
-    defaultValues: initialData || {
+    resolver: zodResolver(peakSchema),
+    defaultValues: {
       peak_stage: 'prospecting',
       deal_value: undefined,
       probability: undefined,
       close_date: ''
     }
   })
-
-  const _watchedValues = watch()
 
   // Update form when initialData changes
   useEffect(() => {

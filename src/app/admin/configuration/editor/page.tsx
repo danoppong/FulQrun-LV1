@@ -131,12 +131,12 @@ function ConfigurationValueEditor({
           <div className="flex items-center">
             <input
               type="checkbox"
-              checked={value}
+              checked={Boolean(value)}
               onChange={(e) => onChange(e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label className="ml-2 text-sm text-gray-700">
-              {value ? 'Enabled' : 'Disabled'}
+              {Boolean(value) ? 'Enabled' : 'Disabled'}
             </label>
           </div>
         );
@@ -145,7 +145,7 @@ function ConfigurationValueEditor({
         return (
           <input
             type="number"
-            value={value}
+            value={String(value || '')}
             onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
@@ -155,14 +155,14 @@ function ConfigurationValueEditor({
         return config.isSensitive ? (
           <input
             type="password"
-            value={value}
+            value={String(value || '')}
             onChange={(e) => onChange(e.target.value)}
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             placeholder="••••••••"
           />
         ) : (
           <textarea
-            value={value}
+            value={String(value || '')}
             onChange={(e) => onChange(e.target.value)}
             rows={3}
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
@@ -238,7 +238,7 @@ function ConfigurationValueEditor({
         return (
           <input
             type="text"
-            value={value}
+            value={String(value || '')}
             onChange={(e) => onChange(e.target.value)}
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
@@ -635,7 +635,19 @@ function ConfigurationEditorModal({
     
     try {
       const validatedData = ConfigurationFormSchema.parse(formData);
-      onSave(validatedData);
+      // Ensure all required fields are present
+      const completeData: ConfigurationFormData = {
+        configKey: validatedData.configKey,
+        configValue: validatedData.configValue,
+        description: validatedData.description,
+        moduleName: validatedData.moduleName,
+        category: validatedData.category,
+        isRequired: validatedData.isRequired,
+        defaultValue: validatedData.defaultValue,
+        validationRules: validatedData.validationRules,
+        isSensitive: validatedData.isSensitive
+      };
+      onSave(completeData);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -710,7 +722,7 @@ function ConfigurationEditorModal({
                 <label className="block text-sm font-medium text-gray-700">Default Value</label>
                 <input
                   type="text"
-                  value={formData.defaultValue}
+                  value={String(formData.defaultValue || '')}
                   onChange={(e) => setFormData({ ...formData, defaultValue: e.target.value })}
                   placeholder="default value"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
@@ -980,9 +992,20 @@ export default function ConfigurationEditor() {
         setConfigurations(updatedConfigurations);
       } else {
         // Create new configuration
+        const configType = typeof configData.configValue === 'boolean' 
+          ? 'boolean' 
+          : typeof configData.configValue === 'number'
+          ? 'number'
+          : typeof configData.configValue === 'object' && Array.isArray(configData.configValue)
+          ? 'array'
+          : typeof configData.configValue === 'object'
+          ? 'object'
+          : 'string';
+          
         const newConfig: ConfigurationItem = {
           id: Date.now().toString(),
           ...configData,
+          configType,
           lastModifiedBy: 'admin@acme.com',
           lastModifiedAt: new Date(),
           version: 1
