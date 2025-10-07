@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useParams } from 'next/navigation'
-import { LearningModuleViewer } from '@/components/learning/LearningModuleViewer'
+import { useParams } from 'next/navigation';
+import { LearningModuleViewer } from '@/components/learning/LearningModuleViewer';
 
 export default function LearningModulePage() {
   const params = useParams()

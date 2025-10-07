@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { Database } from '@/lib/supabase'
+import { Database } from '@/lib/supabase';
 
 type AIInsight = Database['public']['Tables']['ai_insights']['Row']
 type AIInsightInsert = Database['public']['Tables']['ai_insights']['Insert']

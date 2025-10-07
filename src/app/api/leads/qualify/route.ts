@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers'
-import { z } from 'zod'
+import { z } from 'zod';
 
 const QualificationSchema = z.object({
   lead_ids: z.array(z.string().uuid()),
@@ -281,7 +281,7 @@ async function performQualification(
   // This is a placeholder implementation
   // In a real implementation, this would use the specific framework logic
   
-  const qualificationData: any = {
+  const qualificationData: unknown = {
     status: 'NOT_STARTED',
     data: {},
     evidence: []
@@ -664,9 +664,15 @@ async function qualifyTARGETING(lead: any): Promise<any> {
   }
 }
 
-function generateEvidenceRecords(lead: any, framework: string, qualificationData: any): any[] {
-  const evidence: any[] = []
+interface QualificationData {
+  qualified: boolean;
+  value: unknown;
+  confidence: number;
+}
 
+function generateEvidenceRecords(lead: any, framework: string, qualificationData: Record<string, QualificationData>): unknown[] {
+  const evidence: unknown[] = []
+  
   for (const [field, data] of Object.entries(qualificationData)) {
     if (typeof data === 'object' && data !== null) {
       evidence.push({
@@ -674,7 +680,7 @@ function generateEvidenceRecords(lead: any, framework: string, qualificationData
         framework,
         field,
         value: data,
-        confidence: (data as any).confidence || 0.8,
+        confidence: data.confidence || 0.8,
         source: 'AI_QUALIFICATION'
       })
     }

@@ -5,7 +5,7 @@
  * Note: SMS is less secure due to SIM swap attacks - use with caution
  */
 
-import { SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface SMSOTPVerification {
   code: string

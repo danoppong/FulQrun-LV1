@@ -10,7 +10,7 @@ import { MapIcon, UserGroupIcon, ArrowTrendingUpIcon } from '@heroicons/react/24
 interface TerritoryPerformanceChartProps {
   territoryPerformance: Array<{
     territory: any;
-    kpis: any[];
+    kpis: unknown[];
   }>;
   userRole: 'rep' | 'manager' | 'admin';
 }

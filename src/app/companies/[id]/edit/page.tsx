@@ -1,5 +1,5 @@
 import CompanyForm from '@/components/companies/CompanyForm'
-import AuthWrapper from '@/components/auth/AuthWrapper'
+import AuthWrapper from '@/components/auth/AuthWrapper';
 
 interface CompanyEditPageProps {
   params: {

@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface TerritoryManagementProps {
   organizationId: string
@@ -30,8 +30,8 @@ interface Territory {
     full_name: string
     email: string
   }
-  quota_plans: any[]
-  compensation_plans: any[]
+  quota_plans: unknown[]
+  compensation_plans: unknown[]
 }
 
 export function TerritoryManagement({ organizationId, user }: TerritoryManagementProps) {

@@ -1,8 +1,8 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useEffect, useState } from 'react'
-import { getStoredTheme, applyTheme } from '@/lib/theme'
+import { getStoredTheme, applyTheme } from '@/lib/theme';
 
 interface ThemeProviderProps {
   children: React.ReactNode

@@ -5,7 +5,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
+import {;
   ChatBubbleLeftRightIcon,
   PaperAirplaneIcon,
   SparklesIcon,
@@ -23,7 +23,7 @@ interface Message {
   timestamp: string;
   intent?: any;
   analytics?: any;
-  visualizations?: any[];
+  visualizations?: unknown[];
 }
 
 interface ConversationalAnalyticsProps {

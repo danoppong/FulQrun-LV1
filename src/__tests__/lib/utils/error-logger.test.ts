@@ -28,7 +28,7 @@ jest.mock('@/lib/config', () => ({
   }
 }))
 
-import { ErrorLogger, ErrorReporter, errorLogger, errorReporter } from '@/lib/utils/error-logger'
+import { ErrorLogger, ErrorReporter, errorLogger, errorReporter } from '@/lib/utils/error-logger';
 
 describe('ErrorLogger', () => {
   let logger: ErrorLogger

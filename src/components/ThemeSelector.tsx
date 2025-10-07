@@ -1,9 +1,9 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useTheme } from '@/hooks/useTheme'
-import { themes, Theme } from '@/lib/theme'
-import { CheckIcon } from '@heroicons/react/24/outline'
+import { themes, Theme } from '@/lib/theme';
+import { CheckIcon } from '@heroicons/react/24/outline';
 
 export default function ThemeSelector() {
   const { theme, changeTheme, mounted } = useTheme()

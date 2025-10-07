@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
+import { ;
   CircleStackIcon, 
   ServerIcon, 
   PlusIcon, 
@@ -2271,7 +2271,7 @@ function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfigura
   };
 
   // Calculate metrics based on selected time range
-  const getTimeRangeData = (data: any[]) => {
+  const getTimeRangeData = (data: unknown[]) => {
     const now = new Date();
     const timeRangeMs = {
       '1h': 60 * 60 * 1000,

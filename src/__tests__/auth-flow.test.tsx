@@ -1,7 +1,7 @@
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react';
 import { useRouter } from 'next/navigation'
-import AuthWrapper from '@/components/auth/AuthWrapper'
+import AuthWrapper from '@/components/auth/AuthWrapper';
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({

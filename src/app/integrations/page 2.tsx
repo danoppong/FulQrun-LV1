@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { IntegrationHub } from '@/components/integrations/IntegrationHub'
+import { IntegrationHub } from '@/components/integrations/IntegrationHub';
 
 export default function IntegrationsPage() {
   const [organizationId] = useState('00000000-0000-0000-0000-000000000001') // Default organization ID

@@ -6,7 +6,7 @@
  */
 
 import { getSupabaseBrowserClient } from '@/lib/supabase-singleton'
-import { supabaseConfig } from '@/lib/config'
+import { supabaseConfig } from '@/lib/config';
 
 // Export the singleton instance for browser use
 export const supabase = getSupabaseBrowserClient()

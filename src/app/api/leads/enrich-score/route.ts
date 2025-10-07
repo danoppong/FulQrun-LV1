@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers'
-import { z } from 'zod'
+import { z } from 'zod';
 
 const EnrichmentSchema = z.object({
   lead_ids: z.array(z.string().uuid()),
@@ -314,7 +314,7 @@ async function enrichLeadData(
   // This is a placeholder implementation
   // In a real implementation, this would call external data providers
   
-  const enrichedData: any = {
+  const enrichedData: unknown = {
     sources: [`ENRICHED_${enrichmentLevel}`],
     risk_flags: [],
     compliance: {}

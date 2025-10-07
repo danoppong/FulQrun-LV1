@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
-import { 
+import Link from 'next/link';
+import { ;
   UsersIcon,
   ChartBarIcon,
   AcademicCapIcon,
@@ -11,7 +11,7 @@ import {
   DevicePhoneMobileIcon,
   Cog6ToothIcon
 } from '@heroicons/react/24/outline'
-import AuthWrapper from '@/components/auth/AuthWrapper'
+import AuthWrapper from '@/components/auth/AuthWrapper';
 
 // =============================================================================
 // MODULE CONFIGURATION OVERVIEW

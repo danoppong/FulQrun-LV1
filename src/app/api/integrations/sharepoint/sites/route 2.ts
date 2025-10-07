@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
-import { SharePointIntegration } from '@/lib/integrations/sharepoint'
+import { createServerClient } from '@/lib/supabase';
+import { SharePointIntegration } from '@/lib/integrations/sharepoint';
 
 export async function GET(request: NextRequest) {
   try {

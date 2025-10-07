@@ -1,14 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseConfig } from '@/lib/config'
-import { Database } from '@/lib/supabase'
-import { getSupabaseBrowserClient, createSupabaseServerClient } from '@/lib/supabase-singleton'
+import { Database } from '@/lib/supabase';
+import { getSupabaseBrowserClient, createSupabaseServerClient } from '@/lib/supabase-singleton';
 
 // Safe import for server-side only
-let cookies: any = null
+let cookies: unknown = null
 try {
   if (typeof window === 'undefined') {
-    cookies = require('next/headers').cookies
+    const { cookies: nextCookies } = await import('next/headers')
+    cookies = nextCookies
   }
 } catch (error) {
   // cookies not available in client context or server context

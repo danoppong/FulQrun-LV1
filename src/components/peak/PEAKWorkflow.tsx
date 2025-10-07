@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { StageDocuments } from './StageDocuments'
-import { SharePointDocument } from '@/lib/integrations/sharepoint'
+import { StageDocuments } from './StageDocuments';
+import { SharePointDocument } from '@/lib/integrations/sharepoint';
 
 interface PEAKWorkflowProps {
   opportunityId: string

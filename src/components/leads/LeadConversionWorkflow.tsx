@@ -1,17 +1,17 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, ArrowRight, Building, Users, DollarSign, Calendar, Eye, CheckCircle, XCircle } from 'lucide-react'
+import { Loader2, ArrowRight, Building, Users, DollarSign, Calendar, Eye, CheckCircle, XCircle } from 'lucide-react';
 
 interface QualifiedLead {
   id: string
@@ -28,9 +28,9 @@ interface QualifiedLead {
   revenue_band?: string
   employee_band?: string
   entity_type?: string
-  ai_accounts?: any[]
-  ai_contacts?: any[]
-  enhanced_lead_scores?: any[]
+  ai_accounts?: unknown[]
+  ai_contacts?: unknown[]
+  enhanced_lead_scores?: unknown[]
 }
 
 interface ConversionJob {

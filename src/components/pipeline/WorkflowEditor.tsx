@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { WorkflowAutomationAPI, WorkflowAutomationData, WorkflowAction } from '@/lib/api/workflow-automation'
-import { PipelineStage } from '@/lib/api/pipeline-config'
+import { WorkflowAutomationAPI, WorkflowAutomationData, WorkflowAction } from '@/lib/api/workflow-automation';
+import { PipelineStage } from '@/lib/api/pipeline-config';
 
 interface WorkflowEditorProps {
   organizationId: string

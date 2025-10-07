@@ -5,7 +5,7 @@
  */
 
 import { ApiError } from '@/lib/types/errors'
-import { errorLogger } from './error-logger'
+import { errorLogger } from './error-logger';
 
 export interface ErrorHandlerOptions {
   showToast?: boolean

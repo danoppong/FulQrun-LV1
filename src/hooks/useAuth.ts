@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClientComponentClient } from '@/lib/auth'
-import { AuthUser } from '@/lib/auth-client'
+import { createClientComponentClient } from '@/lib/auth';
+import { AuthUser } from '@/lib/auth-client';
 
 export interface UseAuthReturn {
   user: AuthUser | null

@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import { AILeadManagement } from '@/components/leads/AILeadManagement'
-import { AuthWrapper } from '@/components/auth/AuthWrapper'
+import { AILeadManagement } from '@/components/leads/AILeadManagement';
+import { AuthWrapper } from '@/components/auth/AuthWrapper';
 
 export default function LeadQualificationPage() {
   return (

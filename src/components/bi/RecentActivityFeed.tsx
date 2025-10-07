@@ -4,7 +4,7 @@ import React from 'react';
 
 interface RecentActivityFeedProps {
   title: string;
-  activities: any[];
+  activities: unknown[];
   type: 'prescriptions' | 'calls';
 }
 

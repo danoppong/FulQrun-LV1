@@ -1,4 +1,4 @@
-import { normalizeError, ApiError, ApiResponse, SupabaseError } from '@/lib/types/errors'
+import { normalizeError, ApiError, ApiResponse, SupabaseError } from '@/lib/types/errors';
 
 describe('Error Types', () => {
   describe('normalizeError', () => {

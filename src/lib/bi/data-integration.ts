@@ -528,7 +528,7 @@ export class DataIntegrationService {
     return mappedData;
   }
 
-  private applyTransformation(value: any, transformation: string): any {
+  private applyTransformation(...args: unknown[]): unknown {
     // Apply data transformations (e.g., date parsing, number conversion, etc.)
     switch (transformation) {
       case 'to_date':

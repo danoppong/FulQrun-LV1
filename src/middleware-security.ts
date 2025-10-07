@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server';
 
 export function securityMiddleware(request: NextRequest) {
   const url = request.nextUrl

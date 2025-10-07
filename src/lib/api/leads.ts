@@ -1,7 +1,7 @@
 import { createClientComponentClient } from '@/lib/auth'
-import { Database } from '@/lib/supabase'
+import { Database } from '@/lib/supabase';
 import { leadScoringEngine, LeadData, LeadScore } from '@/lib/scoring/leadScoring'
-import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors'
+import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors';
 
 type Lead = Database['public']['Tables']['leads']['Row']
 type LeadInsert = Database['public']['Tables']['leads']['Insert']

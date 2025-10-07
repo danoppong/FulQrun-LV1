@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { supabaseConfig } from '@/lib/config'
+import { supabaseConfig } from '@/lib/config';
 
 // Singleton client instance to prevent multiple GoTrueClient instances
 let supabaseInstance: ReturnType<typeof createClient> | null = null

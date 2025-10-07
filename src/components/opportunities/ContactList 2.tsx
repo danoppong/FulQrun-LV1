@@ -1,8 +1,8 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect } from 'react'
-import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
+import { contactAPI, ContactWithCompany } from '@/lib/api/contacts';
 
 interface ContactListProps {
   opportunityId: string

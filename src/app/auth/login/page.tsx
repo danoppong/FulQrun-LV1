@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, Suspense } from 'react'
-import { AuthClientService } from '@/lib/auth-client'
+import { AuthClientService } from '@/lib/auth-client';
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import Link from 'next/link';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('')
@@ -172,7 +172,7 @@ const LoginForm = () => {
             {/* Sign Up Link */}
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                Don&apos;t have an account?{' '}
+                Don't have an account?{' '}
                 <Link
                   href="/auth/signup"
                   className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors duration-200"

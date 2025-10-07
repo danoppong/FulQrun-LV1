@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { Database } from '@/lib/supabase'
+import { Database } from '@/lib/supabase';
 
 type LearningModule = Database['public']['Tables']['learning_modules']['Row']
 type LearningModuleInsert = Database['public']['Tables']['learning_modules']['Insert']

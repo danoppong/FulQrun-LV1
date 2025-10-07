@@ -1,9 +1,9 @@
 import QuickBooksSetup from '@/components/integrations/QuickBooksSetup'
-import AuthWrapper from '@/components/auth/AuthWrapper'
+import AuthWrapper from '@/components/auth/AuthWrapper';
 import SupabaseDiagnostic from '@/components/SupabaseDiagnostic'
-import ThemeSelector from '@/components/ThemeSelector'
+import ThemeSelector from '@/components/ThemeSelector';
 import Link from 'next/link'
-import { Cog6ToothIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
+import { Cog6ToothIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 
 export default function SettingsPage() {
   return (

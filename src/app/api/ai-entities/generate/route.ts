@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers'
-import { z } from 'zod'
+import { z } from 'zod';
 
 const AccountGenerationSchema = z.object({
   lead_brief_id: z.string().uuid(),
@@ -195,7 +195,7 @@ async function generateContacts(
   }
 
   // Get accounts if account_ids provided
-  let accounts: any[] = []
+  let accounts: unknown[] = []
   if (account_ids && account_ids.length > 0) {
     const { data: accountData, error: accountError } = await supabase
       .from('ai_accounts')
@@ -252,7 +252,7 @@ async function generateAIAccounts(
   // This is a placeholder implementation
   // In a real implementation, this would call an AI service or use data providers
   
-  const accounts: any[] = []
+  const accounts: unknown[] = []
   
   for (let i = 0; i < count; i++) {
     accounts.push({
@@ -284,12 +284,12 @@ async function generateAIContacts(
   leadBrief: any,
   count: number,
   enrichmentLevel: string,
-  accounts: any[] = []
+  accounts: unknown[] = []
 ): Promise<any[]> {
   // This is a placeholder implementation
   // In a real implementation, this would call an AI service or use data providers
   
-  const contacts: any[] = []
+  const contacts: unknown[] = []
   
   for (let i = 0; i < count; i++) {
     const randomAccount = accounts.length > 0 ? accounts[Math.floor(Math.random() * accounts.length)] : null

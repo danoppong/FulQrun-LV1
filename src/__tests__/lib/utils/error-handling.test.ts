@@ -1,5 +1,5 @@
 import { ErrorHandler, useErrorHandler } from '@/lib/utils/error-handling'
-import { ApiError } from '@/lib/types/errors'
+import { ApiError } from '@/lib/types/errors';
 
 // Mock the error logger
 jest.mock('@/lib/utils/error-logger', () => ({

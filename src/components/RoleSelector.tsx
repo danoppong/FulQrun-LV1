@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { UserRole } from '@/lib/roles'
+import { UserRole } from '@/lib/roles';
 
 interface RoleSelectorProps {
   currentRole: UserRole

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase-server'
-import { validateSearchParams, integrationsListSchema, checkRateLimit } from '@/lib/validation'
+import { createServerClient } from '@/lib/supabase-server';
+import { validateSearchParams, integrationsListSchema, checkRateLimit } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic'
 

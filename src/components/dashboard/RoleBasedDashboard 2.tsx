@@ -1,10 +1,10 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { UserRole, getUserPermissions } from '@/lib/roles'
+import { UserRole, getUserPermissions } from '@/lib/roles';
 import { DashboardWidget, WidgetType, DEFAULT_WIDGETS, WIDGET_TEMPLATES } from '@/lib/dashboard-widgets'
-import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData, TeamMemberData, PipelineStageData, ActivityData, MEDDPICCOpportunityData } from '@/lib/types/dashboard'
+import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData, TeamMemberData, PipelineStageData, ActivityData, MEDDPICCOpportunityData } from '@/lib/types/dashboard';
 import { supabase } from '@/lib/supabase'
-import RoleSelector from '@/components/RoleSelector'
+import RoleSelector from '@/components/RoleSelector';
 
 interface RoleBasedDashboardProps {
   userRole: UserRole

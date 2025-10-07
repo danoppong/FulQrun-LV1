@@ -1,5 +1,5 @@
 import { OpenAIClient } from './openai-client'
-import { AIInsightsAPI, AIInsightData, LeadScoringInsight, DealRiskInsight, NextActionInsight, ForecastingInsight, PerformanceInsight } from '@/lib/api/ai-insights'
+import { AIInsightsAPI, AIInsightData, LeadScoringInsight, DealRiskInsight, NextActionInsight, ForecastingInsight, PerformanceInsight } from '@/lib/api/ai-insights';
 
 export interface InsightContext {
   organizationId: string

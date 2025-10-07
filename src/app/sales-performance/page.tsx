@@ -1,7 +1,7 @@
 'use client'
 
 import { SalesPerformanceDashboard } from '@/components/sales-performance/SalesPerformanceDashboard'
-import { AuthWrapper } from '@/components/auth/AuthWrapper'
+import { AuthWrapper } from '@/components/auth/AuthWrapper';
 
 export default function SalesPerformancePage() {
   return (

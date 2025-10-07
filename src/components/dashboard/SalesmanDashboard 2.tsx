@@ -1,8 +1,8 @@
 'use client'
 import React, { useState, useEffect, memo, useCallback } from 'react'
-import { usePerformanceTracking } from '@/hooks/usePerformanceTracking'
-import { supabase } from '@/lib/supabase'
-import { 
+import { usePerformanceTracking } from '@/hooks/usePerformanceTracking';
+import { supabase } from '@/lib/supabase';
+import { ;
   SalesmanKPIs, 
   SAMPLE_SALESMAN_DATA, 
   PerformanceWidget, 

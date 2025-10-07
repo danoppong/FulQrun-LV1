@@ -1,18 +1,18 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { UserRole, getUserPermissions } from '@/lib/roles'
+import { UserRole, getUserPermissions } from '@/lib/roles';
 import { DashboardWidget, WidgetType, DEFAULT_WIDGETS, WIDGET_TEMPLATES } from '@/lib/dashboard-widgets'
-import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData, TeamMemberData, PipelineStageData, ActivityData, MEDDPICCOpportunityData, PharmaKPICardData, TerritoryPerformanceData, ProductPerformanceData, HCPEngagementData, SampleDistributionData, FormularyAccessData } from '@/lib/types/dashboard'
+import { KPICardData, TeamPerformanceData, PipelineOverviewData, RecentActivityData, MEDDPICCScoringData, TeamMemberData, PipelineStageData, ActivityData, MEDDPICCOpportunityData, PharmaKPICardData, TerritoryPerformanceData, ProductPerformanceData, HCPEngagementData, SampleDistributionData, FormularyAccessData } from '@/lib/types/dashboard';
 import { supabase } from '@/lib/supabase'
-import RoleSelector from '@/components/RoleSelector'
+import RoleSelector from '@/components/RoleSelector';
 
 // Import pharmaceutical widget components
 import { PharmaKPICardWidget } from '@/components/dashboard/widgets/PharmaKPICardWidget'
-import { TerritoryPerformanceWidget } from '@/components/dashboard/widgets/TerritoryPerformanceWidget'
+import { TerritoryPerformanceWidget } from '@/components/dashboard/widgets/TerritoryPerformanceWidget';
 import { ProductPerformanceWidget } from '@/components/dashboard/widgets/ProductPerformanceWidget'
-import { HCPEngagementWidget } from '@/components/dashboard/widgets/HCPEngagementWidget'
+import { HCPEngagementWidget } from '@/components/dashboard/widgets/HCPEngagementWidget';
 import { SampleDistributionWidget } from '@/components/dashboard/widgets/SampleDistributionWidget'
-import { FormularyAccessWidget } from '@/components/dashboard/widgets/FormularyAccessWidget'
+import { FormularyAccessWidget } from '@/components/dashboard/widgets/FormularyAccessWidget';
 
 interface RoleBasedDashboardProps {
   userRole: UserRole

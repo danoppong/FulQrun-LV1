@@ -1,7 +1,7 @@
 'use client'
 // import React from 'react' // Unused import
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 
 export default function ServiceWorkerRegistration() {
   useEffect(() => {

@@ -6,7 +6,7 @@
  */
 
 import { MEDDPICC_CONFIG, MEDDPICCResponse, MEDDPICCAssessment, calculateMEDDPICCScore } from '@/lib/meddpicc'
-import { opportunityAPI } from '@/lib/api/opportunities'
+import { opportunityAPI } from '@/lib/api/opportunities';
 
 export interface MEDDPICCScoreResult {
   score: number

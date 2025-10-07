@@ -1,14 +1,14 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 import { opportunityAPI, OpportunityWithDetails, OpportunityFormData } from '@/lib/api/opportunities'
-import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
+import { contactAPI, ContactWithCompany } from '@/lib/api/contacts';
 import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
-import { useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import dynamic from 'next/dynamic'
+import { z } from 'zod';
+import dynamic from 'next/dynamic';
 
 // Dynamic imports for heavy components
 const PEAKForm = dynamic(() => import('@/components/forms/PEAKForm'), {
@@ -29,12 +29,12 @@ const MEDDPICCPEAKIntegration = dynamic(() => import('@/components/meddpicc').th
 })
 
 import type { PEAKFormData } from '@/components/forms/PEAKForm'
-import type { MEDDPICCFormData } from '@/components/forms/MEDDPICCForm'
+import type { MEDDPICCFormData } from '@/components/forms/MEDDPICCForm';
 import { MEDDPICCAssessment, calculateMEDDPICCScore } from '@/lib/meddpicc'
-import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
+import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring';
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { MEDDPICCErrorBoundary } from '@/components/error-boundaries/MEDDPICCErrorBoundary'
-import { useErrorHandler } from '@/lib/utils/error-handling'
+import { MEDDPICCErrorBoundary } from '@/components/error-boundaries/MEDDPICCErrorBoundary';
+import { useErrorHandler } from '@/lib/utils/error-handling';
 
 const opportunitySchema = z.object({
   name: z.string().min(1, 'Opportunity name is required'),

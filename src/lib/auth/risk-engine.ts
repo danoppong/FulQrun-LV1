@@ -5,7 +5,7 @@
  * recommend appropriate security measures.
  */
 
-import { SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface AuthContext {
   userId?: string
@@ -108,7 +108,7 @@ export class RiskAssessmentEngine {
    */
   private async assessDeviceRisk(context: AuthContext): Promise<RiskFactor> {
     let score = 0
-    const details: any = {}
+    const details: unknown = {}
 
     if (!context.userId) {
       // New user, no device history
@@ -159,7 +159,7 @@ export class RiskAssessmentEngine {
    */
   private async assessLocationRisk(context: AuthContext): Promise<RiskFactor> {
     let score = 0
-    const details: any = {}
+    const details: unknown = {}
 
     if (!context.userId) {
       score = 20
@@ -209,7 +209,7 @@ export class RiskAssessmentEngine {
    */
   private async assessBehavioralRisk(context: AuthContext): Promise<RiskFactor> {
     let score = 0
-    const details: any = {}
+    const details: unknown = {}
 
     if (!context.userId) {
       return { name: 'behavioral', score: 0, weight: this.weights.behavioral, details }
@@ -251,7 +251,7 @@ export class RiskAssessmentEngine {
    */
   private async assessVelocityRisk(context: AuthContext): Promise<RiskFactor> {
     let score = 0
-    const details: any = {}
+    const details: unknown = {}
 
     if (!context.userId) {
       return { name: 'velocity', score: 0, weight: this.weights.velocity, details }
@@ -284,7 +284,7 @@ export class RiskAssessmentEngine {
    */
   private async assessThreatIntelligence(context: AuthContext): Promise<RiskFactor> {
     let score = 0
-    const details: any = {}
+    const details: unknown = {}
 
     // Check IP reputation
     const ipReputation = await this.checkIPReputation(context.ipAddress)

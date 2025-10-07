@@ -1,8 +1,8 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect, useCallback } from 'react'
-import { activityAPI, ActivityWithDetails } from '@/lib/api/activities'
+import { activityAPI, ActivityWithDetails } from '@/lib/api/activities';
 
 interface ActivityListProps {
   opportunityId: string

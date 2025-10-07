@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { SharePointDocument } from '@/lib/integrations/sharepoint'
+import { SharePointDocument } from '@/lib/integrations/sharepoint';
 
 interface StageDocumentsProps {
   opportunityId: string

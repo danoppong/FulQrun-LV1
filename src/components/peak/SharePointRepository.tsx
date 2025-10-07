@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { SharePointIntegration, SharePointDocument } from '@/lib/integrations/sharepoint'
+import { SharePointIntegration, SharePointDocument } from '@/lib/integrations/sharepoint';
 
 interface SharePointFolder {
   id: string

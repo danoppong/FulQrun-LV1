@@ -1,8 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server'
-import { SupabaseClient as _SupabaseClient, CookieOptions as _CookieOptions } from '@/lib/types/auth'
-import { supabaseConfig } from '@/lib/config'
+import { SupabaseClient as _SupabaseClient, CookieOptions as _CookieOptions } from '@/lib/types/auth';
+import { supabaseConfig } from '@/lib/config';
 
 export const createServerComponentClient = () => {
   if (!supabaseConfig.isConfigured) {

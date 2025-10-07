@@ -3,7 +3,7 @@
  * Integrates with actual data sources and AI services for lead generation
  */
 
-import { Database } from '@/lib/types/supabase'
+import { Database } from '@/lib/types/supabase';
 
 export interface RealCompanyData {
   name: string
@@ -41,7 +41,7 @@ export class RealAIOrchestrationService {
     hunter?: string
   }
 
-  constructor(supabase: any, apiKeys: any = {}) {
+  constructor(supabase: any, apiKeys: unknown = {}) {
     this.supabase = supabase
     this.apiKeys = apiKeys
   }

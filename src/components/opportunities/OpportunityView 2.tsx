@@ -1,12 +1,12 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 import Link from 'next/link'
-import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
+import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities';
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface OpportunityViewProps {
   opportunityId: string

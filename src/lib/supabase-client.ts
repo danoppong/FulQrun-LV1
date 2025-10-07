@@ -5,7 +5,7 @@
  * Use this for backward compatibility with existing code.
  */
 
-import { getSupabaseBrowserClient } from '@/lib/supabase-singleton'
+import { getSupabaseBrowserClient } from '@/lib/supabase-singleton';
 
 /**
  * Get the singleton Supabase client instance

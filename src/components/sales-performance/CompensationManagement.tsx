@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface CompensationManagementProps {
   organizationId: string
@@ -30,7 +30,7 @@ interface CompensationPlan {
     full_name: string
     email: string
   }
-  commission_calculations: any[]
+  commission_calculations: unknown[]
 }
 
 export function CompensationManagement({ organizationId, user }: CompensationManagementProps) {

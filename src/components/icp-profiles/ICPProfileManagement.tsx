@@ -1,16 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { z } from 'zod';
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge'
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
-import { icpProfileAPI, ICPProfile } from '@/lib/api/icp-profiles'
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { icpProfileAPI, ICPProfile } from '@/lib/api/icp-profiles';
 
 const ICPProfileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),

@@ -1,9 +1,9 @@
 'use client'
 import { supabase } from '@/lib/supabase'
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'
-// import Link from 'next/link' // Unused import
-import dynamic from 'next/dynamic'
+// import Link from 'next/link' // Unused import;
+import dynamic from 'next/dynamic';
 
 // Dynamic imports for dashboard components
 const HierarchicalPerformanceDashboard = dynamic(() => import('@/components/dashboard/HierarchicalPerformanceDashboard'), {
@@ -19,8 +19,8 @@ const PipelineChart = dynamic(() => import('@/components/dashboard/PipelineChart
   ssr: false
 })
 import { UserRole } from '@/lib/roles'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { AuthWrapper } from '@/components/auth/AuthWrapper'
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AuthWrapper } from '@/components/auth/AuthWrapper';
 
 // Function to create user record when they don't exist in database
 async function createUserRecord(user: any, supabase: any) {

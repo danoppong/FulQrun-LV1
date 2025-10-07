@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { AuthClientService } from '@/lib/auth-client'
+import { AuthClientService } from '@/lib/auth-client';
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import Link from 'next/link';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('')
@@ -108,7 +108,7 @@ const LoginPage = () => {
               href="/auth/signup"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              Don&apos;t have an account? Sign up
+              Don't have an account? Sign up
             </Link>
           </div>
         </form>

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 // Common validation schemas
 export const uuidSchema = z.string().uuid('Invalid UUID format')

@@ -1,4 +1,4 @@
-import { WidgetData, WidgetConfig } from '@/lib/types/dashboard'
+import { WidgetData, WidgetConfig } from '@/lib/types/dashboard';
 
 export interface DashboardWidget {
   id: string

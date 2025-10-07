@@ -1,17 +1,17 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 import { leadAPI, LeadWithScore } from '@/lib/api/leads'
-import { useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CheckCircle, Clock, AlertCircle, Target, Users, DollarSign, Calendar, Zap } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CheckCircle, Clock, AlertCircle, Target, Users, DollarSign, Calendar, Zap } from 'lucide-react';
 
 const leadSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),

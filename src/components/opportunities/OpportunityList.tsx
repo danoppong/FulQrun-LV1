@@ -1,11 +1,11 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect, useCallback } from 'react'
-import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
+import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities';
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
-import Link from 'next/link'
-import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link';
+import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 interface OpportunityListProps {
   searchQuery?: string

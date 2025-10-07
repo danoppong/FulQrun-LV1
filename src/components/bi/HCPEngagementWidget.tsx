@@ -14,7 +14,7 @@ interface HCPEngagementWidgetProps {
     engagementRate: number;
     avgInteractions: number;
   };
-  recentCalls: any[];
+  recentCalls: unknown[];
 }
 
 export function HCPEngagementWidget({ hcpEngagement, recentCalls }: HCPEngagementWidgetProps) {

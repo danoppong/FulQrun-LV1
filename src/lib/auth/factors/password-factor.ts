@@ -8,7 +8,7 @@
  * - Password history
  */
 
-import { SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface PasswordAuthResult {
   success: boolean

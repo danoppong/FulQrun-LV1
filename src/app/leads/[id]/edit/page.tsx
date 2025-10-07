@@ -1,5 +1,5 @@
 import LeadFormNew from '@/components/leads/LeadFormNew'
-import AuthWrapper from '@/components/auth/AuthWrapper'
+import AuthWrapper from '@/components/auth/AuthWrapper';
 
 interface LeadEditPageProps {
   params: Promise<{

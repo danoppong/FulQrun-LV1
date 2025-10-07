@@ -1,7 +1,7 @@
 // Email synchronization with Microsoft Graph
 // This module handles email sync functionality separately from the main Graph API
 
-import { microsoftGraphAPI, GraphEmail } from './microsoft-graph'
+import { microsoftGraphAPI, GraphEmail } from './microsoft-graph';
 
 export interface EmailSyncResult {
   imported: number

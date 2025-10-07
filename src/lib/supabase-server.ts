@@ -6,9 +6,9 @@
  */
 
 import { createServerClient as createSSRClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies } from 'next/headers';
 import { supabaseConfig } from '@/lib/config'
-import type { Database } from '@/lib/types/supabase'
+import type { Database } from '@/lib/types/supabase';
 
 // Helper function for server-side client creation (proper server client with auth context)
 export function createServerClient() {

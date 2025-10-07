@@ -1,4 +1,4 @@
-import { AIInsightsEngine, InsightContext } from './insights-engine'
+import { AIInsightsEngine, InsightContext } from './insights-engine';
 
 export interface NextAction {
   action: string

@@ -1,10 +1,10 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect } from 'react'
-import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
+import { contactAPI, ContactWithCompany } from '@/lib/api/contacts';
 import Link from 'next/link'
-import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface ContactListProps {
   searchQuery?: string

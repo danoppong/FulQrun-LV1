@@ -1,8 +1,8 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import Link from 'next/link';
 
 interface LearningModule {
   id: string

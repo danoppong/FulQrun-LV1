@@ -1,8 +1,8 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect, createContext, useContext } from 'react'
-import Navigation from './Navigation'
+import Navigation from './Navigation';
 
 interface ClientLayoutProps {
   children: React.ReactNode

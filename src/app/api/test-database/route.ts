@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClientComponentClient } from '@/lib/auth'
+import { createClientComponentClient } from '@/lib/auth';
 
 export async function GET() {
   try {

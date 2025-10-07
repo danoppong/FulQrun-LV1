@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
+import { ;
   ChartBarIcon, 
   ServerIcon, 
   PlusIcon, 
@@ -27,7 +27,8 @@ import {
   CogIcon,
   ArrowPathIcon,
   SignalIcon,
-  CpuChipIcon
+  CpuChipIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { z } from 'zod';
@@ -438,8 +439,8 @@ function SystemMetrics({ config, onUpdate }: { config: SystemMonitoringConfigura
                 handleSaveMetric({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  category: formData.get('category') as any,
-                  type: formData.get('type') as any,
+                  category: formData.get('category') as 'cpu' | 'memory' | 'disk' | 'network' | 'database' | 'application' | 'custom',
+                  type: formData.get('type') as 'gauge' | 'counter' | 'histogram' | 'summary',
                   unit: formData.get('unit') as string,
                   isActive: true
                 });
@@ -714,7 +715,7 @@ function HealthChecks({ config, onUpdate }: { config: SystemMonitoringConfigurat
                 handleSaveHealthCheck({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as 'http' | 'tcp' | 'database' | 'custom',
                   target: formData.get('target') as string,
                   interval: parseInt(formData.get('interval') as string),
                   timeout: parseInt(formData.get('timeout') as string),

@@ -1,18 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { z } from 'zod';
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
-import { icpProfileAPI, ICPProfile } from '@/lib/api/icp-profiles'
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { icpProfileAPI, ICPProfile } from '@/lib/api/icp-profiles';
 
 const LeadBriefSchema = z.object({
   lead_type: z.enum(['account', 'contact']),
@@ -217,7 +217,7 @@ export default function LeadBriefForm({
               <option value="$10–50M">$10M - $50M</option>
               <option value="$50–250M">$50M - $250M</option>
               <option value="$250M–$1B">$250M - $1B</option>
-              <option value=">$1B">Greater than $1B</option>
+              <option value="&gt;$1B">Greater than $1B</option>
             </Select>
             {errors.revenue_band && (
               <p className="mt-1 text-sm text-red-600">{errors.revenue_band.message}</p>

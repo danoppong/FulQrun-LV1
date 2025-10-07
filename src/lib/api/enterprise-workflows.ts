@@ -3,7 +3,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { workflowManager } from '../workflows/index';
-import { 
+import { ;
   EnterpriseWorkflow, 
   WorkflowExecution 
 } from '../workflows/index';

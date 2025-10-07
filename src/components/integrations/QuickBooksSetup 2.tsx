@@ -1,7 +1,7 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 export default function QuickBooksSetup() {
   const [isConnected, setIsConnected] = useState(false)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AuthService } from '@/lib/auth-unified'
+import { AuthService } from '@/lib/auth-unified';
 
 export default function TestAuth() {
   const [user, setUser] = useState(null)

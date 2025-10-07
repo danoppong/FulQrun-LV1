@@ -8,9 +8,9 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { supabaseConfig } from '@/lib/config'
-import type { Database } from '@/lib/types/supabase'
+import type { Database } from '@/lib/types/supabase';
 
 // Global singleton client instance for browser
 let browserClientInstance: ReturnType<typeof createClient<Database>> | null = null

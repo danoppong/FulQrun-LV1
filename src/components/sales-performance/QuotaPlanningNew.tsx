@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button'
-import { QuotaPlanModal } from './modals/QuotaPlanModal'
-import { Target, TrendingUp, CheckCircle, Clock, Edit, Trash2, Plus, GitBranch } from 'lucide-react'
+import { QuotaPlanModal } from './modals/QuotaPlanModal';
+import { Target, TrendingUp, CheckCircle, Clock, Edit, Trash2, Plus, GitBranch } from 'lucide-react';
 
 interface QuotaPlanningNewProps {
   organizationId: string
@@ -41,7 +41,7 @@ interface QuotaPlan {
   approved_by_user?: {
     full_name: string
   }
-  performance_metrics: any[]
+  performance_metrics: unknown[]
   child_plans?: QuotaPlan[]
 }
 

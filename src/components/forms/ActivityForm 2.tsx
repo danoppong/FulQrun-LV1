@@ -1,12 +1,12 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect, memo } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { z } from 'zod';
 import { activityAPI as _activityAPI } from '@/lib/api/activities'
-import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
+import { contactAPI, ContactWithCompany } from '@/lib/api/contacts';
 
 const activitySchema = z.object({
   type: z.enum(['email', 'call', 'meeting', 'task']),

@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 interface TerritoryModalProps {
   isOpen: boolean
@@ -10,7 +10,7 @@ interface TerritoryModalProps {
   onSuccess: () => void
   territory?: any
   organizationId: string
-  users: any[]
+  users: unknown[]
 }
 
 export function TerritoryModal({ 

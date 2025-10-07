@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { 
+import React, { useState, useEffect } from 'react';
+import { ;
   MEDDPICC_CONFIG, 
   MEDDPICCResponse as _MEDDPICCResponse, 
   MEDDPICCAssessment,
   calculateMEDDPICCScore as _calculateMEDDPICCScore
 } from '@/lib/meddpicc'
-import { 
+import { ;
   CheckCircleIcon, 
   XCircleIcon, 
   ClockIcon,

@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
+import { ;
   ClipboardDocumentListIcon, 
   MagnifyingGlassIcon, 
   FunnelIcon,
@@ -20,7 +20,8 @@ import {
   DocumentTextIcon,
   CalendarIcon,
   ChevronDownIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client';
 

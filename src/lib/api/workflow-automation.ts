@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { Database } from '@/lib/supabase'
+import { Database } from '@/lib/supabase';
 
 type WorkflowAutomation = Database['public']['Tables']['workflow_automations']['Row']
 type WorkflowAutomationInsert = Database['public']['Tables']['workflow_automations']['Insert']

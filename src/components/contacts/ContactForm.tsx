@@ -1,13 +1,13 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod'
-import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
-import { companyAPI } from '@/lib/api/companies'
+import { contactAPI, ContactWithCompany } from '@/lib/api/contacts';
+import { companyAPI } from '@/lib/api/companies';
 
 const contactSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),

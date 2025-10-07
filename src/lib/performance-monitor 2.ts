@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React from 'react';
 
 // Performance monitoring utilities for tracking and optimizing application performance
 

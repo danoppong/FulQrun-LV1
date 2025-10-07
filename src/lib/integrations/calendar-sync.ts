@@ -1,7 +1,7 @@
 // Calendar synchronization with Microsoft Graph
 // This module handles calendar sync functionality separately from the main Graph API
 
-import { microsoftGraphAPI } from './microsoft-graph'
+import { microsoftGraphAPI } from './microsoft-graph';
 
 interface GraphEvent {
   id: string

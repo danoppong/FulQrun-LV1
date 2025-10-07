@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, memo } from 'react'
-import { PerformanceDashboard } from './PerformanceDashboard'
+import { PerformanceDashboard } from './PerformanceDashboard';
 
 const PerformanceToggle = memo(function PerformanceToggle() {
   const [isOpen, setIsOpen] = useState(false)

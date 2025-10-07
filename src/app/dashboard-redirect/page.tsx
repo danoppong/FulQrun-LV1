@@ -1,7 +1,7 @@
 'use client'
 import { AuthClientService } from '@/lib/auth-client'
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const DashboardRedirectPage = () => {
   const [status, setStatus] = useState('Initializing...')

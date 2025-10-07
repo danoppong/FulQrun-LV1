@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 interface QuotaPlanModalProps {
   isOpen: boolean
@@ -10,9 +10,9 @@ interface QuotaPlanModalProps {
   onSuccess: () => void
   quotaPlan?: any
   organizationId: string
-  users: any[]
-  territories: any[]
-  parentPlans?: any[]
+  users: unknown[]
+  territories: unknown[]
+  parentPlans?: unknown[]
 }
 
 export function QuotaPlanModal({ 

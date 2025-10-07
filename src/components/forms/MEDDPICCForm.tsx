@@ -1,13 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { z } from 'zod';
 import { opportunityAPI as _opportunityAPI } from '@/lib/api/opportunities'
-import { MEDDPICCQualification } from '@/components/meddpicc'
+import { MEDDPICCQualification } from '@/components/meddpicc';
 import { MEDDPICCResponse, MEDDPICCAssessment, MEDDPICC_CONFIG, calculateMEDDPICCScore } from '@/lib/meddpicc'
-import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
+import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring';
 
 const meddpiccSchema = z.object({
   metrics: z.string().optional(),

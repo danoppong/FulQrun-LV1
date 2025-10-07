@@ -1,6 +1,6 @@
 import { createClientComponentClient } from '@/lib/auth'
-import { Database } from '@/lib/supabase'
-import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors'
+import { Database } from '@/lib/supabase';
+import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors';
 
 type Contact = Database['public']['Tables']['contacts']['Row']
 type ContactInsert = Database['public']['Tables']['contacts']['Insert']

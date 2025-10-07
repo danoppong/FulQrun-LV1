@@ -1,5 +1,5 @@
 import { createClientComponentClient } from '@/lib/auth'
-import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors'
+import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors';
 
 export interface PerformanceMetric {
   id: string

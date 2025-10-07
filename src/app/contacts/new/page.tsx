@@ -1,4 +1,4 @@
-import ContactForm from '@/components/contacts/ContactForm'
+import ContactForm from '@/components/contacts/ContactForm';
 
 interface NewContactPageProps {
   searchParams: { opportunityId?: string }

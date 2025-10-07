@@ -1,6 +1,6 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import MEDDPICCForm from '@/components/forms/MEDDPICCForm'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import MEDDPICCForm from '@/components/forms/MEDDPICCForm';
 
 // Mock the API calls
 jest.mock('@/lib/api/opportunities', () => ({

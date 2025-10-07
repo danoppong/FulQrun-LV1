@@ -1,8 +1,8 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { usePathname } from 'next/navigation'
-import ClientLayout from './ClientLayout'
+import ClientLayout from './ClientLayout';
 
 interface ConditionalLayoutProps {
   children: React.ReactNode

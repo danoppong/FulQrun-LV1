@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface CriticalErrorBoundaryProps {
   children: React.ReactNode

@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button'
-import { TerritoryModal } from './modals/TerritoryModal'
-import { Map, Users, TrendingUp, Award, Edit, Trash2, Plus } from 'lucide-react'
+import { TerritoryModal } from './modals/TerritoryModal';
+import { Map, Users, TrendingUp, Award, Edit, Trash2, Plus } from 'lucide-react';
 
 interface TerritoryManagementNewProps {
   organizationId: string
@@ -37,8 +37,8 @@ interface Territory {
     full_name: string
     email: string
   }
-  quota_plans: any[]
-  compensation_plans: any[]
+  quota_plans: unknown[]
+  compensation_plans: unknown[]
 }
 
 export function TerritoryManagementNew({ organizationId, user }: TerritoryManagementNewProps) {

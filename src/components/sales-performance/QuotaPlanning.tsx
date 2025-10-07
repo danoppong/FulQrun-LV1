@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface QuotaPlanningProps {
   organizationId: string
@@ -30,7 +30,7 @@ interface QuotaPlan {
     full_name: string
     email: string
   }
-  performance_metrics: any[]
+  performance_metrics: unknown[]
 }
 
 export function QuotaPlanning({ organizationId, user }: QuotaPlanningProps) {

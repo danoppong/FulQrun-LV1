@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { X, Plus, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button';
+import { X, Plus, Trash2 } from 'lucide-react';
 
 interface CompensationPlanModalProps {
   isOpen: boolean
@@ -10,8 +10,8 @@ interface CompensationPlanModalProps {
   onSuccess: () => void
   compensationPlan?: any
   organizationId: string
-  users: any[]
-  territories: any[]
+  users: unknown[]
+  territories: unknown[]
 }
 
 export function CompensationPlanModal({ 

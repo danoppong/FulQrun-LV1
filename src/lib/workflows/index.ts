@@ -28,7 +28,7 @@ export type {
 } from './approval-processes';
 
 // Import types for use in this file
-import type {
+import type {;
   EnterpriseWorkflow,
   WorkflowExecution,
 } from './workflow-engine';

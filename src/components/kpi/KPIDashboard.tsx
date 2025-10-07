@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import { ;
   TrendingUp, 
   TrendingDown, 
   Target, 
@@ -86,7 +86,7 @@ interface KPIData {
     presentations: number;
     activities_per_day: number;
   };
-  trends?: any[];
+  trends?: unknown[];
   benchmarks?: any;
 }
 

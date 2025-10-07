@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { AIInsightsEngine } from '@/lib/ai/insights-engine'
-import type { AIInsightData, LeadScoringInsight, DealRiskInsight, NextActionInsight } from '@/lib/api/ai-insights'
+import { AIInsightsEngine } from '@/lib/ai/insights-engine';
+import type { AIInsightData, LeadScoringInsight, DealRiskInsight, NextActionInsight } from '@/lib/api/ai-insights';
 
 interface AIInsightsPanelProps {
   entityType: 'lead' | 'opportunity' | 'contact' | 'user' | 'organization'

@@ -1,9 +1,9 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@/lib/auth'
-import { supabaseConfig } from '@/lib/config'
+import { createClientComponentClient } from '@/lib/auth';
+import { supabaseConfig } from '@/lib/config';
 
 export default function SupabaseDiagnostic() {
   const [diagnostics, setDiagnostics] = useState<{

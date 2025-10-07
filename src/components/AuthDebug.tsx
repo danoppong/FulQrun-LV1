@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
-import { createClientComponentClient } from '@/lib/auth'
-import { useEffect, useState } from 'react'
+import { createClientComponentClient } from '@/lib/auth';
+import { useEffect, useState } from 'react';
 
 interface AuthState {
   user: {

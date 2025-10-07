@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { PerformanceAPI as _PerformanceAPI } from '@/lib/api/performance'
+import { PerformanceAPI as _PerformanceAPI } from '@/lib/api/performance';
 
 interface ValueMetricsProps {
   userId: string

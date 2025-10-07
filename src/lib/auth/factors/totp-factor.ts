@@ -6,8 +6,8 @@
  */
 
 import { authenticator } from 'otplib'
-import QRCode from 'qrcode'
-import { SupabaseClient } from '@supabase/supabase-js'
+import QRCode from 'qrcode';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface TOTPEnrollment {
   factorId: string

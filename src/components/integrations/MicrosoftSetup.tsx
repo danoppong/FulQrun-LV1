@@ -1,10 +1,10 @@
 'use client'
-import React from 'react'
+import React from 'react';
 
 import { useState, useEffect, useCallback } from 'react'
-import { microsoftGraphAPI as _microsoftGraphAPI } from '@/lib/integrations/microsoft-graph'
+import { microsoftGraphAPI as _microsoftGraphAPI } from '@/lib/integrations/microsoft-graph';
 import { createClientComponentClient } from '@/lib/auth'
-import { CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
+import { CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 interface MicrosoftGraphConfig {
   clientId: string

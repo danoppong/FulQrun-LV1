@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
+import { ;
   PlusIcon, 
   PencilIcon, 
   TrashIcon,
@@ -1423,17 +1423,17 @@ function EmailLayouts({ config, onUpdate }: { config: EmailTemplatesConfiguratio
                       defaultValue={editingLayout?.htmlStructure}
                       rows={12}
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-mono text-xs"
-                      placeholder="<div class=&quot;email-container&quot;>
-  <header class=&quot;header&quot;>
-    <h1>Your Company</h1>
-  </header>
-  <main class=&quot;content&quot;>
+                      placeholder="&lt;div class=&quot;email-container&quot;&gt;
+  &lt;header class=&quot;header&quot;&gt;
+    &lt;h1&gt;Your Company&lt;/h1&gt;
+  &lt;/header&gt;
+  &lt;main class=&quot;content&quot;&gt;
     {{content}}
-  </main>
-  <footer class=&quot;footer&quot;>
-    <p>&copy; 2024 Your Company</p>
-  </footer>
-</div>"
+  &lt;/main&gt;
+  &lt;footer class=&quot;footer&quot;&gt;
+    &lt;p&gt;&amp;copy; 2024 Your Company&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/div&gt;"
                     />
                   </div>
 

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, memo } from 'react'
-import { performanceAPI } from '@/lib/api/performance'
+import { performanceAPI } from '@/lib/api/performance';
 
 interface TeachMetricsProps {
   userId: string

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { Database } from '@/lib/supabase'
+import { Database } from '@/lib/supabase';
 
 type PipelineConfiguration = Database['public']['Tables']['pipeline_configurations']['Row']
 type PipelineConfigurationInsert = Database['public']['Tables']['pipeline_configurations']['Insert']

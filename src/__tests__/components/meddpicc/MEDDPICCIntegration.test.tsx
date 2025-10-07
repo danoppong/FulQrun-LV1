@@ -1,8 +1,8 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { jest } from '@jest/globals'
-import { MEDDPICCQualification } from '@/components/meddpicc'
-import { MEDDPICC_CONFIG, calculateMEDDPICCScore } from '@/lib/meddpicc'
+import { MEDDPICCQualification } from '@/components/meddpicc';
+import { MEDDPICC_CONFIG, calculateMEDDPICCScore } from '@/lib/meddpicc';
 
 // Mock the opportunity API
 jest.mock('@/lib/api/opportunities', () => ({

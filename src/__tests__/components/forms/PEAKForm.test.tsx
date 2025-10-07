@@ -1,6 +1,6 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import PEAKForm from '@/components/forms/PEAKForm'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import PEAKForm from '@/components/forms/PEAKForm';
 
 // Mock the API calls
 jest.mock('@/lib/api/opportunities', () => ({

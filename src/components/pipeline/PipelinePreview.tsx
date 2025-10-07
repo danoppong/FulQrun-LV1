@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { PipelineConfigData, PipelineStage } from '@/lib/api/pipeline-config'
+import { PipelineConfigData, PipelineStage } from '@/lib/api/pipeline-config';
 
 interface PipelinePreviewProps {
   config: PipelineConfigData

@@ -1,7 +1,7 @@
 // Learning Platform API
 // API functions for learning platform features
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

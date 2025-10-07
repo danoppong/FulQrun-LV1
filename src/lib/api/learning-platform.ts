@@ -2,7 +2,7 @@
 // API functions for learning management system, certifications, and compliance
 
 import { createClient } from '@supabase/supabase-js';
-import LearningManagementSystem, { 
+import LearningManagementSystem, { ;
   LearningModule, 
   CertificationTrack, 
   UserProgress, 

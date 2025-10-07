@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { LearningDashboard } from '@/components/learning/LearningDashboard'
+import { LearningDashboard } from '@/components/learning/LearningDashboard';
 
 export default function LearningPage() {
   const [userId] = useState('user-123') // This would come from auth context

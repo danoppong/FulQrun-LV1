@@ -94,7 +94,7 @@ export async function PUT(
     }
 
     // Build update object
-    const updateData: any = {
+    const updateData: unknown = {
       updated_at: new Date().toISOString()
     };
 

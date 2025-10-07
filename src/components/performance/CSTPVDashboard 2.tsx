@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { PerformanceAPI as _PerformanceAPI } from '@/lib/api/performance'
+import { PerformanceAPI as _PerformanceAPI } from '@/lib/api/performance';
 
 interface CSTPVScore {
   clarity: number
@@ -27,10 +27,10 @@ interface PerformanceBenchmark {
   industryAverage: number
 }
 import { ClarityMetrics } from './ClarityMetrics'
-import { ScoreMetrics } from './ScoreMetrics'
+import { ScoreMetrics } from './ScoreMetrics';
 import { TeachMetrics } from './TeachMetrics'
-import { ProblemMetrics } from './ProblemMetrics'
-import { ValueMetrics } from './ValueMetrics'
+import { ProblemMetrics } from './ProblemMetrics';
+import { ValueMetrics } from './ValueMetrics';
 
 interface CSTPVDashboardProps {
   userId: string

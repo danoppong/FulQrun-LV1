@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers'
-import { z } from 'zod'
+import { z } from 'zod';
 
 const ProviderConfigSchema = z.object({
   provider: z.enum(['CLEARBIT', 'ZOOMINFO', 'OPPORTUNITY', 'COMPLIANCE']),

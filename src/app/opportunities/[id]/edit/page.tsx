@@ -1,5 +1,5 @@
 import OpportunityForm from '@/components/opportunities/OpportunityForm'
-import AuthWrapper from '@/components/auth/AuthWrapper'
+import AuthWrapper from '@/components/auth/AuthWrapper';
 
 interface OpportunityEditPageProps {
   params: {

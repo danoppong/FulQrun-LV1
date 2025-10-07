@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
-import { performanceMonitor } from '@/lib/performance-monitor'
+import { performanceMonitor } from '@/lib/performance-monitor';
 
 interface UsePerformanceTrackingOptions {
   componentName: string

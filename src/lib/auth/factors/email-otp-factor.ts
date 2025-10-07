@@ -5,7 +5,7 @@
  * Uses Supabase's built-in email OTP functionality
  */
 
-import { SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface EmailOTPVerification {
   code: string

@@ -5,7 +5,7 @@
  * MFA methods are unavailable
  */
 
-import { SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface BackupCodesGeneration {
   codes: string[]

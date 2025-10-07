@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { PipelineStage } from '@/lib/api/pipeline-config'
+import { PipelineStage } from '@/lib/api/pipeline-config';
 
 interface StageEditorProps {
   stages: PipelineStage[]

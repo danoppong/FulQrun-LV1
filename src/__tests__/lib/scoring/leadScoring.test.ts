@@ -1,4 +1,4 @@
-import { leadScoringEngine, LeadData, LeadScoringRule } from '@/lib/scoring/leadScoring'
+import { leadScoringEngine, LeadData, LeadScoringRule } from '@/lib/scoring/leadScoring';
 
 describe('Lead Scoring Engine', () => {
   const sampleLeadData: LeadData = {

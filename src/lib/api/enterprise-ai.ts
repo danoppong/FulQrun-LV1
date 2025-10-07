@@ -6,7 +6,7 @@ import { getSupabaseClient } from '@/lib/supabase-client';
 const supabase = getSupabaseClient();
 
 // Lazy initialization of AI intelligence engine to avoid circular dependencies
-let aiIntelligence: any = null;
+let aiIntelligence: unknown = null;
 
 function getAIIntelligence() {
   if (!aiIntelligence) {

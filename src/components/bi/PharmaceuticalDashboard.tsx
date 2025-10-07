@@ -5,7 +5,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
+import {;
   ChartBarIcon,
   UserGroupIcon,
   ArrowTrendingUpIcon,
@@ -54,11 +54,11 @@ interface DashboardData {
     engagementRate: number;
     avgInteractions: number;
   };
-  recentPrescriptions: any[];
-  recentCalls: any[];
+  recentPrescriptions: unknown[];
+  recentCalls: unknown[];
   territoryPerformance: Array<{
     territory: any;
-    kpis: any[];
+    kpis: unknown[];
   }>;
   productPerformance: Array<{
     productId: string;

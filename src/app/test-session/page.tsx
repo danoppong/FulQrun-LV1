@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { createServerComponentClient } from '@/lib/auth-server'
+import { createServerComponentClient } from '@/lib/auth-server';
 
 const TestSessionPage = async () => {
   const cookieStore = cookies()

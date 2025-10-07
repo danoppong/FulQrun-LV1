@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { 
+import { z } from 'zod';
+import { ;
   MEDDPICC_CONFIG, 
   MEDDPICCResponse, 
   MEDDPICCAssessment,
@@ -12,8 +12,8 @@ import {
   getMEDDPICCLevel
 } from '@/lib/meddpicc'
 import { opportunityAPI } from '@/lib/api/opportunities'
-import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
-import { ChevronDownIcon, ChevronUpIcon, InformationCircleIcon } from '@heroicons/react/24/outline'
+import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring';
+import { ChevronDownIcon, ChevronUpIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
 interface MEDDPICCQualificationProps {
   opportunityId: string

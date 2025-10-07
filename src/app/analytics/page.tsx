@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { EnhancedAnalyticsDashboard } from '@/components/analytics/EnhancedAnalyticsDashboard'
+import { EnhancedAnalyticsDashboard } from '@/components/analytics/EnhancedAnalyticsDashboard';
 
 export default function AnalyticsPage() {
   const [organizationId] = useState('org-123') // This would come from auth context

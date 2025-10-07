@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
+import { ;
   ChartBarIcon, 
   LightBulbIcon, 
   UserGroupIcon, 
@@ -11,7 +11,7 @@ import {
   ClockIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline';
-import { 
+import { ;
   generateAdvancedLeadScore,
   generateDealRiskAssessment,
   generateCoachingRecommendations,

@@ -5,7 +5,7 @@
  * Most secure MFA method - phishing resistant
  */
 
-import { SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface WebAuthnEnrollment {
   factorId: string

@@ -879,7 +879,7 @@ export class KPITestSuite implements KPITestSuite {
     return data.id;
   }
 
-  private async createTestOpportunities(organizationId: string, userId: string, opportunities: any[]): Promise<void> {
+  private async createTestOpportunities(organizationId: string, userId: string, opportunities: unknown[]): Promise<void> {
     for (const opp of opportunities) {
       await this.createTestOpportunity(organizationId, userId, opp);
     }
@@ -904,7 +904,7 @@ export class KPITestSuite implements KPITestSuite {
     }
   }
 
-  private async createTestActivities(organizationId: string, userId: string, activities: any[]): Promise<void> {
+  private async createTestActivities(organizationId: string, userId: string, activities: unknown[]): Promise<void> {
     for (const activity of activities) {
       const { error } = await this.supabase
         .from('activities')
@@ -924,7 +924,7 @@ export class KPITestSuite implements KPITestSuite {
     }
   }
 
-  private async createTestLeads(organizationId: string, userId: string, leads: any[]): Promise<void> {
+  private async createTestLeads(organizationId: string, userId: string, leads: unknown[]): Promise<void> {
     for (const lead of leads) {
       const { error } = await this.supabase
         .from('leads')
