@@ -31,7 +31,7 @@ async function getAuthenticatedUser(request: NextRequest) {
 }
 
 // Helper function to get organization ID
-async function getOrganizationId(supabase: any, userId: string) {
+async function getOrganizationId(supabase: unknown, userId: string) {
   const { data, error } = await supabase
     .from('users')
     .select('organization_id')

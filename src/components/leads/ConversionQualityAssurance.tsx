@@ -45,7 +45,7 @@ interface QualityAudit {
     severity: 'low' | 'medium' | 'high' | 'critical'
     suggestion: string
   }>
-  audit_data: Record<string, any>
+  audit_data: Record<string, unknown>
   audited_at: string
   audited_by: string
 }
@@ -92,7 +92,7 @@ interface QualityReport {
   }
   generated_at: string
   generated_by: string
-  data: any
+  data: unknown
 }
 
 export function ConversionQualityAssurance() {
@@ -685,7 +685,7 @@ function QualityCheckDialog({ check, onChange, onSave, onCancel }: QualityCheckD
                 <Label htmlFor="category">Category</Label>
                 <Select
                   value={check.category || 'data_quality'}
-                  onValueChange={(value: any) => onChange({ ...check, category: value })}
+                  onValueChange={(value: unknown) => onChange({ ...check, category: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />

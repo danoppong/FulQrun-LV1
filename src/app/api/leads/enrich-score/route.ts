@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
 }
 
 async function enrichLeads(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string
 ) {
   const validationResult = EnrichmentSchema.safeParse(body)
@@ -189,8 +189,8 @@ async function enrichLeads(
 }
 
 async function scoreLeads(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string
 ) {
   const validationResult = ScoringSchema.safeParse(body)
@@ -307,10 +307,10 @@ async function scoreLeads(
 }
 
 async function enrichLeadData(
-  lead: any,
+  lead: unknown,
   enrichmentLevel: string,
   providers?: string[]
-): Promise<any> {
+): Promise<unknown> {
   // This is a placeholder implementation
   // In a real implementation, this would call external data providers
   
@@ -350,9 +350,9 @@ async function enrichLeadData(
 }
 
 async function calculateLeadScores(
-  lead: any,
+  lead: unknown,
   weights?: any
-): Promise<any> {
+): Promise<unknown> {
   // This is a placeholder implementation
   // In a real implementation, this would use ML models and data analysis
   
@@ -399,7 +399,7 @@ async function calculateLeadScores(
   }
 }
 
-function calculateFitScore(lead: any): number {
+function calculateFitScore(lead: unknown): number {
   // Placeholder logic for fit score
   let score = 0.5 // Base score
 
@@ -418,7 +418,7 @@ function calculateFitScore(lead: any): number {
   return Math.min(score, 1)
 }
 
-function calculateIntentScore(lead: any): number {
+function calculateIntentScore(lead: unknown): number {
   // Placeholder logic for intent score
   let score = 0.3 // Base score
 
@@ -435,7 +435,7 @@ function calculateIntentScore(lead: any): number {
   return Math.min(score, 1)
 }
 
-function calculateEngagementScore(lead: any): number {
+function calculateEngagementScore(lead: unknown): number {
   // Placeholder logic for engagement score
   let score = 0.2 // Base score
 
@@ -457,7 +457,7 @@ function calculateEngagementScore(lead: any): number {
   return Math.min(score, 1)
 }
 
-function calculateViabilityScore(lead: any): number {
+function calculateViabilityScore(lead: unknown): number {
   // Placeholder logic for viability score
   let score = 0.4 // Base score
 
@@ -479,7 +479,7 @@ function calculateViabilityScore(lead: any): number {
   return Math.min(score, 1)
 }
 
-function calculateRecencyScore(lead: any): number {
+function calculateRecencyScore(lead: unknown): number {
   // Placeholder logic for recency score
   const createdAt = new Date(lead.created_at)
   const now = new Date()

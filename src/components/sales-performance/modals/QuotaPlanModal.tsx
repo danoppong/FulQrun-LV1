@@ -109,7 +109,7 @@ export function QuotaPlanModal({
 
       onSuccess()
       onClose()
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message)
     } finally {
       setLoading(false)

@@ -65,7 +65,7 @@ interface PolicyRule {
   id: string;
   condition: string;
   action: 'allow' | 'deny' | 'encrypt' | 'mask' | 'audit' | 'notify';
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
 }
 
 interface PolicyEnforcement {
@@ -100,7 +100,7 @@ interface RetentionRule {
 interface RetentionCondition {
   field: string;
   operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains';
-  value: any;
+  value: unknown;
 }
 
 interface AccessControl {
@@ -126,7 +126,7 @@ interface Permission {
 interface AccessCondition {
   field: string;
   operator: string;
-  value: any;
+  value: unknown;
 }
 
 interface ComplianceFramework {
@@ -411,7 +411,7 @@ function DataPolicies({ config, onUpdate }: { config: DataGovernanceConfiguratio
                 handleSavePolicy({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  category: formData.get('category') as any,
+                  category: formData.get('category') as unknown,
                   isActive: true
                 });
               }} className="space-y-4">
@@ -640,7 +640,7 @@ function DataClassifications({ config, onUpdate }: { config: DataGovernanceConfi
                 handleSaveClassification({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  level: formData.get('level') as any,
+                  level: formData.get('level') as unknown,
                   color: selectedLevel?.color || '#3B82F6',
                   isActive: true
                 });

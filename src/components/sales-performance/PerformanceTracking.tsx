@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 
 interface PerformanceTrackingProps {
   organizationId: string
-  user: any
+  user: unknown
 }
 
 interface KPIData {

@@ -96,7 +96,7 @@ export interface PharmaKPICardData {
   confidence: number
   trend: 'up' | 'down' | 'stable'
   format: 'number' | 'percentage' | 'currency' | 'ratio'
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
 }
 
 export interface TerritoryPerformanceData {

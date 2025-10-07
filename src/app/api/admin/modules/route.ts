@@ -31,7 +31,7 @@ async function getAuthenticatedUser(request: NextRequest) {
   return { user, supabase };
 }
 
-async function getOrganizationId(supabase: any, userId: string) {
+async function getOrganizationId(supabase: unknown, userId: string) {
   const { data, error } = await supabase
     .from('users')
     .select('organization_id')
@@ -45,7 +45,7 @@ async function getOrganizationId(supabase: any, userId: string) {
   return data.organization_id;
 }
 
-async function checkAdminPermission(supabase: any, userId: string, permission: string) {
+async function checkAdminPermission(supabase: unknown, userId: string, permission: string) {
   // For now, return true to allow access - implement proper RBAC later
   // const { data, error } = await supabase.rpc('has_admin_permission', {
   //   p_user_id: userId,
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
         acc[feature.moduleName].enabledFeatures++;
       }
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, unknown>);
 
     console.log('✅ Returning modules:', Object.keys(modules));
 

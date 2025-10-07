@@ -298,7 +298,7 @@ export function KPIAlerting({ organizationId }: KPIAlertingProps) {
 
                   <div>
                     <Label htmlFor="condition">Condition</Label>
-                    <Select value={newRule.condition} onValueChange={(value: any) => setNewRule({ ...newRule, condition: value })}>
+                    <Select value={newRule.condition} onValueChange={(value: unknown) => setNewRule({ ...newRule, condition: value })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -322,7 +322,7 @@ export function KPIAlerting({ organizationId }: KPIAlertingProps) {
 
                   <div>
                     <Label htmlFor="frequency">Frequency</Label>
-                    <Select value={newRule.frequency} onValueChange={(value: any) => setNewRule({ ...newRule, frequency: value })}>
+                    <Select value={newRule.frequency} onValueChange={(value: unknown) => setNewRule({ ...newRule, frequency: value })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>

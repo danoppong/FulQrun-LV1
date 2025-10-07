@@ -393,7 +393,7 @@ function DatabaseConnections({ config, onUpdate }: { config: DatabaseConfigurati
                 const formData = new FormData(e.currentTarget);
                 handleSaveConnection({
                   name: formData.get('name') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   host: formData.get('host') as string,
                   port: parseInt(formData.get('port') as string),
                   database: formData.get('database') as string,
@@ -910,7 +910,7 @@ function DatabaseSchemas({ config, onUpdate }: { config: DatabaseConfiguration; 
           <span className="text-sm text-gray-500">Status:</span>
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as any)}
+            onChange={(e) => setFilterStatus(e.target.value as unknown)}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm"
           >
             <option value="all">All</option>
@@ -922,7 +922,7 @@ function DatabaseSchemas({ config, onUpdate }: { config: DatabaseConfiguration; 
           <span className="text-sm text-gray-500">Sort by:</span>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as unknown)}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm"
           >
             <option value="name">Name</option>
@@ -1062,7 +1062,7 @@ function DatabaseSchemas({ config, onUpdate }: { config: DatabaseConfiguration; 
                 handleSaveSchema({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   permissions: permissions,
                   isActive: formData.get('isActive') === 'on'
                 });
@@ -1329,7 +1329,7 @@ function DatabaseTables({ config, onUpdate }: { config: DatabaseConfiguration; o
           <span className="text-sm text-gray-500">Sort by:</span>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as unknown)}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm"
           >
             <option value="name">Name</option>
@@ -1503,7 +1503,7 @@ function DatabaseTables({ config, onUpdate }: { config: DatabaseConfiguration; o
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
                   schemaId: formData.get('schemaId') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   columns: [], // Simplified for demo
                   indexes: [] // Simplified for demo
                 });
@@ -1772,7 +1772,7 @@ function DatabaseMigrations({ config, onUpdate }: { config: DatabaseConfiguratio
           <span className="text-sm text-gray-500">Status:</span>
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as any)}
+            onChange={(e) => setFilterStatus(e.target.value as unknown)}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm"
           >
             <option value="all">All</option>
@@ -1787,7 +1787,7 @@ function DatabaseMigrations({ config, onUpdate }: { config: DatabaseConfiguratio
           <span className="text-sm text-gray-500">Sort by:</span>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as unknown)}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm"
           >
             <option value="name">Name</option>
@@ -1982,7 +1982,7 @@ function DatabaseMigrations({ config, onUpdate }: { config: DatabaseConfiguratio
                   description: formData.get('description') as string,
                   sql: formData.get('sql') as string,
                   rollbackSql: formData.get('rollbackSql') as string,
-                  status: formData.get('status') as any
+                  status: formData.get('status') as unknown
                 });
               }} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2328,7 +2328,7 @@ function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfigura
   // Get slow queries from live data or historical data
   const getSlowQueries = () => {
     if (liveMetrics?.slowQueries?.length > 0) {
-      return liveMetrics.slowQueries.map((query: any) => ({
+      return liveMetrics.slowQueries.map((query: unknown) => ({
         query: query.query?.substring(0, 100) || 'Unknown query',
         executionTime: query.mean_exec_time || 0,
         executions: query.calls || 0,
@@ -2425,7 +2425,7 @@ function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfigura
             <span className="text-sm text-gray-500">Time range:</span>
             <select
               value={selectedTimeRange}
-              onChange={(e) => setSelectedTimeRange(e.target.value as any)}
+              onChange={(e) => setSelectedTimeRange(e.target.value as unknown)}
               className="border border-gray-300 rounded-md px-3 py-1 text-sm"
             >
               <option value="1h">Last Hour</option>
@@ -2797,7 +2797,7 @@ function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfigura
             <div>
               <h5 className="text-sm font-medium text-gray-700 mb-3">Estimated Table Sizes</h5>
               <div className="space-y-3">
-                {liveMetrics.tableSizes?.map((table: any, index: number) => (
+                {liveMetrics.tableSizes?.map((table: unknown, index: number) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900">

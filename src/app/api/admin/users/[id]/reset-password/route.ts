@@ -31,7 +31,7 @@ async function getAuthenticatedUser(request: NextRequest) {
 }
 
 // Helper function to check admin permission
-async function checkAdminPermission(supabase: any, userId: string) {
+async function checkAdminPermission(supabase: unknown, userId: string) {
   const { data, error } = await supabase
     .from('users')
     .select('role, organization_id')

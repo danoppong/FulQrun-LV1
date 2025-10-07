@@ -122,14 +122,14 @@ export async function GET(request: NextRequest) {
 
     if (category) {
       const configs = await configService.getConfigurationsByCategory(
-        category as any,
-        environment as any
+        category as unknown,
+        environment as unknown
       );
       return NextResponse.json({ configs });
     }
 
     if (module) {
-      const parameters = await configService.getModuleParameters(module as any);
+      const parameters = await configService.getModuleParameters(module as unknown);
       return NextResponse.json({ parameters });
     }
 
@@ -168,7 +168,7 @@ export async function PUT(
 
     // Determine category and data type from config key
     const configKey = params.key;
-    const category = configKey.split('.')[0] as any;
+    const category = configKey.split('.')[0] as unknown;
     const dataType = typeof validatedData.value === 'string' ? 'string' :
                     typeof validatedData.value === 'number' ? 'number' :
                     typeof validatedData.value === 'boolean' ? 'boolean' :
@@ -360,7 +360,7 @@ export async function GET_MODULES(request: NextRequest) {
         acc[feature.moduleName].enabledFeatures++;
       }
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, unknown>);
 
     return NextResponse.json({ modules: Object.values(modules) });
 
@@ -390,8 +390,8 @@ export async function GET_MODULE(
 
     const configService = new ConfigurationService(organizationId, user.id);
     const [features, parameters] = await Promise.all([
-      configService.getModuleFeatures(params.moduleName as any),
-      configService.getModuleParameters(params.moduleName as any)
+      configService.getModuleFeatures(params.moduleName as unknown),
+      configService.getModuleParameters(params.moduleName as unknown)
     ]);
 
     return NextResponse.json({ 
@@ -433,7 +433,7 @@ export async function PUT_MODULE(
     if (body.parameters) {
       for (const param of body.parameters) {
         await configService.setModuleParameter(
-          params.moduleName as any,
+          params.moduleName as unknown,
           param.parameterKey,
           param.value,
           {
@@ -452,7 +452,7 @@ export async function PUT_MODULE(
     if (body.features) {
       for (const feature of body.features) {
         await configService.toggleModuleFeature(
-          params.moduleName as any,
+          params.moduleName as unknown,
           feature.featureKey,
           feature.isEnabled,
           feature.reason
@@ -489,11 +489,11 @@ export async function POST_ENABLE_MODULE(
     const configService = new ConfigurationService(organizationId, user.id);
     
     // Enable all features for the module
-    const features = await configService.getModuleFeatures(params.moduleName as any);
+    const features = await configService.getModuleFeatures(params.moduleName as unknown);
     for (const feature of features) {
       if (!feature.isEnabled) {
         await configService.toggleModuleFeature(
-          params.moduleName as any,
+          params.moduleName as unknown,
           feature.featureKey,
           true,
           'Module enabled via API'
@@ -530,11 +530,11 @@ export async function POST_DISABLE_MODULE(
     const configService = new ConfigurationService(organizationId, user.id);
     
     // Disable all features for the module
-    const features = await configService.getModuleFeatures(params.moduleName as any);
+    const features = await configService.getModuleFeatures(params.moduleName as unknown);
     for (const feature of features) {
       if (feature.isEnabled) {
         await configService.toggleModuleFeature(
-          params.moduleName as any,
+          params.moduleName as unknown,
           feature.featureKey,
           false,
           'Module disabled via API'
@@ -578,8 +578,8 @@ export async function GET_AUDIT_LOGS(request: NextRequest) {
 
     const configService = new ConfigurationService(organizationId, user.id);
     const logs = await configService.getAdminActionLogs({
-      actionType: actionType as any,
-      riskLevel: riskLevel as any,
+      actionType: actionType as unknown,
+      riskLevel: riskLevel as unknown,
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
       limit

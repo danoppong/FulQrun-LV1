@@ -764,7 +764,7 @@ function OptimizationRuleDialog({ rule, onChange, onSave, onCancel }: Optimizati
                 <Label htmlFor="type">Rule Type</Label>
                 <Select
                   value={rule.type || 'scoring_adjustment'}
-                  onValueChange={(value: any) => onChange({ ...rule, type: value })}
+                  onValueChange={(value: unknown) => onChange({ ...rule, type: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />

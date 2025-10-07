@@ -238,7 +238,7 @@ export function MobileKPIDashboard({ organizationId, userId, territoryId }: Mobi
               </Select>
             </div>
 
-            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)}>
+            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as unknown)}>
               <TabsList className="w-full">
                 <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
                 <TabsTrigger value="detailed" className="flex-1">Details</TabsTrigger>
@@ -428,7 +428,7 @@ function MobileKPICard({ title, value, subtitle, icon, trend, performanceTier }:
 // Mobile Detailed Card Component
 interface MobileDetailedCardProps {
   title: string;
-  data: any;
+  data: unknown;
   type: string;
 }
 

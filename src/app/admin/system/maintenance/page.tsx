@@ -286,7 +286,7 @@ function MaintenanceModeControl({ config, onUpdate }: { config: MaintenanceConfi
               <label className="block text-sm font-medium text-gray-700">Maintenance Type</label>
               <select
                 value={mode.type}
-                onChange={(e) => setMode({ ...mode, type: e.target.value as any })}
+                onChange={(e) => setMode({ ...mode, type: e.target.value as unknown })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
                 <option value="full">Full Maintenance (Complete shutdown)</option>
@@ -568,7 +568,7 @@ function MaintenanceSchedules({ config, onUpdate }: { config: MaintenanceConfigu
                 handleSaveSchedule({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   startTime: new Date(formData.get('startTime') as string),
                   endTime: new Date(formData.get('endTime') as string),
                   recurring: formData.get('recurring') === 'on',

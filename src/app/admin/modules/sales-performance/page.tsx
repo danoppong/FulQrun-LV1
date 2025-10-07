@@ -90,7 +90,7 @@ interface TerritoryRule {
 interface TerritoryCondition {
   field: string;
   operator: string;
-  value: any;
+  value: unknown;
 }
 
 interface TerritoryAssignmentRule {
@@ -596,7 +596,7 @@ function QuotaManagement({ config, onUpdate }: { config: SalesPerformanceConfigu
                 handleSavePlan({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   targets: [],
                   isActive: true
                 });
@@ -802,7 +802,7 @@ function CompensationManagement({ config, onUpdate }: { config: SalesPerformance
                 handleSavePlan({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   isActive: true
                 });
               }} className="space-y-4">

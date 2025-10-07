@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 
 interface CommissionApprovalProps {
   organizationId: string
-  user: any
+  user: unknown
 }
 
 interface CommissionCalculation {
@@ -21,7 +21,7 @@ interface CommissionCalculation {
   total_compensation: number
   quota_attainment: number
   commission_rate_applied: number
-  adjustments: Record<string, any>
+  adjustments: Record<string, unknown>
   status: string
   approved_by: string
   approved_at: string

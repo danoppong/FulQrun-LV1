@@ -99,7 +99,7 @@ interface MEDDPICCIntegrationConfig {
   auto_populate: boolean
   confidence_threshold: number
   data_sources: string[]
-  mapping_rules: Record<string, any>
+  mapping_rules: Record<string, unknown>
   organization_id: string
   created_at: string
   updated_at: string

@@ -47,7 +47,7 @@ interface SubMenuItem {
 interface MenuItem {
   name: string
   href?: string
-  icon: any
+  icon: unknown
   submenu?: SubMenuItem[]
 }
 

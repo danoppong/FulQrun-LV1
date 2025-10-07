@@ -143,13 +143,13 @@ export async function POST(request: NextRequest) {
 }
 
 async function convertLeadToOpportunity(
-  supabase: any,
-  lead: any,
-  opportunityData: any,
+  supabase: unknown,
+  lead: unknown,
+  opportunityData: unknown,
   organizationId: string,
   userId: string,
   idempotencyKey?: string
-): Promise<any> {
+): Promise<unknown> {
   try {
     // Generate idempotency key if not provided
     const finalIdempotencyKey = idempotencyKey || `conversion_${lead.id}_${Date.now()}`

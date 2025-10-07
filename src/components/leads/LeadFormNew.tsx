@@ -73,7 +73,7 @@ export default function LeadForm({ mode, leadId }: LeadFormProps) {
   const [selectedFramework, setSelectedFramework] = useState<string>('')
   const [availableFrameworks, setAvailableFrameworks] = useState<QualificationFramework[]>([])
   const [currentQualification, setCurrentQualification] = useState<QualificationData | null>(null)
-  const [qualificationFormData, setQualificationFormData] = useState<Record<string, any>>({})
+  const [qualificationFormData, setQualificationFormData] = useState<Record<string, unknown>>({})
 
   const {
     register,
@@ -105,7 +105,7 @@ export default function LeadForm({ mode, leadId }: LeadFormProps) {
         setValue('company', lead.company || '')
         setValue('title', lead.title || '')
         setValue('source', lead.source || '')
-        setValue('status', lead.status as any || 'new')
+        setValue('status', lead.status as unknown || 'new')
         setValue('notes', lead.notes || '')
       }
     } catch (error) {
@@ -403,7 +403,7 @@ export default function LeadForm({ mode, leadId }: LeadFormProps) {
                 </div>
                 <div>
                   <Label htmlFor="status">Status *</Label>
-                  <Select value={watch('status')} onValueChange={(value) => setValue('status', value as any)}>
+                  <Select value={watch('status')} onValueChange={(value) => setValue('status', value as unknown)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

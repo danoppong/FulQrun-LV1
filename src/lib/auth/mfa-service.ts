@@ -209,7 +209,7 @@ export class MFAService {
         throw new Error(`Unsupported factor type: ${factorType}`)
       }
 
-      const verified = await (factor as any).verify(
+      const verified = await (factor as unknown).verify(
         challenge.userId, 
         verification
       )
@@ -279,8 +279,8 @@ export class MFAService {
   async enrollFactor(
     userId: string, 
     factorType: FactorType, 
-    enrollmentData: any
-  ): Promise<any> {
+    enrollmentData: unknown
+  ): Promise<unknown> {
     // Check enrollment limits
     const currentFactors = await this.getEnrolledFactors(userId)
     
@@ -294,7 +294,7 @@ export class MFAService {
       throw new Error(`Unsupported factor type: ${factorType}`)
     }
 
-    const enrollment = await (factor as any).enroll(userId, enrollmentData)
+    const enrollment = await (factor as unknown).enroll(userId, enrollmentData)
 
     // Log enrollment
     await this.logFactorEnrollment(userId, factorType)
@@ -360,7 +360,7 @@ export class MFAService {
    */
   private async determineMFARequirement(
     riskScore: RiskScore, 
-    user: any
+    user: unknown
   ): Promise<MFARequirement> {
     // Get user-specific policy
     const userPolicy = await this.getUserMFAPolicy(user.id)
@@ -458,7 +458,7 @@ export class MFAService {
   /**
    * Create authenticated session
    */
-  private async createSession(user: any, context: AuthContext) {
+  private async createSession(user: unknown, context: AuthContext) {
     // Generate tokens
     const accessToken = this.generateSecureToken()
     const refreshToken = this.generateSecureToken()
@@ -508,7 +508,7 @@ export class MFAService {
     return Buffer.from(hashBuffer).toString('hex')
   }
 
-  private async createDeviceFingerprint(deviceInfo: any): Promise<string> {
+  private async createDeviceFingerprint(deviceInfo: unknown): Promise<string> {
     const fingerprintData = {
       userAgent: deviceInfo.userAgent,
       screenResolution: deviceInfo.screenResolution,

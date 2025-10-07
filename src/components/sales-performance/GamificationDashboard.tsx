@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 
 interface GamificationDashboardProps {
   organizationId: string
-  user: any
+  user: unknown
 }
 
 interface SalesRecognition {

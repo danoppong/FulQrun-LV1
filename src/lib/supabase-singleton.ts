@@ -114,24 +114,24 @@ function createMockBrowserClient() {
     auth: {
       getUser: async () => ({
         data: { user: null },
-        error: { message: 'Supabase not configured' } as any,
+        error: { message: 'Supabase not configured' } as unknown,
       }),
       getSession: async () => ({
         data: { session: null },
-        error: { message: 'Supabase not configured' } as any,
+        error: { message: 'Supabase not configured' } as unknown,
       }),
       signInWithPassword: async () => ({
         data: { user: null, session: null },
-        error: { message: 'Supabase not configured' } as any,
+        error: { message: 'Supabase not configured' } as unknown,
       }),
       signUp: async () => ({
         data: { user: null, session: null },
-        error: { message: 'Supabase not configured' } as any,
+        error: { message: 'Supabase not configured' } as unknown,
       }),
       signOut: async () => ({ error: null }),
       signInWithOAuth: async () => ({
-        data: { provider: null as any, url: null as any },
-        error: { message: 'Supabase not configured' } as any,
+        data: { provider: null as unknown, url: null as unknown },
+        error: { message: 'Supabase not configured' } as unknown,
       }),
       onAuthStateChange: (_callback: (event: string, session: any) => void) => ({
         data: { subscription: { unsubscribe: () => {} } },
@@ -148,12 +148,12 @@ function createMockBrowserClient() {
         }),
         limit: async () => ({ data: [], error: null }),
       }),
-      insert: (_data: any) => ({
+      insert: (_data: unknown) => ({
         select: () => ({
           single: async () => ({ data: null, error: { message: 'Database not configured' } }),
         }),
       }),
-      update: (_data: any) => ({
+      update: (_data: unknown) => ({
         eq: () => ({
           select: () => ({
             single: async () => ({ data: null, error: { message: 'Database not configured' } }),
@@ -164,5 +164,5 @@ function createMockBrowserClient() {
         eq: async () => ({ error: { message: 'Database not configured' } }),
       }),
     }),
-  } as any
+  } as unknown
 }

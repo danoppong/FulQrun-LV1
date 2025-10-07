@@ -40,7 +40,7 @@ interface AuditLogEntry {
   resourceType: string;
   resourceId?: string;
   resourceName?: string;
-  details: any;
+  details: unknown;
   ipAddress: string;
   userAgent: string;
   timestamp: Date;
@@ -50,8 +50,8 @@ interface AuditLogEntry {
   sessionId?: string;
   changes?: {
     field: string;
-    oldValue: any;
-    newValue: any;
+    oldValue: unknown;
+    newValue: unknown;
   }[];
 }
 

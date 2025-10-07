@@ -53,7 +53,7 @@ interface Lead {
   intent_keywords: string[]
   sources: string[]
   risk_flags: string[]
-  compliance: Record<string, any>
+  compliance: Record<string, unknown>
   created_at: string
   ai_accounts?: unknown[]
   ai_contacts?: unknown[]

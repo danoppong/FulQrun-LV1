@@ -11,7 +11,7 @@ export interface ICPProfile {
   id: string
   name: string
   description: string | null
-  criteria: Record<string, any>
+  criteria: Record<string, unknown>
   organization_id: string
   created_by: string
   created_at: string
@@ -22,13 +22,13 @@ export interface ICPProfile {
 export interface ICPProfileInsert {
   name: string
   description?: string | null
-  criteria?: Record<string, any>
+  criteria?: Record<string, unknown>
 }
 
 export interface ICPProfileUpdate {
   name?: string
   description?: string | null
-  criteria?: Record<string, any>
+  criteria?: Record<string, unknown>
 }
 
 export class ICPProfileAPI {

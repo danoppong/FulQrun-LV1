@@ -149,7 +149,7 @@ interface CampaignRecipients {
 interface RecipientFilter {
   field: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than';
-  value: any;
+  value: unknown;
 }
 
 interface CampaignSchedule {
@@ -414,7 +414,7 @@ function EmailTemplates({ config, onUpdate }: { config: EmailTemplatesConfigurat
                 handleSaveTemplate({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  category: formData.get('category') as any,
+                  category: formData.get('category') as unknown,
                   subject: formData.get('subject') as string,
                   htmlContent: formData.get('htmlContent') as string,
                   isActive: formData.get('isActive') === 'on',
@@ -870,7 +870,7 @@ function EmailVariables({ config, onUpdate }: { config: EmailTemplatesConfigurat
           <span className="text-sm text-gray-500">Sort by:</span>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as unknown)}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm"
           >
             <option value="name">Name</option>
@@ -982,7 +982,7 @@ function EmailVariables({ config, onUpdate }: { config: EmailTemplatesConfigurat
                   name: formData.get('name') as string,
                   label: formData.get('label') as string,
                   description: formData.get('description') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   defaultValue: formData.get('defaultValue') as string,
                   isRequired: formData.get('isRequired') === 'on',
                   isActive: formData.get('isActive') === 'on'
@@ -1255,7 +1255,7 @@ function EmailLayouts({ config, onUpdate }: { config: EmailTemplatesConfiguratio
           <span className="text-sm text-gray-500">Sort by:</span>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as unknown)}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm"
           >
             <option value="name">Name</option>
@@ -1727,7 +1727,7 @@ function EmailCampaigns({ config, onUpdate }: { config: EmailTemplatesConfigurat
           <span className="text-sm text-gray-500">Status:</span>
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as any)}
+            onChange={(e) => setFilterStatus(e.target.value as unknown)}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm"
           >
             <option value="all">All</option>
@@ -1742,7 +1742,7 @@ function EmailCampaigns({ config, onUpdate }: { config: EmailTemplatesConfigurat
           <span className="text-sm text-gray-500">Sort by:</span>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as unknown)}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm"
           >
             <option value="name">Name</option>
@@ -1889,7 +1889,7 @@ function EmailCampaigns({ config, onUpdate }: { config: EmailTemplatesConfigurat
                   layoutId: formData.get('layoutId') as string,
                   audienceSize: parseInt(formData.get('audienceSize') as string) || 0,
                   scheduledAt: formData.get('scheduledAt') ? new Date(formData.get('scheduledAt') as string) : undefined,
-                  status: formData.get('status') as any
+                  status: formData.get('status') as unknown
                 });
               }} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

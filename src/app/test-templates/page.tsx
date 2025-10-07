@@ -53,7 +53,7 @@ export default function TestTemplatesAPI() {
       <h3 className="font-bold">Templates Loaded Successfully!</h3>
       <p>Found {templates.length} templates:</p>
       <ul className="list-disc list-inside mt-2">
-        {templates.map((template: any) => (
+        {templates.map((template: unknown) => (
           <li key={template.id}>
             {template.name} ({template.category}) - {template.metric_type}
           </li>

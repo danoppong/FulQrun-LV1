@@ -710,7 +710,7 @@ function HandoffWorkflowDialog({ workflow, onChange, onSave, onCancel, users }: 
                   <Label htmlFor="assignment_method">Assignment Method</Label>
                   <Select
                     value={workflow.assignment_rules?.method || 'auto'}
-                    onValueChange={(value: any) => onChange({
+                    onValueChange={(value: unknown) => onChange({
                       ...workflow,
                       assignment_rules: {
                         ...workflow.assignment_rules,

@@ -30,7 +30,7 @@ async function getAuthenticatedUser(request: NextRequest) {
   return { user, supabase };
 }
 
-async function getOrganizationAndCheckPermission(supabase: any, userId: string) {
+async function getOrganizationAndCheckPermission(supabase: unknown, userId: string) {
   const { data: userData, error: userError } = await supabase
     .from('users')
     .select('organization_id, role')

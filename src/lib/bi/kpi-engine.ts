@@ -11,7 +11,7 @@ export interface KPICalculationParams {
   repId?: string;
   periodStart: Date;
   periodEnd: Date;
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
 }
 
 export interface KPICalculation {
@@ -20,7 +20,7 @@ export interface KPICalculation {
   value: number;
   confidence: number;
   calculatedAt: Date;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface KPIDefinition {
@@ -497,7 +497,7 @@ export class KPIEngine {
     kpiId: string,
     periodStart: Date,
     periodEnd: Date,
-    filters?: Record<string, any>
+    filters?: Record<string, unknown>
   ): Promise<KPICalculation | null> {
     const { data, error } = await this.supabase
       .from('kpi_calculated_values')

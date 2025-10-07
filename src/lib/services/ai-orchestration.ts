@@ -29,7 +29,7 @@ export interface AIAccount {
   employee_band?: string
   entity_type?: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER'
   account_embedding?: number[]
-  provenance: Record<string, any>
+  provenance: Record<string, unknown>
 }
 
 export interface AIContact {
@@ -44,7 +44,7 @@ export interface AIContact {
   email_status?: 'UNVERIFIED' | 'VERIFIED' | 'UNKNOWN'
   phone_hint?: string
   contact_embedding?: number[]
-  provenance: Record<string, any>
+  provenance: Record<string, unknown>
 }
 
 export interface GeneratedLead {
@@ -63,8 +63,8 @@ export interface GeneratedLead {
   icp_profile_id: string
   sources: string[]
   risk_flags?: string[]
-  compliance?: Record<string, any>
-  postprocessing?: Record<string, any>
+  compliance?: Record<string, unknown>
+  postprocessing?: Record<string, unknown>
 }
 
 export class AIOrchestrationService {

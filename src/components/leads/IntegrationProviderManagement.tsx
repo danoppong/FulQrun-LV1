@@ -24,7 +24,7 @@ interface IntegrationProvider {
     rate_limit?: number
     timeout?: number
     retry_attempts?: number
-    custom_fields?: Record<string, any>
+    custom_fields?: Record<string, unknown>
   }
   created_at: string
   updated_at: string
@@ -92,7 +92,7 @@ export function IntegrationProviderManagement() {
   const [providers, setProviders] = useState<IntegrationProvider[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedProvider, setSelectedProvider] = useState<string>('CLEARBIT')
-  const [providerConfig, setProviderConfig] = useState<Record<string, any>>({})
+  const [providerConfig, setProviderConfig] = useState<Record<string, unknown>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
   const [testResults, setTestResults] = useState<ProviderTestResult[]>([])
@@ -253,7 +253,7 @@ export function IntegrationProviderManagement() {
       {/* Provider Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Object.entries(PROVIDER_CONFIGS).map(([key, config]) => {
-          const status = getProviderStatus(key as any)
+          const status = getProviderStatus(key as unknown)
           const providerData = providers.find(p => p.provider === key)
           
           return (

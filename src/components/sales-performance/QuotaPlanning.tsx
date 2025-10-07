@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 
 interface QuotaPlanningProps {
   organizationId: string
-  user: any
+  user: unknown
 }
 
 interface QuotaPlan {

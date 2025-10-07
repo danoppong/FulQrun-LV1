@@ -61,7 +61,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
 
       // Determine affected users and territories
       const affectedUsers = [opportunity.assigned_to].filter(Boolean);
-      const affectedTerritories = opportunity.companies?.sales_territories?.map((t: any) => t.id) || [];
+      const affectedTerritories = opportunity.companies?.sales_territories?.map((t: unknown) => t.id) || [];
 
       // Trigger KPI recalculation for affected users/territories
       await this.recalculateKPIs(
@@ -281,7 +281,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
 
   // Private helper methods
 
-  private async updateWinRateMetrics(opportunity: any): Promise<void> {
+  private async updateWinRateMetrics(opportunity: unknown): Promise<void> {
     if (opportunity.stage === 'closed_won' || opportunity.stage === 'closed_lost') {
       const { error } = await this.supabase
         .from('win_rate_metrics')
@@ -303,7 +303,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updateRevenueGrowthMetrics(opportunity: any): Promise<void> {
+  private async updateRevenueGrowthMetrics(opportunity: unknown): Promise<void> {
     if (opportunity.stage === 'closed_won' && opportunity.deal_value) {
       const { error } = await this.supabase
         .from('revenue_growth_metrics')
@@ -326,7 +326,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updateDealSizeMetrics(opportunity: any): Promise<void> {
+  private async updateDealSizeMetrics(opportunity: unknown): Promise<void> {
     if (opportunity.stage === 'closed_won' && opportunity.deal_value) {
       const { error } = await this.supabase
         .from('avg_deal_size_metrics')
@@ -351,7 +351,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updateSalesCycleMetrics(opportunity: any): Promise<void> {
+  private async updateSalesCycleMetrics(opportunity: unknown): Promise<void> {
     if (opportunity.stage === 'closed_won' && opportunity.close_date) {
       const cycleLength = Math.ceil((new Date(opportunity.close_date).getTime() - new Date(opportunity.created_at).getTime()) / (1000 * 60 * 60 * 24));
       
@@ -378,7 +378,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updateQuotaAttainmentMetrics(opportunity: any): Promise<void> {
+  private async updateQuotaAttainmentMetrics(opportunity: unknown): Promise<void> {
     if (opportunity.stage === 'closed_won' && opportunity.deal_value) {
       const { error } = await this.supabase
         .from('quota_attainment_metrics')
@@ -400,12 +400,12 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updatePipelineCoverageMetrics(opportunity: any): Promise<void> {
+  private async updatePipelineCoverageMetrics(opportunity: unknown): Promise<void> {
     // This would calculate pipeline coverage based on all opportunities
     // Implementation would be similar to other metrics
   }
 
-  private async updateActivitiesPerRepMetrics(activity: any): Promise<void> {
+  private async updateActivitiesPerRepMetrics(activity: unknown): Promise<void> {
     const { error } = await this.supabase
       .from('activities_per_rep_metrics')
       .upsert({
@@ -429,7 +429,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updateLeadConversionMetrics(lead: any): Promise<void> {
+  private async updateLeadConversionMetrics(lead: unknown): Promise<void> {
     const { error } = await this.supabase
       .from('lead_conversion_metrics')
       .upsert({
@@ -449,7 +449,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async storeKPICalculatedValues(organizationId: string, kpiData: any, periodStart: string, periodEnd: string): Promise<void> {
+  private async storeKPICalculatedValues(organizationId: string, kpiData: unknown, periodStart: string, periodEnd: string): Promise<void> {
     // Store calculated KPI values in cache for performance
     const kpiNames = Object.keys(kpiData).filter(key => key !== 'calculation_metadata');
     
@@ -474,7 +474,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private extractKPIValue(data: any, kpiName: string): number {
+  private extractKPIValue(data: unknown, kpiName: string): number {
     switch (kpiName) {
       case 'win_rate':
         return data.win_rate || 0;

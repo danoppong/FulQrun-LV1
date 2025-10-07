@@ -493,11 +493,11 @@ function KPIDefinitions({ config, onUpdate }: { config: KPIConfiguration; onUpda
                 handleSaveKPI({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  category: formData.get('category') as any,
-                  type: formData.get('type') as any,
+                  category: formData.get('category') as unknown,
+                  type: formData.get('type') as unknown,
                   formula: formData.get('formula') as string,
                   dataSource: formData.get('dataSource') as string,
-                  frequency: formData.get('frequency') as any,
+                  frequency: formData.get('frequency') as unknown,
                   unit: formData.get('unit') as string,
                   isActive: true
                 });
@@ -805,8 +805,8 @@ function KPIThresholds({ config, onUpdate }: { config: KPIConfiguration; onUpdat
                 const formData = new FormData(e.currentTarget);
                 handleSaveThreshold({
                   kpiId: formData.get('kpiId') as string,
-                  level: formData.get('level') as any,
-                  operator: formData.get('operator') as any,
+                  level: formData.get('level') as unknown,
+                  operator: formData.get('operator') as unknown,
                   value: parseFloat(formData.get('value') as string),
                   maxValue: formData.get('maxValue') ? parseFloat(formData.get('maxValue') as string) : undefined,
                   color: formData.get('color') as string,

@@ -151,7 +151,7 @@ export function CompensationPlanModal({
 
       onSuccess()
       onClose()
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message)
     } finally {
       setLoading(false)

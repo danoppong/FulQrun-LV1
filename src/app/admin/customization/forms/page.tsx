@@ -411,7 +411,7 @@ function FormDesigner({ config, onUpdate }: { config: FormDesignerConfiguration;
                 handleSaveForm({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  entityType: formData.get('entityType') as any,
+                  entityType: formData.get('entityType') as unknown,
                   isActive: formData.get('isActive') === 'on',
                   isPublic: formData.get('isPublic') === 'on'
                 });
@@ -663,7 +663,7 @@ function FormTemplates({ config, onUpdate }: { config: FormDesignerConfiguration
                 handleSaveTemplate({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  category: formData.get('category') as any,
+                  category: formData.get('category') as unknown,
                   entityType: formData.get('entityType') as string,
                   isActive: true
                 });

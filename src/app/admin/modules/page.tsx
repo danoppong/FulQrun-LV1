@@ -22,7 +22,7 @@ interface ModuleCard {
   name: string
   description: string
   href: string
-  icon: any
+  icon: unknown
   color: string
   status: 'active' | 'inactive' | 'beta'
   features: string[]

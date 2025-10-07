@@ -94,8 +94,8 @@ export async function POST(request: NextRequest) {
 }
 
 async function qualifyLeads(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string,
   userId: string
 ) {
@@ -208,8 +208,8 @@ async function qualifyLeads(
 }
 
 async function addEvidence(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string,
   userId: string
 ) {
@@ -274,10 +274,10 @@ async function addEvidence(
 }
 
 async function performQualification(
-  lead: any,
+  lead: unknown,
   framework: string,
   autoQualify: boolean
-): Promise<any> {
+): Promise<unknown> {
   // This is a placeholder implementation
   // In a real implementation, this would use the specific framework logic
   
@@ -328,7 +328,7 @@ async function performQualification(
   }
 
   // Determine qualification status
-  const qualifiedCount = Object.values(qualificationData.data).filter((value: any) => 
+  const qualifiedCount = Object.values(qualificationData.data).filter((value: unknown) => 
     value === true || (typeof value === 'object' && value.qualified === true)
   ).length
 
@@ -349,7 +349,7 @@ async function performQualification(
   return qualificationData
 }
 
-async function qualifyBANT(lead: any): Promise<any> {
+async function qualifyBANT(lead: unknown): Promise<unknown> {
   return {
     budget: {
       qualified: lead.revenue_band && lead.revenue_band !== '<$10M',
@@ -374,7 +374,7 @@ async function qualifyBANT(lead: any): Promise<any> {
   }
 }
 
-async function qualifyCHAMP(lead: any): Promise<any> {
+async function qualifyCHAMP(lead: unknown): Promise<unknown> {
   return {
     challenges: {
       qualified: lead.intent_keywords && lead.intent_keywords.length > 0,
@@ -399,7 +399,7 @@ async function qualifyCHAMP(lead: any): Promise<any> {
   }
 }
 
-async function qualifyGPCTBA(lead: any): Promise<any> {
+async function qualifyGPCTBA(lead: unknown): Promise<unknown> {
   return {
     goals: {
       qualified: lead.intent_keywords && lead.intent_keywords.length > 0,
@@ -434,7 +434,7 @@ async function qualifyGPCTBA(lead: any): Promise<any> {
   }
 }
 
-async function qualifySPICED(lead: any): Promise<any> {
+async function qualifySPICED(lead: unknown): Promise<unknown> {
   return {
     situation: {
       qualified: lead.industry && lead.industry !== '',
@@ -469,7 +469,7 @@ async function qualifySPICED(lead: any): Promise<any> {
   }
 }
 
-async function qualifyANUM(lead: any): Promise<any> {
+async function qualifyANUM(lead: unknown): Promise<unknown> {
   return {
     authority: {
       qualified: lead.ai_contacts?.[0]?.seniority && ['C-LEVEL', 'VP', 'DIR'].includes(lead.ai_contacts[0].seniority),
@@ -494,7 +494,7 @@ async function qualifyANUM(lead: any): Promise<any> {
   }
 }
 
-async function qualifyFAINT(lead: any): Promise<any> {
+async function qualifyFAINT(lead: unknown): Promise<unknown> {
   return {
     funds: {
       qualified: lead.revenue_band && lead.revenue_band !== '<$10M',
@@ -524,7 +524,7 @@ async function qualifyFAINT(lead: any): Promise<any> {
   }
 }
 
-async function qualifyNEAT(lead: any): Promise<any> {
+async function qualifyNEAT(lead: unknown): Promise<unknown> {
   return {
     need: {
       qualified: lead.intent_keywords && lead.intent_keywords.length > 0,
@@ -549,7 +549,7 @@ async function qualifyNEAT(lead: any): Promise<any> {
   }
 }
 
-async function qualifyPACT(lead: any): Promise<any> {
+async function qualifyPACT(lead: unknown): Promise<unknown> {
   return {
     pain: {
       qualified: lead.intent_keywords && lead.intent_keywords.length > 0,
@@ -574,7 +574,7 @@ async function qualifyPACT(lead: any): Promise<any> {
   }
 }
 
-async function qualifyJTBD(lead: any): Promise<any> {
+async function qualifyJTBD(lead: unknown): Promise<unknown> {
   return {
     job_to_be_done: {
       qualified: lead.intent_keywords && lead.intent_keywords.length > 0,
@@ -589,7 +589,7 @@ async function qualifyJTBD(lead: any): Promise<any> {
   }
 }
 
-async function qualifyFIVEFIT(lead: any): Promise<any> {
+async function qualifyFIVEFIT(lead: unknown): Promise<unknown> {
   return {
     fit: {
       qualified: lead.icp_profile_id !== null,
@@ -619,7 +619,7 @@ async function qualifyFIVEFIT(lead: any): Promise<any> {
   }
 }
 
-async function qualifyABM(lead: any): Promise<any> {
+async function qualifyABM(lead: unknown): Promise<unknown> {
   return {
     account_fit: {
       qualified: lead.icp_profile_id !== null,
@@ -639,7 +639,7 @@ async function qualifyABM(lead: any): Promise<any> {
   }
 }
 
-async function qualifyTARGETING(lead: any): Promise<any> {
+async function qualifyTARGETING(lead: unknown): Promise<unknown> {
   return {
     demographic_fit: {
       qualified: lead.industry && lead.industry !== '',
@@ -670,7 +670,7 @@ interface QualificationData {
   confidence: number;
 }
 
-function generateEvidenceRecords(lead: any, framework: string, qualificationData: Record<string, QualificationData>): unknown[] {
+function generateEvidenceRecords(lead: unknown, framework: string, qualificationData: Record<string, QualificationData>): unknown[] {
   const evidence: unknown[] = []
   
   for (const [field, data] of Object.entries(qualificationData)) {
@@ -690,8 +690,8 @@ function generateEvidenceRecords(lead: any, framework: string, qualificationData
 }
 
 async function getQualifications(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string
 ) {
   const { lead_ids } = body

@@ -180,8 +180,8 @@ export async function POST(request: NextRequest) {
 }
 
 async function configureProvider(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string
 ) {
   const validationResult = ProviderConfigSchema.safeParse(body)
@@ -260,8 +260,8 @@ async function configureProvider(
 }
 
 async function testProvider(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string
 ) {
   const validationResult = ProviderTestSchema.safeParse(body)
@@ -308,8 +308,8 @@ async function testProvider(
 }
 
 async function enableProvider(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string
 ) {
   const { provider } = body
@@ -349,8 +349,8 @@ async function enableProvider(
 }
 
 async function disableProvider(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string
 ) {
   const { provider } = body
@@ -391,9 +391,9 @@ async function disableProvider(
 
 async function testProviderConnection(
   provider: string,
-  config: any,
+  config: unknown,
   testData?: any
-): Promise<any> {
+): Promise<unknown> {
   // This is a placeholder implementation
   // In a real implementation, this would test actual API connections
   
@@ -414,7 +414,7 @@ async function testProviderConnection(
   }
 }
 
-async function testClearbitConnection(config: any, testData?: any): Promise<any> {
+async function testClearbitConnection(config: unknown, testData?: any): Promise<unknown> {
   // Placeholder implementation
   return {
     success: true,
@@ -425,7 +425,7 @@ async function testClearbitConnection(config: any, testData?: any): Promise<any>
   }
 }
 
-async function testZoomInfoConnection(config: any, testData?: any): Promise<any> {
+async function testZoomInfoConnection(config: unknown, testData?: any): Promise<unknown> {
   // Placeholder implementation
   return {
     success: true,
@@ -436,7 +436,7 @@ async function testZoomInfoConnection(config: any, testData?: any): Promise<any>
   }
 }
 
-async function testOpportunityConnection(config: any, testData?: any): Promise<any> {
+async function testOpportunityConnection(config: unknown, testData?: any): Promise<unknown> {
   // Placeholder implementation
   return {
     success: true,
@@ -446,7 +446,7 @@ async function testOpportunityConnection(config: any, testData?: any): Promise<a
   }
 }
 
-async function testComplianceConnection(config: any, testData?: any): Promise<any> {
+async function testComplianceConnection(config: unknown, testData?: any): Promise<unknown> {
   // Placeholder implementation
   return {
     success: true,

@@ -13,7 +13,7 @@ interface KPICardProps {
   trend: 'up' | 'down' | 'stable';
   color: string;
   confidence: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   format?: 'number' | 'percentage' | 'currency' | 'ratio';
   precision?: number;
 }

@@ -38,7 +38,7 @@ export interface RiskFactor {
   name: string
   score: number
   weight: number
-  details: any
+  details: unknown
 }
 
 export interface RiskScore {
@@ -552,7 +552,7 @@ export class RiskAssessmentEngine {
     return count || 0
   }
 
-  private async checkIPReputation(ipAddress: string): Promise<any> {
+  private async checkIPReputation(ipAddress: string): Promise<unknown> {
     // In production, integrate with IP reputation services
     // like IPQualityScore, AbuseIPDB, or similar
     return {
@@ -564,7 +564,7 @@ export class RiskAssessmentEngine {
     }
   }
 
-  private async checkDomainReputation(domain: string): Promise<any> {
+  private async checkDomainReputation(domain: string): Promise<unknown> {
     // In production, check against disposable email providers list
     const disposableDomains = [
       'tempmail.com', 'guerrillamail.com', '10minutemail.com',

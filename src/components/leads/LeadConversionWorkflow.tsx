@@ -38,7 +38,7 @@ interface ConversionJob {
   lead_id: string
   status: 'PENDING' | 'IN_PROGRESS' | 'SUCCEEDED' | 'FAILED' | 'ROLLED_BACK'
   idempotency_key: string
-  request_payload: any
+  request_payload: unknown
   response_payload?: any
   created_at: string
   updated_at: string
@@ -119,7 +119,7 @@ export function LeadConversionWorkflow() {
         
         // Poll for conversion job status
         if (data.data.conversions.length > 0) {
-          const jobIds = data.data.conversions.map((conv: any) => conv.job_id)
+          const jobIds = data.data.conversions.map((conv: unknown) => conv.job_id)
           pollConversionJobs(jobIds)
         }
         
@@ -259,7 +259,7 @@ export function LeadConversionWorkflow() {
                   <Label htmlFor="stage">Initial Stage</Label>
                   <Select
                     value={opportunityData.stage}
-                    onValueChange={(value: any) => setOpportunityData({ ...opportunityData, stage: value })}
+                    onValueChange={(value: unknown) => setOpportunityData({ ...opportunityData, stage: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />

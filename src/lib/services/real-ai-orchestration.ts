@@ -33,7 +33,7 @@ export interface LeadGenerationRequest {
 }
 
 export class RealAIOrchestrationService {
-  private supabase: any
+  private supabase: unknown
   private apiKeys: {
     clearbit?: string
     zoominfo?: string
@@ -41,7 +41,7 @@ export class RealAIOrchestrationService {
     hunter?: string
   }
 
-  constructor(supabase: any, apiKeys: unknown = {}) {
+  constructor(supabase: unknown, apiKeys: unknown = {}) {
     this.supabase = supabase
     this.apiKeys = apiKeys
   }
@@ -74,7 +74,7 @@ export class RealAIOrchestrationService {
   /**
    * Search for companies using real data sources
    */
-  private async searchCompanies(criteria: any): Promise<Partial<RealCompanyData>[]> {
+  private async searchCompanies(criteria: unknown): Promise<Partial<RealCompanyData>[]> {
     const companies: Partial<RealCompanyData>[] = []
     
     // Data Source 1: Clearbit Company API
@@ -123,7 +123,7 @@ export class RealAIOrchestrationService {
   /**
    * Search Clearbit Company API
    */
-  private async searchClearbit(criteria: any): Promise<Partial<RealCompanyData>[]> {
+  private async searchClearbit(criteria: unknown): Promise<Partial<RealCompanyData>[]> {
     const response = await fetch('https://company.clearbit.com/v1/domains/find', {
       method: 'GET',
       headers: {
@@ -154,7 +154,7 @@ export class RealAIOrchestrationService {
   /**
    * Search Apollo.io API
    */
-  private async searchApollo(criteria: any): Promise<Partial<RealCompanyData>[]> {
+  private async searchApollo(criteria: unknown): Promise<Partial<RealCompanyData>[]> {
     const searchParams = new URLSearchParams({
       q_organization_domains: criteria.industry || '',
       page: '1',
@@ -175,7 +175,7 @@ export class RealAIOrchestrationService {
     
     const data = await response.json()
     
-    return data.organizations?.map((org: any) => ({
+    return data.organizations?.map((org: unknown) => ({
       name: org.name,
       domain: org.primary_domain,
       industry: org.industry,
@@ -192,7 +192,7 @@ export class RealAIOrchestrationService {
   /**
    * Search Hunter.io API
    */
-  private async searchHunter(criteria: any): Promise<Partial<RealCompanyData>[]> {
+  private async searchHunter(criteria: unknown): Promise<Partial<RealCompanyData>[]> {
     const response = await fetch(`https://api.hunter.io/v2/domain-search?domain=${criteria.industry}&api_key=${this.apiKeys.hunter}`)
     
     if (!response.ok) {
@@ -217,7 +217,7 @@ export class RealAIOrchestrationService {
   /**
    * Search ZoomInfo API
    */
-  private async searchZoomInfo(criteria: any): Promise<Partial<RealCompanyData>[]> {
+  private async searchZoomInfo(criteria: unknown): Promise<Partial<RealCompanyData>[]> {
     // ZoomInfo API implementation would go here
     // This requires a ZoomInfo API key and specific endpoint
     return []

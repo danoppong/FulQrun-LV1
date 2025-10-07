@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
 
     // Create custom fields if provided
     if (custom_fields && custom_fields.length > 0) {
-      const fieldInserts = custom_fields.map((field: any, index: number) => ({
+      const fieldInserts = custom_fields.map((field: unknown, index: number) => ({
         metric_template_id: template.id,
         field_name: field.field_name,
         field_type: field.field_type,

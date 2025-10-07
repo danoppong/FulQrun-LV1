@@ -63,7 +63,7 @@ interface ProviderConfiguration {
   tokenUrl?: string;
   userInfoUrl?: string;
   scope?: string[];
-  customSettings?: Record<string, any>;
+  customSettings?: Record<string, unknown>;
 }
 
 interface ProviderMetadata {
@@ -362,7 +362,7 @@ function SSOProviders({ config, onUpdate }: { config: SSOConfiguration; onUpdate
                 const formData = new FormData(e.currentTarget);
                 handleSaveProvider({
                   name: formData.get('name') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   enabled: true
                 });
               }} className="space-y-4">

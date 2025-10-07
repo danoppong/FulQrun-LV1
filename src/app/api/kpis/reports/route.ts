@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Helper function to generate executive report
-async function generateExecutiveReport(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function generateExecutiveReport(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   // Calculate all KPIs for executive summary
   const { data: kpiData, error: kpiError } = await supabase.rpc('calculate_all_kpis', {
     p_organization_id: params.organizationId,
@@ -149,7 +149,7 @@ async function generateExecutiveReport(supabase: any, params: any, periodStart: 
       revenue_growth: kpiData.revenue_growth?.growth_percentage || 0,
       win_rate: kpiData.win_rate?.win_rate || 0,
       quota_attainment: kpiData.quota_attainment?.attainment_percentage || 0,
-      top_performers: (topPerformers || []).map((performer: any) => ({
+      top_performers: (topPerformers || []).map((performer: unknown) => ({
         name: `${performer.first_name} ${performer.last_name}`,
         revenue: performer.quota_attainment_metrics[0]?.actual_achievement || 0,
         win_rate: 0 // Would need additional calculation
@@ -164,7 +164,7 @@ async function generateExecutiveReport(supabase: any, params: any, periodStart: 
 }
 
 // Helper function to generate territory report
-async function generateTerritoryReport(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function generateTerritoryReport(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   const territoryPerformance = await getTerritoryPerformance(supabase, params, periodStart, periodEnd);
   
   return {
@@ -175,7 +175,7 @@ async function generateTerritoryReport(supabase: any, params: any, periodStart: 
 }
 
 // Helper function to generate rep report
-async function generateRepReport(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function generateRepReport(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   const repScorecards = await getRepScorecards(supabase, params, periodStart, periodEnd);
   
   return {
@@ -186,7 +186,7 @@ async function generateRepReport(supabase: any, params: any, periodStart: string
 }
 
 // Helper function to generate trend report
-async function generateTrendReport(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function generateTrendReport(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   const trendAnalysis = await getTrendAnalysis(supabase, params, periodStart, periodEnd);
   
   return {
@@ -197,7 +197,7 @@ async function generateTrendReport(supabase: any, params: any, periodStart: stri
 }
 
 // Helper function to get territory performance
-async function getTerritoryPerformance(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getTerritoryPerformance(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   const { data, error } = await supabase
     .from('sales_territories')
     .select(`
@@ -226,7 +226,7 @@ async function getTerritoryPerformance(supabase: any, params: any, periodStart: 
     return [];
   }
 
-  return (data || []).map((territory: any) => ({
+  return (data || []).map((territory: unknown) => ({
     territory_name: territory.name,
     revenue: territory.users[0]?.quota_attainment_metrics[0]?.actual_achievement || 0,
     win_rate: territory.users[0]?.win_rate_metrics[0]?.win_rate || 0,
@@ -237,7 +237,7 @@ async function getTerritoryPerformance(supabase: any, params: any, periodStart: 
 }
 
 // Helper function to get rep scorecards
-async function getRepScorecards(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getRepScorecards(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   const { data, error } = await supabase
     .from('users')
     .select(`
@@ -276,7 +276,7 @@ async function getRepScorecards(supabase: any, params: any, periodStart: string,
     return [];
   }
 
-  return (data || []).map((rep: any) => ({
+  return (data || []).map((rep: unknown) => ({
     rep_name: `${rep.first_name} ${rep.last_name}`,
     territory: rep.sales_territories[0]?.name || 'Unassigned',
     revenue: rep.quota_attainment_metrics[0]?.actual_achievement || 0,
@@ -290,7 +290,7 @@ async function getRepScorecards(supabase: any, params: any, periodStart: string,
 }
 
 // Helper function to get trend analysis
-async function getTrendAnalysis(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getTrendAnalysis(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   // Get historical data for trend analysis
   const { data, error } = await supabase
     .from('kpi_calculated_values')
@@ -305,7 +305,7 @@ async function getTrendAnalysis(supabase: any, params: any, periodStart: string,
   }
 
   // Group by period and calculate averages
-  const groupedData = (data || []).reduce((acc: any, item: any) => {
+  const groupedData = (data || []).reduce((acc: unknown, item: any) => {
     const period = item.calculation_date.split('T')[0];
     if (!acc[period]) {
       acc[period] = {
@@ -322,7 +322,7 @@ async function getTrendAnalysis(supabase: any, params: any, periodStart: string,
     return acc;
   }, {});
 
-  return Object.values(groupedData).map((item: any) => ({
+  return Object.values(groupedData).map((item: unknown) => ({
     period: item.period,
     revenue: item.revenue / item.count,
     win_rate: 0, // Would need specific KPI filtering
@@ -332,7 +332,7 @@ async function getTrendAnalysis(supabase: any, params: any, periodStart: string,
 }
 
 // Helper function to get KPI breakdown
-async function getKPIBreakdown(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getKPIBreakdown(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   const kpiNames = [
     'win_rate',
     'revenue_growth',
@@ -373,7 +373,7 @@ async function getKPIBreakdown(supabase: any, params: any, periodStart: string, 
 }
 
 // Helper function to generate key insights
-function generateKeyInsights(kpiData: any): string[] {
+function generateKeyInsights(kpiData: unknown): string[] {
   const insights = [];
 
   if (kpiData.win_rate?.win_rate > 25) {
@@ -414,7 +414,7 @@ function getPerformanceTier(value: number): string {
 }
 
 // Helper function to extract KPI value
-function extractKPIValue(data: any, kpiName: string): number {
+function extractKPIValue(data: unknown, kpiName: string): number {
   switch (kpiName) {
     case 'win_rate':
       return data.win_rate || 0;
@@ -459,32 +459,32 @@ function getTargetValue(kpiName: string): number {
 }
 
 // Additional helper functions for other report types
-async function getTerritoryComparison(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getTerritoryComparison(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   // Implementation for territory comparison
   return [];
 }
 
-async function getTerritoryTrends(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getTerritoryTrends(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   // Implementation for territory trends
   return [];
 }
 
-async function getRepRanking(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getRepRanking(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   // Implementation for rep ranking
   return [];
 }
 
-async function getRepActivities(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getRepActivities(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   // Implementation for rep activities
   return [];
 }
 
-async function getSeasonalPatterns(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getSeasonalPatterns(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   // Implementation for seasonal patterns
   return [];
 }
 
-async function getForecastData(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getForecastData(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   // Implementation for forecast data
   return [];
 }

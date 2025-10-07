@@ -865,7 +865,7 @@ export class ConfigurationService {
   // MAPPING METHODS
   // =============================================================================
 
-  private mapSystemConfiguration(data: any): SystemConfiguration {
+  private mapSystemConfiguration(data: unknown): SystemConfiguration {
     return {
       id: data.id,
       organizationId: data.organization_id,
@@ -891,7 +891,7 @@ export class ConfigurationService {
     };
   }
 
-  private mapConfigurationHistory(data: any): ConfigurationHistory {
+  private mapConfigurationHistory(data: unknown): ConfigurationHistory {
     return {
       id: data.id,
       configurationId: data.configuration_id,
@@ -905,7 +905,7 @@ export class ConfigurationService {
     };
   }
 
-  private mapModuleFeature(data: any): ModuleFeature {
+  private mapModuleFeature(data: unknown): ModuleFeature {
     return {
       id: data.id,
       organizationId: data.organization_id,
@@ -926,7 +926,7 @@ export class ConfigurationService {
     };
   }
 
-  private mapModuleParameter(data: any): ModuleParameter {
+  private mapModuleParameter(data: unknown): ModuleParameter {
     return {
       id: data.id,
       organizationId: data.organization_id,
@@ -951,7 +951,7 @@ export class ConfigurationService {
     };
   }
 
-  private mapAdminActionLog(data: any): AdminActionLog {
+  private mapAdminActionLog(data: unknown): AdminActionLog {
     return {
       id: data.id,
       organizationId: data.organization_id,
@@ -973,7 +973,7 @@ export class ConfigurationService {
     };
   }
 
-  private mapPermissionDefinition(data: any): PermissionDefinition {
+  private mapPermissionDefinition(data: unknown): PermissionDefinition {
     return {
       id: data.id,
       permissionKey: data.permission_key,

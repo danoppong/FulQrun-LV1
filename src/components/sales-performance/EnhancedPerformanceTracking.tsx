@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 
 interface EnhancedPerformanceTrackingProps {
   organizationId: string
-  user: any
+  user: unknown
 }
 
 interface MetricTemplate {
@@ -26,7 +26,7 @@ interface CustomField {
   id: string
   field_name: string
   field_type: string
-  field_options: Record<string, any>
+  field_options: Record<string, unknown>
   is_required: boolean
   display_order: number
 }
@@ -39,7 +39,7 @@ interface EnhancedMetric {
   period_end: string
   actual_value: number
   target_value: number
-  custom_fields: Record<string, any>
+  custom_fields: Record<string, unknown>
   notes: string
   status: string
   metric_template: MetricTemplate
@@ -438,7 +438,7 @@ export function EnhancedPerformanceTracking({ organizationId, user }: EnhancedPe
 function MetricCreationForm({ templates, organizationId, user, onClose, onSuccess }: {
   templates: MetricTemplate[]
   organizationId: string
-  user: any
+  user: unknown
   onClose: () => void
   onSuccess: () => void
 }) {
@@ -609,7 +609,7 @@ function MetricCreationForm({ templates, organizationId, user, onClose, onSucces
 function TemplateManagementForm({ templates, organizationId, user, onClose, onSuccess }: {
   templates: MetricTemplate[]
   organizationId: string
-  user: any
+  user: unknown
   onClose: () => void
   onSuccess: () => void
 }) {
@@ -694,7 +694,7 @@ function TemplateManagementForm({ templates, organizationId, user, onClose, onSu
 // Create Template Form Component
 function CreateTemplateForm({ organizationId, user, onClose, onSuccess }: {
   organizationId: string
-  user: any
+  user: unknown
   onClose: () => void
   onSuccess: () => void
 }) {

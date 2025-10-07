@@ -38,7 +38,7 @@ export class PharmaceuticalDataService {
 
       const kpis = await response.json();
       
-      return kpis.map((kpi: any) => ({
+      return kpis.map((kpi: unknown) => ({
         kpiId: kpi.kpiId,
         kpiName: kpi.kpiName,
         value: kpi.value,

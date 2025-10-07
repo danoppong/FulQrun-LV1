@@ -121,7 +121,7 @@ interface SecurityAlert {
 interface SecurityAction {
   id: string;
   type: 'block_ip' | 'lock_account' | 'require_mfa' | 'send_notification' | 'log_event';
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   executed: boolean;
   executedAt?: Date;
 }
@@ -172,7 +172,7 @@ function PasswordPolicyConfig({ config, onUpdate }: { config: AuthenticationConf
           setPolicies(data.policies || []);
           
           // Set default policy if available
-          const defaultPolicy = data.policies?.find((p: any) => p.is_default);
+          const defaultPolicy = data.policies?.find((p: unknown) => p.is_default);
           if (defaultPolicy) {
             setSelectedPolicyId(defaultPolicy.id);
             setPolicy({

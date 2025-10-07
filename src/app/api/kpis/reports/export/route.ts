@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Helper function to generate report data
-async function generateReportData(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function generateReportData(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   // Calculate all KPIs
   const { data: kpiData, error: kpiError } = await supabase.rpc('calculate_all_kpis', {
     p_organization_id: params.organizationId,
@@ -135,7 +135,7 @@ async function generateReportData(supabase: any, params: any, periodStart: strin
 }
 
 // Helper function to export to CSV
-async function exportToCSV(data: any, reportType: string) {
+async function exportToCSV(data: unknown, reportType: string) {
   let csvContent = '';
   
   switch (reportType) {
@@ -163,7 +163,7 @@ async function exportToCSV(data: any, reportType: string) {
 }
 
 // Helper function to export to Excel
-async function exportToExcel(data: any, reportType: string) {
+async function exportToExcel(data: unknown, reportType: string) {
   // For Excel export, we would use a library like 'xlsx'
   // This is a simplified implementation
   const csvContent = await exportToCSV(data, reportType);
@@ -176,7 +176,7 @@ async function exportToExcel(data: any, reportType: string) {
 }
 
 // Helper function to export to PDF
-async function exportToPDF(data: any, reportType: string) {
+async function exportToPDF(data: unknown, reportType: string) {
   // For PDF export, we would use a library like 'puppeteer' or 'jsPDF'
   // This is a simplified implementation that returns HTML for now
   const htmlContent = generatePDFHTML(data, reportType);
@@ -189,7 +189,7 @@ async function exportToPDF(data: any, reportType: string) {
 }
 
 // Helper functions to generate CSV content
-function generateExecutiveCSV(data: any): string {
+function generateExecutiveCSV(data: unknown): string {
   const headers = [
     'Metric',
     'Current Value',
@@ -215,7 +215,7 @@ function generateExecutiveCSV(data: any): string {
   return [headers, ...rows].map(row => row.join(',')).join('\n');
 }
 
-function generateTerritoryCSV(data: any): string {
+function generateTerritoryCSV(data: unknown): string {
   const headers = [
     'Territory',
     'Revenue',
@@ -225,7 +225,7 @@ function generateTerritoryCSV(data: any): string {
     'Growth Rate'
   ];
 
-  const rows = (data.additionalData.territories || []).map((territory: any) => [
+  const rows = (data.additionalData.territories || []).map((territory: unknown) => [
     territory.name,
     territory.revenue,
     territory.win_rate,
@@ -237,7 +237,7 @@ function generateTerritoryCSV(data: any): string {
   return [headers, ...rows].map(row => row.join(',')).join('\n');
 }
 
-function generateRepCSV(data: any): string {
+function generateRepCSV(data: unknown): string {
   const headers = [
     'Rep Name',
     'Territory',
@@ -250,7 +250,7 @@ function generateRepCSV(data: any): string {
     'Performance Tier'
   ];
 
-  const rows = (data.additionalData.reps || []).map((rep: any) => [
+  const rows = (data.additionalData.reps || []).map((rep: unknown) => [
     rep.name,
     rep.territory,
     rep.revenue,
@@ -265,7 +265,7 @@ function generateRepCSV(data: any): string {
   return [headers, ...rows].map(row => row.join(',')).join('\n');
 }
 
-function generateTrendsCSV(data: any): string {
+function generateTrendsCSV(data: unknown): string {
   const headers = [
     'Period',
     'Revenue',
@@ -274,7 +274,7 @@ function generateTrendsCSV(data: any): string {
     'Activities'
   ];
 
-  const rows = (data.additionalData.trends || []).map((trend: any) => [
+  const rows = (data.additionalData.trends || []).map((trend: unknown) => [
     trend.period,
     trend.revenue,
     trend.win_rate,
@@ -285,12 +285,12 @@ function generateTrendsCSV(data: any): string {
   return [headers, ...rows].map(row => row.join(',')).join('\n');
 }
 
-function generateDefaultCSV(data: any): string {
+function generateDefaultCSV(data: unknown): string {
   return generateExecutiveCSV(data);
 }
 
 // Helper function to generate PDF HTML
-function generatePDFHTML(data: any, reportType: string): string {
+function generatePDFHTML(data: unknown, reportType: string): string {
   const title = `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`;
   const generatedAt = new Date().toLocaleString();
 
@@ -350,7 +350,7 @@ function generatePDFHTML(data: any, reportType: string): string {
 }
 
 // Helper functions to get additional data
-async function getExecutiveData(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getExecutiveData(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   // Get top performers and key insights
   const { data: topPerformers } = await supabase
     .from('users')
@@ -372,7 +372,7 @@ async function getExecutiveData(supabase: any, params: any, periodStart: string,
   };
 }
 
-async function getTerritoryData(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getTerritoryData(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   const { data: territories } = await supabase
     .from('sales_territories')
     .select(`
@@ -386,7 +386,7 @@ async function getTerritoryData(supabase: any, params: any, periodStart: string,
     .eq('organization_id', params.organizationId);
 
   return {
-    territories: (territories || []).map((territory: any) => ({
+    territories: (territories || []).map((territory: unknown) => ({
       name: territory.name,
       revenue: territory.users[0]?.quota_attainment_metrics[0]?.actual_achievement || 0,
       win_rate: territory.users[0]?.win_rate_metrics[0]?.win_rate || 0,
@@ -397,7 +397,7 @@ async function getTerritoryData(supabase: any, params: any, periodStart: string,
   };
 }
 
-async function getRepData(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getRepData(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   const { data: reps } = await supabase
     .from('users')
     .select(`
@@ -414,7 +414,7 @@ async function getRepData(supabase: any, params: any, periodStart: string, perio
     .lte('quota_attainment_metrics.period_end', periodEnd);
 
   return {
-    reps: (reps || []).map((rep: any) => ({
+    reps: (reps || []).map((rep: unknown) => ({
       name: `${rep.first_name} ${rep.last_name}`,
       territory: rep.sales_territories[0]?.name || 'Unassigned',
       revenue: rep.quota_attainment_metrics[0]?.actual_achievement || 0,
@@ -428,7 +428,7 @@ async function getRepData(supabase: any, params: any, periodStart: string, perio
   };
 }
 
-async function getTrendData(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getTrendData(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   const { data: trends } = await supabase
     .from('kpi_calculated_values')
     .select('*')
@@ -437,7 +437,7 @@ async function getTrendData(supabase: any, params: any, periodStart: string, per
     .order('calculation_date', { ascending: true });
 
   return {
-    trends: (trends || []).map((trend: any) => ({
+    trends: (trends || []).map((trend: unknown) => ({
       period: trend.calculation_date.split('T')[0],
       revenue: trend.calculated_value,
       win_rate: 0,
@@ -448,7 +448,7 @@ async function getTrendData(supabase: any, params: any, periodStart: string, per
 }
 
 // Helper functions
-function generateKeyInsights(params: any): string[] {
+function generateKeyInsights(params: unknown): string[] {
   return [
     'Performance metrics are within normal ranges',
     'Consider reviewing sales strategies for improvement',

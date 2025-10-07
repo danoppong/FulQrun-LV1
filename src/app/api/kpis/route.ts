@@ -293,7 +293,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to get KPI trends
-async function getKPITrends(supabase: any, params: any, periodStart: string, periodEnd: string) {
+async function getKPITrends(supabase: unknown, params: unknown, periodStart: string, periodEnd: string) {
   try {
     const { data, error } = await supabase
       .from('kpi_calculated_values')
@@ -316,7 +316,7 @@ async function getKPITrends(supabase: any, params: any, periodStart: string, per
 }
 
 // Helper function to get KPI benchmarks
-async function getKPIBenchmarks(supabase: any, organizationId: string, kpiType: string) {
+async function getKPIBenchmarks(supabase: unknown, organizationId: string, kpiType: string) {
   try {
     const { data, error } = await supabase
       .from('kpi_definitions')

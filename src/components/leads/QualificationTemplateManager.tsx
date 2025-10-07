@@ -740,7 +740,7 @@ function TemplateEditor({ template, onChange, onSave, onCancel }: TemplateEditor
                         <Label>Type</Label>
                         <Select
                           value={criterion.type}
-                          onValueChange={(value: any) => handleUpdateCriterion(criterionId, { type: value })}
+                          onValueChange={(value: unknown) => handleUpdateCriterion(criterionId, { type: value })}
                         >
                           <SelectTrigger>
                             <SelectValue />

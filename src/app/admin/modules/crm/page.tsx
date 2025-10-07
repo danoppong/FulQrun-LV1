@@ -132,7 +132,7 @@ export default function CRMModuleAdmin() {
         
         // Merge with default frameworks, preserving saved settings
         const mergedFrameworks = QUALIFICATION_FRAMEWORKS.map(defaultFramework => {
-          const saved = savedFrameworks.find((f: any) => f.framework_id === defaultFramework.id)
+          const saved = savedFrameworks.find((f: unknown) => f.framework_id === defaultFramework.id)
           return saved ? {
             ...defaultFramework,
             enabled: saved.enabled

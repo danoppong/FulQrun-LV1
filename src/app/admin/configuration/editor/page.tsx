@@ -36,13 +36,13 @@ const supabase = getSupabaseClient();
 interface ConfigurationItem {
   id: string;
   configKey: string;
-  configValue: any;
+  configValue: unknown;
   configType: 'string' | 'number' | 'boolean' | 'object' | 'array';
   description?: string;
   moduleName: string;
   category: string;
   isRequired: boolean;
-  defaultValue: any;
+  defaultValue: unknown;
   validationRules?: string;
   isSensitive: boolean;
   lastModifiedBy: string;
@@ -53,8 +53,8 @@ interface ConfigurationItem {
 interface ConfigurationHistory {
   id: string;
   configId: string;
-  oldValue: any;
-  newValue: any;
+  oldValue: unknown;
+  newValue: unknown;
   changedBy: string;
   changedAt: Date;
   changeReason?: string;
@@ -63,12 +63,12 @@ interface ConfigurationHistory {
 
 interface ConfigurationFormData {
   configKey: string;
-  configValue: any;
+  configValue: unknown;
   description?: string;
   moduleName: string;
   category: string;
   isRequired: boolean;
-  defaultValue: any;
+  defaultValue: unknown;
   validationRules?: string;
   isSensitive: boolean;
 }
@@ -108,8 +108,8 @@ function ConfigurationValueEditor({
   onChange 
 }: {
   config: ConfigurationItem;
-  value: any;
-  onChange: (value: any) => void;
+  value: unknown;
+  onChange: (value: unknown) => void;
 }) {
   const [isJsonMode, setIsJsonMode] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);

@@ -31,7 +31,7 @@ async function getAuthenticatedUser(request: NextRequest) {
 }
 
 // Helper function to get organization ID and check admin permission
-async function getOrganizationAndCheckPermission(supabase: any, userId: string) {
+async function getOrganizationAndCheckPermission(supabase: unknown, userId: string) {
   const { data, error } = await supabase
     .from('users')
     .select('organization_id, role')

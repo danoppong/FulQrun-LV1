@@ -1298,7 +1298,7 @@ export default function RoleManagement() {
       const permissionsData = await permissionsResponse.json();
 
       // Transform API data to match our interfaces
-      const transformedRoles: Role[] = rolesData.roles.map((r: any) => ({
+      const transformedRoles: Role[] = rolesData.roles.map((r: unknown) => ({
         id: r.id,
         roleKey: r.role_key,
         roleName: r.role_name,
@@ -1312,7 +1312,7 @@ export default function RoleManagement() {
         updatedAt: new Date(r.updated_at)
       }));
 
-      const transformedPermissions: Permission[] = permissionsData.permissions.map((p: any) => ({
+      const transformedPermissions: Permission[] = permissionsData.permissions.map((p: unknown) => ({
         id: p.id,
         permissionKey: p.permission_key,
         permissionName: p.permission_name,
@@ -1334,7 +1334,7 @@ export default function RoleManagement() {
             
             if (rolePermissionsResponse.ok) {
               const rolePermissionsData = await rolePermissionsResponse.json();
-              const rolePermissionKeys = rolePermissionsData.permissions.map((p: any) => p.permission_key);
+              const rolePermissionKeys = rolePermissionsData.permissions.map((p: unknown) => p.permission_key);
               return { ...role, permissions: rolePermissionKeys };
             }
           } catch (error) {

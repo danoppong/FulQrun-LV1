@@ -105,7 +105,7 @@ interface TriggerConfiguration {
 interface TriggerCondition {
   field: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'is_empty' | 'is_not_empty';
-  value: any;
+  value: unknown;
 }
 
 interface ScheduleConfiguration {
@@ -151,7 +151,7 @@ interface WorkflowAction {
 interface ActionConfiguration {
   emailTemplate?: string;
   recipients?: string[];
-  dataFields?: Record<string, any>;
+  dataFields?: Record<string, unknown>;
   webhookUrl?: string;
   apiEndpoint?: string;
   filePath?: string;
@@ -329,7 +329,7 @@ function WorkflowBuilder({ config, onUpdate }: { config: WorkflowBuilderConfigur
 
   const handleStatusChange = (workflowId: string, newStatus: string) => {
     const updatedWorkflows = workflows.map(w => 
-      w.id === workflowId ? { ...w, status: newStatus as any, updatedAt: new Date() } : w
+      w.id === workflowId ? { ...w, status: newStatus as unknown, updatedAt: new Date() } : w
     );
     setWorkflows(updatedWorkflows);
     onUpdate({
@@ -450,8 +450,8 @@ function WorkflowBuilder({ config, onUpdate }: { config: WorkflowBuilderConfigur
                 handleSaveWorkflow({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  category: formData.get('category') as any,
-                  status: formData.get('status') as any,
+                  category: formData.get('category') as unknown,
+                  status: formData.get('status') as unknown,
                   isActive: formData.get('isActive') === 'on'
                 });
               }} className="space-y-4">

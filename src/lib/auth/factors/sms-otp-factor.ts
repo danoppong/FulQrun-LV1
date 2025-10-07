@@ -137,7 +137,7 @@ export class SMSOTPFactor {
     })
   }
 
-  private async getStoredOTP(userId: string): Promise<any> {
+  private async getStoredOTP(userId: string): Promise<unknown> {
     // Placeholder - implement proper OTP storage/retrieval
     const { data } = await this.supabase
       .from('auth_audit_log')

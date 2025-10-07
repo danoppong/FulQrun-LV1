@@ -46,7 +46,7 @@ interface DashboardData {
     value: number;
     confidence: number;
     calculatedAt: string;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
   }>;
   hcpEngagement: {
     totalHCPs: number;
@@ -57,7 +57,7 @@ interface DashboardData {
   recentPrescriptions: unknown[];
   recentCalls: unknown[];
   territoryPerformance: Array<{
-    territory: any;
+    territory: unknown;
     kpis: unknown[];
   }>;
   productPerformance: Array<{
@@ -275,7 +275,7 @@ export default function PharmaceuticalDashboard({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as unknown)}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'

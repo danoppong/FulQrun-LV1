@@ -8,7 +8,7 @@ import { Map, Users, TrendingUp, Award, Edit, Trash2, Plus } from 'lucide-react'
 
 interface TerritoryManagementNewProps {
   organizationId: string
-  user: any
+  user: unknown
 }
 
 interface Territory {

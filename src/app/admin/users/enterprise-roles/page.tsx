@@ -128,7 +128,7 @@ function EnterpriseRoleTable({
       key: 'userFullName' as keyof EnterpriseRole,
       label: 'User',
       sortable: true,
-      render: (value: any, role: EnterpriseRole) => (
+      render: (value: unknown, role: EnterpriseRole) => (
         <div className="flex items-center">
           <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
             <span className="text-sm font-medium text-gray-700">
@@ -377,7 +377,7 @@ function EnterpriseRoleForm({
               <label className="block text-sm font-medium text-gray-700">Enterprise Role</label>
               <select
                 value={formData.enterpriseRole}
-                onChange={(e) => setFormData({ ...formData, enterpriseRole: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, enterpriseRole: e.target.value as unknown })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
                 <option value="user">User</option>
@@ -462,7 +462,7 @@ export default function EnterpriseRolesManagement() {
       const data = await response.json();
       
       // Transform API data to match our EnterpriseRole interface
-      const transformedRoles: EnterpriseRole[] = data.enterpriseRoles.map((r: any) => ({
+      const transformedRoles: EnterpriseRole[] = data.enterpriseRoles.map((r: unknown) => ({
         id: r.id,
         userId: r.userId,
         userEmail: r.userEmail,
@@ -494,7 +494,7 @@ export default function EnterpriseRolesManagement() {
 
       if (response.ok) {
         const data = await response.json();
-        setAvailableUsers(data.users.map((u: any) => ({
+        setAvailableUsers(data.users.map((u: unknown) => ({
           id: u.id,
           email: u.email,
           fullName: u.fullName

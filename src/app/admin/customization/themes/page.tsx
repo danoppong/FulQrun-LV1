@@ -701,7 +701,7 @@ function ThemeCustomizer({ config, onUpdate }: { config: ThemeCustomizerConfigur
                 handleSaveTheme({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  category: formData.get('category') as any,
+                  category: formData.get('category') as unknown,
                   isActive: formData.get('isActive') === 'on',
                   isDefault: formData.get('isDefault') === 'on'
                 });

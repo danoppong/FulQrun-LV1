@@ -173,8 +173,8 @@ export interface Database {
           icp_profile_id: string | null
           sources: string[]
           risk_flags: string[]
-          compliance: Record<string, any>
-          postprocessing: Record<string, any>
+          compliance: Record<string, unknown>
+          postprocessing: Record<string, unknown>
         }
         Insert: {
           id?: string
@@ -210,8 +210,8 @@ export interface Database {
           icp_profile_id?: string | null
           sources?: string[]
           risk_flags?: string[]
-          compliance?: Record<string, any>
-          postprocessing?: Record<string, any>
+          compliance?: Record<string, unknown>
+          postprocessing?: Record<string, unknown>
         }
         Update: {
           id?: string
@@ -247,8 +247,8 @@ export interface Database {
           icp_profile_id?: string | null
           sources?: string[]
           risk_flags?: string[]
-          compliance?: Record<string, any>
-          postprocessing?: Record<string, any>
+          compliance?: Record<string, unknown>
+          postprocessing?: Record<string, unknown>
         }
       }
       opportunities: {
@@ -311,8 +311,8 @@ export interface Database {
           updated_at: string
           // AI Lead Management fields
           lead_id: string | null
-          before_data: Record<string, any> | null
-          after_data: Record<string, any> | null
+          before_data: Record<string, unknown> | null
+          after_data: Record<string, unknown> | null
           reason: string | null
         }
         Insert: {
@@ -330,8 +330,8 @@ export interface Database {
           updated_at?: string
           // AI Lead Management fields
           lead_id?: string | null
-          before_data?: Record<string, any> | null
-          after_data?: Record<string, any> | null
+          before_data?: Record<string, unknown> | null
+          after_data?: Record<string, unknown> | null
           reason?: string | null
         }
         Update: {
@@ -349,8 +349,8 @@ export interface Database {
           updated_at?: string
           // AI Lead Management fields
           lead_id?: string | null
-          before_data?: Record<string, any> | null
-          after_data?: Record<string, any> | null
+          before_data?: Record<string, unknown> | null
+          after_data?: Record<string, unknown> | null
           reason?: string | null
         }
       }
@@ -467,8 +467,8 @@ export interface Database {
           base_salary: number
           commission_rate: number
           commission_cap: number | null
-          bonus_thresholds: Record<string, any>
-          product_weightings: Record<string, any>
+          bonus_thresholds: Record<string, unknown>
+          product_weightings: Record<string, unknown>
           territory_id: string | null
           user_id: string | null
           organization_id: string
@@ -484,8 +484,8 @@ export interface Database {
           base_salary?: number
           commission_rate?: number
           commission_cap?: number | null
-          bonus_thresholds?: Record<string, any>
-          product_weightings?: Record<string, any>
+          bonus_thresholds?: Record<string, unknown>
+          product_weightings?: Record<string, unknown>
           territory_id?: string | null
           user_id?: string | null
           organization_id: string
@@ -501,8 +501,8 @@ export interface Database {
           base_salary?: number
           commission_rate?: number
           commission_cap?: number | null
-          bonus_thresholds?: Record<string, any>
-          product_weightings?: Record<string, any>
+          bonus_thresholds?: Record<string, unknown>
+          product_weightings?: Record<string, unknown>
           territory_id?: string | null
           user_id?: string | null
           organization_id?: string
@@ -583,7 +583,7 @@ export interface Database {
           total_compensation: number
           quota_attainment: number
           commission_rate_applied: number
-          adjustments: Record<string, any>
+          adjustments: Record<string, unknown>
           status: 'pending' | 'approved' | 'paid' | 'disputed'
           approved_by: string | null
           approved_at: string | null
@@ -605,7 +605,7 @@ export interface Database {
           total_compensation?: number
           quota_attainment?: number
           commission_rate_applied?: number
-          adjustments?: Record<string, any>
+          adjustments?: Record<string, unknown>
           status?: 'pending' | 'approved' | 'paid' | 'disputed'
           approved_by?: string | null
           approved_at?: string | null
@@ -627,7 +627,7 @@ export interface Database {
           total_compensation?: number
           quota_attainment?: number
           commission_rate_applied?: number
-          adjustments?: Record<string, any>
+          adjustments?: Record<string, unknown>
           status?: 'pending' | 'approved' | 'paid' | 'disputed'
           approved_by?: string | null
           approved_at?: string | null
@@ -730,11 +730,11 @@ export interface Database {
           description: string | null
           scenario_type: 'quota_adjustment' | 'territory_redesign' | 'compensation_change' | 'what_if'
           base_scenario_id: string | null
-          assumptions: Record<string, any>
-          quota_changes: Record<string, any>
-          territory_changes: Record<string, any>
-          compensation_changes: Record<string, any>
-          impact_analysis: Record<string, any>
+          assumptions: Record<string, unknown>
+          quota_changes: Record<string, unknown>
+          territory_changes: Record<string, unknown>
+          compensation_changes: Record<string, unknown>
+          impact_analysis: Record<string, unknown>
           budget_variance: number
           fairness_score: number
           is_active: boolean
@@ -749,11 +749,11 @@ export interface Database {
           description?: string | null
           scenario_type: 'quota_adjustment' | 'territory_redesign' | 'compensation_change' | 'what_if'
           base_scenario_id?: string | null
-          assumptions?: Record<string, any>
-          quota_changes?: Record<string, any>
-          territory_changes?: Record<string, any>
-          compensation_changes?: Record<string, any>
-          impact_analysis?: Record<string, any>
+          assumptions?: Record<string, unknown>
+          quota_changes?: Record<string, unknown>
+          territory_changes?: Record<string, unknown>
+          compensation_changes?: Record<string, unknown>
+          impact_analysis?: Record<string, unknown>
           budget_variance?: number
           fairness_score?: number
           is_active?: boolean
@@ -768,11 +768,11 @@ export interface Database {
           description?: string | null
           scenario_type?: 'quota_adjustment' | 'territory_redesign' | 'compensation_change' | 'what_if'
           base_scenario_id?: string | null
-          assumptions?: Record<string, any>
-          quota_changes?: Record<string, any>
-          territory_changes?: Record<string, any>
-          compensation_changes?: Record<string, any>
-          impact_analysis?: Record<string, any>
+          assumptions?: Record<string, unknown>
+          quota_changes?: Record<string, unknown>
+          territory_changes?: Record<string, unknown>
+          compensation_changes?: Record<string, unknown>
+          impact_analysis?: Record<string, unknown>
           budget_variance?: number
           fairness_score?: number
           is_active?: boolean
@@ -889,7 +889,7 @@ export interface Database {
           metric_template_id: string
           field_name: string
           field_type: 'text' | 'number' | 'date' | 'boolean' | 'select'
-          field_options: Record<string, any>
+          field_options: Record<string, unknown>
           is_required: boolean
           display_order: number
           organization_id: string
@@ -900,7 +900,7 @@ export interface Database {
           metric_template_id: string
           field_name: string
           field_type: 'text' | 'number' | 'date' | 'boolean' | 'select'
-          field_options?: Record<string, any>
+          field_options?: Record<string, unknown>
           is_required?: boolean
           display_order?: number
           organization_id: string
@@ -911,7 +911,7 @@ export interface Database {
           metric_template_id?: string
           field_name?: string
           field_type?: 'text' | 'number' | 'date' | 'boolean' | 'select'
-          field_options?: Record<string, any>
+          field_options?: Record<string, unknown>
           is_required?: boolean
           display_order?: number
           organization_id?: string
@@ -929,7 +929,7 @@ export interface Database {
           period_end: string
           actual_value: number
           target_value: number
-          custom_fields: Record<string, any>
+          custom_fields: Record<string, unknown>
           notes: string | null
           status: 'active' | 'archived' | 'draft'
           organization_id: string
@@ -947,7 +947,7 @@ export interface Database {
           period_end: string
           actual_value: number
           target_value: number
-          custom_fields?: Record<string, any>
+          custom_fields?: Record<string, unknown>
           notes?: string | null
           status?: 'active' | 'archived' | 'draft'
           organization_id: string
@@ -965,7 +965,7 @@ export interface Database {
           period_end?: string
           actual_value?: number
           target_value?: number
-          custom_fields?: Record<string, any>
+          custom_fields?: Record<string, unknown>
           notes?: string | null
           status?: 'active' | 'archived' | 'draft'
           organization_id?: string
@@ -1031,7 +1031,7 @@ export interface Database {
           description: string | null
           user_id: string | null
           is_shared: boolean
-          dashboard_config: Record<string, any>
+          dashboard_config: Record<string, unknown>
           organization_id: string
           created_by: string
           created_at: string
@@ -1043,7 +1043,7 @@ export interface Database {
           description?: string | null
           user_id?: string | null
           is_shared?: boolean
-          dashboard_config?: Record<string, any>
+          dashboard_config?: Record<string, unknown>
           organization_id: string
           created_by: string
           created_at?: string
@@ -1055,7 +1055,7 @@ export interface Database {
           description?: string | null
           user_id?: string | null
           is_shared?: boolean
-          dashboard_config?: Record<string, any>
+          dashboard_config?: Record<string, unknown>
           organization_id?: string
           created_by?: string
           created_at?: string
@@ -1069,7 +1069,7 @@ export interface Database {
           metric_template_id: string
           display_order: number
           chart_type: 'line' | 'bar' | 'pie' | 'area' | 'gauge' | 'table'
-          chart_config: Record<string, any>
+          chart_config: Record<string, unknown>
           created_at: string
         }
         Insert: {
@@ -1078,7 +1078,7 @@ export interface Database {
           metric_template_id: string
           display_order?: number
           chart_type?: 'line' | 'bar' | 'pie' | 'area' | 'gauge' | 'table'
-          chart_config?: Record<string, any>
+          chart_config?: Record<string, unknown>
           created_at?: string
         }
         Update: {
@@ -1087,7 +1087,7 @@ export interface Database {
           metric_template_id?: string
           display_order?: number
           chart_type?: 'line' | 'bar' | 'pie' | 'area' | 'gauge' | 'table'
-          chart_config?: Record<string, any>
+          chart_config?: Record<string, unknown>
           created_at?: string
         }
       }
@@ -1097,7 +1097,7 @@ export interface Database {
           id: string
           name: string
           description: string | null
-          criteria: Record<string, any>
+          criteria: Record<string, unknown>
           organization_id: string
           created_by: string
           created_at: string
@@ -1108,7 +1108,7 @@ export interface Database {
           id?: string
           name: string
           description?: string | null
-          criteria?: Record<string, any>
+          criteria?: Record<string, unknown>
           organization_id: string
           created_by: string
           created_at?: string
@@ -1119,7 +1119,7 @@ export interface Database {
           id?: string
           name?: string
           description?: string | null
-          criteria?: Record<string, any>
+          criteria?: Record<string, unknown>
           organization_id?: string
           created_by?: string
           created_at?: string
@@ -1198,7 +1198,7 @@ export interface Database {
           legal_name: string
           known_as: string | null
           domain: string | null
-          registry_ids: Record<string, any> | null
+          registry_ids: Record<string, unknown> | null
           country: string | null
           region: 'US' | 'EU' | 'UK' | 'APAC' | null
           industry_code: string | null
@@ -1206,7 +1206,7 @@ export interface Database {
           employee_band: string | null
           entity_type: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER' | null
           account_embedding: number[] | null
-          provenance: Record<string, any>
+          provenance: Record<string, unknown>
           organization_id: string
           created_at: string
           updated_at: string
@@ -1217,7 +1217,7 @@ export interface Database {
           legal_name: string
           known_as?: string | null
           domain?: string | null
-          registry_ids?: Record<string, any> | null
+          registry_ids?: Record<string, unknown> | null
           country?: string | null
           region?: 'US' | 'EU' | 'UK' | 'APAC' | null
           industry_code?: string | null
@@ -1225,7 +1225,7 @@ export interface Database {
           employee_band?: string | null
           entity_type?: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER' | null
           account_embedding?: number[] | null
-          provenance?: Record<string, any>
+          provenance?: Record<string, unknown>
           organization_id: string
           created_at?: string
           updated_at?: string
@@ -1236,7 +1236,7 @@ export interface Database {
           legal_name?: string
           known_as?: string | null
           domain?: string | null
-          registry_ids?: Record<string, any> | null
+          registry_ids?: Record<string, unknown> | null
           country?: string | null
           region?: 'US' | 'EU' | 'UK' | 'APAC' | null
           industry_code?: string | null
@@ -1244,7 +1244,7 @@ export interface Database {
           employee_band?: string | null
           entity_type?: 'PUBLIC' | 'PRIVATE' | 'NONPROFIT' | 'OTHER' | null
           account_embedding?: number[] | null
-          provenance?: Record<string, any>
+          provenance?: Record<string, unknown>
           organization_id?: string
           created_at?: string
           updated_at?: string
@@ -1264,7 +1264,7 @@ export interface Database {
           email_status: 'UNVERIFIED' | 'VERIFIED' | 'UNKNOWN'
           phone_hint: string | null
           contact_embedding: number[] | null
-          provenance: Record<string, any>
+          provenance: Record<string, unknown>
           organization_id: string
           created_at: string
           updated_at: string
@@ -1282,7 +1282,7 @@ export interface Database {
           email_status?: 'UNVERIFIED' | 'VERIFIED' | 'UNKNOWN'
           phone_hint?: string | null
           contact_embedding?: number[] | null
-          provenance?: Record<string, any>
+          provenance?: Record<string, unknown>
           organization_id: string
           created_at?: string
           updated_at?: string
@@ -1300,7 +1300,7 @@ export interface Database {
           email_status?: 'UNVERIFIED' | 'VERIFIED' | 'UNKNOWN'
           phone_hint?: string | null
           contact_embedding?: number[] | null
-          provenance?: Record<string, any>
+          provenance?: Record<string, unknown>
           organization_id?: string
           created_at?: string
           updated_at?: string
@@ -1313,7 +1313,7 @@ export interface Database {
           lead_id: string
           framework: 'BANT' | 'CHAMP' | 'GPCTBA/C&I' | 'SPICED' | 'ANUM' | 'FAINT' | 'NEAT' | 'PACT' | 'JTBD_FIT' | 'FIVE_FIT' | 'ABM' | 'TARGETING'
           status: 'NOT_STARTED' | 'IN_PROGRESS' | 'QUALIFIED' | 'DISQUALIFIED'
-          data: Record<string, any>
+          data: Record<string, unknown>
           organization_id: string
           created_at: string
           updated_at: string
@@ -1324,7 +1324,7 @@ export interface Database {
           lead_id: string
           framework: 'BANT' | 'CHAMP' | 'GPCTBA/C&I' | 'SPICED' | 'ANUM' | 'FAINT' | 'NEAT' | 'PACT' | 'JTBD_FIT' | 'FIVE_FIT' | 'ABM' | 'TARGETING'
           status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'QUALIFIED' | 'DISQUALIFIED'
-          data?: Record<string, any>
+          data?: Record<string, unknown>
           organization_id: string
           created_at?: string
           updated_at?: string
@@ -1335,7 +1335,7 @@ export interface Database {
           lead_id?: string
           framework?: 'BANT' | 'CHAMP' | 'GPCTBA/C&I' | 'SPICED' | 'ANUM' | 'FAINT' | 'NEAT' | 'PACT' | 'JTBD_FIT' | 'FIVE_FIT' | 'ABM' | 'TARGETING'
           status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'QUALIFIED' | 'DISQUALIFIED'
-          data?: Record<string, any>
+          data?: Record<string, unknown>
           organization_id?: string
           created_at?: string
           updated_at?: string
@@ -1348,7 +1348,7 @@ export interface Database {
           lead_id: string
           framework: string
           field: string
-          value: Record<string, any>
+          value: Record<string, unknown>
           confidence: number | null
           source: string | null
           actor_user_id: string | null
@@ -1363,7 +1363,7 @@ export interface Database {
           lead_id: string
           framework: string
           field: string
-          value: Record<string, any>
+          value: Record<string, unknown>
           confidence?: number | null
           source?: string | null
           actor_user_id?: string | null
@@ -1378,7 +1378,7 @@ export interface Database {
           lead_id?: string
           framework?: string
           field?: string
-          value?: Record<string, any>
+          value?: Record<string, unknown>
           confidence?: number | null
           source?: string | null
           actor_user_id?: string | null
@@ -1399,8 +1399,8 @@ export interface Database {
           viability: number
           recency: number
           composite: number
-          weights: Record<string, any>
-          segment: Record<string, any>
+          weights: Record<string, unknown>
+          segment: Record<string, unknown>
           organization_id: string
           created_at: string
         }
@@ -1413,8 +1413,8 @@ export interface Database {
           viability: number
           recency: number
           composite: number
-          weights: Record<string, any>
-          segment: Record<string, any>
+          weights: Record<string, unknown>
+          segment: Record<string, unknown>
           organization_id: string
           created_at?: string
         }
@@ -1427,8 +1427,8 @@ export interface Database {
           viability?: number
           recency?: number
           composite?: number
-          weights?: Record<string, any>
-          segment?: Record<string, any>
+          weights?: Record<string, unknown>
+          segment?: Record<string, unknown>
           organization_id?: string
           created_at?: string
         }
@@ -1437,7 +1437,7 @@ export interface Database {
         Row: {
           id: string
           provider: 'CLEARBIT' | 'ZOOMINFO' | 'OPPORTUNITY' | 'COMPLIANCE'
-          config: Record<string, any>
+          config: Record<string, unknown>
           organization_id: string
           created_at: string
           updated_at: string
@@ -1446,7 +1446,7 @@ export interface Database {
         Insert: {
           id?: string
           provider: 'CLEARBIT' | 'ZOOMINFO' | 'OPPORTUNITY' | 'COMPLIANCE'
-          config: Record<string, any>
+          config: Record<string, unknown>
           organization_id: string
           created_at?: string
           updated_at?: string
@@ -1455,7 +1455,7 @@ export interface Database {
         Update: {
           id?: string
           provider?: 'CLEARBIT' | 'ZOOMINFO' | 'OPPORTUNITY' | 'COMPLIANCE'
-          config?: Record<string, any>
+          config?: Record<string, unknown>
           organization_id?: string
           created_at?: string
           updated_at?: string
@@ -1469,8 +1469,8 @@ export interface Database {
           status: 'PENDING' | 'IN_PROGRESS' | 'SUCCEEDED' | 'FAILED' | 'ROLLED_BACK'
           idempotency_key: string
           correlation_id: string | null
-          request_payload: Record<string, any>
-          response_payload: Record<string, any> | null
+          request_payload: Record<string, unknown>
+          response_payload: Record<string, unknown> | null
           organization_id: string
           created_at: string
           updated_at: string
@@ -1482,8 +1482,8 @@ export interface Database {
           status: 'PENDING' | 'IN_PROGRESS' | 'SUCCEEDED' | 'FAILED' | 'ROLLED_BACK'
           idempotency_key: string
           correlation_id?: string | null
-          request_payload: Record<string, any>
-          response_payload?: Record<string, any> | null
+          request_payload: Record<string, unknown>
+          response_payload?: Record<string, unknown> | null
           organization_id: string
           created_at?: string
           updated_at?: string
@@ -1495,8 +1495,8 @@ export interface Database {
           status?: 'PENDING' | 'IN_PROGRESS' | 'SUCCEEDED' | 'FAILED' | 'ROLLED_BACK'
           idempotency_key?: string
           correlation_id?: string | null
-          request_payload?: Record<string, any>
-          response_payload?: Record<string, any> | null
+          request_payload?: Record<string, unknown>
+          response_payload?: Record<string, unknown> | null
           organization_id?: string
           created_at?: string
           updated_at?: string
@@ -1510,7 +1510,7 @@ export interface Database {
           external_opportunity_id: string
           external_account_id: string | null
           external_contact_id: string | null
-          mapping: Record<string, any>
+          mapping: Record<string, unknown>
           organization_id: string
           created_at: string
           updated_at: string
@@ -1522,7 +1522,7 @@ export interface Database {
           external_opportunity_id: string
           external_account_id?: string | null
           external_contact_id?: string | null
-          mapping?: Record<string, any>
+          mapping?: Record<string, unknown>
           organization_id: string
           created_at?: string
           updated_at?: string
@@ -1534,7 +1534,7 @@ export interface Database {
           external_opportunity_id?: string
           external_account_id?: string | null
           external_contact_id?: string | null
-          mapping?: Record<string, any>
+          mapping?: Record<string, unknown>
           organization_id?: string
           created_at?: string
           updated_at?: string

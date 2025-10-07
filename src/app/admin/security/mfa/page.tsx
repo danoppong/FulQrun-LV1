@@ -417,7 +417,7 @@ function MFAMethods({ config, onUpdate }: { config: MFAConfiguration; onUpdate: 
                 const formData = new FormData(e.currentTarget);
                 handleSaveMethod({
                   name: formData.get('name') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   enabled: true,
                   priority: parseInt(formData.get('priority') as string)
                 });

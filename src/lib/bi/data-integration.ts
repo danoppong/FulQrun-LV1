@@ -498,14 +498,14 @@ export class DataIntegrationService {
     ];
   }
 
-  private async parseCSVFile(file: File): Promise<Record<string, any>[]> {
+  private async parseCSVFile(file: File): Promise<Record<string, unknown>[]> {
     const text = await file.text();
     const lines = text.split('\n');
     const headers = lines[0].split(',').map(h => h.trim());
     
     return lines.slice(1).map(line => {
       const values = line.split(',').map(v => v.trim());
-      const row: Record<string, any> = {};
+      const row: Record<string, unknown> = {};
       headers.forEach((header, index) => {
         row[header] = values[index];
       });
@@ -513,8 +513,8 @@ export class DataIntegrationService {
     });
   }
 
-  private mapCSVRow(row: Record<string, any>, mapping: DataMapping[]): Record<string, any> {
-    const mappedData: Record<string, any> = {};
+  private mapCSVRow(row: Record<string, unknown>, mapping: DataMapping[]): Record<string, unknown> {
+    const mappedData: Record<string, unknown> = {};
     
     mapping.forEach(map => {
       const value = row[map.sourceField];
@@ -542,7 +542,7 @@ export class DataIntegrationService {
     }
   }
 
-  private async processPrescriptionData(organizationId: string, data: Record<string, any>): Promise<void> {
+  private async processPrescriptionData(organizationId: string, data: Record<string, unknown>): Promise<void> {
     await this.supabase
       .from('prescription_events')
       .insert({
@@ -561,7 +561,7 @@ export class DataIntegrationService {
       });
   }
 
-  private async processHCPData(organizationId: string, data: Record<string, any>): Promise<void> {
+  private async processHCPData(organizationId: string, data: Record<string, unknown>): Promise<void> {
     await this.supabase
       .from('healthcare_providers')
       .upsert({
@@ -576,7 +576,7 @@ export class DataIntegrationService {
       });
   }
 
-  private async processCallData(organizationId: string, data: Record<string, any>): Promise<void> {
+  private async processCallData(organizationId: string, data: Record<string, unknown>): Promise<void> {
     await this.supabase
       .from('pharmaceutical_calls')
       .insert({
@@ -596,7 +596,7 @@ export class DataIntegrationService {
       });
   }
 
-  private async processSampleData(organizationId: string, data: Record<string, any>): Promise<void> {
+  private async processSampleData(organizationId: string, data: Record<string, unknown>): Promise<void> {
     await this.supabase
       .from('sample_distributions')
       .insert({

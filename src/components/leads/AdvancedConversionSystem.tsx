@@ -26,12 +26,12 @@ interface ConversionTemplate {
     value_estimation: {
       method: 'fixed' | 'calculated' | 'ai_estimated'
       value?: number
-      calculation_rules?: Record<string, any>
+      calculation_rules?: Record<string, unknown>
     }
     close_date_estimation: {
       method: 'fixed' | 'calculated' | 'ai_estimated'
       days?: number
-      calculation_rules?: Record<string, any>
+      calculation_rules?: Record<string, unknown>
     }
     description_template: string
   }
@@ -53,7 +53,7 @@ interface ConversionTemplate {
   meddpicc_integration: {
     auto_populate: boolean
     confidence_threshold: number
-    mapping_rules: Record<string, any>
+    mapping_rules: Record<string, unknown>
   }
   organization_id: string
   created_at: string
@@ -223,7 +223,7 @@ export function AdvancedConversionSystem() {
         
         // Poll for conversion job status
         if (data.data.conversions.length > 0) {
-          const jobIds = data.data.conversions.map((conv: any) => conv.job_id)
+          const jobIds = data.data.conversions.map((conv: unknown) => conv.job_id)
           pollConversionJobs(jobIds)
         }
         
@@ -873,7 +873,7 @@ function ConversionTemplateDialog({ template, onChange, onSave, onCancel }: Conv
                 <Label htmlFor="value_method">Value Estimation Method</Label>
                 <Select
                   value={template.opportunity_settings?.value_estimation?.method || 'fixed'}
-                  onValueChange={(value: any) => onChange({
+                  onValueChange={(value: unknown) => onChange({
                     ...template,
                     opportunity_settings: {
                       ...template.opportunity_settings,
@@ -932,7 +932,7 @@ function ConversionTemplateDialog({ template, onChange, onSave, onCancel }: Conv
                   <Label htmlFor="user_selection">User Selection Method</Label>
                   <Select
                     value={template.handoff_settings?.user_selection_method || 'auto'}
-                    onValueChange={(value: any) => onChange({
+                    onValueChange={(value: unknown) => onChange({
                       ...template,
                       handoff_settings: {
                         ...template.handoff_settings,

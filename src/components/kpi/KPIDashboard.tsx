@@ -245,7 +245,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             </SelectContent>
           </Select>
 
-          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)}>
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as unknown)}>
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="detailed">Detailed</TabsTrigger>
@@ -515,7 +515,7 @@ function KPICard({ title, value, subtitle, icon, trend, performanceTier }: KPICa
 // Detailed KPI Card Component
 interface DetailedKPICardProps {
   title: string;
-  data: any;
+  data: unknown;
   type: string;
 }
 

@@ -68,7 +68,7 @@ interface Widget {
   position: Position;
   size: Size;
   config: WidgetConfig;
-  data: any;
+  data: unknown;
   style: WidgetStyle;
 }
 
@@ -98,7 +98,7 @@ interface WidgetConfig {
 interface Filter {
   field: string;
   operator: string;
-  value: any;
+  value: unknown;
 }
 
 interface WidgetStyle {
@@ -660,7 +660,7 @@ function PropertiesPanel({
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as unknown)}
               className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium ${
                 activeTab === tab.id
                   ? 'text-blue-600 border-b-2 border-blue-600'

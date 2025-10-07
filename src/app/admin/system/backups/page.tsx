@@ -102,7 +102,7 @@ interface DestinationConfiguration {
   port?: number;
   username?: string;
   password?: string;
-  customSettings?: Record<string, any>;
+  customSettings?: Record<string, unknown>;
 }
 
 interface BackupJob {
@@ -374,8 +374,8 @@ function BackupSchedules({ config, onUpdate }: { config: BackupConfiguration; on
                 handleSaveSchedule({
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
-                  type: formData.get('type') as any,
-                  frequency: formData.get('frequency') as any,
+                  type: formData.get('type') as unknown,
+                  frequency: formData.get('frequency') as unknown,
                   enabled: formData.get('enabled') === 'on',
                   retentionDays: parseInt(formData.get('retentionDays') as string),
                   compressionEnabled: formData.get('compressionEnabled') === 'on',
@@ -668,7 +668,7 @@ function BackupDestinations({ config, onUpdate }: { config: BackupConfiguration;
                 const formData = new FormData(e.currentTarget);
                 handleSaveDestination({
                   name: formData.get('name') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   isActive: true
                 });
               }} className="space-y-4">

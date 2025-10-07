@@ -91,8 +91,8 @@ export async function GET(
     const { moduleName } = await params;
     const configService = new ConfigurationService(organizationId, user.id);
     const [features, parameters] = await Promise.all([
-      configService.getModuleFeatures(moduleName as any),
-      configService.getModuleParameters(moduleName as any)
+      configService.getModuleFeatures(moduleName as unknown),
+      configService.getModuleParameters(moduleName as unknown)
     ]);
 
     return NextResponse.json({ 
@@ -137,7 +137,7 @@ export async function PUT(
     if (validatedData.parameters) {
       for (const param of validatedData.parameters) {
         await configService.setModuleParameter(
-          moduleName as any,
+          moduleName as unknown,
           param.parameterKey,
           param.value,
           {
@@ -156,7 +156,7 @@ export async function PUT(
     if (validatedData.features) {
       for (const feature of validatedData.features) {
         await configService.toggleModuleFeature(
-          moduleName as any,
+          moduleName as unknown,
           feature.featureKey,
           feature.isEnabled,
           feature.reason

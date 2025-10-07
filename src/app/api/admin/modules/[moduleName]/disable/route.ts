@@ -69,11 +69,11 @@ export async function POST(
     const configService = new ConfigurationService(organizationId, user.id);
     
     // Disable all features for the module
-    const features = await configService.getModuleFeatures(params.moduleName as any);
+    const features = await configService.getModuleFeatures(params.moduleName as unknown);
     for (const feature of features) {
       if (feature.isEnabled) {
         await configService.toggleModuleFeature(
-          params.moduleName as any,
+          params.moduleName as unknown,
           feature.featureKey,
           false,
           'Module disabled via API'

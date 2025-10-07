@@ -61,7 +61,7 @@ interface QualificationResult {
   criteria_scores: Record<string, number>
   evidence: Array<{
     field: string
-    value: any
+    value: unknown
     confidence: number
     source: string
   }>
@@ -469,7 +469,7 @@ function AutomationConfigDialog({ config, onChange, onSave, onCancel, templates 
                 <Label htmlFor="frequency">Run Frequency</Label>
                 <Select
                   value={config.auto_run_frequency || 'daily'}
-                  onValueChange={(value: any) => onChange({ ...config, auto_run_frequency: value })}
+                  onValueChange={(value: unknown) => onChange({ ...config, auto_run_frequency: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />

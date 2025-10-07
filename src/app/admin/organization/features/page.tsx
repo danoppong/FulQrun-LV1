@@ -284,7 +284,7 @@ export default function OrganizationFeatures() {
         const data = await response.json();
         
         // Transform API data into Module objects
-        const modulesData: Module[] = data.modules?.map((mod: any) => ({
+        const modulesData: Module[] = data.modules?.map((mod: unknown) => ({
           name: mod.name,
           displayName: MODULE_METADATA[mod.name]?.displayName || mod.name,
           description: MODULE_METADATA[mod.name]?.description || '',

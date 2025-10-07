@@ -67,7 +67,7 @@ interface UserTableColumn {
   key: keyof User;
   label: string;
   sortable: boolean;
-  render?: (value: any, user: User) => React.ReactNode;
+  render?: (value: unknown, user: User) => React.ReactNode;
 }
 
 // =============================================================================
@@ -479,7 +479,7 @@ function UserForm({
               <label className="block text-sm font-medium text-gray-700">Role</label>
               <select
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as unknown })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
                 <option value="rep">Sales Rep</option>
@@ -567,7 +567,7 @@ export default function UserManagement() {
       const data = await response.json();
       
       // Transform API data to match our User interface
-      const transformedUsers: User[] = data.users.map((u: any) => ({
+      const transformedUsers: User[] = data.users.map((u: unknown) => ({
         id: u.id,
         email: u.email,
         fullName: u.fullName || '',

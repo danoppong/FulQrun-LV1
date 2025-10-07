@@ -8,7 +8,7 @@ import { Target, TrendingUp, CheckCircle, Clock, Edit, Trash2, Plus, GitBranch }
 
 interface QuotaPlanningNewProps {
   organizationId: string
-  user: any
+  user: unknown
 }
 
 interface QuotaPlan {

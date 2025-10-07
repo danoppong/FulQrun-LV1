@@ -747,7 +747,7 @@ function AutomationRuleDialog({ rule, onChange, onSave, onCancel }: AutomationRu
                   <Label htmlFor="assignment_method">Assignment Method</Label>
                   <Select
                     value={rule.conversion_settings?.assignment_method || 'auto'}
-                    onValueChange={(value: any) => onChange({
+                    onValueChange={(value: unknown) => onChange({
                       ...rule,
                       conversion_settings: {
                         ...rule.conversion_settings,
@@ -773,7 +773,7 @@ function AutomationRuleDialog({ rule, onChange, onSave, onCancel }: AutomationRu
                   <Label htmlFor="priority">Priority</Label>
                   <Select
                     value={rule.conversion_settings?.priority || 'medium'}
-                    onValueChange={(value: any) => onChange({
+                    onValueChange={(value: unknown) => onChange({
                       ...rule,
                       conversion_settings: {
                         ...rule.conversion_settings,

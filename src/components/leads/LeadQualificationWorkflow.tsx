@@ -18,7 +18,7 @@ interface QualificationFramework {
   id: string
   name: string
   description: string
-  criteria: Record<string, any>
+  criteria: Record<string, unknown>
 }
 
 interface LeadQualification {
@@ -26,7 +26,7 @@ interface LeadQualification {
   lead_id: string
   framework: string
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'QUALIFIED' | 'DISQUALIFIED'
-  data: Record<string, any>
+  data: Record<string, unknown>
   created_at: string
   updated_at: string
 }
@@ -36,7 +36,7 @@ interface FrameworkEvidence {
   lead_id: string
   framework: string
   field: string
-  value: any
+  value: unknown
   confidence: number
   source: string
   justification?: string

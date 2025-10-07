@@ -72,8 +72,8 @@ interface ConnectionSettings {
   batchSize: number;
   retryAttempts: number;
   timeout: number;
-  filters?: Record<string, any>;
-  customSettings?: Record<string, any>;
+  filters?: Record<string, unknown>;
+  customSettings?: Record<string, unknown>;
 }
 
 interface SyncRule {
@@ -100,7 +100,7 @@ interface FieldMapping {
 interface SyncCondition {
   field: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
-  value: any;
+  value: unknown;
 }
 
 interface DataMapping {
@@ -468,7 +468,7 @@ function IntegrationConnections({ config, onUpdate }: { config: IntegrationConfi
                 const formData = new FormData(e.currentTarget);
                 handleSaveConnection({
                   name: formData.get('name') as string,
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as unknown,
                   provider: formData.get('provider') as string,
                   status: 'pending',
                   isActive: true

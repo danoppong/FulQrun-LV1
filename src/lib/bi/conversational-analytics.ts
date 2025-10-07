@@ -21,12 +21,12 @@ export interface QueryIntent {
 
 export interface AnalyticsResponse {
   intent: QueryIntent;
-  data: any;
+  data: unknown;
   insights: string[];
   recommendations: string[];
   visualizations: {
     type: 'chart' | 'table' | 'metric' | 'map';
-    data: any;
+    data: unknown;
     title: string;
   }[];
   confidence: number;
@@ -186,7 +186,7 @@ export class ConversationalAnalyticsEngine {
   async generateResponse(
     intent: QueryIntent, 
     context: ConversationContext,
-    dashboardData: any
+    dashboardData: unknown
   ): Promise<AnalyticsResponse> {
     const insights: string[] = [];
     const recommendations: string[] = [];
@@ -219,7 +219,7 @@ export class ConversationalAnalyticsEngine {
   private async generateKPIResponse(
     intent: QueryIntent, 
     context: ConversationContext,
-    dashboardData: any
+    dashboardData: unknown
   ): Promise<AnalyticsResponse> {
     const insights: string[] = [];
     const recommendations: string[] = [];
@@ -279,7 +279,7 @@ export class ConversationalAnalyticsEngine {
   private async generateTrendResponse(
     intent: QueryIntent, 
     context: ConversationContext,
-    dashboardData: any
+    dashboardData: unknown
   ): Promise<AnalyticsResponse> {
     const insights: string[] = [];
     const recommendations: string[] = [];
@@ -326,7 +326,7 @@ export class ConversationalAnalyticsEngine {
   private async generateComparisonResponse(
     intent: QueryIntent, 
     context: ConversationContext,
-    dashboardData: any
+    dashboardData: unknown
   ): Promise<AnalyticsResponse> {
     const insights: string[] = [];
     const recommendations: string[] = [];
@@ -368,7 +368,7 @@ export class ConversationalAnalyticsEngine {
   private async generateForecastResponse(
     intent: QueryIntent, 
     context: ConversationContext,
-    dashboardData: any
+    dashboardData: unknown
   ): Promise<AnalyticsResponse> {
     const insights: string[] = [];
     const recommendations: string[] = [];
@@ -417,7 +417,7 @@ export class ConversationalAnalyticsEngine {
   private async generateAnomalyResponse(
     intent: QueryIntent, 
     context: ConversationContext,
-    dashboardData: any
+    dashboardData: unknown
   ): Promise<AnalyticsResponse> {
     const insights: string[] = [];
     const recommendations: string[] = [];
@@ -463,7 +463,7 @@ export class ConversationalAnalyticsEngine {
   private async generateRecommendationResponse(
     intent: QueryIntent, 
     context: ConversationContext,
-    dashboardData: any
+    dashboardData: unknown
   ): Promise<AnalyticsResponse> {
     const insights: string[] = [];
     const recommendations: string[] = [];
@@ -521,7 +521,7 @@ export class ConversationalAnalyticsEngine {
   private async generateGeneralResponse(
     intent: QueryIntent, 
     context: ConversationContext,
-    dashboardData: any
+    dashboardData: unknown
   ): Promise<AnalyticsResponse> {
     const insights: string[] = [];
     const recommendations: string[] = [];

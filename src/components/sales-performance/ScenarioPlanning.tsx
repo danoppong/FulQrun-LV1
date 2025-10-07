@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 
 interface ScenarioPlanningProps {
   organizationId: string
-  user: any
+  user: unknown
 }
 
 interface ScenarioPlan {
@@ -15,11 +15,11 @@ interface ScenarioPlan {
   description: string
   scenario_type: string
   base_scenario_id: string
-  assumptions: Record<string, any>
-  quota_changes: Record<string, any>
-  territory_changes: Record<string, any>
-  compensation_changes: Record<string, any>
-  impact_analysis: Record<string, any>
+  assumptions: Record<string, unknown>
+  quota_changes: Record<string, unknown>
+  territory_changes: Record<string, unknown>
+  compensation_changes: Record<string, unknown>
+  impact_analysis: Record<string, unknown>
   budget_variance: number
   fairness_score: number
   is_active: boolean

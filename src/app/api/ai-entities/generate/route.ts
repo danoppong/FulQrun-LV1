@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
 }
 
 async function generateAccounts(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string
 ) {
   const validationResult = AccountGenerationSchema.safeParse(body)
@@ -158,8 +158,8 @@ async function generateAccounts(
 }
 
 async function generateContacts(
-  supabase: any,
-  body: any,
+  supabase: unknown,
+  body: unknown,
   organizationId: string
 ) {
   const validationResult = ContactGenerationSchema.safeParse(body)
@@ -245,7 +245,7 @@ async function generateContacts(
 }
 
 async function generateAIAccounts(
-  leadBrief: any,
+  leadBrief: unknown,
   count: number,
   enrichmentLevel: string
 ): Promise<any[]> {
@@ -281,7 +281,7 @@ async function generateAIAccounts(
 }
 
 async function generateAIContacts(
-  leadBrief: any,
+  leadBrief: unknown,
   count: number,
   enrichmentLevel: string,
   accounts: unknown[] = []

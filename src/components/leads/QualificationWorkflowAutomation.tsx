@@ -22,11 +22,11 @@ interface WorkflowRule {
   conditions: {
     field: string
     operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'in' | 'not_in'
-    value: any
+    value: unknown
   }[]
   actions: {
     type: 'assign_framework' | 'auto_qualify' | 'auto_disqualify' | 'send_notification' | 'create_task'
-    parameters: Record<string, any>
+    parameters: Record<string, unknown>
   }[]
   priority: number
   enabled: boolean
@@ -536,7 +536,7 @@ function WorkflowRuleDialog({ rule, onChange, onSave, onCancel }: WorkflowRuleDi
                         <Label>Operator</Label>
                         <Select
                           value={condition.operator}
-                          onValueChange={(value: any) => {
+                          onValueChange={(value: unknown) => {
                             const newConditions = [...(rule.conditions || [])]
                             newConditions[index] = { ...condition, operator: value }
                             onChange({ ...rule, conditions: newConditions })
@@ -594,7 +594,7 @@ function WorkflowRuleDialog({ rule, onChange, onSave, onCancel }: WorkflowRuleDi
                         <Label>Action Type</Label>
                         <Select
                           value={action.type}
-                          onValueChange={(value: any) => {
+                          onValueChange={(value: unknown) => {
                             const newActions = [...(rule.actions || [])]
                             newActions[index] = { ...action, type: value, parameters: {} }
                             onChange({ ...rule, actions: newActions })
