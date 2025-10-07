@@ -2,7 +2,7 @@
 import React from 'react';
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@/lib/auth';
+import { createClientComponentClient } from '@/lib/auth'
 import { supabaseConfig } from '@/lib/config';
 
 export default function SupabaseDiagnostic() {

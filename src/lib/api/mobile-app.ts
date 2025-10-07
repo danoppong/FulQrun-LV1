@@ -2,7 +2,7 @@
 // API functions for mobile app management and offline-first features
 
 import { createClient } from '@supabase/supabase-js';
-import { ;
+import {
   MobileSession, 
   DeviceInfo, 
   OfflineData as _OfflineData, 

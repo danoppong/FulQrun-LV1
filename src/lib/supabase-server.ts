@@ -6,7 +6,7 @@
  */
 
 import { createServerClient as createSSRClient } from '@supabase/ssr'
-import { cookies } from 'next/headers';
+import { cookies } from 'next/headers'
 import { supabaseConfig } from '@/lib/config'
 import type { Database } from '@/lib/types/supabase';
 

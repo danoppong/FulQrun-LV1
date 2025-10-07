@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import {;
+import {
   ShieldCheckIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,

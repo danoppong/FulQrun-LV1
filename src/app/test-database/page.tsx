@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase';
 
 // Phase 2 tables that should exist

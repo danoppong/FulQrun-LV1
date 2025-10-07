@@ -5,8 +5,8 @@
 'use client';
 
 import React from 'react';
-import { DashboardWidget } from '@/lib/dashboard-widgets';
-import { PharmaKPICardData } from '@/lib/types/dashboard';
+import { DashboardWidget } from '@/lib/dashboard-widgets'
+import { PharmaKPICardData } from '@/lib/types/dashboard'
 import { KPICard } from '@/components/bi/KPICard';
 
 interface PharmaKPICardWidgetProps {

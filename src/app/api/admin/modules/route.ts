@@ -1,9 +1,9 @@
 // Administration Module - Module Configuration API Routes
 // API routes for module-specific configuration management
 
-import { NextRequest, NextResponse } from 'next/server';
-import { ConfigurationService } from '@/lib/admin/services/ConfigurationService';
-import { createServerClient } from '@supabase/ssr';
+import { NextRequest, NextResponse } from 'next/server'
+import { ConfigurationService } from '@/lib/admin/services/ConfigurationService'
+import { createServerClient } from '@supabase/ssr'
 import { supabaseConfig } from '@/lib/config';
 
 // Helper functions using server-side Supabase client

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ;
+import {
   DevicePhoneMobileIcon, 
   MicrophoneIcon, 
   ChartBarIcon,

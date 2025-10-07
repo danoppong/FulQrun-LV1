@@ -1,8 +1,8 @@
 // API Route: Toggle Module Feature
 // Enables or disables a specific module feature
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { supabaseConfig } from '@/lib/config';
 
 // Helper function to get authenticated user

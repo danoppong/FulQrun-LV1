@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AuthService } from '@/lib/auth-unified';
+import { AuthService } from '@/lib/auth-unified'
 import { TerritoryManagementNew } from './TerritoryManagementNew'
-import { QuotaPlanningNew } from './QuotaPlanningNew';
+import { QuotaPlanningNew } from './QuotaPlanningNew'
 import { CompensationManagement } from './CompensationManagement'
-import { PerformanceTracking } from './PerformanceTracking';
+import { PerformanceTracking } from './PerformanceTracking'
 import { CommissionApproval } from './CommissionApproval'
-import { ScenarioPlanning } from './ScenarioPlanning';
+import { ScenarioPlanning } from './ScenarioPlanning'
 import { GamificationDashboard } from './GamificationDashboard';
 
 export function SalesPerformanceDashboard() {

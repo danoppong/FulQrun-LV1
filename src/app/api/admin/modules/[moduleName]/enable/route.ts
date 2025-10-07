@@ -1,8 +1,8 @@
 // Administration Module - Module Enable/Disable API Routes
 // API routes for enabling and disabling modules
 
-import { NextRequest, NextResponse } from 'next/server';
-import { ConfigurationService } from '@/lib/admin/services/ConfigurationService';
+import { NextRequest, NextResponse } from 'next/server'
+import { ConfigurationService } from '@/lib/admin/services/ConfigurationService'
 import { getSupabaseClient } from '@/lib/supabase-client';
 
 const supabase = getSupabaseClient();

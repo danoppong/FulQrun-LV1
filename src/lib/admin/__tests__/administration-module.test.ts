@@ -1,7 +1,7 @@
 // Administration Module - Test Implementation
 // Simple test to verify the administration module is working
 
-import { ConfigurationService } from '@/lib/admin/services/ConfigurationService';
+import { ConfigurationService } from '@/lib/admin/services/ConfigurationService'
 import { getSupabaseClient } from '@/lib/supabase-client';
 
 const supabase = getSupabaseClient();

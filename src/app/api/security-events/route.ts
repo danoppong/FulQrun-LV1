@@ -1,7 +1,7 @@
 // Security Events API Route
 // API endpoint for fetching security events from database
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server';
 
 // =============================================================================

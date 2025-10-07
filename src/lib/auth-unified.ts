@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseConfig } from '@/lib/config'
-import { Database } from '@/lib/supabase';
+import { Database } from '@/lib/supabase'
 import { getSupabaseBrowserClient, createSupabaseServerClient } from '@/lib/supabase-singleton';
 
 // Safe import for server-side only

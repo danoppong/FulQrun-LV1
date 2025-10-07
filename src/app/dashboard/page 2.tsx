@@ -1,6 +1,6 @@
 'use client'
 import { supabase } from '@/lib/supabase'
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 // import Link from 'next/link' // Unused import;
 import dynamic from 'next/dynamic';
@@ -19,7 +19,7 @@ const PipelineChart = dynamic(() => import('@/components/dashboard/PipelineChart
   ssr: false
 })
 import { UserRole } from '@/lib/roles'
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { AuthWrapper } from '@/components/auth/AuthWrapper';
 
 // Function to create user record when they don't exist in database

@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { PipelineConfigAPI, PipelineConfigData } from '@/lib/api/pipeline-config';
+import { PipelineConfigAPI, PipelineConfigData } from '@/lib/api/pipeline-config'
 import { PipelineBuilder } from '@/components/pipeline/PipelineBuilder'
-import { createClientComponentClient } from '@/lib/auth';
+import { createClientComponentClient } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
-import { AuthWrapper } from '@/components/auth/AuthWrapper';
+import { AuthWrapper } from '@/components/auth/AuthWrapper'
 import { DEFAULT_ORGANIZATION_ID } from '@/lib/config';
 
 export default function PipelinePage() {

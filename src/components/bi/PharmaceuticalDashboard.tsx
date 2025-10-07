@@ -5,7 +5,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {;
+import {
   ChartBarIcon,
   UserGroupIcon,
   ArrowTrendingUpIcon,
@@ -18,13 +18,13 @@ import {;
   BeakerIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
-import { KPICard } from './KPICard';
-import { TerritoryPerformanceChart } from './TerritoryPerformanceChart';
-import { ProductPerformanceChart } from './ProductPerformanceChart';
-import { RecentActivityFeed } from './RecentActivityFeed';
-import { HCPEngagementWidget } from './HCPEngagementWidget';
-import { SampleDistributionWidget } from './SampleDistributionWidget';
-import { FormularyAccessWidget } from './FormularyAccessWidget';
+import { KPICard } from './KPICard'
+import { TerritoryPerformanceChart } from './TerritoryPerformanceChart'
+import { ProductPerformanceChart } from './ProductPerformanceChart'
+import { RecentActivityFeed } from './RecentActivityFeed'
+import { HCPEngagementWidget } from './HCPEngagementWidget'
+import { SampleDistributionWidget } from './SampleDistributionWidget'
+import { FormularyAccessWidget } from './FormularyAccessWidget'
 import { ConversationalAnalytics } from './ConversationalAnalytics';
 
 interface PharmaceuticalDashboardProps {

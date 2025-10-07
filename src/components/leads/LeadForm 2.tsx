@@ -2,9 +2,9 @@
 import React from 'react';
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation'
 import { leadAPI, LeadWithScore } from '@/lib/api/leads'
-import { useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod';
 

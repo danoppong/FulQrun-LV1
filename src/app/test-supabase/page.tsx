@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase-client';
 
 export default function TestSupabasePage() {

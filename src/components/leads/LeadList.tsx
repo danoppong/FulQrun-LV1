@@ -2,9 +2,9 @@
 import React from 'react';
 
 import { useState, useEffect } from 'react'
-import { leadAPI, LeadWithScore } from '@/lib/api/leads';
-import Link from 'next/link'
-import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, ArrowUpIcon } from '@heroicons/react/24/outline';
+import { leadAPI, LeadWithScore } from '@/lib/api/leads'
+import Link from 'next/link';
+import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, ArrowUpIcon } from '@heroicons/react/24/outline'
 import { leadScoringEngine } from '@/lib/scoring/leadScoring';
 
 interface LeadListProps {

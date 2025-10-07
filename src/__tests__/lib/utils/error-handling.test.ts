@@ -69,7 +69,7 @@ describe('ErrorHandler', () => {
     })
 
     it('should not log errors when logError is false', async () => {
-      const { errorLogger } = require('@/lib/utils/error-logger')
+      const { errorLogger } = await import('@/lib/utils/error-logger')
       
       const error: ApiError = {
         message: 'Test error'

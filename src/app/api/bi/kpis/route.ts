@@ -2,8 +2,8 @@
 // Pharmaceutical KPI API endpoints
 // Handles KPI calculations, definitions, and cached values
 
-import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/lib/auth-unified';
+import { NextRequest, NextResponse } from 'next/server'
+import { AuthService } from '@/lib/auth-unified'
 import { kpiEngine } from '@/lib/bi/kpi-engine';
 
 export const dynamic = 'force-dynamic';

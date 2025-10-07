@@ -5,8 +5,8 @@
 'use client';
 
 import React from 'react';
-import { DashboardWidget } from '@/lib/dashboard-widgets';
-import { ProductPerformanceData } from '@/lib/types/dashboard';
+import { DashboardWidget } from '@/lib/dashboard-widgets'
+import { ProductPerformanceData } from '@/lib/types/dashboard'
 import { BeakerIcon } from '@heroicons/react/24/outline';
 
 interface ProductPerformanceWidgetProps {

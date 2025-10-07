@@ -9,11 +9,11 @@
  */
 
 import { SupabaseClient } from '@supabase/supabase-js'
-import { RiskAssessmentEngine, AuthContext, RiskScore } from './risk-engine';
+import { RiskAssessmentEngine, AuthContext, RiskScore } from './risk-engine'
 import { PasswordAuthenticationFactor } from './factors/password-factor'
-import { TOTPAuthenticationFactor } from './factors/totp-factor';
+import { TOTPAuthenticationFactor } from './factors/totp-factor'
 import { SMSOTPFactor } from './factors/sms-otp-factor'
-import { EmailOTPFactor } from './factors/email-otp-factor';
+import { EmailOTPFactor } from './factors/email-otp-factor'
 import { WebAuthnFactor } from './factors/webauthn-factor'
 import { BackupCodesFactor } from './factors/backup-codes';
 

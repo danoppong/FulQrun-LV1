@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { opportunityAPI } from '@/lib/api/opportunities';
+import { opportunityAPI } from '@/lib/api/opportunities'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface PipelineData {

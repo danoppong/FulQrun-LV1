@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AuthClientService } from '@/lib/auth-client';
+import { AuthClientService } from '@/lib/auth-client'
 import { supabaseConfig } from '@/lib/config';
 
 export default function DebugAuthPage() {

@@ -1,7 +1,7 @@
 // Centralized Error Handling System
 // Enterprise-grade error logging, reporting, and monitoring
 
-import { getSupabaseClient } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-client'
 import { supabaseConfig } from '@/lib/config';
 
 // Use centralized Supabase client

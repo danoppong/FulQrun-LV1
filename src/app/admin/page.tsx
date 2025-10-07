@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ;
+import {
   ChartBarIcon, 
   UsersIcon, 
   CogIcon, 
@@ -17,7 +17,7 @@ import { ;
   CloudIcon,
   BellIcon
 } from '@heroicons/react/24/outline';
-import { ConfigurationService } from '@/lib/admin/services/ConfigurationService';
+import { ConfigurationService } from '@/lib/admin/services/ConfigurationService'
 import { getSupabaseClient } from '@/lib/supabase-client';
 
 const supabase = getSupabaseClient();

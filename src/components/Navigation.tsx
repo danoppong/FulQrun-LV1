@@ -4,9 +4,9 @@ import React from 'react';
 import { useState } from 'react'
 import Link from 'next/link';
 import { usePathname } from 'next/navigation'
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation';
-import {;
+import {
   HomeIcon,
   UserGroupIcon,
   BuildingOfficeIcon,

@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ;
+import {
   CircleStackIcon, 
   ServerIcon, 
   PlusIcon, 
@@ -27,7 +27,7 @@ import { ;
   CogIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { getSupabaseBrowserClient } from '@/lib/supabase-singleton';
+import { getSupabaseBrowserClient } from '@/lib/supabase-singleton'
 import { z } from 'zod';
 
 const supabase = getSupabaseBrowserClient();

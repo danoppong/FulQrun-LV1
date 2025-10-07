@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link';
-import { ;
+import {
   UsersIcon,
   ChartBarIcon,
   AcademicCapIcon,

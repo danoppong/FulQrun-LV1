@@ -40,7 +40,7 @@ export class SMSOTPFactor {
       await this.storeOTP(userId, hashedOTP, phoneNumber)
 
       // TODO: Send via Twilio
-      // const twilio = require('twilio')(
+      // import twilio from 'twilio'(
       //   process.env.TWILIO_ACCOUNT_SID,
       //   process.env.TWILIO_AUTH_TOKEN
       // )

@@ -2,7 +2,7 @@
 // Pharmaceutical Dashboard Configuration
 // Provides role-based pharmaceutical widget layouts for dashboard integration
 
-import { DashboardWidget, WidgetType } from '@/lib/dashboard-widgets';
+import { DashboardWidget, WidgetType } from '@/lib/dashboard-widgets'
 import { UserRole } from '@/lib/roles';
 
 export interface PharmaceuticalDashboardConfig {

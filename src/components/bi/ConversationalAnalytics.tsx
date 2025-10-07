@@ -5,7 +5,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {;
+import {
   ChatBubbleLeftRightIcon,
   PaperAirplaneIcon,
   SparklesIcon,

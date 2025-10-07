@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/components/ConditionalLayout";
-import { CriticalErrorBoundary } from '@/components/error-boundaries/CriticalErrorBoundary';
-import { PerformanceToggle } from '@/components/performance/PerformanceToggle';
+import { CriticalErrorBoundary } from '@/components/error-boundaries/CriticalErrorBoundary'
+import { PerformanceToggle } from '@/components/performance/PerformanceToggle'
 import ThemeProvider from '@/components/ThemeProvider';
 
 const inter = Inter({

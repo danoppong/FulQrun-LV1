@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { UserRole } from '@/lib/roles';
+import { UserRole } from '@/lib/roles'
 import { PerformanceMetrics, getPerformanceDataForRole, getDrillDownData } from '@/lib/performance-data'
 import RoleSelector from '@/components/RoleSelector';
 

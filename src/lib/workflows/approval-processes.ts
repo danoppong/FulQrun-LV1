@@ -1,7 +1,7 @@
 // Approval Processes
 // Advanced approval workflow management for enterprise workflows
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 import { ApprovalConfig, EscalationConfig } from './workflow-engine';
 
 const supabase = createClient(

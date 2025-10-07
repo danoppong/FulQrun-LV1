@@ -1,9 +1,9 @@
 // Administration Module - Module Configuration API Routes
 // API routes for individual module configuration
 
-import { NextRequest, NextResponse } from 'next/server';
-import { ConfigurationService } from '@/lib/admin/services/ConfigurationService';
-import { getSupabaseClient } from '@/lib/supabase-client';
+import { NextRequest, NextResponse } from 'next/server'
+import { ConfigurationService } from '@/lib/admin/services/ConfigurationService'
+import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
 const supabase = getSupabaseClient();

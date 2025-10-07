@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { SlackIntegration as _SlackIntegration } from '@/lib/integrations/slack';
+import { SlackIntegration as _SlackIntegration } from '@/lib/integrations/slack'
 import { DocuSignIntegration as _DocuSignIntegration } from '@/lib/integrations/docusign'
-import { StripeIntegration as _StripeIntegration } from '@/lib/integrations/stripe';
+import { StripeIntegration as _StripeIntegration } from '@/lib/integrations/stripe'
 import { GongIntegration as _GongIntegration } from '@/lib/integrations/gong';
 
 interface Integration {

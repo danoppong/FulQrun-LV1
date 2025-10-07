@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation';
-import { opportunityAPI, OpportunityWithDetails, MEDDPICCData } from '@/lib/api/opportunities';
+import { useRouter } from 'next/navigation'
+import { opportunityAPI, OpportunityWithDetails, MEDDPICCData } from '@/lib/api/opportunities'
 
 type PEAKData = {
   peak_stage: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
@@ -11,13 +11,13 @@ type PEAKData = {
   close_date?: string | undefined
 }
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
-import { companyAPI, CompanyWithStats } from '@/lib/api/companies';
+import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import PEAKForm from '@/components/forms/PEAKForm';
 import MEDDPICCForm from '@/components/forms/MEDDPICCForm'
-import { MEDDPICCDashboard, MEDDPICCPEAKIntegration } from '@/components/meddpicc';
+import { MEDDPICCDashboard, MEDDPICCPEAKIntegration } from '@/components/meddpicc'
 import { MEDDPICCAssessment } from '@/lib/meddpicc'
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 

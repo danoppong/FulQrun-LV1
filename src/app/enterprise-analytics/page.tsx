@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth'
 import EnterpriseAnalyticsDashboard from '@/components/analytics/EnterpriseAnalyticsDashboard';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 

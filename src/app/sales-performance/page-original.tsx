@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AuthService } from '@/lib/auth-unified';
+import { AuthService } from '@/lib/auth-unified'
 import { SalesPerformanceDashboard } from '@/components/sales-performance/SalesPerformanceDashboard'
 import { AuthWrapper } from '@/components/auth/AuthWrapper';
 

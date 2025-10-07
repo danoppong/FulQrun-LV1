@@ -20,8 +20,8 @@ console.log('   - src/lib/supabase-client.ts (UPDATED)')
 
 // Test 2: Check for duplicate files
 console.log('\n📋 Test 2: Checking for duplicate files...')
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
 
 const duplicateFiles = [
   'src/lib/auth 2',

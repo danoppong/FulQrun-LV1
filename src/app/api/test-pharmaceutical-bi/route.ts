@@ -2,7 +2,7 @@
 // Test endpoint for pharmaceutical BI functionality
 // This endpoint tests the KPI calculations and data retrieval
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';

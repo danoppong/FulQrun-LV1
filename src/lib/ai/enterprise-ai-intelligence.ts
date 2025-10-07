@@ -1,7 +1,7 @@
 // Enterprise AI Intelligence Engine
 // Advanced machine learning models for predictive analytics, automated coaching, and intelligent insights
 
-import { getSupabaseClient } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-client'
 import OpenAI from 'openai';
 // import Anthropic from '@anthropic-ai/sdk';
 

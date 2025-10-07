@@ -8,7 +8,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { supabaseConfig } from '@/lib/config'
 import type { Database } from '@/lib/types/supabase';
 

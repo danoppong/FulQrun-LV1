@@ -2,11 +2,11 @@
 import React from 'react';
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { contactAPI, ContactWithCompany } from '@/lib/api/contacts';
+import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
 import { companyAPI } from '@/lib/api/companies';
 
 const contactSchema = z.object({

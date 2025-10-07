@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card';
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { TerritoryModal } from './modals/TerritoryModal';
+import { TerritoryModal } from './modals/TerritoryModal'
 import { Map, Users, TrendingUp, Award, Edit, Trash2, Plus } from 'lucide-react';
 
 interface TerritoryManagementNewProps {

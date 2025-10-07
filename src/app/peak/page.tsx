@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link'
-import { PEAKWorkflow } from '@/components/peak/PEAKWorkflow';
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link';
+import { PEAKWorkflow } from '@/components/peak/PEAKWorkflow'
 import { SharePointRepository } from '@/components/peak/SharePointRepository'
 import { SharePointDocument } from '@/lib/integrations/sharepoint';
 

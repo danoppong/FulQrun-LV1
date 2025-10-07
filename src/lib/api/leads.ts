@@ -1,5 +1,5 @@
 import { createClientComponentClient } from '@/lib/auth'
-import { Database } from '@/lib/supabase';
+import { Database } from '@/lib/supabase'
 import { leadScoringEngine, LeadData, LeadScore } from '@/lib/scoring/leadScoring'
 import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors';
 

@@ -5,8 +5,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { AuthService } from '@/lib/auth-unified';
+import { useRouter } from 'next/navigation'
+import { AuthService } from '@/lib/auth-unified'
 import PharmaceuticalDashboard from '@/components/bi/PharmaceuticalDashboard';
 import { ClockIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 

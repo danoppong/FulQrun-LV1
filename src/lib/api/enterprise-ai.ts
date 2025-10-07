@@ -11,7 +11,7 @@ let aiIntelligence: unknown = null;
 function getAIIntelligence() {
   if (!aiIntelligence) {
     // Dynamic import to avoid circular dependency
-    const EnterpriseAIIntelligence = require('./enterprise-ai-intelligence').default;
+    import EnterpriseAIIntelligence from './enterprise-ai-intelligence'.default;
     aiIntelligence = new EnterpriseAIIntelligence(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

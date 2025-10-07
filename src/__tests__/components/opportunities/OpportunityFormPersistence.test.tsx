@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { jest } from '@jest/globals'
 import OpportunityForm from '@/components/opportunities/OpportunityForm';
 // import { opportunityAPI as _opportunityAPI } from '@/lib/api/opportunities' // Unused import

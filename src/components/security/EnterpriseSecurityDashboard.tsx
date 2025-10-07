@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ;
+import {
   ShieldCheckIcon, 
   ExclamationTriangleIcon, 
   UserGroupIcon,
@@ -13,7 +13,7 @@ import { ;
   ChartBarIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
-import { ;
+import {
   getAuditLogs,
   generateComplianceReport,
   getComplianceReports,

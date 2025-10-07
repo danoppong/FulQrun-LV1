@@ -1,7 +1,7 @@
 // Webhook Manager
 // Centralized webhook handling for all enterprise integrations
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 import { WebhookPayload } from './base-integration';
 
 const supabase = createClient(

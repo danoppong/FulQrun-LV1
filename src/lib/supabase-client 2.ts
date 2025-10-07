@@ -5,13 +5,13 @@
  * Use this for backward compatibility with existing code.
  */
 
-import { getSupabaseBrowserClient } from '@/lib/supabase-singleton';
+import { getSupabaseBrowserClient } from '@/lib/supabase-singleton'
 
 /**
  * Get the singleton Supabase client instance
  * This ensures only one GoTrueClient is created per browser context
  * 
- * @deprecated Use getSupabaseBrowserClient from '@/lib/supabase-singleton' instead
+ * @deprecated Use getSupabaseBrowserClient from '@/lib/supabase-singleton' instead;
  */
 export function getSupabaseClient() {
   return getSupabaseBrowserClient()

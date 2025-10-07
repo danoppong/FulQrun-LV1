@@ -5,8 +5,8 @@
 'use client';
 
 import React from 'react';
-import { DashboardWidget } from '@/lib/dashboard-widgets';
-import { FormularyAccessData } from '@/lib/types/dashboard';
+import { DashboardWidget } from '@/lib/dashboard-widgets'
+import { FormularyAccessData } from '@/lib/types/dashboard'
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 interface FormularyAccessWidgetProps {

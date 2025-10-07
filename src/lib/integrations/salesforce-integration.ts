@@ -1,7 +1,7 @@
 // Salesforce Integration
 // Enterprise Salesforce CRM integration with advanced features
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 import { BaseIntegration, SyncResult, SyncConfiguration, WebhookPayload } from './base-integration';
 
 const supabase = createClient(

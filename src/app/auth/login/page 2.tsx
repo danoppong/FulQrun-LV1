@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, Suspense } from 'react'
-import { AuthClientService } from '@/lib/auth-client';
+import { AuthClientService } from '@/lib/auth-client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link';
 

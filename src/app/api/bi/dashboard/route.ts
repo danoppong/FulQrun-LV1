@@ -2,9 +2,9 @@
 // Pharmaceutical BI Dashboard API
 // Provides comprehensive dashboard data with role-based filtering
 
-import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/lib/auth-unified';
-import { kpiEngine } from '@/lib/bi/kpi-engine';
+import { NextRequest, NextResponse } from 'next/server'
+import { AuthService } from '@/lib/auth-unified'
+import { kpiEngine } from '@/lib/bi/kpi-engine'
 import { createServerClient } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';

@@ -1,5 +1,5 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Database } from '@/lib/types/supabase';
+import { Database } from '@/lib/types/supabase'
 import { normalizeError } from '@/lib/utils';
 
 export interface ApiResponse<T> {

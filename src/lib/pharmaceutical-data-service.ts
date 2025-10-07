@@ -2,7 +2,7 @@
 // Pharmaceutical Data Service for Dashboard Integration
 // Provides pharmaceutical KPI data for dashboard widgets
 
-import { PharmaKPICardData, TerritoryPerformanceData, ProductPerformanceData, HCPEngagementData, SampleDistributionData, FormularyAccessData } from '@/lib/types/dashboard';
+import { PharmaKPICardData, TerritoryPerformanceData, ProductPerformanceData, HCPEngagementData, SampleDistributionData, FormularyAccessData } from '@/lib/types/dashboard'
 import { UserRole } from '@/lib/roles';
 
 export interface PharmaceuticalDataParams {

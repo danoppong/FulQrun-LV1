@@ -1,8 +1,8 @@
 // Password Policy Status API Routes
 // API endpoints for password policy status and management
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase-server'
 import { z } from 'zod';
 
 // =============================================================================

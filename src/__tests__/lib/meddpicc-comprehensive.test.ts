@@ -1,4 +1,4 @@
-import { ;
+import {
   calculateMEDDPICCScore, 
   calculateMEDDPICCScoreLegacy,
   getMEDDPICCLevel, 

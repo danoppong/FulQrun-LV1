@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ;
+import {
   UsersIcon, 
   PlusIcon, 
   PencilIcon, 
@@ -21,7 +21,7 @@ import { ;
   UserPlusIcon,
   KeyIcon
 } from '@heroicons/react/24/outline';
-import { getSupabaseClient } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
 const supabase = getSupabaseClient();

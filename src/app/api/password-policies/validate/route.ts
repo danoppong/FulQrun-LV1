@@ -1,8 +1,8 @@
 // Password Validation API Routes
 // API endpoints for password validation and policy enforcement
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase-server'
 import { z } from 'zod';
 
 // =============================================================================

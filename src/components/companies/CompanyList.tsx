@@ -2,8 +2,8 @@
 import React from 'react';
 
 import { useState, useEffect } from 'react'
-import { companyAPI, CompanyWithStats } from '@/lib/api/companies';
-import Link from 'next/link'
+import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
+import Link from 'next/link';
 import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 
 interface CompanyListProps {

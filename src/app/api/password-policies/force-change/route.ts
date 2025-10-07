@@ -1,8 +1,8 @@
 // Password Policy Force Change API Route
 // API endpoint for forcing password changes
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase-server'
 import { z } from 'zod';
 
 // =============================================================================

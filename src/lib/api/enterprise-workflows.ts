@@ -1,9 +1,9 @@
 // Enterprise Workflow API Layer
 // API functions for enterprise workflow automation management
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 import { workflowManager } from '../workflows/index';
-import { ;
+import {
   EnterpriseWorkflow, 
   WorkflowExecution 
 } from '../workflows/index';

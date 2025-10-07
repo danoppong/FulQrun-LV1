@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { PipelineConfigAPI, PipelineConfigData, PipelineStage } from '@/lib/api/pipeline-config';
+import { PipelineConfigAPI, PipelineConfigData, PipelineStage } from '@/lib/api/pipeline-config'
 import { StageEditor } from './StageEditor'
-import { WorkflowEditor } from './WorkflowEditor';
+import { WorkflowEditor } from './WorkflowEditor'
 import { PipelinePreview } from './PipelinePreview';
 
 interface PipelineBuilderProps {

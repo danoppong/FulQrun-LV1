@@ -1,8 +1,8 @@
 // API Route: Individual Enterprise Role Operations
 // Handles updating and removing specific enterprise roles
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { supabaseConfig } from '@/lib/config';
 
 // Helper function to get authenticated user

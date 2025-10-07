@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ;
+import {
   BarChart3, 
   Target, 
   Bell, 
@@ -16,8 +16,8 @@ import { ;
   Download,
   RefreshCw
 } from 'lucide-react';
-import { KPIDashboard } from './KPIDashboard';
-import { KPIBenchmarking } from './KPIBenchmarking';
+import { KPIDashboard } from './KPIDashboard'
+import { KPIBenchmarking } from './KPIBenchmarking'
 import { KPIAlerting } from './KPIAlerting';
 
 interface KPIModuleProps {
