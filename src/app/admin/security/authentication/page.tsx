@@ -15,6 +15,7 @@ import {
   XCircleIcon,
   MagnifyingGlassIcon,
   ArrowUpDownIcon,
+  ArrowPathIcon,
   EyeIcon,
   EyeSlashIcon,
   ClockIcon,
@@ -157,10 +158,181 @@ function PasswordPolicyConfig({ config, onUpdate }: { config: AuthenticationConf
   const [policy, setPolicy] = useState<PasswordPolicy>(config.passwordPolicy);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [policies, setPolicies] = useState<any[]>([]);
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
+
+  // Load password policies from database
+  useEffect(() => {
+    const loadPolicies = async () => {
+      try {
+        const response = await fetch('/api/password-policies');
+        if (response.ok) {
+          const data = await response.json();
+          setPolicies(data.policies || []);
+          
+          // Set default policy if available
+          const defaultPolicy = data.policies?.find((p: any) => p.is_default);
+          if (defaultPolicy) {
+            setSelectedPolicyId(defaultPolicy.id);
+            setPolicy({
+              minLength: defaultPolicy.min_length,
+              requireUppercase: defaultPolicy.require_uppercase,
+              requireLowercase: defaultPolicy.require_lowercase,
+              requireNumbers: defaultPolicy.require_numbers,
+              requireSpecialChars: defaultPolicy.require_special_chars,
+              maxAge: defaultPolicy.max_age_days,
+              preventReuse: defaultPolicy.prevent_reuse_count,
+              complexityScore: defaultPolicy.complexity_score_min
+            });
+          }
+        } else if (response.status === 401) {
+          // User not authenticated, use default policy
+          console.log('User not authenticated, using default policy');
+        } else if (response.status === 500) {
+          // Database not ready, use mock data for now
+          console.log('Database not ready, using mock password policy');
+          const mockPolicy = {
+            id: 'mock-policy-1',
+            policy_name: 'Default Password Policy',
+            description: 'Default password policy for organization',
+            min_length: 8,
+            require_uppercase: true,
+            require_lowercase: true,
+            require_numbers: true,
+            require_special_chars: true,
+            max_age_days: 90,
+            prevent_reuse_count: 5,
+            complexity_score_min: 6,
+            max_failed_attempts: 5,
+            lockout_duration_minutes: 15,
+            is_active: true,
+            is_default: true
+          };
+          setPolicies([mockPolicy]);
+          setSelectedPolicyId(mockPolicy.id);
+          setPolicy({
+            minLength: mockPolicy.min_length,
+            requireUppercase: mockPolicy.require_uppercase,
+            requireLowercase: mockPolicy.require_lowercase,
+            requireNumbers: mockPolicy.require_numbers,
+            requireSpecialChars: mockPolicy.require_special_chars,
+            maxAge: mockPolicy.max_age_days,
+            preventReuse: mockPolicy.prevent_reuse_count,
+            complexityScore: mockPolicy.complexity_score_min
+          });
+        } else {
+          console.error('Failed to load password policies:', response.status);
+        }
+      } catch (error) {
+        console.error('Error loading password policies:', error);
+        // Use mock data on error
+        const mockPolicy = {
+          id: 'mock-policy-1',
+          policy_name: 'Default Password Policy',
+          description: 'Default password policy for organization',
+          min_length: 8,
+          require_uppercase: true,
+          require_lowercase: true,
+          require_numbers: true,
+          require_special_chars: true,
+          max_age_days: 90,
+          prevent_reuse_count: 5,
+          complexity_score_min: 6,
+          max_failed_attempts: 5,
+          lockout_duration_minutes: 15,
+          is_active: true,
+          is_default: true
+        };
+        setPolicies([mockPolicy]);
+        setSelectedPolicyId(mockPolicy.id);
+        setPolicy({
+          minLength: mockPolicy.min_length,
+          requireUppercase: mockPolicy.require_uppercase,
+          requireLowercase: mockPolicy.require_lowercase,
+          requireNumbers: mockPolicy.require_numbers,
+          requireSpecialChars: mockPolicy.require_special_chars,
+          maxAge: mockPolicy.max_age_days,
+          preventReuse: mockPolicy.prevent_reuse_count,
+          complexityScore: mockPolicy.complexity_score_min
+        });
+      }
+    };
+
+    loadPolicies();
+  }, []);
 
   const handleSave = async () => {
+    setIsLoading(true);
     try {
       const validatedData = PasswordPolicySchema.parse(policy);
+      
+      if (selectedPolicyId) {
+        // Update existing policy
+        const response = await fetch(`/api/password-policies/${selectedPolicyId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            policy_name: 'Updated Password Policy',
+            description: 'Updated password policy',
+            min_length: validatedData.minLength,
+            require_uppercase: validatedData.requireUppercase,
+            require_lowercase: validatedData.requireLowercase,
+            require_numbers: validatedData.requireNumbers,
+            require_special_chars: validatedData.requireSpecialChars,
+            max_age_days: validatedData.maxAge,
+            prevent_reuse_count: validatedData.preventReuse,
+            complexity_score_min: validatedData.complexityScore,
+            max_failed_attempts: 5,
+            lockout_duration_minutes: 15,
+            is_active: true,
+            is_default: true
+          })
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Authentication required to save password policies');
+          } else if (response.status === 500) {
+            throw new Error('Database not ready. Password policy changes will be applied when database is available.');
+          }
+          throw new Error('Failed to update policy');
+        }
+      } else {
+        // Create new policy
+        const response = await fetch('/api/password-policies', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            policy_name: 'Password Policy',
+            description: 'Organization password policy',
+            min_length: validatedData.minLength,
+            require_uppercase: validatedData.requireUppercase,
+            require_lowercase: validatedData.requireLowercase,
+            require_numbers: validatedData.requireNumbers,
+            require_special_chars: validatedData.requireSpecialChars,
+            max_age_days: validatedData.maxAge,
+            prevent_reuse_count: validatedData.preventReuse,
+            complexity_score_min: validatedData.complexityScore,
+            max_failed_attempts: 5,
+            lockout_duration_minutes: 15,
+            is_active: true,
+            is_default: true
+          })
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Authentication required to save password policies');
+          } else if (response.status === 500) {
+            throw new Error('Database not ready. Password policy changes will be applied when database is available.');
+          }
+          throw new Error('Failed to create policy');
+        }
+
+        const data = await response.json();
+        setSelectedPolicyId(data.policy.id);
+      }
       
       const updatedConfig = {
         ...config,
@@ -179,7 +351,11 @@ function PasswordPolicyConfig({ config, onUpdate }: { config: AuthenticationConf
           }
         });
         setErrors(fieldErrors);
+      } else {
+        setErrors({ general: error instanceof Error ? error.message : 'Failed to save password policy' });
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -248,6 +424,40 @@ function PasswordPolicyConfig({ config, onUpdate }: { config: AuthenticationConf
           </div>
         </div>
       </div>
+
+      {/* Status Display */}
+      {selectedPolicyId === 'mock-policy-1' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <ShieldCheckIcon className="h-5 w-5 text-yellow-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">Development Mode</h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>Using mock password policy data. Database migrations will be applied when Supabase is available.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {errors.general && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <XCircleIcon className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{errors.general}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Password Requirements */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -377,10 +587,11 @@ function PasswordPolicyConfig({ config, onUpdate }: { config: AuthenticationConf
           </button>
           <button
             onClick={handleSave}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            disabled={isLoading}
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <CheckCircleIcon className="h-4 w-4 mr-2" />
-            Save Policy
+            {isLoading ? 'Saving...' : 'Save Policy'}
           </button>
         </div>
       )}
@@ -572,6 +783,7 @@ function SecurityEvents({ events }: { events: SecurityEvent[] }) {
     eventType: '',
     resolved: ''
   });
+  const [isRealData, setIsRealData] = useState(false);
 
   useEffect(() => {
     let filtered = [...events];
@@ -589,6 +801,12 @@ function SecurityEvents({ events }: { events: SecurityEvent[] }) {
     }
 
     setFilteredEvents(filtered);
+    
+    // Detect if we're using real data (events with IDs starting with 'audit-' or 'violation-')
+    const hasRealData = events.some(event => 
+      event.id.startsWith('audit-') || event.id.startsWith('violation-')
+    );
+    setIsRealData(hasRealData);
   }, [events, filters]);
 
   const getSeverityColor = (severity: string) => {
@@ -620,9 +838,24 @@ function SecurityEvents({ events }: { events: SecurityEvent[] }) {
           <h3 className="text-lg font-medium text-gray-900">Security Events</h3>
           <p className="text-sm text-gray-500">Monitor authentication and security events</p>
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">Total Events:</span>
-          <span className="text-sm font-medium text-gray-900">{events.length}</span>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-500">Total Events:</span>
+            <span className="text-sm font-medium text-gray-900">{events.length}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${isRealData ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+            <span className="text-xs text-gray-500">
+              {isRealData ? 'Live Data' : 'Mock Data'}
+            </span>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <ArrowPathIcon className="h-4 w-4 mr-2" />
+            Refresh
+          </button>
         </div>
       </div>
 
@@ -751,6 +984,307 @@ function SecurityEvents({ events }: { events: SecurityEvent[] }) {
 }
 
 // =============================================================================
+// LOGIN SECURITY CONFIGURATION COMPONENT
+// =============================================================================
+
+const LoginSecurityConfig: React.FC<{
+  config: AuthenticationConfiguration;
+  onUpdate: (config: AuthenticationConfiguration) => void;
+}> = ({ config, onUpdate }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loginSecurity, setLoginSecurity] = useState<LoginSecurity>(config.loginSecurity);
+
+  const LoginSecuritySchema = z.object({
+    enableBruteForceProtection: z.boolean(),
+    maxLoginAttempts: z.number().min(3).max(10),
+    lockoutDuration: z.number().min(5).max(60),
+    enableGeolocationTracking: z.boolean(),
+    requireEmailVerification: z.boolean(),
+    enableSuspiciousActivityDetection: z.boolean()
+  });
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      const validatedData = LoginSecuritySchema.parse(loginSecurity);
+      
+      const updatedConfig = {
+        ...config,
+        loginSecurity: validatedData
+      };
+      
+      onUpdate(updatedConfig);
+      setIsEditing(false);
+      setErrors({});
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach(err => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      } else {
+        setErrors({ general: 'Failed to save login security configuration' });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setLoginSecurity(config.loginSecurity);
+    setIsEditing(false);
+    setErrors({});
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium text-gray-900">Login Security Configuration</h3>
+          <p className="text-sm text-gray-500">Configure login security settings and protection mechanisms</p>
+        </div>
+        <div className="flex space-x-3">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleCancel}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <XCircleIcon className="h-4 w-4 mr-2" />
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isLoading}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CheckCircleIcon className="h-4 w-4 mr-2" />
+                {isLoading ? 'Saving...' : 'Save Configuration'}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              <PencilIcon className="h-4 w-4 mr-2" />
+              Edit Configuration
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Error Display */}
+      {errors.general && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <XCircleIcon className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{errors.general}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Brute Force Protection */}
+      <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="flex items-center mb-4">
+          <ShieldCheckIcon className="h-6 w-6 text-blue-600 mr-3" />
+          <h4 className="text-lg font-medium text-gray-900">Brute Force Protection</h4>
+        </div>
+        
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Enable Brute Force Protection</label>
+              <p className="text-sm text-gray-500">Automatically lock accounts after multiple failed login attempts</p>
+            </div>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={loginSecurity.enableBruteForceProtection}
+                onChange={(e) => setLoginSecurity({
+                  ...loginSecurity,
+                  enableBruteForceProtection: e.target.checked
+                })}
+                disabled={!isEditing}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+              />
+            </div>
+          </div>
+
+          {loginSecurity.enableBruteForceProtection && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Maximum Login Attempts</label>
+                  <input
+                    type="number"
+                    min="3"
+                    max="10"
+                    value={loginSecurity.maxLoginAttempts}
+                    onChange={(e) => setLoginSecurity({
+                      ...loginSecurity,
+                      maxLoginAttempts: parseInt(e.target.value) || 3
+                    })}
+                    disabled={!isEditing}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100"
+                  />
+                  {errors.maxLoginAttempts && (
+                    <p className="mt-1 text-sm text-red-600">{errors.maxLoginAttempts}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Lockout Duration (minutes)</label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="60"
+                    value={loginSecurity.lockoutDuration}
+                    onChange={(e) => setLoginSecurity({
+                      ...loginSecurity,
+                      lockoutDuration: parseInt(e.target.value) || 5
+                    })}
+                    disabled={!isEditing}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100"
+                  />
+                  {errors.lockoutDuration && (
+                    <p className="mt-1 text-sm text-red-600">{errors.lockoutDuration}</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Geolocation Tracking */}
+      <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="flex items-center mb-4">
+          <DevicePhoneMobileIcon className="h-6 w-6 text-green-600 mr-3" />
+          <h4 className="text-lg font-medium text-gray-900">Geolocation Tracking</h4>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="text-sm font-medium text-gray-700">Enable Geolocation Tracking</label>
+            <p className="text-sm text-gray-500">Track login locations for security monitoring and anomaly detection</p>
+          </div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={loginSecurity.enableGeolocationTracking}
+              onChange={(e) => setLoginSecurity({
+                ...loginSecurity,
+                enableGeolocationTracking: e.target.checked
+              })}
+              disabled={!isEditing}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Email Verification */}
+      <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="flex items-center mb-4">
+          <UserCircleIcon className="h-6 w-6 text-purple-600 mr-3" />
+          <h4 className="text-lg font-medium text-gray-900">Email Verification</h4>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="text-sm font-medium text-gray-700">Require Email Verification</label>
+            <p className="text-sm text-gray-500">Force users to verify their email address before accessing the system</p>
+          </div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={loginSecurity.requireEmailVerification}
+              onChange={(e) => setLoginSecurity({
+                ...loginSecurity,
+                requireEmailVerification: e.target.checked
+              })}
+              disabled={!isEditing}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Suspicious Activity Detection */}
+      <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="flex items-center mb-4">
+          <ExclamationTriangleIcon className="h-6 w-6 text-orange-600 mr-3" />
+          <h4 className="text-lg font-medium text-gray-900">Suspicious Activity Detection</h4>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="text-sm font-medium text-gray-700">Enable Suspicious Activity Detection</label>
+            <p className="text-sm text-gray-500">Automatically detect and flag unusual login patterns or behaviors</p>
+          </div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={loginSecurity.enableSuspiciousActivityDetection}
+              onChange={(e) => setLoginSecurity({
+                ...loginSecurity,
+                enableSuspiciousActivityDetection: e.target.checked
+              })}
+              disabled={!isEditing}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Security Status Summary */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div className="flex items-center mb-4">
+          <InformationCircleIcon className="h-6 w-6 text-blue-600 mr-3" />
+          <h4 className="text-lg font-medium text-blue-900">Security Status Summary</h4>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <div className={`w-3 h-3 rounded-full mr-2 ${loginSecurity.enableBruteForceProtection ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+              <span className="text-sm text-gray-700">Brute Force Protection: {loginSecurity.enableBruteForceProtection ? 'Enabled' : 'Disabled'}</span>
+            </div>
+            <div className="flex items-center">
+              <div className={`w-3 h-3 rounded-full mr-2 ${loginSecurity.enableGeolocationTracking ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+              <span className="text-sm text-gray-700">Geolocation Tracking: {loginSecurity.enableGeolocationTracking ? 'Enabled' : 'Disabled'}</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <div className={`w-3 h-3 rounded-full mr-2 ${loginSecurity.requireEmailVerification ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+              <span className="text-sm text-gray-700">Email Verification: {loginSecurity.requireEmailVerification ? 'Required' : 'Optional'}</span>
+            </div>
+            <div className="flex items-center">
+              <div className={`w-3 h-3 rounded-full mr-2 ${loginSecurity.enableSuspiciousActivityDetection ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+              <span className="text-sm text-gray-700">Activity Detection: {loginSecurity.enableSuspiciousActivityDetection ? 'Enabled' : 'Disabled'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
 // MAIN AUTHENTICATION MANAGEMENT COMPONENT
 // =============================================================================
 
@@ -812,7 +1346,26 @@ export default function AuthenticationManagement() {
     try {
       setLoading(true);
       
-      // Mock security events data
+      // Try to load real security events from database
+      try {
+        const response = await fetch('/api/security-events');
+        console.log('Security events API response:', response.status, response.statusText);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Security events data received:', data);
+          setEvents(data.events || []);
+          return;
+        } else if (response.status === 401) {
+          console.log('Unauthorized - using mock data');
+        } else {
+          console.log('API error:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.log('API not available, using mock data:', error);
+      }
+      
+      // Fallback to mock data if API is not available
       const mockEvents: SecurityEvent[] = [
         {
           id: '1',
@@ -996,11 +1549,7 @@ export default function AuthenticationManagement() {
           <SessionManagementConfig config={config} onUpdate={handleConfigUpdate} />
         )}
         {activeTab === 'loginSecurity' && (
-          <div className="text-center py-12">
-            <ShieldCheckIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Login Security Configuration</h3>
-            <p className="text-gray-500">Login security settings configuration coming soon...</p>
-          </div>
+          <LoginSecurityConfig config={config} onUpdate={handleConfigUpdate} />
         )}
         {activeTab === 'securityEvents' && (
           <SecurityEvents events={events} />

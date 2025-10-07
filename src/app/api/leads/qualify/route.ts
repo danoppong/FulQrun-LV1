@@ -75,9 +75,11 @@ export async function POST(request: NextRequest) {
       return await qualifyLeads(supabase, body, userProfile.organization_id, user.id)
     } else if (action === 'add_evidence') {
       return await addEvidence(supabase, body, userProfile.organization_id, user.id)
+    } else if (action === 'get_qualifications') {
+      return await getQualifications(supabase, body, userProfile.organization_id)
     } else {
       return NextResponse.json(
-        { error: 'Invalid action. Must be "qualify" or "add_evidence"' },
+        { error: 'Invalid action. Must be "qualify", "add_evidence", or "get_qualifications"' },
         { status: 400 }
       )
     }
@@ -679,4 +681,48 @@ function generateEvidenceRecords(lead: any, framework: string, qualificationData
   }
 
   return evidence
+}
+
+async function getQualifications(
+  supabase: any,
+  body: any,
+  organizationId: string
+) {
+  const { lead_ids } = body
+  
+  if (!lead_ids || !Array.isArray(lead_ids)) {
+    return NextResponse.json(
+      { error: 'lead_ids is required and must be an array' },
+      { status: 400 }
+    )
+  }
+
+  try {
+    const { data: qualifications, error } = await supabase
+      .from('lead_qualifications')
+      .select('*')
+      .in('lead_id', lead_ids)
+      .eq('organization_id', organizationId)
+
+    if (error) {
+      console.error('Error fetching qualifications:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch qualifications' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        qualifications: qualifications || []
+      }
+    })
+  } catch (error) {
+    console.error('Error in getQualifications:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
 }

@@ -416,3 +416,69 @@ COMMENT ON COLUMN lead_qualifications.framework IS 'Qualification framework used
 COMMENT ON COLUMN framework_evidence.confidence IS 'Confidence score for evidence (0-1)';
 COMMENT ON COLUMN enhanced_lead_scores.composite IS 'Composite score combining all metrics (0-100)';
 COMMENT ON COLUMN conversion_jobs.idempotency_key IS 'Unique key to prevent duplicate conversions';
+
+-- =============================================================================
+-- QUALIFICATION FRAMEWORK SETTINGS
+-- =============================================================================
+
+-- Table for organization-specific qualification framework settings
+CREATE TABLE IF NOT EXISTS qualification_framework_settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    framework_id VARCHAR(50) NOT NULL,
+    framework_name VARCHAR(100) NOT NULL,
+    framework_full_name VARCHAR(200) NOT NULL,
+    framework_description TEXT,
+    framework_fields JSONB NOT NULL DEFAULT '[]',
+    enabled BOOLEAN NOT NULL DEFAULT false,
+    created_by UUID NOT NULL REFERENCES users(id),
+    updated_by UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Ensure one setting per framework per organization
+    UNIQUE(organization_id, framework_id)
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_qualification_framework_settings_org 
+    ON qualification_framework_settings(organization_id);
+CREATE INDEX IF NOT EXISTS idx_qualification_framework_settings_enabled 
+    ON qualification_framework_settings(organization_id, enabled) WHERE enabled = true;
+
+-- RLS Policies
+ALTER TABLE qualification_framework_settings ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can only see settings for their organization
+CREATE POLICY "Users can view framework settings for their organization" ON qualification_framework_settings
+    FOR SELECT USING (
+        organization_id IN (
+            SELECT organization_id FROM users WHERE id = auth.uid()
+        )
+    );
+
+-- Policy: Only admins can modify framework settings
+CREATE POLICY "Admins can modify framework settings for their organization" ON qualification_framework_settings
+    FOR ALL USING (
+        organization_id IN (
+            SELECT organization_id FROM users 
+            WHERE id = auth.uid() AND (role = 'admin' OR role = 'super_admin')
+        )
+    );
+
+-- Update trigger for updated_at
+CREATE OR REPLACE FUNCTION update_qualification_framework_settings_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_qualification_framework_settings_updated_at
+    BEFORE UPDATE ON qualification_framework_settings
+    FOR EACH ROW
+    EXECUTE FUNCTION update_qualification_framework_settings_updated_at();
+
+COMMENT ON TABLE qualification_framework_settings IS 'Organization-specific settings for qualification frameworks';
+COMMENT ON COLUMN qualification_framework_settings.framework_fields IS 'JSON array of field names required for this framework';

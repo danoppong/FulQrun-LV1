@@ -1,16 +1,18 @@
-import LeadForm from '@/components/leads/LeadForm'
+import LeadFormNew from '@/components/leads/LeadFormNew'
 import AuthWrapper from '@/components/auth/AuthWrapper'
 
 interface LeadEditPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function LeadEditPage({ params }: LeadEditPageProps) {
+export default async function LeadEditPage({ params }: LeadEditPageProps) {
+  const { id } = await params
+  
   return (
     <AuthWrapper>
-      <LeadForm mode="edit" leadId={params.id} />
+      <LeadFormNew mode="edit" leadId={id} />
     </AuthWrapper>
   )
 }

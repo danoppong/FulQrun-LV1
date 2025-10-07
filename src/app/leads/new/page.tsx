@@ -1,5 +1,5 @@
-import LeadForm from '@/components/leads/LeadForm'
+import LeadFormNew from '@/components/leads/LeadFormNew'
 
 export default function NewLeadPage() {
-  return <LeadForm mode="create" />
+  return <LeadFormNew mode="create" />
 }

@@ -13,7 +13,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   MagnifyingGlassIcon,
-  ArrowUpDownIcon,
+  ArrowPathIcon,
   EyeIcon,
   DocumentTextIcon,
   ClockIcon,
@@ -209,6 +209,102 @@ function KPIDefinitions({ config, onUpdate }: { config: KPIConfiguration; onUpda
     { value: 'custom', label: 'Custom Query' }
   ];
 
+  // Helper function to reload configuration
+  const reloadConfiguration = async () => {
+    try {
+      // Load KPI definitions from database
+      const { data: kpiDefinitions, error } = await supabase
+        .from('kpi_definitions')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_name');
+
+      if (error) {
+        console.error('Error loading KPI definitions:', error);
+        return;
+      }
+
+      // Transform database KPI definitions to component format
+      const transformedDefinitions: KPIDefinition[] = (kpiDefinitions || []).map(kpi => ({
+        id: kpi.id,
+        name: kpi.display_name,
+        description: kpi.description,
+        category: mapKpiCategory(kpi.kpi_name),
+        type: mapKpiType(kpi.calculation_method),
+        formula: kpi.formula,
+        dataSource: kpi.data_sources?.[0] || 'custom',
+        dimensions: kpi.dimensions?.map(dim => ({ name: dim, type: 'string' as const })) || [],
+        frequency: 'daily' as const,
+        unit: getKpiUnit(kpi.kpi_name),
+        isActive: kpi.is_active,
+        createdAt: new Date(kpi.created_at),
+        updatedAt: new Date(kpi.updated_at)
+      }));
+
+      setDefinitions(transformedDefinitions);
+      onUpdate({
+        ...config,
+        definitions: transformedDefinitions,
+        calculations: config.calculations,
+        thresholds: config.thresholds,
+        dashboards: config.dashboards,
+        alerts: config.alerts,
+        reports: config.reports
+      });
+    } catch (error) {
+      console.error('Error reloading KPI definitions:', error);
+    }
+  };
+
+  // Helper functions to map database KPI data to component format
+  const mapKpiCategory = (kpiName: string): 'sales' | 'marketing' | 'customer' | 'financial' | 'operational' | 'custom' => {
+    if (kpiName.includes('win_rate') || kpiName.includes('revenue') || kpiName.includes('deal') || 
+        kpiName.includes('quota') || kpiName.includes('pipeline') || kpiName.includes('activities')) {
+      return 'sales';
+    }
+    if (kpiName.includes('lead') || kpiName.includes('conversion') || kpiName.includes('cac')) {
+      return 'marketing';
+    }
+    if (kpiName.includes('clv') || kpiName.includes('customer')) {
+      return 'customer';
+    }
+    if (kpiName.includes('trx') || kpiName.includes('nrx') || kpiName.includes('prescription') || 
+        kpiName.includes('pharmaceutical') || kpiName.includes('hcp')) {
+      return 'operational';
+    }
+    if (kpiName.includes('meddpicc') || kpiName.includes('enterprise') || kpiName.includes('chart') || 
+        kpiName.includes('data') || kpiName.includes('metric') || kpiName.includes('content')) {
+      return 'custom';
+    }
+    return 'sales';
+  };
+
+  const mapKpiType = (calculationMethod: string): 'count' | 'sum' | 'average' | 'percentage' | 'ratio' | 'custom' => {
+    if (calculationMethod === 'sql_function') {
+      return 'custom';
+    }
+    if (calculationMethod === 'api_calculation') {
+      return 'average';
+    }
+    return 'custom';
+  };
+
+  const getKpiUnit = (kpiName: string): string => {
+    if (kpiName.includes('rate') || kpiName.includes('percentage') || kpiName.includes('growth')) {
+      return '%';
+    }
+    if (kpiName.includes('revenue') || kpiName.includes('deal') || kpiName.includes('cac') || kpiName.includes('clv')) {
+      return '$';
+    }
+    if (kpiName.includes('cycle') || kpiName.includes('days') || kpiName.includes('time')) {
+      return 'days';
+    }
+    if (kpiName.includes('activities') || kpiName.includes('calls') || kpiName.includes('leads')) {
+      return 'count';
+    }
+    return 'value';
+  };
+
   const handleSaveKPI = (kpiData: Partial<KPIDefinition>) => {
     try {
       const validatedData = KPIDefinitionSchema.parse(kpiData);
@@ -283,14 +379,29 @@ function KPIDefinitions({ config, onUpdate }: { config: KPIConfiguration; onUpda
         <div>
           <h3 className="text-lg font-medium text-gray-900">KPI Definitions</h3>
           <p className="text-sm text-gray-500">Define and configure key performance indicators</p>
+          <div className="flex items-center mt-1">
+            <div className={`w-2 h-2 rounded-full mr-2 ${config.definitions.length > 3 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+            <span className="text-xs text-gray-500">
+              {config.definitions.length > 3 ? 'Live Data' : 'Mock Data'} - {config.definitions.length} KPIs loaded
+            </span>
+          </div>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-        >
-          <PlusIcon className="h-4 w-4 mr-2" />
-          Add KPI
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={reloadConfiguration}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <ArrowPathIcon className="h-4 w-4 mr-2" />
+            Refresh
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Add KPI
+          </button>
+        </div>
       </div>
 
       {/* KPI Definitions Grid */}
@@ -811,6 +922,409 @@ function KPIThresholds({ config, onUpdate }: { config: KPIConfiguration; onUpdat
 }
 
 // =============================================================================
+// DASHBOARD CONFIGURATION COMPONENT
+// =============================================================================
+
+function DashboardConfiguration({ config, onUpdate }: { config: KPIConfiguration; onUpdate: (config: KPIConfiguration) => void }) {
+  const [dashboards, setDashboards] = useState<KPIDashboard[]>(config.dashboards);
+  const [showForm, setShowForm] = useState(false);
+  const [editingDashboard, setEditingDashboard] = useState<KPIDashboard | undefined>();
+  const [draggedKPI, setDraggedKPI] = useState<string | null>(null);
+
+  const chartTypes = [
+    { value: 'line', label: 'Line Chart', icon: ArrowTrendingUpIcon },
+    { value: 'bar', label: 'Bar Chart', icon: ChartBarIcon },
+    { value: 'pie', label: 'Pie Chart', icon: ChartBarIcon },
+    { value: 'number', label: 'Number Display', icon: CalculatorIcon },
+    { value: 'gauge', label: 'Gauge Chart', icon: ChartBarIcon }
+  ];
+
+  const timeRanges = [
+    { value: '1h', label: 'Last Hour' },
+    { value: '24h', label: 'Last 24 Hours' },
+    { value: '7d', label: 'Last 7 Days' },
+    { value: '30d', label: 'Last 30 Days' },
+    { value: '90d', label: 'Last 90 Days' },
+    { value: '1y', label: 'Last Year' }
+  ];
+
+  const handleSaveDashboard = (dashboardData: Partial<KPIDashboard>) => {
+    try {
+      if (editingDashboard) {
+        const updatedDashboards = dashboards.map(d => 
+          d.id === editingDashboard.id 
+            ? { ...d, ...dashboardData, id: editingDashboard.id, updatedAt: new Date() }
+            : d
+        );
+        setDashboards(updatedDashboards);
+      } else {
+        const newDashboard: KPIDashboard = {
+          id: Date.now().toString(),
+          ...dashboardData,
+          kpis: [],
+          layout: { columns: 4, rows: 3, gridSize: 20 },
+          isPublic: false,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        } as KPIDashboard;
+        setDashboards([...dashboards, newDashboard]);
+      }
+      
+      setShowForm(false);
+      setEditingDashboard(undefined);
+      
+      onUpdate({
+        ...config,
+        definitions: config.definitions,
+        calculations: config.calculations,
+        thresholds: config.thresholds,
+        dashboards,
+        alerts: config.alerts,
+        reports: config.reports
+      });
+    } catch (error) {
+      console.error('Error saving dashboard:', error);
+    }
+  };
+
+  const handleDeleteDashboard = (dashboardId: string) => {
+    setDashboards(dashboards.filter(d => d.id !== dashboardId));
+    onUpdate({
+      ...config,
+      definitions: config.definitions,
+      calculations: config.calculations,
+      thresholds: config.thresholds,
+      dashboards: dashboards.filter(d => d.id !== dashboardId),
+      alerts: config.alerts,
+      reports: config.reports
+    });
+  };
+
+  const handleAddKPIToDashboard = (dashboardId: string, kpiId: string) => {
+    const dashboard = dashboards.find(d => d.id === dashboardId);
+    if (!dashboard) return;
+
+    const kpi = config.definitions.find(k => k.id === kpiId);
+    if (!kpi) return;
+
+    const newKPIConfig: DashboardKPI = {
+      kpiId,
+      position: { x: 0, y: 0, width: 2, height: 2 },
+      chartType: 'number',
+      timeRange: '30d'
+    };
+
+    const updatedDashboard = {
+      ...dashboard,
+      kpis: [...dashboard.kpis, newKPIConfig],
+      updatedAt: new Date()
+    };
+
+    const updatedDashboards = dashboards.map(d => 
+      d.id === dashboardId ? updatedDashboard : d
+    );
+
+    setDashboards(updatedDashboards);
+    onUpdate({
+      ...config,
+      definitions: config.definitions,
+      calculations: config.calculations,
+      thresholds: config.thresholds,
+      dashboards: updatedDashboards,
+      alerts: config.alerts,
+      reports: config.reports
+    });
+  };
+
+  const handleRemoveKPIFromDashboard = (dashboardId: string, kpiId: string) => {
+    const dashboard = dashboards.find(d => d.id === dashboardId);
+    if (!dashboard) return;
+
+    const updatedDashboard = {
+      ...dashboard,
+      kpis: dashboard.kpis.filter(k => k.kpiId !== kpiId),
+      updatedAt: new Date()
+    };
+
+    const updatedDashboards = dashboards.map(d => 
+      d.id === dashboardId ? updatedDashboard : d
+    );
+
+    setDashboards(updatedDashboards);
+    onUpdate({
+      ...config,
+      definitions: config.definitions,
+      calculations: config.calculations,
+      thresholds: config.thresholds,
+      dashboards: updatedDashboards,
+      alerts: config.alerts,
+      reports: config.reports
+    });
+  };
+
+  const handleUpdateKPIConfig = (dashboardId: string, kpiId: string, updates: Partial<DashboardKPI>) => {
+    const dashboard = dashboards.find(d => d.id === dashboardId);
+    if (!dashboard) return;
+
+    const updatedDashboard = {
+      ...dashboard,
+      kpis: dashboard.kpis.map(k => 
+        k.kpiId === kpiId ? { ...k, ...updates } : k
+      ),
+      updatedAt: new Date()
+    };
+
+    const updatedDashboards = dashboards.map(d => 
+      d.id === dashboardId ? updatedDashboard : d
+    );
+
+    setDashboards(updatedDashboards);
+    onUpdate({
+      ...config,
+      definitions: config.definitions,
+      calculations: config.calculations,
+      thresholds: config.thresholds,
+      dashboards: updatedDashboards,
+      alerts: config.alerts,
+      reports: config.reports
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium text-gray-900">Dashboard Configuration</h3>
+          <p className="text-sm text-gray-500">Create and configure KPI dashboards with drag-and-drop layouts</p>
+        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        >
+          <PlusIcon className="h-4 w-4 mr-2" />
+          Create Dashboard
+        </button>
+      </div>
+
+      {/* Dashboard Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {dashboards.map((dashboard) => (
+          <div key={dashboard.id} className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h4 className="text-lg font-medium text-gray-900">{dashboard.name}</h4>
+                {dashboard.description && (
+                  <p className="text-sm text-gray-500 mt-1">{dashboard.description}</p>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  dashboard.isPublic ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {dashboard.isPublic ? 'Public' : 'Private'}
+                </span>
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  dashboard.isActive ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {dashboard.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </div>
+
+            {/* Dashboard Preview */}
+            <div className="mb-4">
+              <div className="text-sm font-medium text-gray-700 mb-2">Dashboard Preview</div>
+              <div 
+                className="grid gap-2 p-3 bg-gray-50 rounded border"
+                style={{ 
+                  gridTemplateColumns: `repeat(${dashboard.layout.columns}, 1fr)`,
+                  gridTemplateRows: `repeat(${dashboard.layout.rows}, 1fr)`,
+                  height: '200px'
+                }}
+              >
+                {dashboard.kpis.map((kpiConfig, index) => {
+                  const kpi = config.definitions.find(k => k.id === kpiConfig.kpiId);
+                  const chartType = chartTypes.find(ct => ct.value === kpiConfig.chartType);
+                  const ChartIcon = chartType?.icon || ChartBarIcon;
+                  
+                  return (
+                    <div
+                      key={kpiConfig.kpiId}
+                      className="bg-white border border-gray-200 rounded p-2 flex items-center justify-center"
+                      style={{
+                        gridColumn: `span ${kpiConfig.position.width}`,
+                        gridRow: `span ${kpiConfig.position.height}`
+                      }}
+                    >
+                      <div className="text-center">
+                        <ChartIcon className="h-4 w-4 text-blue-600 mx-auto mb-1" />
+                        <div className="text-xs font-medium text-gray-900 truncate">
+                          {kpi?.name || 'Unknown KPI'}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {chartType?.label}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* KPIs List */}
+            <div className="mb-4">
+              <div className="text-sm font-medium text-gray-700 mb-2">KPIs ({dashboard.kpis.length})</div>
+              <div className="space-y-1">
+                {dashboard.kpis.map((kpiConfig) => {
+                  const kpi = config.definitions.find(k => k.id === kpiConfig.kpiId);
+                  const chartType = chartTypes.find(ct => ct.value === kpiConfig.chartType);
+                  
+                  return (
+                    <div key={kpiConfig.kpiId} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div className="flex items-center">
+                        <ChartBarIcon className="h-4 w-4 text-blue-600 mr-2" />
+                        <span className="text-sm text-gray-900">{kpi?.name || 'Unknown KPI'}</span>
+                        <span className="text-xs text-gray-500 ml-2">({chartType?.label})</span>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveKPIFromDashboard(dashboard.id, kpiConfig.kpiId)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Available KPIs */}
+            <div className="mb-4">
+              <div className="text-sm font-medium text-gray-700 mb-2">Add KPIs</div>
+              <div className="space-y-1">
+                {config.definitions
+                  .filter(kpi => !dashboard.kpis.some(k => k.kpiId === kpi.id))
+                  .map((kpi) => (
+                    <button
+                      key={kpi.id}
+                      onClick={() => handleAddKPIToDashboard(dashboard.id, kpi.id)}
+                      className="w-full flex items-center p-2 text-left hover:bg-gray-50 rounded"
+                    >
+                      <PlusIcon className="h-4 w-4 text-green-600 mr-2" />
+                      <span className="text-sm text-gray-900">{kpi.name}</span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    setEditingDashboard(dashboard);
+                    setShowForm(true);
+                  }}
+                  className="text-blue-600 hover:text-blue-900"
+                >
+                  <PencilIcon className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => handleDeleteDashboard(dashboard.id)}
+                  className="text-red-600 hover:text-red-900"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              </div>
+              <button className="text-sm text-blue-600 hover:text-blue-900">
+                View Dashboard
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Dashboard Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-4/5 max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                {editingDashboard ? 'Edit Dashboard' : 'Create Dashboard'}
+              </h3>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                handleSaveDashboard({
+                  name: formData.get('name') as string,
+                  description: formData.get('description') as string,
+                  isPublic: formData.get('isPublic') === 'on',
+                  isActive: true
+                });
+              }} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Dashboard Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    defaultValue={editingDashboard?.name}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    name="description"
+                    defaultValue={editingDashboard?.description}
+                    rows={3}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="isPublic"
+                    defaultChecked={editingDashboard?.isPublic}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 block text-sm text-gray-900">
+                    Make this dashboard public
+                  </label>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForm(false);
+                      setEditingDashboard(undefined);
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    {editingDashboard ? 'Update Dashboard' : 'Create Dashboard'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
 // MAIN KPI CONFIGURATION COMPONENT
 // =============================================================================
 
@@ -831,97 +1345,229 @@ export default function KPIConfiguration() {
     loadConfiguration();
   }, []);
 
+  const loadMockConfig = () => {
+    console.log('Loading mock KPI configuration...');
+    const mockConfig: KPIConfiguration = {
+      definitions: [
+        {
+          id: '1',
+          name: 'Lead Conversion Rate',
+          description: 'Percentage of leads that convert to opportunities',
+          category: 'sales',
+          type: 'percentage',
+          formula: '(COUNT(opportunities) / COUNT(leads)) * 100',
+          dataSource: 'leads',
+          dimensions: [],
+          frequency: 'daily',
+          unit: '%',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: '2',
+          name: 'Average Deal Size',
+          description: 'Average value of closed won opportunities',
+          category: 'sales',
+          type: 'average',
+          formula: 'AVG(opportunities.value) WHERE status = "closed_won"',
+          dataSource: 'opportunities',
+          dimensions: [],
+          frequency: 'monthly',
+          unit: '$',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: '3',
+          name: 'Sales Velocity',
+          description: 'Average time from lead to closed won',
+          category: 'sales',
+          type: 'average',
+          formula: 'AVG(DATEDIFF(closed_date, created_date))',
+          dataSource: 'opportunities',
+          dimensions: [],
+          frequency: 'weekly',
+          unit: 'days',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ],
+      calculations: [],
+      thresholds: [
+        {
+          id: '1',
+          kpiId: '1',
+          level: 'critical',
+          operator: 'less_than',
+          value: 10,
+          color: '#EF4444',
+          isActive: true
+        },
+        {
+          id: '2',
+          kpiId: '1',
+          level: 'warning',
+          operator: 'less_than',
+          value: 20,
+          color: '#F59E0B',
+          isActive: true
+        },
+        {
+          id: '3',
+          kpiId: '2',
+          level: 'success',
+          operator: 'greater_than',
+          value: 50000,
+          color: '#10B981',
+          isActive: true
+        }
+      ],
+      dashboards: [
+        {
+          id: '1',
+          name: 'Sales Performance Dashboard',
+          description: 'Key sales metrics and performance indicators',
+          kpis: [
+            {
+              kpiId: '1',
+              position: { x: 0, y: 0, width: 2, height: 2 },
+              chartType: 'number',
+              timeRange: '30d'
+            },
+            {
+              kpiId: '2',
+              position: { x: 2, y: 0, width: 2, height: 2 },
+              chartType: 'line',
+              timeRange: '30d'
+            }
+          ],
+          layout: { columns: 4, rows: 3, gridSize: 20 },
+          isPublic: false,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ],
+      alerts: [],
+      reports: []
+    };
+    console.log('Mock config loaded with', mockConfig.definitions.length, 'KPIs');
+    setConfig(mockConfig);
+    setLoading(false);
+  };
+
+  // Helper functions to map database KPI data to component format
+  const mapKpiCategory = (kpiName: string): 'sales' | 'marketing' | 'customer' | 'financial' | 'operational' | 'custom' => {
+    if (kpiName.includes('win_rate') || kpiName.includes('revenue') || kpiName.includes('deal') || 
+        kpiName.includes('quota') || kpiName.includes('pipeline') || kpiName.includes('activities')) {
+      return 'sales';
+    }
+    if (kpiName.includes('lead') || kpiName.includes('conversion') || kpiName.includes('cac')) {
+      return 'marketing';
+    }
+    if (kpiName.includes('clv') || kpiName.includes('customer')) {
+      return 'customer';
+    }
+    if (kpiName.includes('trx') || kpiName.includes('nrx') || kpiName.includes('prescription') || 
+        kpiName.includes('pharmaceutical') || kpiName.includes('hcp')) {
+      return 'operational';
+    }
+    if (kpiName.includes('meddpicc') || kpiName.includes('enterprise') || kpiName.includes('chart') || 
+        kpiName.includes('data') || kpiName.includes('metric') || kpiName.includes('content')) {
+      return 'custom';
+    }
+    return 'sales';
+  };
+
+  const mapKpiType = (calculationMethod: string): 'count' | 'sum' | 'average' | 'percentage' | 'ratio' | 'custom' => {
+    if (calculationMethod === 'sql_function') {
+      return 'custom';
+    }
+    if (calculationMethod === 'api_calculation') {
+      return 'average';
+    }
+    return 'custom';
+  };
+
+  const getKpiUnit = (kpiName: string): string => {
+    if (kpiName.includes('rate') || kpiName.includes('percentage') || kpiName.includes('growth')) {
+      return '%';
+    }
+    if (kpiName.includes('revenue') || kpiName.includes('deal') || kpiName.includes('cac') || kpiName.includes('clv')) {
+      return '$';
+    }
+    if (kpiName.includes('cycle') || kpiName.includes('days') || kpiName.includes('time')) {
+      return 'days';
+    }
+    if (kpiName.includes('activities') || kpiName.includes('calls') || kpiName.includes('leads')) {
+      return 'count';
+    }
+    return 'value';
+  };
+
   const loadConfiguration = async () => {
     try {
       setLoading(true);
       
-      // Mock configuration data
-      const mockConfig: KPIConfiguration = {
-        definitions: [
-          {
-            id: '1',
-            name: 'Lead Conversion Rate',
-            description: 'Percentage of leads that convert to opportunities',
-            category: 'sales',
-            type: 'percentage',
-            formula: '(COUNT(opportunities) / COUNT(leads)) * 100',
-            dataSource: 'leads',
-            dimensions: [],
-            frequency: 'daily',
-            unit: '%',
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          },
-          {
-            id: '2',
-            name: 'Average Deal Size',
-            description: 'Average value of closed won opportunities',
-            category: 'sales',
-            type: 'average',
-            formula: 'AVG(opportunities.value) WHERE status = "closed_won"',
-            dataSource: 'opportunities',
-            dimensions: [],
-            frequency: 'monthly',
-            unit: '$',
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          },
-          {
-            id: '3',
-            name: 'Sales Velocity',
-            description: 'Average time from lead to closed won',
-            category: 'sales',
-            type: 'average',
-            formula: 'AVG(DATEDIFF(closed_date, created_date))',
-            dataSource: 'opportunities',
-            dimensions: [],
-            frequency: 'weekly',
-            unit: 'days',
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          }
-        ],
+      // Load KPI definitions from database
+      console.log('Loading KPI definitions from database...');
+      const { data: kpiDefinitions, error } = await supabase
+        .from('kpi_definitions')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_name');
+
+      console.log('Database query result:', { kpiDefinitions, error });
+
+      if (error) {
+        console.error('Error loading KPI definitions:', error);
+        // Fall back to mock data if database fails
+        console.log('Falling back to mock data...');
+        loadMockConfig();
+        return;
+      }
+
+      if (!kpiDefinitions || kpiDefinitions.length === 0) {
+        console.log('No KPI definitions found in database, falling back to mock data...');
+        loadMockConfig();
+        return;
+      }
+
+      // Transform database KPI definitions to component format
+      const transformedDefinitions: KPIDefinition[] = (kpiDefinitions || []).map(kpi => ({
+        id: kpi.id,
+        name: kpi.display_name,
+        description: kpi.description,
+        category: mapKpiCategory(kpi.kpi_name),
+        type: mapKpiType(kpi.calculation_method),
+        formula: kpi.formula,
+        dataSource: kpi.data_sources?.[0] || 'custom',
+        dimensions: kpi.dimensions?.map(dim => ({ name: dim, type: 'string' as const })) || [],
+        frequency: 'daily' as const,
+        unit: getKpiUnit(kpi.kpi_name),
+        isActive: kpi.is_active,
+        createdAt: new Date(kpi.created_at),
+        updatedAt: new Date(kpi.updated_at)
+      }));
+
+      const config: KPIConfiguration = {
+        definitions: transformedDefinitions,
         calculations: [],
-        thresholds: [
-          {
-            id: '1',
-            kpiId: '1',
-            level: 'critical',
-            operator: 'less_than',
-            value: 10,
-            color: '#EF4444',
-            isActive: true
-          },
-          {
-            id: '2',
-            kpiId: '1',
-            level: 'warning',
-            operator: 'less_than',
-            value: 20,
-            color: '#F59E0B',
-            isActive: true
-          },
-          {
-            id: '3',
-            kpiId: '2',
-            level: 'success',
-            operator: 'greater_than',
-            value: 50000,
-            color: '#10B981',
-            isActive: true
-          }
-        ],
+        thresholds: [],
         dashboards: [],
         alerts: [],
         reports: []
       };
       
-      setConfig(mockConfig);
+      console.log('Database config loaded with', transformedDefinitions.length, 'KPIs');
+      setConfig(config);
     } catch (error) {
       console.error('Error loading KPI configuration:', error);
+      // Fall back to mock data on any error
+      loadMockConfig();
     } finally {
       setLoading(false);
     }
@@ -1030,11 +1676,7 @@ export default function KPIConfiguration() {
           <KPIThresholds config={config} onUpdate={handleConfigUpdate} />
         )}
         {activeTab === 'dashboards' && (
-          <div className="text-center py-12">
-            <EyeIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Dashboard Configuration</h3>
-            <p className="text-gray-500">KPI dashboard configuration coming soon...</p>
-          </div>
+          <DashboardConfiguration config={config} onUpdate={handleConfigUpdate} />
         )}
         {activeTab === 'alerts' && (
           <div className="text-center py-12">

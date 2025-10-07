@@ -340,14 +340,20 @@ function BreadcrumbNav() {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Breadcrumb */}
-      <BreadcrumbNav />
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <AdminSidebar />
       
-      {/* Page Content */}
-      <main className="flex-1 bg-gray-50 p-6">
-        {children}
-      </main>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Breadcrumb */}
+        <BreadcrumbNav />
+        
+        {/* Page Content */}
+        <main className="flex-1 bg-gray-50 p-6">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
