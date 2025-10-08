@@ -9,7 +9,8 @@ import {
   CubeIcon,
   SparklesIcon,
   DevicePhoneMobileIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  PresentationChartBarIcon
 } from '@heroicons/react/24/outline'
 import AuthWrapper from '@/components/auth/AuthWrapper';
 
@@ -72,6 +73,23 @@ const modules: ModuleCard[] = [
       'Analytics dashboards',
       'Reporting templates',
       'Data visualization'
+    ]
+  },
+  {
+    id: 'meddpicc',
+    name: 'MEDDPICC Configuration',
+    description: 'Configure MEDDPICC pillars, questions, weights, and scoring algorithm',
+    href: '/admin/modules/meddpicc',
+    icon: PresentationChartBarIcon,
+    color: 'blue',
+    status: 'active',
+    features: [
+      'Pillar management',
+      'Question configuration',
+      'Weight distribution',
+      'Scoring algorithm',
+      'Quality thresholds',
+      'Algorithm parameters'
     ]
   },
   {

@@ -434,7 +434,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
         
         // Prepare comprehensive opportunity data
         const opportunityData = {
-          ...data,
+          name: data.name, // Ensure name is always provided
           contact_id: data.contact_id || null,
           company_id: data.company_id || null,
           // Include PEAK data
@@ -760,8 +760,8 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
                           initialData={[]} // Will load from database
                           onSave={(assessment) => {
                             console.log('MEDDPICC Assessment saved:', assessment)
+                            // Only update timestamp, don't trigger any saves
                             setLastSaved(new Date())
-                            // Update local state if needed
                           }}
                           onStageGateReady={(gate, isReady) => {
                             console.log(`Stage gate ${gate} is ${isReady ? 'ready' : 'not ready'}`)

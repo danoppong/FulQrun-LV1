@@ -8,11 +8,8 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation';
 import {
   HomeIcon,
-  UserGroupIcon,
   BuildingOfficeIcon,
   UserPlusIcon,
-  ChartBarIcon,
-  Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
@@ -21,8 +18,6 @@ import {
   AcademicCapIcon,
   ChartPieIcon,
   PuzzlePieceIcon,
-  LightBulbIcon,
-  DocumentTextIcon,
   CpuChipIcon,
   ShieldCheckIcon,
   DevicePhoneMobileIcon,
@@ -32,9 +27,7 @@ import {
   ChevronRightIcon,
   BriefcaseIcon,
   UsersIcon,
-  ClipboardDocumentListIcon,
   ChartBarSquareIcon,
-  DocumentChartBarIcon,
   FunnelIcon,
   PresentationChartLineIcon
 } from '@heroicons/react/24/outline'
@@ -47,7 +40,7 @@ interface SubMenuItem {
 interface MenuItem {
   name: string
   href?: string
-  icon: unknown
+  icon: React.ComponentType<{ className?: string }>
   submenu?: SubMenuItem[]
 }
 
@@ -143,19 +136,80 @@ const navigation: MenuItem[] = [
     href: '/learning-platform', 
     icon: AcademicCapIcon 
   },
+
+  // ==================== ADMINISTRATION SECTION ====================
+  
   { 
-    name: 'Administration', 
-    icon: Cog6ToothIcon,
+    name: 'Admin Dashboard', 
+    href: '/admin', 
+    icon: ChartBarSquareIcon 
+  },
+  { 
+    name: 'Organization', 
+    icon: BuildingOfficeIcon,
     submenu: [
-      { name: 'Admin Dashboard', href: '/admin' },
       { name: 'Organization Settings', href: '/admin/organization/settings' },
-      { name: 'User Management', href: '/admin/users' },
+      { name: 'Features & Modules', href: '/admin/organization/features' },
+      { name: 'Compliance', href: '/admin/organization/compliance' },
+      { name: 'Branding', href: '/admin/organization/branding' },
+    ]
+  },
+  { 
+    name: 'User Management', 
+    icon: UsersIcon,
+    submenu: [
+      { name: 'User List', href: '/admin/users/list' },
+      { name: 'Roles & Permissions', href: '/admin/users/roles' },
+      { name: 'Teams & Hierarchy', href: '/admin/users/teams' },
+      { name: 'Custom Roles', href: '/admin/users/custom-roles' },
       { name: 'Enterprise Roles', href: '/admin/users/enterprise-roles' },
-      { name: 'Module Configuration', href: '/admin/modules/crm' },
-      { name: 'Security & Compliance', href: '/admin/security/authentication' },
-      { name: 'System Administration', href: '/admin/system/database' },
-      { name: 'Customization', href: '/admin/customization/fields' },
-      { name: 'Legacy Settings', href: '/settings' },
+    ]
+  },
+  { 
+    name: 'Module Configuration', 
+    icon: PuzzlePieceIcon,
+    submenu: [
+      { name: 'CRM Settings', href: '/admin/modules/crm' },
+      { name: 'MEDDPICC Configuration', href: '/admin/modules/meddpicc' },
+      { name: 'Sales Performance', href: '/admin/modules/sales-performance' },
+      { name: 'KPI & Analytics', href: '/admin/modules/kpi' },
+      { name: 'Learning Platform', href: '/admin/modules/learning' },
+      { name: 'Integration Hub', href: '/admin/modules/integrations' },
+      { name: 'AI & Automation', href: '/admin/modules/ai' },
+      { name: 'Mobile App', href: '/admin/modules/mobile' },
+    ]
+  },
+  { 
+    name: 'Security & Compliance', 
+    icon: ShieldCheckIcon,
+    submenu: [
+      { name: 'Authentication', href: '/admin/security/authentication' },
+      { name: 'Multi-Factor Auth', href: '/admin/security/mfa' },
+      { name: 'SSO Configuration', href: '/admin/security/sso' },
+      { name: 'Audit Logs', href: '/admin/audit/logs' },
+      { name: 'Data Governance', href: '/admin/security/data-governance' },
+    ]
+  },
+  { 
+    name: 'System Administration', 
+    icon: CogIcon,
+    submenu: [
+      { name: 'Configuration Editor', href: '/admin/configuration/editor' },
+      { name: 'Database Management', href: '/admin/system/database' },
+      { name: 'Monitoring & Alerts', href: '/admin/system/monitoring' },
+      { name: 'Backup & Restore', href: '/admin/system/backups' },
+      { name: 'Maintenance Mode', href: '/admin/system/maintenance' },
+    ]
+  },
+  { 
+    name: 'Customization', 
+    icon: PresentationChartLineIcon,
+    submenu: [
+      { name: 'Custom Fields', href: '/admin/customization/fields' },
+      { name: 'Form Designer', href: '/admin/customization/forms' },
+      { name: 'Workflow Builder', href: '/admin/customization/workflows' },
+      { name: 'Email Templates', href: '/admin/customization/templates' },
+      { name: 'Theme Customizer', href: '/admin/customization/themes' },
     ]
   },
 ]
@@ -191,6 +245,36 @@ export default function Navigation() {
       prev.includes(menuName) 
         ? prev.filter(name => name !== menuName)
         : [...prev, menuName]
+    )
+  }
+
+  // Render navigation with sections
+  const renderNavigationWithSections = (isMobile = false) => {
+    const adminSectionStart = navigation.findIndex(item => item.name === 'Admin Dashboard')
+    const beforeAdminItems = navigation.slice(0, adminSectionStart)
+    const adminItems = navigation.slice(adminSectionStart)
+
+    return (
+      <>
+        {/* Regular menu items */}
+        {beforeAdminItems.map((item) => renderMenuItem(item, isMobile))}
+        
+        {/* Administration Section Divider */}
+        {adminItems.length > 0 && (!sidebarCollapsed || isMobile) && (
+          <div className="px-4 py-4">
+            <div className="flex items-center">
+              <div className="flex-grow h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+              <div className="px-3 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">
+                Administration
+              </div>
+              <div className="flex-grow h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+            </div>
+          </div>
+        )}
+        
+        {/* Administration items */}
+        {adminItems.map((item) => renderMenuItem(item, isMobile))}
+      </>
     )
   }
 
@@ -309,7 +393,7 @@ export default function Navigation() {
             </button>
           </div>
           <nav className="flex-1 space-y-1 px-4 py-6 overflow-y-auto">
-            {navigation.map((item) => renderMenuItem(item, true))}
+            {renderNavigationWithSections(true)}
           </nav>
           <div className="border-t border-border/50 p-4">
             <button
@@ -353,7 +437,7 @@ export default function Navigation() {
             )}
           </div>
           <nav className="flex-1 space-y-1 px-3 py-6 overflow-y-auto">
-            {navigation.map((item) => renderMenuItem(item, false))}
+            {renderNavigationWithSections(false)}
           </nav>
           {sidebarCollapsed && (
             <div className="border-t border-border/50 p-3 flex justify-center">

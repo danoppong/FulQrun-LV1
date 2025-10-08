@@ -1,7 +1,7 @@
 'use client'
 import React from 'react';
 
-import { useState, useEffect, createContext, useContext } from 'react'
+import { useState, useEffect, createContext } from 'react'
 import Navigation from './Navigation';
 
 interface ClientLayoutProps {
@@ -23,8 +23,8 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       {mounted && <Navigation />}
-      <main className={mounted ? "lg:pl-72 transition-all duration-300" : ""} style={{ paddingLeft: mounted ? 'var(--sidebar-width, 18rem)' : '0' }}>
-        <div className="px-4 sm:px-6 lg:px-8 py-8">
+      <main className={mounted ? "pt-16 lg:pt-0 lg:pl-72 transition-all duration-300" : ""}>
+        <div className="px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
           {children}
         </div>
       </main>

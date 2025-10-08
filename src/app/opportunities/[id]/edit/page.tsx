@@ -1,4 +1,4 @@
-import OpportunityForm from '@/components/opportunities/OpportunityForm'
+import OpportunityForm from '@/components/opportunities/OpportunityFormFixed'
 import AuthWrapper from '@/components/auth/AuthWrapper';
 
 interface OpportunityEditPageProps {

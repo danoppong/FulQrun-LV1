@@ -66,15 +66,15 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
   framework: "MEDD(I)PICC",
   scoring: {
     weights: {
-      metrics: 15,
-      economicBuyer: 20,
-      decisionCriteria: 10,
-      decisionProcess: 15,
-      paperProcess: 5,
-      identifyPain: 20,
-      implicatePain: 20,
-      champion: 10,
-      competition: 5
+      metrics: 40,              // Highest priority - quantified business impact
+      economicBuyer: 15,        // Critical decision maker identification
+      decisionCriteria: 8,      // Important for competitive positioning
+      decisionProcess: 10,      // Process understanding
+      paperProcess: 3,          // Administrative requirements
+      identifyPain: 12,         // Pain identification
+      implicatePain: 7,         // Pain implication and urgency
+      champion: 3,              // Internal advocate
+      competition: 2            // Competitive landscape
     },
     thresholds: {
       excellent: 80,
@@ -88,7 +88,7 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
       id: 'metrics',
       displayName: 'Metrics',
       description: 'Quantify the business impact and ROI',
-      weight: 15,
+      weight: 40,
       icon: '📊',
       color: 'bg-blue-100 text-blue-800',
       questions: [
@@ -132,10 +132,10 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
     {
       id: 'economicBuyer',
       displayName: 'Economic Buyer',
-      description: 'Identify the person who can approve the budget',
-      weight: 20,
-      icon: '💰',
-      color: 'bg-green-100 text-green-800',
+      description: 'Identify what problems need to be solved',
+      weight: 15,
+      icon: '�',
+      color: 'bg-red-100 text-red-800',
       questions: [
         {
           id: 'budget_authority',
@@ -176,9 +176,9 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
     {
       id: 'decisionCriteria',
       displayName: 'Decision Criteria',
-      description: 'Understand how they will evaluate solutions',
-      weight: 10,
-      icon: '📋',
+      description: 'Understand their evaluation criteria',
+      weight: 8,
+      icon: '�',
       color: 'bg-purple-100 text-purple-800',
       questions: [
         {
@@ -207,9 +207,9 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
     {
       id: 'decisionProcess',
       displayName: 'Decision Process',
-      description: 'Map the approval workflow and timeline',
-      weight: 15,
-      icon: '⚙️',
+      description: 'Map their decision-making process',
+      weight: 10,
+      icon: '🔄',
       color: 'bg-orange-100 text-orange-800',
       questions: [
         {
@@ -238,8 +238,8 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
     {
       id: 'paperProcess',
       displayName: 'Paper Process',
-      description: 'Document requirements and procurement process',
-      weight: 5,
+      description: 'Document approval requirements',
+      weight: 3,
       icon: '📄',
       color: 'bg-gray-100 text-gray-800',
       questions: [
@@ -270,7 +270,7 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
       id: 'identifyPain',
       displayName: 'Identify Pain',
       description: 'Understand their pain points and challenges',
-      weight: 20,
+      weight: 12,
       icon: '😰',
       color: 'bg-red-100 text-red-800',
       questions: [
@@ -300,9 +300,9 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
     {
       id: 'implicatePain',
       displayName: 'Implicate Pain',
-      description: 'Help them understand the full impact of their pain',
-      weight: 20,
-      icon: '💡',
+      description: 'Help them understand consequences of inaction',
+      weight: 7,
+      icon: '�',
       color: 'bg-yellow-100 text-yellow-800',
       questions: [
         {
@@ -331,9 +331,9 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
     {
       id: 'champion',
       displayName: 'Champion',
-      description: 'Find internal advocate who will support you',
-      weight: 10,
-      icon: '🏆',
+      description: 'Find an internal advocate for your solution',
+      weight: 3,
+      icon: '🤝',
       color: 'bg-indigo-100 text-indigo-800',
       questions: [
         {
@@ -377,7 +377,7 @@ export const MEDDPICC_CONFIG: MEDDPICCConfig = {
       id: 'competition',
       displayName: 'Competition',
       description: 'Assess competitive landscape and positioning',
-      weight: 5,
+      weight: 2,
       icon: '⚔️',
       color: 'bg-pink-100 text-pink-800',
       questions: [
@@ -499,14 +499,15 @@ export interface MEDDPICCField {
 
 // Legacy MEDDPICC fields for backward compatibility
 export const MEDDPICC_FIELDS: MEDDPICCField[] = [
-  { id: 'metrics', name: 'Metrics', description: 'Quantify the business impact', weight: 15, questions: ['What is the current cost?', 'What is the potential savings?'] },
-  { id: 'economic_buyer', name: 'Economic Buyer', description: 'Identify the decision maker', weight: 20, questions: ['Who has budget authority?', 'What is their influence level?'] },
-  { id: 'decision_criteria', name: 'Decision Criteria', description: 'Understand evaluation process', weight: 10, questions: ['What are the key criteria?', 'How will success be measured?'] },
-  { id: 'decision_process', name: 'Decision Process', description: 'Map approval workflow', weight: 15, questions: ['What are the process steps?', 'Who needs to approve?'] },
-  { id: 'paper_process', name: 'Paper Process', description: 'Document requirements', weight: 5, questions: ['What documentation is needed?', 'What are the procurement steps?'] },
-  { id: 'identify_pain', name: 'Identify Pain', description: 'Understand pain points', weight: 20, questions: ['What is the biggest challenge?', 'What are the consequences?'] },
-  { id: 'champion', name: 'Champion', description: 'Find internal advocate', weight: 10, questions: ['Who is your champion?', 'What is their commitment level?'] },
-  { id: 'competition', name: 'Competition', description: 'Assess competitive landscape', weight: 5, questions: ['Who are the competitors?', 'What is our differentiation?'] }
+  { id: 'metrics', name: 'Metrics', description: 'Quantify the business impact', weight: 40, questions: ['What is the current cost?', 'What is the potential savings?'] },
+  { id: 'economic_buyer', name: 'Economic Buyer', description: 'Identify the decision maker', weight: 15, questions: ['Who has budget authority?', 'What is their influence level?'] },
+  { id: 'decision_criteria', name: 'Decision Criteria', description: 'Understand evaluation process', weight: 8, questions: ['What are the key criteria?', 'How will success be measured?'] },
+  { id: 'decision_process', name: 'Decision Process', description: 'Map approval workflow', weight: 10, questions: ['What are the process steps?', 'Who needs to approve?'] },
+  { id: 'paper_process', name: 'Paper Process', description: 'Document requirements', weight: 3, questions: ['What documentation is needed?', 'What are the procurement steps?'] },
+  { id: 'identify_pain', name: 'Identify Pain', description: 'Understand pain points', weight: 12, questions: ['What is the biggest challenge?', 'What are the consequences?'] },
+  { id: 'implicate_pain', name: 'Implicate Pain', description: 'Help them understand consequences of inaction', weight: 7, questions: ['What happens if they do nothing?', 'What is the cost of inaction?'] },
+  { id: 'champion', name: 'Champion', description: 'Find internal advocate', weight: 3, questions: ['Who is your champion?', 'What is their commitment level?'] },
+  { id: 'competition', name: 'Competition', description: 'Assess competitive landscape', weight: 2, questions: ['Who are the competitors?', 'What is our differentiation?'] }
 ]
 
 export interface MEDDPICCResponse {

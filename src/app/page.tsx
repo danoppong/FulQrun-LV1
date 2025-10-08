@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { isSupabaseConfigured } from "@/lib/supabase";
+// import { isSupabaseConfigured } from "@/lib/supabase";
 
 export default function Home() {
+  // Temporarily disable Supabase config check for debugging
+  const isSupabaseConfigured = true;
+  
   // If Supabase is not configured, redirect to setup
   if (!isSupabaseConfigured) {
     return (

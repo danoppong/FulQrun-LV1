@@ -265,6 +265,14 @@ export function applyTheme(theme: Theme) {
   style.textContent = css
   document.head.appendChild(style)
   
+  // Control Tailwind's dark mode class based on theme
+  const htmlElement = document.documentElement
+  if (theme === 'dark') {
+    htmlElement.classList.add('dark')
+  } else {
+    htmlElement.classList.remove('dark')
+  }
+  
   // Store theme preference
   localStorage.setItem('theme', theme)
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod';
@@ -13,7 +13,7 @@ import {
 } from '@/lib/meddpicc'
 import { opportunityAPI } from '@/lib/api/opportunities'
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
-import { ChevronDownIcon, ChevronUpIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, ChevronUpIcon, InformationCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 interface MEDDPICCQualificationProps {
   opportunityId: string
@@ -36,6 +36,76 @@ interface MEDDPICCQuestion {
   answers?: { text: string; points: number }[]
 }
 
+interface ValidationError {
+  field: string
+  message: string
+  pillarId?: string
+  questionId?: string
+}
+
+interface ErrorState {
+  general: string | null
+  validation: ValidationError[]
+  network: string | null
+  submission: string | null
+}
+
+// Comprehensive validation schema
+const createValidationSchema = (config: typeof MEDDPICC_CONFIG) => {
+  const schemaFields: Record<string, z.ZodTypeAny> = {}
+
+  // Validate each pillar's questions
+  config?.pillars?.forEach(pillar => {
+    pillar.questions.forEach(question => {
+      const fieldKey = `${pillar.id}_${question.id}`
+      
+      if (question.required) {
+        switch (question.type) {
+          case 'text':
+            schemaFields[fieldKey] = z.string()
+              .min(10, `${question.text} requires at least 10 characters for meaningful input`)
+              .max(2000, `${question.text} must be less than 2000 characters`)
+              .refine(val => val.trim().length > 0, `${question.text} cannot be only whitespace`)
+            break
+          case 'scale':
+          case 'yes_no':
+          case 'multiple_choice':
+            schemaFields[fieldKey] = z.string()
+              .min(1, `Please select an option for: ${question.text}`)
+            break
+        }
+      } else {
+        // Optional fields with validation when provided
+        switch (question.type) {
+          case 'text':
+            schemaFields[fieldKey] = z.string()
+              .max(2000, `${question.text} must be less than 2000 characters`)
+              .optional()
+            break
+          case 'scale':
+          case 'yes_no':
+          case 'multiple_choice':
+            schemaFields[fieldKey] = z.string().optional()
+            break
+        }
+      }
+    })
+  })
+
+  // Validate litmus test if present
+  if (config?.litmusTest) {
+    config.litmusTest.questions.forEach(question => {
+      const fieldKey = `litmus_${question.id}`
+      if (question.required) {
+        schemaFields[fieldKey] = z.string()
+          .min(1, `${question.text} is required for qualification`)
+      }
+    })
+  }
+
+  return z.object(schemaFields)
+}
+
 export default function MEDDPICCQualification({
   opportunityId,
   initialData = [],
@@ -50,16 +120,140 @@ export default function MEDDPICCQualification({
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<MEDDPICCAssessment | null>(null)
   const [responses, setResponses] = useState<MEDDPICCResponse[]>(initialData.filter((item): item is MEDDPICCResponse => item !== undefined))
+  
+  // Error state management
+  const [errors, setErrors] = useState<ErrorState>({
+    general: null,
+    validation: [],
+    network: null,
+    submission: null
+  })
+
+  // Create dynamic validation schema
+  const validationSchema = React.useMemo(() => {
+    return MEDDPICC_CONFIG ? createValidationSchema(MEDDPICC_CONFIG) : z.object({})
+  }, [])
 
   const {
     register,
     handleSubmit,
     watch: _watch,
-    formState: {}
+    formState: { errors: formErrors, isValid },
+    setError: setFormError,
+    clearErrors,
+    reset
   } = useForm<PillarFormData>({
-    resolver: zodResolver(z.object({})), // Dynamic validation
-    defaultValues: {}
+    resolver: zodResolver(validationSchema),
+    defaultValues: {},
+    mode: 'onChange' // Real-time validation
   })
+
+  // Error handling utilities
+  const clearAllErrors = useCallback(() => {
+    setErrors({
+      general: null,
+      validation: [],
+      network: null,
+      submission: null
+    })
+    clearErrors()
+  }, [clearErrors])
+
+  const addValidationError = useCallback((field: string, message: string, pillarId?: string, questionId?: string) => {
+    setErrors(prev => ({
+      ...prev,
+      validation: [...prev.validation, { field, message, pillarId, questionId }]
+    }))
+  }, [])
+
+  const setNetworkError = useCallback((message: string) => {
+    setErrors(prev => ({ ...prev, network: message }))
+  }, [])
+
+  const setSubmissionError = useCallback((message: string) => {
+    setErrors(prev => ({ ...prev, submission: message }))
+  }, [])
+
+  const setGeneralError = useCallback((message: string) => {
+    setErrors(prev => ({ ...prev, general: message }))
+  }, [])
+
+  // Validate individual question
+  const validateQuestion = useCallback((pillarId: string, questionId: string, value: string): boolean => {
+    if (!MEDDPICC_CONFIG) return true
+
+    const pillar = MEDDPICC_CONFIG.pillars?.find(p => p.id === pillarId)
+    const question = pillar?.questions.find(q => q.id === questionId)
+    
+    if (!question) return true
+
+    const fieldKey = `${pillarId}_${questionId}`
+    
+    // Clear existing errors for this field
+    setErrors(prev => ({
+      ...prev,
+      validation: prev.validation.filter(err => err.field !== fieldKey)
+    }))
+
+    // Required field validation
+    if (question.required && (!value || value.trim().length === 0)) {
+      addValidationError(fieldKey, `${question.text} is required`, pillarId, questionId)
+      return false
+    }
+
+    // Text field specific validation
+    if (question.type === 'text' && value) {
+      if (value.length < 10 && question.required) {
+        addValidationError(fieldKey, `${question.text} requires at least 10 characters for meaningful input`, pillarId, questionId)
+        return false
+      }
+      if (value.length > 2000) {
+        addValidationError(fieldKey, `${question.text} must be less than 2000 characters`, pillarId, questionId)
+        return false
+      }
+      if (value.trim().length === 0 && question.required) {
+        addValidationError(fieldKey, `${question.text} cannot be only whitespace`, pillarId, questionId)
+        return false
+      }
+    }
+
+    return true
+  }, [addValidationError])
+
+  // Validate entire form
+  const validateForm = useCallback((): boolean => {
+    if (!MEDDPICC_CONFIG) return false
+
+    clearAllErrors()
+    let isFormValid = true
+
+    // Validate all pillar questions
+    MEDDPICC_CONFIG.pillars?.forEach(pillar => {
+      pillar.questions.forEach(question => {
+        const response = responses.find(r => r.pillarId === pillar.id && r.questionId === question.id)
+        const value = response?.answer || ''
+        
+        if (!validateQuestion(pillar.id, question.id, value)) {
+          isFormValid = false
+        }
+      })
+    })
+
+    // Validate litmus test
+    if (MEDDPICC_CONFIG.litmusTest) {
+      MEDDPICC_CONFIG.litmusTest.questions.forEach(question => {
+        const response = responses.find(r => r.pillarId === 'litmus' && r.questionId === question.id)
+        const value = response?.answer || ''
+        
+        if (question.required && (!value || value.trim().length === 0)) {
+          addValidationError(`litmus_${question.id}`, `${question.text} is required for qualification`, 'litmus', question.id)
+          isFormValid = false
+        }
+      })
+    }
+
+    return isFormValid
+  }, [responses, clearAllErrors, validateQuestion, addValidationError])
 
   // Convert legacy MEDDPICC data to comprehensive format
   const convertLegacyToComprehensive = useCallback((legacyData: Record<string, string>): MEDDPICCResponse[] => {
@@ -162,16 +356,17 @@ export default function MEDDPICCQualification({
           const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, opportunity as unknown as { id: string; name: string; [key: string]: unknown })
           
           // Convert opportunity MEDDPICC data to responses format
+          const opportunityWithMeddpicc = opportunity as unknown as Record<string, string>
           const existingResponses = convertLegacyToComprehensive({
-            metrics: opportunity.metrics,
-            economic_buyer: opportunity.economic_buyer,
-            decision_criteria: opportunity.decision_criteria,
-            decision_process: opportunity.decision_process,
-            paper_process: opportunity.paper_process,
-            identify_pain: opportunity.identify_pain,
-            implicate_pain: opportunity.implicate_pain,
-            champion: opportunity.champion,
-            competition: opportunity.competition
+            metrics: opportunityWithMeddpicc.metrics,
+            economic_buyer: opportunityWithMeddpicc.economic_buyer,
+            decision_criteria: opportunityWithMeddpicc.decision_criteria,
+            decision_process: opportunityWithMeddpicc.decision_process,
+            paper_process: opportunityWithMeddpicc.paper_process,
+            identify_pain: opportunityWithMeddpicc.identify_pain,
+            implicate_pain: opportunityWithMeddpicc.implicate_pain,
+            champion: opportunityWithMeddpicc.champion,
+            competition: opportunityWithMeddpicc.competition
           })
           
           setResponses(existingResponses)
@@ -211,7 +406,7 @@ export default function MEDDPICCQualification({
   }, [opportunityId, convertLegacyToComprehensive])
 
   // Memoize the stage gate notification to prevent infinite loops
-  const notifyStageGateReadiness = useCallback((assessment: MEDDPICCAssessment) => {
+  const _notifyStageGateReadiness = useCallback((assessment: MEDDPICCAssessment) => {
     if (onStageGateReady) {
       Object.entries(assessment.stageGateReadiness).forEach(([gate, isReady]) => {
         onStageGateReady(gate, isReady)
@@ -219,50 +414,47 @@ export default function MEDDPICCQualification({
     }
   }, [onStageGateReady])
 
-  // Memoize the assessment calculation to prevent unnecessary re-calculations
-  const assessment = useMemo(() => {
-    if (responses.length > 0) {
-      // Use the unified scoring service for consistency across all views
-      const scoreResult = calculateMEDDPICCScore(responses)
-      return scoreResult
-    }
-    return currentAssessment // Return the loaded assessment if no form changes
-  }, [responses, currentAssessment])
+  // DISABLED: Automatic assessment calculation to prevent infinite loops
+  // const assessment = useMemo(() => {
+  //   if (responses.length > 0) {
+  //     const scoreResult = calculateMEDDPICCScore(responses)
+  //     return scoreResult
+  //   }
+  //   return currentAssessment
+  // }, [responses, currentAssessment])
 
-  useEffect(() => {
-    if (assessment) {
-      setCurrentAssessment(assessment)
+  // DISABLED: Automatic assessment updates to prevent infinite loops  
+  // useEffect(() => {
+  //   if (assessment) {
+  //     setCurrentAssessment(assessment)
       
-      // Notify parent about stage gate readiness (only when assessment changes)
-      if (currentAssessment?.overallScore !== assessment.overallScore) {
-        notifyStageGateReadiness(assessment)
-      }
-    }
-  }, [assessment, currentAssessment?.overallScore, notifyStageGateReadiness])
+  //     if (currentAssessment?.overallScore !== assessment.overallScore) {
+  //       notifyStageGateReadiness(assessment)
+  //     }
+  //   }
+  // }, [assessment, currentAssessment?.overallScore, notifyStageGateReadiness])
 
-  // Listen for MEDDPICC score updates from other components
-  useEffect(() => {
-    const handleScoreUpdate = (event: CustomEvent) => {
-      const { opportunityId: updatedOpportunityId, score } = event.detail
-      if (updatedOpportunityId === opportunityId && typeof score === 'number') {
-        // Update the current assessment with the new score
-        setCurrentAssessment(prev => prev ? {
-          ...prev,
-          overallScore: score,
-          qualificationLevel: getMEDDPICCLevel(score).level
-        } : null)
-        
-        // Invalidate cache to ensure fresh calculation
-        meddpiccScoringService.invalidateScore(opportunityId)
-      }
-    }
+  // DISABLED: Listen for MEDDPICC score updates to prevent infinite loops
+  // useEffect(() => {
+  //   const handleScoreUpdate = (event: CustomEvent) => {
+  //     const { opportunityId: updatedOpportunityId, score } = event.detail
+  //     if (updatedOpportunityId === opportunityId && typeof score === 'number') {
+  //       setCurrentAssessment(prev => prev ? {
+  //         ...prev,
+  //         overallScore: score,
+  //         qualificationLevel: getMEDDPICCLevel(score).level
+  //       } : null)
+  //       
+  //       meddpiccScoringService.invalidateScore(opportunityId)
+  //     }
+  //   }
 
-    window.addEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
+  //   window.addEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
     
-    return () => {
-      window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
-    }
-  }, [opportunityId])
+  //   return () => {
+  //     window.removeEventListener('meddpicc-score-updated', handleScoreUpdate as EventListener)
+  //   }
+  // }, [opportunityId])
 
   const togglePillar = (pillarId: string) => {
     setExpandedPillars(prev => {
@@ -276,62 +468,144 @@ export default function MEDDPICCQualification({
     })
   }
 
-  const handleQuestionChange = (pillarId: string, questionId: string, answer: string | number, points?: number) => {
-    const newResponses = responses.filter(r => !(r.pillarId === pillarId && r.questionId === questionId))
-    
-    if (answer !== '' && answer !== null && answer !== undefined) {
-      newResponses.push({
-        pillarId,
-        questionId,
-        answer,
-        points
+  const handleQuestionChange = useCallback((pillarId: string, questionId: string, answer: string | number, points?: number) => {
+    try {
+      // Convert answer to string for validation
+      const answerStr = String(answer)
+      
+      // Validate the individual question
+      const isValidInput = validateQuestion(pillarId, questionId, answerStr)
+      
+      // Update responses regardless of validation (to show current state)
+      const newResponses = responses.filter(r => !(r.pillarId === pillarId && r.questionId === questionId))
+      
+      if (answer !== '' && answer !== null && answer !== undefined) {
+        newResponses.push({
+          pillarId,
+          questionId,
+          answer: answerStr,
+          points
+        })
+      }
+      
+      setResponses(newResponses)
+      
+      // Log validation result
+      console.log('Question changed:', { 
+        pillarId, 
+        questionId, 
+        answer: answerStr, 
+        isValid: isValidInput 
       })
+      
+    } catch (error) {
+      console.error('Error in handleQuestionChange:', error)
+      setGeneralError('An error occurred while updating your response. Please try again.')
     }
-    
-    setResponses(newResponses)
-  }
+  }, [responses, validateQuestion, setGeneralError])
 
   const onSubmit = async () => {
-    setIsSubmitting(true)
     try {
-      if (currentAssessment) {
-        // Save to opportunity - combine all responses for each pillar
-        const meddpiccData = {
-          metrics: combinePillarResponses(responses, 'metrics'),
-          economic_buyer: combinePillarResponses(responses, 'economicBuyer'),
-          decision_criteria: combinePillarResponses(responses, 'decisionCriteria'),
-          decision_process: combinePillarResponses(responses, 'decisionProcess'),
-          paper_process: combinePillarResponses(responses, 'paperProcess'),
-          identify_pain: combinePillarResponses(responses, 'identifyPain'),
-          implicate_pain: combinePillarResponses(responses, 'implicatePain'),
-          champion: combinePillarResponses(responses, 'champion'),
-          competition: combinePillarResponses(responses, 'competition')
-        }
-        
-        console.log('Saving MEDDPICC data:', meddpiccData)
-        console.log('All responses:', responses)
-        
-        await opportunityAPI.updateMEDDPICC(opportunityId, meddpiccData)
-
-        // Update the MEDDPICC score in the database using the unified service
-        if (currentAssessment) {
-          await meddpiccScoringService.updateOpportunityScore(opportunityId, currentAssessment)
-        }
-
-        if (onSave) {
-          onSave(currentAssessment)
-        }
+      // Add guard to prevent auto-submission
+      if (isSubmitting) {
+        console.log('Already submitting, preventing duplicate save')
+        return
       }
+      
+      console.log('Manual MEDDPICC save triggered')
+      clearAllErrors()
+      
+      // Validate form before submission
+      const isFormValid = validateForm()
+      if (!isFormValid) {
+        setSubmissionError('Please fix the validation errors before submitting.')
+        return
+      }
+      
+      setIsSubmitting(true)
+      
+      // Add a safety timeout to prevent infinite loading states
+      const timeoutId = setTimeout(() => {
+        console.warn('MEDDPICC save timeout - resetting isSubmitting state')
+        setIsSubmitting(false)
+        setNetworkError('Save operation timed out. Please check your connection and try again.')
+      }, 30000) // 30 second timeout
+      
+      try {
+        if (currentAssessment) {
+          // Save to opportunity - combine all responses for each pillar
+          const meddpiccData = {
+            metrics: combinePillarResponses(responses, 'metrics'),
+            economic_buyer: combinePillarResponses(responses, 'economicBuyer'),
+            decision_criteria: combinePillarResponses(responses, 'decisionCriteria'),
+            decision_process: combinePillarResponses(responses, 'decisionProcess'),
+            paper_process: combinePillarResponses(responses, 'paperProcess'),
+            identify_pain: combinePillarResponses(responses, 'identifyPain'),
+            implicate_pain: combinePillarResponses(responses, 'implicatePain'),
+            champion: combinePillarResponses(responses, 'champion'),
+            competition: combinePillarResponses(responses, 'competition')
+          }
+          
+          console.log('Saving MEDDPICC data (manual):', meddpiccData)
+          
+          await opportunityAPI.updateMEDDPICC(opportunityId, meddpiccData)
+
+          // Update the MEDDPICC score in the database using the unified service
+          await meddpiccScoringService.updateOpportunityScore(opportunityId, currentAssessment)
+
+          // Only call onSave if provided (no automatic triggering)
+          if (onSave) {
+            console.log('Calling onSave callback (manual)')
+            onSave(currentAssessment)
+          }
+          
+          console.log('MEDDPICC save completed successfully')
+        } else {
+          setSubmissionError('Please run analysis first to generate assessment before saving.')
+        }
+      } catch (error) {
+        console.error('Error saving MEDDPICC assessment:', error)
+        
+        // Handle specific error types
+        if (error instanceof Error) {
+          if (error.message.includes('network') || error.message.includes('fetch')) {
+            setNetworkError('Network error occurred. Please check your connection and try again.')
+          } else {
+            setSubmissionError(`Failed to save assessment: ${error.message}`)
+          }
+        } else {
+          setSubmissionError('An unexpected error occurred while saving. Please try again.')
+        }
+      } finally {
+        clearTimeout(timeoutId) // Clear the safety timeout
+        setIsSubmitting(false)
+        console.log('Manual MEDDPICC save completed - isSubmitting reset to false')
+      }
+      
     } catch (error) {
-      console.error('Error saving MEDDPICC assessment:', error)
-    } finally {
+      console.error('Critical error in onSubmit:', error)
+      setGeneralError('A critical error occurred. Please refresh the page and try again.')
       setIsSubmitting(false)
     }
   }
 
+  // Safety function to reset stuck submitting state
+  const resetSubmittingState = useCallback(() => {
+    console.log('Force resetting isSubmitting state')
+    setIsSubmitting(false)
+  }, [])
+
   const runAnalysis = async () => {
-    setIsAnalyzing(true)
     try {
+      clearAllErrors()
+      
+      // Check if we have any responses to analyze
+      if (responses.length === 0) {
+        setGeneralError('Please provide answers to at least some questions before running analysis.')
+        return
+      }
+      
+      setIsAnalyzing(true)
       console.log('Running MEDDPICC Analysis with responses:', responses)
 
       // Calculate the assessment using current responses
@@ -350,6 +624,15 @@ export default function MEDDPICCQualification({
 
     } catch (error) {
       console.error('Error running MEDDPICC analysis:', error)
+      if (error instanceof Error) {
+        if (error.message.includes('network') || error.message.includes('fetch')) {
+          setNetworkError('Failed to save analysis results. Please check your connection.')
+        } else {
+          setGeneralError(`Analysis failed: ${error.message}`)
+        }
+      } else {
+        setGeneralError('An unexpected error occurred during analysis. Please try again.')
+      }
     } finally {
       setIsAnalyzing(false)
     }
@@ -409,7 +692,7 @@ export default function MEDDPICCQualification({
             value={currentAnswer}
             onChange={(e) => handleQuestionChange(pillarId, question.id, e.target.value)}
             rows={3}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+            className="mt-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary text-sm sm:text-base p-3 resize-none min-h-[80px] touch-manipulation"
             placeholder={`Enter your response...`}
           />
         )
@@ -417,18 +700,18 @@ export default function MEDDPICCQualification({
       case 'scale':
       case 'yes_no':
         return (
-          <div className="mt-1 space-y-2">
+          <div className="mt-2 space-y-3 sm:space-y-3">
             {question.answers?.map((answer: { text: string; points: number }, index: number) => (
-              <label key={index} className="flex items-center">
+              <label key={index} className="flex items-start space-x-3 cursor-pointer touch-manipulation">
                 <input
                   type="radio"
                   name={`${pillarId}_${question.id}`}
                   value={answer.text}
                   checked={currentAnswer === answer.text}
                   onChange={() => handleQuestionChange(pillarId, question.id, answer.text, answer.points)}
-                  className="mr-2 text-primary focus:ring-primary"
+                  className="mt-1 flex-shrink-0 h-4 w-4 text-primary focus:ring-primary border-gray-300"
                 />
-                <span className="text-sm">{answer.text}</span>
+                <span className="text-sm sm:text-base leading-relaxed text-gray-700">{answer.text}</span>
               </label>
             ))}
           </div>
@@ -454,19 +737,19 @@ export default function MEDDPICCQualification({
   }
 
   return (
-    <div className={`bg-white shadow rounded-lg ${className}`}>
+    <div className={`w-full max-w-none bg-white shadow rounded-lg ${className}`}>
       {/* Header with Overall Score */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-3 sm:mb-0">
             <h3 className="text-lg font-medium text-gray-900">MEDDPICC Qualification</h3>
             <p className="text-sm text-gray-500">Comprehensive sales qualification assessment</p>
           </div>
           {currentAssessment && (
-            <div className="text-right">
+            <div className="flex flex-col sm:text-right">
               <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                 getMEDDPICCLevel(currentAssessment.overallScore).color
-              } text-white`}>
+              } text-white w-fit sm:ml-auto`}>
                 {currentAssessment.overallScore}% - {currentAssessment.qualificationLevel}
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -477,8 +760,74 @@ export default function MEDDPICCQualification({
         </div>
       </div>
 
+      {/* Error Display Section */}
+      <div className="px-4 sm:px-6">
+        {/* General Error */}
+        {errors.general && (
+          <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2" />
+              <div className="text-sm text-red-700">{errors.general}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Network Error */}
+        {errors.network && (
+          <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="h-5 w-5 text-orange-600 mr-2" />
+              <div className="text-sm text-orange-700">
+                <strong>Network Error:</strong> {errors.network}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Submission Error */}
+        {errors.submission && (
+          <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-2" />
+              <div className="text-sm text-yellow-700">
+                <strong>Submission Error:</strong> {errors.submission}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Validation Errors Summary */}
+        {errors.validation.length > 0 && (
+          <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="text-sm font-medium text-red-800 mb-2">
+                  Please fix the following errors:
+                </h4>
+                <ul className="text-sm text-red-700 space-y-1">
+                  {errors.validation.map((error, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>{error.message}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={clearAllErrors}
+                  className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+                >
+                  Clear all errors
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Pillars */}
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         <div className="space-y-4">
           {MEDDPICC_CONFIG && MEDDPICC_CONFIG.pillars ? MEDDPICC_CONFIG.pillars.map((pillar) => {
             const isExpanded = expandedPillars.has(pillar.id)
@@ -491,17 +840,17 @@ export default function MEDDPICCQualification({
                   onClick={() => togglePillar(pillar.id)}
                   className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset"
                 >
-                  <div className="flex items-center space-x-3">
-                    <span className="text-2xl">{pillar.icon}</span>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">{pillar.displayName}</h4>
-                      <p className="text-xs text-gray-500">{pillar.description}</p>
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    <span className="text-xl sm:text-2xl flex-shrink-0">{pillar.icon}</span>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-medium text-gray-900 truncate">{pillar.displayName}</h4>
+                      <p className="text-xs text-gray-500 line-clamp-2 sm:line-clamp-none">{pillar.description}</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 ml-2">
                     <div className="text-right">
                       <div className="text-sm font-medium text-gray-900">{progress}%</div>
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-2">
                         <div 
                           className={`h-2 rounded-full ${pillar.color}`}
                           style={{ width: `${progress}%` }}
@@ -509,9 +858,9 @@ export default function MEDDPICCQualification({
                       </div>
                     </div>
                     {isExpanded ? (
-                      <ChevronUpIcon className="h-5 w-5 text-gray-400" />
+                      <ChevronUpIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
                     ) : (
-                      <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+                      <ChevronDownIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
                     )}
                   </div>
                 </button>
@@ -519,18 +868,37 @@ export default function MEDDPICCQualification({
                 {isExpanded && (
                   <div className="px-4 pb-4 border-t border-gray-200">
                     <div className="space-y-4 pt-4">
-                      {pillar.questions.map((question) => (
-                        <div key={question.id}>
-                          <label className="block text-sm font-medium text-gray-700">
-                            {question.text}
-                            {question.tooltip && (
-                              <InformationCircleIcon className="inline h-4 w-4 ml-1 text-gray-400" title={question.tooltip} />
+                      {pillar.questions.map((question) => {
+                        const fieldKey = `${pillar.id}_${question.id}`
+                        const fieldErrors = errors.validation.filter(err => err.field === fieldKey)
+                        const hasFieldError = fieldErrors.length > 0
+                        
+                        return (
+                          <div key={question.id} className="space-y-2">
+                            <label className={`block text-sm font-medium ${hasFieldError ? 'text-red-700' : 'text-gray-700'}`}>
+                              {question.text}
+                              {question.tooltip && (
+                                <InformationCircleIcon className="inline h-4 w-4 ml-1 text-gray-400" title={question.tooltip} />
+                              )}
+                              {question.required && <span className="text-red-500 ml-1">*</span>}
+                            </label>
+                            <div className="w-full">
+                              {renderQuestion(pillar.id, question)}
+                            </div>
+                            {/* Field-specific error display */}
+                            {hasFieldError && (
+                              <div className="text-sm text-red-600 mt-1">
+                                {fieldErrors.map((error, errorIndex) => (
+                                  <div key={errorIndex} className="flex items-start">
+                                    <ExclamationTriangleIcon className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
+                                    <span>{error.message}</span>
+                                  </div>
+                                ))}
+                              </div>
                             )}
-                            {question.required && <span className="text-red-500 ml-1">*</span>}
-                          </label>
-                          {renderQuestion(pillar.id, question)}
-                        </div>
-                      ))}
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
@@ -556,18 +924,37 @@ export default function MEDDPICCQualification({
             </div>
             <div className="px-4 py-4">
               <div className="space-y-4">
-                {MEDDPICC_CONFIG.litmusTest.questions.map((question) => (
-                <div key={question.id}>
-                  <label className="block text-sm font-medium text-gray-700">
-                    {question.text}
-                    {question.required && <span className="text-red-500 ml-1">*</span>}
-                  </label>
-                  {renderQuestion('litmus', question)}
-                </div>
-              ))}
+                {MEDDPICC_CONFIG.litmusTest.questions.map((question) => {
+                  const fieldKey = `litmus_${question.id}`
+                  const fieldErrors = errors.validation.filter(err => err.field === fieldKey)
+                  const hasFieldError = fieldErrors.length > 0
+                  
+                  return (
+                    <div key={question.id} className="space-y-2">
+                      <label className={`block text-sm font-medium ${hasFieldError ? 'text-red-700' : 'text-gray-700'}`}>
+                        {question.text}
+                        {question.required && <span className="text-red-500 ml-1">*</span>}
+                      </label>
+                      <div className="w-full">
+                        {renderQuestion('litmus', question)}
+                      </div>
+                      {/* Field-specific error display */}
+                      {hasFieldError && (
+                        <div className="text-sm text-red-600 mt-1">
+                          {fieldErrors.map((error, errorIndex) => (
+                            <div key={errorIndex} className="flex items-start">
+                              <ExclamationTriangleIcon className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
+                              <span>{error.message}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
-        </div>
         )}
 
         {/* Next Actions */}
@@ -676,25 +1063,79 @@ export default function MEDDPICCQualification({
           </div>
         )}
 
+        {/* Form Validation Status */}
+        <div className="mt-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-700">Form Status:</span>
+              {errors.validation.length === 0 ? (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  ✓ Valid
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  ⚠ {errors.validation.length} Error{errors.validation.length !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center space-x-2 text-xs text-gray-500">
+              <span>Progress:</span>
+              <span className="font-medium">
+                {responses.length} / {
+                  MEDDPICC_CONFIG && MEDDPICC_CONFIG.pillars ? 
+                  MEDDPICC_CONFIG.pillars.reduce((total, pillar) => total + pillar.questions.length, 0) +
+                  (MEDDPICC_CONFIG.litmusTest ? MEDDPICC_CONFIG.litmusTest.questions.length : 0)
+                  : 0
+                } Completed
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Action Buttons */}
-        <div className="mt-6 flex justify-between">
+        <div className="mt-6 flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
           <button
             type="button"
             onClick={runAnalysis}
             disabled={isAnalyzing}
-            className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+            className="inline-flex justify-center py-3 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 w-full sm:w-auto touch-manipulation min-h-[44px]"
           >
             {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
           </button>
           
-          <button
-            type="button"
-            onClick={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
-          >
-            {isSubmitting ? 'Saving...' : 'Save MEDDPICC Assessment'}
-          </button>
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+            {/* Debug reset button - only show when stuck in submitting state */}
+            {isSubmitting && (
+              <button
+                type="button"
+                onClick={resetSubmittingState}
+                className="inline-flex justify-center py-2 px-3 border border-red-300 shadow-sm text-xs font-medium rounded text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full sm:w-auto touch-manipulation min-h-[40px]"
+                title="Force reset if stuck in saving state"
+              >
+                Reset
+              </button>
+            )}
+            
+            <button
+              type="button"
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSubmitting || errors.validation.length > 0 || !currentAssessment}
+              className={`inline-flex justify-center py-3 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary w-full sm:w-auto touch-manipulation min-h-[44px] ${
+                isSubmitting || errors.validation.length > 0 || !currentAssessment
+                ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                : 'bg-primary hover:bg-primary/90'
+              }`}
+              title={
+                errors.validation.length > 0 
+                ? 'Please fix validation errors before saving'
+                : !currentAssessment
+                ? 'Please run analysis first before saving'
+                : undefined
+              }
+            >
+              {isSubmitting ? 'Saving...' : 'Save MEDDPICC Assessment'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
