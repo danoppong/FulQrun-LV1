@@ -9,8 +9,10 @@ import { DashboardWidget } from '@/lib/dashboard-widgets'
 import { PharmaKPICardData } from '@/lib/types/dashboard'
 import { KPICard } from '@/components/bi/KPICard';
 import { kpiEngine, KPICalculationParams } from '@/lib/bi/kpi-engine';
+import { aiInsightEngine } from '@/lib/ai/ai-insights-engine';
 import { AuthService } from '@/lib/auth-unified';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Brain, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { AIInsight } from '@/lib/types/ai-insights';
 
 interface PharmaKPICardWidgetProps {
   widget: DashboardWidget;
@@ -20,6 +22,7 @@ interface PharmaKPICardWidgetProps {
   territoryId?: string;
   autoRefresh?: boolean;
   refreshInterval?: number; // in minutes
+  onDrillDown?: (kpiData: PharmaKPICardData, kpiId: string, organizationId: string, productId?: string, territoryId?: string) => void;
 }
 
 export function PharmaKPICardWidget({ 
@@ -29,12 +32,69 @@ export function PharmaKPICardWidget({
   productId,
   territoryId,
   autoRefresh = false,
-  refreshInterval = 15 
+  refreshInterval = 15,
+  onDrillDown
 }: PharmaKPICardWidgetProps) {
   const [kpiData, setKpiData] = useState<PharmaKPICardData>(data);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Handle drill-down click
+  const handleDrillDown = useCallback(() => {
+    if (onDrillDown && organizationId) {
+      onDrillDown(kpiData, data.kpiId, organizationId, productId, territoryId);
+    }
+  }, [onDrillDown, kpiData, data.kpiId, organizationId, productId, territoryId]);
+
+  // AI Analysis for KPI insights
+  const analyzeKPIWithAI = useCallback(async (kpiDataToAnalyze: PharmaKPICardData) => {
+    if (!organizationId) return;
+
+    setIsAnalyzing(true);
+    
+    try {
+      // Generate mock pharmaceutical data for AI analysis
+      const pharmaData = [{
+        date: new Date().toISOString().split('T')[0],
+        territory: territoryId || 'Territory-1',
+        product: productId || 'Product-A',
+        trx: data.kpiId === 'trx' ? kpiDataToAnalyze.value : Math.floor(Math.random() * 1000) + 500,
+        nrx: data.kpiId === 'nrx' ? kpiDataToAnalyze.value : Math.floor(Math.random() * 200) + 100,
+        market_share: data.kpiId === 'market_share' ? kpiDataToAnalyze.value : Math.random() * 20 + 10,
+        calls: Math.floor(Math.random() * 10) + 3,
+        samples: Math.floor(Math.random() * 50) + 20
+      }];
+
+      const analysisContext = {
+        timeframe: '30_days',
+        filters: {
+          territories: territoryId ? [territoryId] : [],
+          products: productId ? [productId] : [],
+        },
+        user_id: 'user_123',
+        organization_id: organizationId
+      };
+
+      // Generate AI insights for this KPI
+      const insights = await aiInsightEngine.generateInsights(pharmaData, analysisContext);
+      
+      // Filter insights relevant to this specific KPI
+      const relevantInsights = insights.filter(insight => 
+        insight.category === 'performance' && 
+        (insight.description.toLowerCase().includes(data.kpiId) || 
+         insight.title.toLowerCase().includes(data.kpiName.toLowerCase()))
+      );
+
+      setAiInsights(relevantInsights);
+    } catch (err) {
+      console.error('AI analysis error:', err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [organizationId, territoryId, productId, data.kpiId, data.kpiName]);
 
   // Calculate KPI using the engine
   const calculateKPI = useCallback(async () => {
@@ -95,26 +155,35 @@ export function PharmaKPICardWidget({
       }
 
       // Update KPI data with calculated values
-      setKpiData(prev => ({
-        ...prev,
+      const trendValue = calculation.value > kpiData.value ? 'up' as const : 
+                        calculation.value < kpiData.value ? 'down' as const : 
+                        'stable' as const;
+
+      const newKpiData: PharmaKPICardData = {
+        ...kpiData,
         value: calculation.value,
         confidence: calculation.confidence,
-        trend: calculation.value > prev.value ? 'up' : calculation.value < prev.value ? 'down' : 'stable',
+        trend: trendValue,
         metadata: {
-          ...prev.metadata,
+          ...kpiData.metadata,
           ...calculation.metadata,
           calculatedAt: calculation.calculatedAt.toISOString()
         }
-      }));
+      };
 
+      setKpiData(newKpiData);
       setLastUpdated(new Date());
+
+      // Trigger AI analysis for insights
+      await analyzeKPIWithAI(newKpiData);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to calculate KPI');
       console.error('KPI calculation error:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [organizationId, productId, territoryId, data.kpiId]);
+  }, [organizationId, productId, territoryId, data.kpiId, kpiData, analyzeKPIWithAI]);
 
   // Auto-refresh effect
   useEffect(() => {
@@ -206,15 +275,21 @@ export function PharmaKPICardWidget({
 
       {/* Enhanced KPI Card */}
       <div className="relative">
-        <KPICard
-          title={kpiData.kpiName}
-          value={kpiData.value}
-          trend={kpiData.trend}
-          color={getKPIColor(kpiData.kpiId, kpiData.value)}
-          confidence={kpiData.confidence}
-          metadata={kpiData.metadata}
-          format={kpiData.format}
-        />
+        <div 
+          className={`${onDrillDown ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
+          onClick={onDrillDown ? handleDrillDown : undefined}
+          title={onDrillDown ? 'Click for detailed analytics' : undefined}
+        >
+          <KPICard
+            title={kpiData.kpiName}
+            value={kpiData.value}
+            trend={kpiData.trend}
+            color={getKPIColor(kpiData.kpiId, kpiData.value)}
+            confidence={kpiData.confidence}
+            metadata={kpiData.metadata}
+            format={kpiData.format}
+          />
+        </div>
         
         {/* Refresh Controls */}
         <div className="absolute top-2 right-2 flex items-center space-x-1">
@@ -245,6 +320,42 @@ export function PharmaKPICardWidget({
           <div className="absolute bottom-1 left-2 flex items-center">
             <div className="w-2 h-2 bg-yellow-400 rounded-full mr-1" />
             <span className="text-xs text-gray-500">Low confidence</span>
+          </div>
+        )}
+
+        {/* AI Insights Indicator */}
+        {aiInsights.length > 0 && (
+          <div className="absolute top-1 left-2 flex items-center">
+            <Brain className="h-3 w-3 text-purple-500 mr-1" />
+            <span className="text-xs text-purple-600 font-medium">{aiInsights.length}</span>
+            <div className="ml-1 group relative">
+              <AlertTriangle className="h-3 w-3 text-orange-500" />
+              {/* AI Insights Tooltip */}
+              <div className="absolute bottom-full left-0 mb-2 w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                <div className="font-medium mb-1">AI Insights:</div>
+                {aiInsights.slice(0, 2).map((insight) => (
+                  <div key={insight.id} className="mb-1">
+                    <div className="flex items-center">
+                      {insight.severity === 'high' && <TrendingDown className="h-3 w-3 text-red-400 mr-1" />}
+                      {insight.severity === 'medium' && <TrendingUp className="h-3 w-3 text-yellow-400 mr-1" />}
+                      {insight.severity === 'low' && <Brain className="h-3 w-3 text-blue-400 mr-1" />}
+                      <span className="truncate">{insight.title}</span>
+                    </div>
+                  </div>
+                ))}
+                {aiInsights.length > 2 && (
+                  <div className="text-purple-300">+{aiInsights.length - 2} more insights</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Analysis Loading Indicator */}
+        {isAnalyzing && (
+          <div className="absolute top-1 left-2 flex items-center">
+            <Brain className="h-3 w-3 text-purple-500 animate-pulse mr-1" />
+            <span className="text-xs text-purple-600">Analyzing...</span>
           </div>
         )}
       </div>

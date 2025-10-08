@@ -19,6 +19,8 @@ import { ProductPerformanceWidget } from '@/components/dashboard/widgets/Product
 import { SampleDistributionWidget } from '@/components/dashboard/widgets/SampleDistributionWidget'
 import { FormularyAccessWidget } from '@/components/dashboard/widgets/FormularyAccessWidget';
 import { RefreshCw, Settings, Eye, EyeOff } from 'lucide-react';
+import { useDrillDown } from '@/hooks/useDrillDown';
+import { DrillDownModal } from '@/components/dashboard/widgets/DrillDownModal';
 
 interface EnhancedRoleBasedDashboardProps {
   userRole: UserRole
@@ -138,6 +140,7 @@ function DashboardControls() {
 // Internal Dashboard Component (uses context)
 function DashboardContent({ userRole: initialUserRole, userId }: EnhancedRoleBasedDashboardProps) {
   const dashboard = useDashboard();
+  const drillDown = useDrillDown();
   const [userRole, setUserRole] = useState<UserRole>(initialUserRole || UserRole.SALESMAN)
   const [widgets, setWidgets] = useState<DashboardWidget[]>(DEFAULT_WIDGETS)
   const [isEditMode, setIsEditMode] = useState(false)
@@ -272,6 +275,7 @@ function DashboardContent({ userRole: initialUserRole, userId }: EnhancedRoleBas
           <PharmaKPICardWidget 
             widget={widget} 
             data={widget.data as PharmaKPICardData}
+            onDrillDown={drillDown.openDrillDown}
             {...sharedProps}
           />
         );
@@ -414,6 +418,19 @@ function DashboardContent({ userRole: initialUserRole, userId }: EnhancedRoleBas
           )}
         </div>
       </div>
+
+      {/* Drill-down Modal */}
+      {drillDown.isOpen && drillDown.kpiData && drillDown.kpiId && drillDown.organizationId && (
+        <DrillDownModal
+          isOpen={drillDown.isOpen}
+          onClose={drillDown.closeDrillDown}
+          kpiData={drillDown.kpiData}
+          kpiId={drillDown.kpiId}
+          organizationId={drillDown.organizationId}
+          productId={drillDown.productId}
+          territoryId={drillDown.territoryId}
+        />
+      )}
     </div>
   )
 }

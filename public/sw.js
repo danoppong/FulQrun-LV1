@@ -1,301 +1,375 @@
-// FulQrun Service Worker
-// Provides offline capability and caching for the PWA
+// FulQrun Service Worker - Phase 2.8 Enhanced
+// Provides offline capability, background sync, and PWA features
 
-// const _CACHE_NAME = 'fulqrun-v1.0.0' // Unused variable
-const STATIC_CACHE_NAME = 'fulqrun-static-v1.0.3'
-const DYNAMIC_CACHE_NAME = 'fulqrun-dynamic-v1.0.3'
+const CACHE_NAME = 'fulqrun-v2.8.0';
+const STATIC_CACHE = 'fulqrun-static-v2.8.0';
+const DYNAMIC_CACHE = 'fulqrun-dynamic-v2.8.0';
 
-// Files to cache for offline functionality
+// Assets to cache immediately
 const STATIC_ASSETS = [
   '/',
-  '/dashboard',
-  '/leads',
-  '/opportunities',
-  '/contacts',
-  '/companies',
-  '/auth/login',
+  '/pharmaceutical-bi',
   '/manifest.json',
-  '/offline.html'
-]
-
-// API endpoints to cache
-const API_CACHE_PATTERNS = [
-  '/api/',
-  '/supabase/'
-]
+  '/favicon.ico'
+];
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing...')
+  console.log('[Service Worker] Installing...');
   
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME)
+    caches.open(STATIC_CACHE)
       .then((cache) => {
-        console.log('Service Worker: Caching static assets')
-        return cache.addAll(STATIC_ASSETS)
+        console.log('[Service Worker] Caching static assets');
+        return cache.addAll(STATIC_ASSETS);
       })
       .then(() => {
-        console.log('Service Worker: Installation complete')
-        return self.skipWaiting()
+        console.log('[Service Worker] Static assets cached');
+        return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('Service Worker: Installation failed', error)
+        console.error('[Service Worker] Failed to cache static assets:', error);
       })
-  )
-})
+  );
+});
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activating...')
+  console.log('[Service Worker] Activating...');
   
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
         return Promise.all(
-          cacheNames.map((cacheName) => {
-            console.log('Service Worker: Deleting cache', cacheName)
-            return caches.delete(cacheName)
-          })
-        )
+          cacheNames
+            .filter((cacheName) => {
+              return cacheName !== STATIC_CACHE && 
+                     cacheName !== DYNAMIC_CACHE &&
+                     cacheName !== CACHE_NAME;
+            })
+            .map((cacheName) => {
+              console.log('[Service Worker] Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            })
+        );
       })
       .then(() => {
-        console.log('Service Worker: Activation complete')
-        return self.clients.claim()
+        console.log('[Service Worker] Claiming clients');
+        return self.clients.claim();
       })
-  )
-})
+  );
+});
 
-// Fetch event - serve cached content when offline
+// Fetch event - implement cache strategy
 self.addEventListener('fetch', (event) => {
-  const { request } = event
-  const url = new URL(request.url)
-  
+  const { request } = event;
+  const url = new URL(request.url);
+
   // Skip non-GET requests
   if (request.method !== 'GET') {
-    return
+    return;
   }
-  
-  // Skip chrome-extension and other non-http requests
-  if (!url.protocol.startsWith('http')) {
-    return
+
+  // Skip chrome-extension requests
+  if (url.protocol === 'chrome-extension:') {
+    return;
   }
-  
+
+  // API requests - Network First with Cache Fallback
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      networkFirstStrategy(request)
+    );
+    return;
+  }
+
+  // Static assets - Cache First
+  if (isStaticAsset(url)) {
+    event.respondWith(
+      cacheFirstStrategy(request)
+    );
+    return;
+  }
+
+  // Pages - Stale While Revalidate
+  if (isPage(url)) {
+    event.respondWith(
+      staleWhileRevalidateStrategy(request)
+    );
+    return;
+  }
+
+  // Default - Network First
   event.respondWith(
-    handleRequest(request)
-  )
-})
-
-async function handleRequest(request) {
-  const url = new URL(request.url)
-  
-  try {
-    // Try network first for API requests
-    if (isApiRequest(url)) {
-      return await networkFirstStrategy(request)
-    }
-    
-    // Try cache first for static assets
-    if (isStaticAsset(url)) {
-      return await cacheFirstStrategy(request)
-    }
-    
-    // Default to network first with cache fallback
-    return await networkFirstStrategy(request)
-    
-  } catch (error) {
-    console.error('Service Worker: Request failed', error)
-    
-    // Return offline page for navigation requests
-    if (request.mode === 'navigate') {
-      return await getOfflinePage()
-    }
-    
-    // Return cached version if available
-    const cachedResponse = await caches.match(request)
-    if (cachedResponse) {
-      return cachedResponse
-    }
-    
-    // Return a generic offline response
-    return new Response('Offline - Content not available', {
-      status: 503,
-      statusText: 'Service Unavailable',
-      headers: new Headers({
-        'Content-Type': 'text/plain'
-      })
-    })
-  }
-}
-
-// Cache first strategy - check cache first, then network
-async function cacheFirstStrategy(request) {
-  const cachedResponse = await caches.match(request)
-  
-  if (cachedResponse) {
-    return cachedResponse
-  }
-  
-  try {
-    const networkResponse = await fetch(request)
-    
-    if (networkResponse.ok) {
-      const cache = await caches.open(STATIC_CACHE_NAME)
-      cache.put(request, networkResponse.clone())
-    }
-    
-    return networkResponse
-  } catch (error) {
-    throw error
-  }
-}
-
-// Network first strategy - try network first, then cache
-async function networkFirstStrategy(request) {
-  try {
-    const networkResponse = await fetch(request)
-    
-    if (networkResponse.ok) {
-      const cache = await caches.open(DYNAMIC_CACHE_NAME)
-      cache.put(request, networkResponse.clone())
-    }
-    
-    return networkResponse
-  } catch (error) {
-    const cachedResponse = await caches.match(request)
-    
-    if (cachedResponse) {
-      return cachedResponse
-    }
-    
-    throw error
-  }
-}
-
-// Check if request is for an API endpoint
-function isApiRequest(url) {
-  return API_CACHE_PATTERNS.some(pattern => url.pathname.startsWith(pattern))
-}
-
-// Check if request is for a static asset
-function isStaticAsset(url) {
-  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2']
-  return staticExtensions.some(ext => url.pathname.endsWith(ext))
-}
-
-// Get offline page
-async function getOfflinePage() {
-  const cache = await caches.open(STATIC_CACHE_NAME)
-  const offlinePage = await cache.match('/offline.html')
-  
-  if (offlinePage) {
-    return offlinePage
-  }
-  
-  // Return a simple offline page if not cached
-  return new Response(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>FulQrun - Offline</title>
-      <style>
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          margin: 0;
-          padding: 20px;
-          background: #f9fafb;
-          color: #374151;
-          text-align: center;
-        }
-        .container {
-          max-width: 400px;
-          margin: 100px auto;
-          background: white;
-          padding: 40px;
-          border-radius: 8px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        h1 { color: #4f46e5; margin-bottom: 20px; }
-        p { margin-bottom: 30px; line-height: 1.6; }
-        button {
-          background: #4f46e5;
-          color: white;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 16px;
-        }
-        button:hover { background: #4338ca; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>📱 FulQrun</h1>
-        <h2>You're Offline</h2>
-        <p>It looks like you're not connected to the internet. Some features may not be available, but you can still view cached content.</p>
-        <button onclick="window.location.reload()">Try Again</button>
-      </div>
-    </body>
-    </html>
-  `, {
-    headers: {
-      'Content-Type': 'text/html'
-    }
-  })
-}
+    networkFirstStrategy(request)
+  );
+});
 
 // Background sync for offline actions
 self.addEventListener('sync', (event) => {
-  console.log('Service Worker: Background sync triggered', event.tag)
-  
-  if (event.tag === 'background-sync') {
-    event.waitUntil(doBackgroundSync())
-  }
-})
+  console.log('[Service Worker] Background sync triggered:', event.tag);
 
-async function doBackgroundSync() {
+  if (event.tag === 'fulqrun-sync') {
+    event.waitUntil(
+      syncOfflineActions()
+    );
+  }
+});
+
+// Push notifications
+self.addEventListener('push', (event) => {
+  console.log('[Service Worker] Push notification received');
+
+  if (!event.data) {
+    return;
+  }
+
   try {
-    // Sync offline data when connection is restored
-    console.log('Service Worker: Performing background sync')
-    
-    // You can implement specific sync logic here
-    // For example, sync offline form submissions, cached API calls, etc.
-    
+    const data = event.data.json();
+    const options = {
+      body: data.body || 'FulQrun notification',
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: data.tag || 'fulqrun-notification',
+      data: data.data || {},
+      actions: data.actions || [],
+      requireInteraction: data.requireInteraction || false
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'FulQrun', options)
+    );
   } catch (error) {
-    console.error('Service Worker: Background sync failed', error)
+    console.error('[Service Worker] Failed to show notification:', error);
+  }
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  console.log('[Service Worker] Notification clicked:', event.notification.tag);
+
+  event.notification.close();
+
+  if (event.action) {
+    // Handle action button clicks
+    handleNotificationAction(event.action, event.notification.data);
+  } else {
+    // Handle notification body click
+    event.waitUntil(
+      clients.openWindow('/')
+    );
+  }
+});
+
+// Cache Strategies
+
+async function cacheFirstStrategy(request) {
+  try {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    const networkResponse = await fetch(request);
+    if (networkResponse.status === 200) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    console.error('[Service Worker] Cache first strategy failed:', error);
+    return new Response('Offline - content not available', {
+      status: 503,
+      statusText: 'Service Unavailable'
+    });
   }
 }
 
-// Push notification handling (for future implementation)
-self.addEventListener('push', (event) => {
-  console.log('Service Worker: Push notification received')
-  
-  if (event.data) {
-    const data = event.data.json()
+async function networkFirstStrategy(request) {
+  try {
+    const networkResponse = await fetch(request);
     
-    const options = {
-      body: data.body || 'New notification from FulQrun',
-      icon: '/icon.svg',
-      badge: '/icon.svg',
-      tag: data.tag || 'fulqrun-notification',
-      data: data.data || {}
+    if (networkResponse.status === 200) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, networkResponse.clone());
     }
     
-    event.waitUntil(
-      self.registration.showNotification(data.title || 'FulQrun', options)
-    )
-  }
-})
+    return networkResponse;
+  } catch (_error) {
+    console.log('[Service Worker] Network failed, trying cache:', request.url);
+    
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
 
-// Notification click handling
-self.addEventListener('notificationclick', (event) => {
-  console.log('Service Worker: Notification clicked')
-  
-  event.notification.close()
-  
-  event.waitUntil(
-    clients.openWindow('/dashboard')
-  )
-})
+    // Return offline page for navigation requests
+    if (request.mode === 'navigate') {
+      const offlineResponse = await caches.match('/');
+      if (offlineResponse) {
+        return offlineResponse;
+      }
+    }
+
+    return new Response('Offline - content not available', {
+      status: 503,
+      statusText: 'Service Unavailable'
+    });
+  }
+}
+
+async function staleWhileRevalidateStrategy(request) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+  const cachedResponse = await cache.match(request);
+
+  const fetchPromise = fetch(request)
+    .then((networkResponse) => {
+      if (networkResponse.status === 200) {
+        cache.put(request, networkResponse.clone());
+      }
+      return networkResponse;
+    })
+    .catch(() => cachedResponse);
+
+  return cachedResponse || fetchPromise;
+}
+
+// Utility Functions
+
+function isStaticAsset(url) {
+  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.woff', '.woff2'];
+  return staticExtensions.some(ext => url.pathname.endsWith(ext));
+}
+
+function isPage(url) {
+  return url.pathname === '/' || 
+         url.pathname.startsWith('/pharmaceutical-bi') ||
+         url.pathname.includes('.');
+}
+
+async function syncOfflineActions() {
+  try {
+    console.log('[Service Worker] Syncing offline actions...');
+
+    // Get offline actions from IndexedDB
+    const db = await openDB();
+    const transaction = db.transaction(['offline_actions'], 'readonly');
+    const store = transaction.objectStore('offline_actions');
+    const actions = await getAllFromStore(store);
+
+    console.log(`[Service Worker] Found ${actions.length} offline actions to sync`);
+
+    for (const action of actions) {
+      try {
+        await syncAction(action);
+        
+        // Remove synced action
+        const deleteTransaction = db.transaction(['offline_actions'], 'readwrite');
+        const deleteStore = deleteTransaction.objectStore('offline_actions');
+        await deleteStore.delete(action.id);
+        
+        console.log('[Service Worker] Synced action:', action.id);
+      } catch (error) {
+        console.error('[Service Worker] Failed to sync action:', action.id, error);
+      }
+    }
+
+    db.close();
+  } catch (error) {
+    console.error('[Service Worker] Background sync failed:', error);
+  }
+}
+
+async function syncAction(action) {
+  const { endpoint, data, method } = action;
+
+  const response = await fetch(endpoint, {
+    method: method || 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Sync failed: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+function handleNotificationAction(action, data) {
+  switch (action) {
+    case 'view':
+      clients.openWindow(data.url || '/');
+      break;
+    case 'dismiss':
+      // Action already handled by closing notification
+      break;
+    default:
+      console.log('[Service Worker] Unknown notification action:', action);
+  }
+}
+
+// IndexedDB helpers
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('fulqrun-offline', 1);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      
+      if (!db.objectStoreNames.contains('offline_actions')) {
+        const store = db.createObjectStore('offline_actions', { keyPath: 'id' });
+        store.createIndex('timestamp', 'timestamp');
+        store.createIndex('type', 'type');
+      }
+      
+      if (!db.objectStoreNames.contains('cache_data')) {
+        const cacheStore = db.createObjectStore('cache_data', { keyPath: 'key' });
+        cacheStore.createIndex('timestamp', 'timestamp');
+        cacheStore.createIndex('entity_type', 'entity_type');
+      }
+    };
+  });
+}
+
+function getAllFromStore(store) {
+  return new Promise((resolve, reject) => {
+    const request = store.getAll();
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+// Message handling from main thread
+self.addEventListener('message', (event) => {
+  const { type } = event.data;
+
+  switch (type) {
+    case 'SKIP_WAITING':
+      self.skipWaiting();
+      break;
+    case 'GET_VERSION':
+      event.ports[0].postMessage({ version: CACHE_NAME });
+      break;
+    case 'CLEAR_CACHE':
+      clearAllCaches()
+        .then(() => event.ports[0].postMessage({ success: true }))
+        .catch((error) => event.ports[0].postMessage({ success: false, error: error.message }));
+      break;
+    default:
+      console.log('[Service Worker] Unknown message type:', type);
+  }
+});
+
+async function clearAllCaches() {
+  const cacheNames = await caches.keys();
+  return Promise.all(
+    cacheNames.map(cacheName => caches.delete(cacheName))
+  );
+}
