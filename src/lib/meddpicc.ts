@@ -529,7 +529,7 @@ export interface MEDDPICCAssessment {
 export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCAssessment => {
   const isDevelopment = process.env.NODE_ENV === 'development'
   
-  if (isDevelopment) {
+  if (isDevelopment && responses && responses.length > 0) {
     console.log('=== MEDDPICC Scoring Debug ===')
     console.log('Input responses:', responses)
     console.log('MEDDPICC_CONFIG available:', !!MEDDPICC_CONFIG)
@@ -561,15 +561,17 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
     let _answeredQuestions = 0
     const totalQuestions = pillar.questions.length
     
-    if (isDevelopment) {
+    const pillarResponses = responses.filter(r => r.pillarId === pillar.id)
+    
+    if (isDevelopment && pillarResponses.length > 0) {
       console.log(`\n--- Processing Pillar: ${pillar.id} ---`)
       console.log('Pillar questions:', pillar.questions.map(q => ({ id: q.id, text: q.text })))
-      console.log('Available responses for this pillar:', responses.filter(r => r.pillarId === pillar.id))
+      console.log('Available responses for this pillar:', pillarResponses)
     }
     
     for (const question of pillar.questions) {
       const response = responses.find(r => r.pillarId === pillar.id && r.questionId === question.id)
-      if (isDevelopment) {
+      if (isDevelopment && response) {
         console.log(`Looking for response to question ${question.id}:`, response)
       }
       
@@ -666,7 +668,7 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
     totalWeightedScore += weightedScore
     totalWeight += pillarWeight
     
-    if (isDevelopment) {
+    if (isDevelopment && responses && responses.length > 0) {
       console.log(`Pillar ${pillar.id}: ${pillarScore}% × ${pillarWeight} = ${weightedScore.toFixed(2)}`)
     }
   }
@@ -675,7 +677,7 @@ export const calculateMEDDPICCScore = (responses: MEDDPICCResponse[]): MEDDPICCA
   const overallScore = totalWeight > 0 ? Math.round((totalWeightedScore / totalWeight) * 100) : 0
   const litmusTestScore = Math.round((litmusScore / litmusMaxScore) * 100)
   
-  if (isDevelopment) {
+  if (isDevelopment && responses && responses.length > 0) {
     console.log(`Total weighted score: ${totalWeightedScore.toFixed(2)}`)
     console.log(`Total weight: ${totalWeight}`)
     console.log(`Overall score: ${overallScore}%`)

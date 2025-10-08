@@ -63,7 +63,7 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
     setValue,
     reset
   } = useForm<PEAKFormData>({
-    resolver: zodResolver(peakSchema),
+    resolver: zodResolver(peakFormSchema),
     defaultValues: {
       peak_stage: 'prospecting',
       deal_value: undefined,

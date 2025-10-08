@@ -20,6 +20,10 @@ const MEDDPICCForm = dynamic(() => import('@/components/forms/MEDDPICCForm'), {
   loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
   ssr: false
 })
+const MEDDPICCQualification = dynamic(() => import('@/components/meddpicc/MEDDPICCQualification'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  ssr: false
+})
 const MEDDPICCDashboard = dynamic(() => import('@/components/meddpicc').then(mod => ({ default: mod.MEDDPICCDashboard })), {
   loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
   ssr: false
@@ -685,96 +689,139 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
 
             {/* MEDDPICC Qualification */}
             <MEDDPICCErrorBoundary>
-              {showComprehensiveMEDDPICC ? (
-                <div className="space-y-6">
-                  {/* Toggle Button */}
-                  <div className="bg-white shadow rounded-lg p-6">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900">MEDDPICC Qualification - Comprehensive View</h3>
-                      <button
-                        type="button"
-                        onClick={() => setShowComprehensiveMEDDPICC(false)}
-                        className="text-sm text-primary hover:text-primary/80"
-                      >
-                        Switch to Simple View
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* MEDDPICC Dashboard */}
-                  <MEDDPICCDashboard
-                    opportunityId={opportunityId || ''}
-                    assessment={meddpiccAssessment}
-                  />
-                  
-                  {/* PEAK Integration */}
-                  <MEDDPICCPEAKIntegration
-                    opportunityId={opportunityId || ''}
-                    currentPEAKStage={peakData.peak_stage}
-                    assessment={meddpiccAssessment}
-                    onStageAdvance={async (fromStage, toStage) => {
-                      try {
-                        await opportunityAPI.updatePeakStage(opportunityId!, toStage as string)
-                        setPeakData(prev => ({ ...prev, peak_stage: toStage as string }))
-                      } catch (error) {
-                        console.error('Error advancing stage:', error)
+              <div className="bg-white shadow rounded-lg p-6">
+                {/* Header with Toggle */}
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      MEDDPICC Qualification
+                      {showComprehensiveMEDDPICC && (
+                        <span className="ml-2 text-sm text-gray-500">- Comprehensive View</span>
+                      )}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {showComprehensiveMEDDPICC 
+                        ? 'Complete questionnaire with detailed scoring' 
+                        : 'Simple text-based qualification form'
                       }
-                    }}
-                  />
-                  
-                  {/* Comprehensive MEDDPICC Form */}
-                  <MEDDPICCForm
-                    opportunityId={opportunityId}
-                    initialData={meddpiccData}
-                    onSave={handleMeddpiccSave}
-                    onSuccess={handleMeddpiccSuccess}
-                    loading={loading}
-                    useComprehensiveView={true}
-                  />
-                </div>
-              ) : (
-                <div className="bg-white shadow rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">MEDDPICC Qualification</h3>
-                    <div className="flex space-x-2">
+                    </p>
+                    {mode === 'edit' && lastSaved && (
+                      <p className="text-xs text-green-600 mt-1">
+                        Last saved: {lastSaved.toLocaleTimeString()}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        console.log('Toggling MEDDPICC view from', showComprehensiveMEDDPICC, 'to', !showComprehensiveMEDDPICC)
+                        setShowComprehensiveMEDDPICC(!showComprehensiveMEDDPICC)
+                      }}
+                      className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700 transition-colors"
+                    >
+                      {showComprehensiveMEDDPICC ? 'Switch to Simple' : 'Switch to Comprehensive'}
+                    </button>
+                    {mode === 'edit' && opportunityId && (
                       <button
                         type="button"
-                        onClick={() => setShowComprehensiveMEDDPICC(!showComprehensiveMEDDPICC)}
-                        className="text-sm text-primary hover:text-primary/80"
+                        onClick={saveMeddpiccData}
+                        disabled={isSavingRef.current}
+                        className="bg-green-600 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700 disabled:opacity-50 transition-colors"
                       >
-                        {showComprehensiveMEDDPICC ? 'Simple View' : 'Comprehensive View'}
+                        {isSavingRef.current ? 'Saving...' : 'Save MEDDPICC'}
                       </button>
-                    </div>
+                    )}
                   </div>
-                  
-                  <MEDDPICCForm
-                    initialData={meddpiccData}
-                    onSave={handleMeddpiccSave}
-                    onSuccess={handleMeddpiccSuccess}
-                    loading={loading}
-                  />
                 </div>
-              )}
-            </MEDDPICCErrorBoundary>
 
-            {/* Manual save buttons for MEDDPICC */}
-            {mode === 'edit' && opportunityId && (
-              <div className="bg-white shadow rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
-                    {lastSaved ? `Last saved: ${lastSaved.toLocaleTimeString()}` : 'Changes not saved'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={saveMeddpiccData}
-                    disabled={isSavingRef.current}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
-                  >
-                    {isSavingRef.current ? 'Saving...' : 'Save MEDDPICC Data'}
-                  </button>
-                </div>
+                {/* MEDDPICC Content */}
+                {showComprehensiveMEDDPICC ? (
+                  <div className="space-y-6">
+                    {/* Comprehensive View with Questionnaire */}
+                    <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 p-4 rounded-r-lg">
+                      <h4 className="font-medium text-blue-900">Comprehensive MEDDPICC Assessment</h4>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Complete the detailed questionnaire below for accurate scoring and insights.
+                      </p>
+                    </div>
+                    
+                    {opportunityId ? (
+                      <React.Suspense 
+                        fallback={
+                          <div className="flex items-center justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <span className="ml-2 text-gray-600">Loading comprehensive questionnaire...</span>
+                          </div>
+                        }
+                      >
+                        <MEDDPICCQualification
+                          opportunityId={opportunityId}
+                          initialData={[]} // Will load from database
+                          onSave={(assessment) => {
+                            console.log('MEDDPICC Assessment saved:', assessment)
+                            setLastSaved(new Date())
+                            // Update local state if needed
+                          }}
+                          onStageGateReady={(gate, isReady) => {
+                            console.log(`Stage gate ${gate} is ${isReady ? 'ready' : 'not ready'}`)
+                          }}
+                          className="mt-4"
+                        />
+                      </React.Suspense>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>Save the opportunity first to use the comprehensive MEDDPICC questionnaire.</p>
+                      </div>
+                    )}
+                    
+                    {/* MEDDPICC Dashboard */}
+                    {opportunityId && (
+                      <MEDDPICCDashboard
+                        opportunityId={opportunityId}
+                        assessment={meddpiccAssessment}
+                      />
+                    )}
+                    
+                    {/* PEAK Integration */}
+                    {opportunityId && (
+                      <MEDDPICCPEAKIntegration
+                        opportunityId={opportunityId}
+                        currentPEAKStage={peakData.peak_stage}
+                        assessment={meddpiccAssessment}
+                        onStageAdvance={async (fromStage, toStage) => {
+                          try {
+                            await opportunityAPI.updatePeakStage(opportunityId, toStage as string)
+                            setPeakData(prev => ({ ...prev, peak_stage: toStage as string }))
+                          } catch (error) {
+                            console.error('Error advancing stage:', error)
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Simple View */}
+                    <div className="border-l-4 border-gray-400 pl-4 bg-gray-50 p-4 rounded-r-lg">
+                      <h4 className="font-medium text-gray-900">Simple MEDDPICC Form</h4>
+                      <p className="text-sm text-gray-700 mt-1">
+                        Quick text-based fields for basic MEDDPICC qualification.
+                      </p>
+                    </div>
+                    
+                    <MEDDPICCForm
+                      opportunityId={opportunityId}
+                      initialData={meddpiccData}
+                      onSave={handleMeddpiccSave}
+                      onSuccess={handleMeddpiccSuccess}
+                      loading={loading}
+                      useComprehensiveView={false}
+                    />
+                  </div>
+                )}
               </div>
-            )}
+            </MEDDPICCErrorBoundary>
 
             <div className="flex justify-end space-x-3">
               <button
