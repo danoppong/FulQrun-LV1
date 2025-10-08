@@ -74,7 +74,15 @@ export const ROLE_PERMISSIONS = {
 }
 
 export function getUserPermissions(role: UserRole) {
-  return ROLE_PERMISSIONS[role]
+  const permissions = ROLE_PERMISSIONS[role];
+  
+  // Return default permissions if role is not found
+  if (!permissions) {
+    console.warn(`Unknown role: ${role}, using default permissions`);
+    return ROLE_PERMISSIONS[UserRole.SALESMAN];
+  }
+  
+  return permissions;
 }
 
 export function canUserAccessLevel(userRole: UserRole, targetLevel: UserRole): boolean {

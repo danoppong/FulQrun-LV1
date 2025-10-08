@@ -51,6 +51,11 @@ const navigation: MenuItem[] = [
     icon: HomeIcon 
   },
   { 
+    name: 'Enhanced Dashboard (Beta)', 
+    href: '/enhanced-dashboard', 
+    icon: ChartBarSquareIcon 
+  },
+  { 
     name: 'Account', 
     icon: BriefcaseIcon,
     submenu: [
