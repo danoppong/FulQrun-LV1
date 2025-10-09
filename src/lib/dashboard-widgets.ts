@@ -63,7 +63,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
     id: 'sales-chart',
     type: WidgetType.SALES_CHART,
     title: 'Sales Performance',
-    position: { x: 0, y: 2, w: 6, h: 4 },
+    position: { x: 0, y: 2, w: 12, h: 3 },
     data: {
       labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
       datasets: [
@@ -76,7 +76,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
     id: 'team-performance',
     type: WidgetType.TEAM_PERFORMANCE,
     title: 'Team Performance',
-    position: { x: 6, y: 2, w: 6, h: 4 },
+    position: { x: 0, y: 5, w: 12, h: 3 },
     data: {
       teamMembers: [
         { name: 'John Smith', quota: 100000, achieved: 87000, percentage: 87 },
@@ -89,7 +89,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
     id: 'pipeline-overview',
     type: WidgetType.PIPELINE_OVERVIEW,
     title: 'Pipeline Overview',
-    position: { x: 0, y: 6, w: 4, h: 4 },
+    position: { x: 0, y: 8, w: 12, h: 3 },
     data: {
       stages: [
         { name: 'Prospecting', count: 45, value: 180000 },
@@ -104,7 +104,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
     id: 'recent-activity',
     type: WidgetType.RECENT_ACTIVITY,
     title: 'Recent Activity',
-    position: { x: 4, y: 6, w: 4, h: 4 },
+    position: { x: 0, y: 11, w: 12, h: 3 },
     data: {
       activities: [
         { type: 'lead', message: 'New lead: Acme Corp', time: '2h ago' },
@@ -117,7 +117,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
     id: 'meddpicc-scoring',
     type: WidgetType.MEDDPICC_SCORING,
     title: 'MEDDPICC Scoring',
-    position: { x: 8, y: 6, w: 4, h: 4 },
+    position: { x: 0, y: 14, w: 12, h: 3 },
     data: {
       opportunities: [
         { name: 'Enterprise Deal', score: 85, status: 'High' },

@@ -25,6 +25,9 @@ export interface DashboardContextState {
   defaultPeriodDays: number;
   autoRefresh: boolean;
   refreshInterval: number;
+  // Global filters
+  productId?: string;
+  territoryId?: string;
   
   // KPI data cache
   kpiCache: Map<string, KPICacheEntry>;
@@ -112,6 +115,37 @@ export function DashboardProvider({ children, initialSettings = {} }: DashboardP
 
     initializeContext();
   }, []);
+
+  // Hydrate settings from localStorage (client-side persistence)
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem('dashboard:settings:v1') : null
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<DashboardSettings>
+        setSettings(prev => ({ ...prev, ...parsed }))
+      }
+    } catch (_e) {
+      // ignore corrupted storage
+    }
+  }, [])
+
+  // Persist settings to localStorage when they change
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const toPersist: Partial<DashboardSettings> = {
+          defaultPeriodDays: settings.defaultPeriodDays,
+          autoRefresh: settings.autoRefresh,
+          refreshInterval: settings.refreshInterval,
+          productId: settings.productId,
+          territoryId: settings.territoryId,
+        }
+        window.localStorage.setItem('dashboard:settings:v1', JSON.stringify(toPersist))
+      }
+    } catch (_e) {
+      // ignore quota or serialization errors
+    }
+  }, [settings])
 
   // Generate cache key for KPI
   const generateCacheKey = useCallback((kpiId: string, params: Partial<KPICalculationParams>): string => {
@@ -270,6 +304,8 @@ export function DashboardProvider({ children, initialSettings = {} }: DashboardP
     defaultPeriodDays: settings.defaultPeriodDays,
     autoRefresh: settings.autoRefresh,
     refreshInterval: settings.refreshInterval,
+    productId: settings.productId,
+    territoryId: settings.territoryId,
     kpiCache,
     isInitializing,
     calculateKPI,

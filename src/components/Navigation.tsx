@@ -51,8 +51,8 @@ const navigation: MenuItem[] = [
     icon: HomeIcon 
   },
   { 
-    name: 'Enhanced Dashboard (Beta)', 
-    href: '/enhanced-dashboard', 
+    name: 'Legacy Dashboard', 
+    href: '/legacy-dashboard', 
     icon: ChartBarSquareIcon 
   },
   { 

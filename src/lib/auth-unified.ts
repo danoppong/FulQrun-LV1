@@ -1,20 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseConfig } from '@/lib/config'
-import { Database } from '@/lib/supabase'
-import { getSupabaseBrowserClient, createSupabaseServerClient } from '@/lib/supabase-singleton';
+import type { Database } from '@/lib/types/supabase'
+import { getSupabaseBrowserClient } from '@/lib/supabase-singleton';
 
 // Safe import for server-side only
-let cookies: unknown = null
-try {
-  if (typeof window === 'undefined') {
-    const { cookies: nextCookies } = await import('next/headers')
-    cookies = nextCookies
-  }
-} catch (error) {
-  // cookies not available in client context or server context
-  console.warn('Cookies not available:', error)
-}
+// Note: In Next.js 15, cookies() is async and must be awaited in the same request scope.
+// Do NOT capture cookies() globally; instead, resolve it inside request-scoped functions.
 
 // Types for better type safety
 export type AuthUser = {
@@ -50,20 +42,15 @@ export class AuthService {
   /**
    * Get server-side Supabase client for API routes
    */
-  static getServerClient() {
+  static async getServerClient() {
     if (!supabaseConfig.isConfigured) {
       return getSupabaseBrowserClient() // Fall back to browser client if not configured
     }
 
-    // Check if cookies are available
-    if (!cookies) {
-      console.warn('Cookies not available, falling back to browser client')
-      return getSupabaseBrowserClient()
-    }
-
     try {
-      const cookieStore = cookies()
-      
+      const { cookies: nextCookies } = await import('next/headers')
+      const cookieStore = await nextCookies()
+
       return createServerClient(
         supabaseConfig.url!,
         supabaseConfig.anonKey!,
@@ -72,7 +59,7 @@ export class AuthService {
             get(name: string) {
               return cookieStore.get(name)?.value
             },
-            set(name: string, value: string, options: any) {
+            set(name: string, value: string, options: Record<string, unknown>) {
               try {
                 cookieStore.set({ name, value, ...options })
               } catch (error) {
@@ -80,7 +67,7 @@ export class AuthService {
                 console.warn('Failed to set cookie:', name, error)
               }
             },
-            remove(name: string, options: any) {
+            remove(name: string, options: Record<string, unknown>) {
               try {
                 cookieStore.set({ name, value: '', ...options })
               } catch (error) {
@@ -122,45 +109,43 @@ export class AuthService {
           get(name: string) {
             return request.cookies.get(name)?.value
           },
-          set(name: string, value: string, options: { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: string }) {
-            request.cookies.set({
-              name,
-              value,
-              ...options,
-            })
+          set(name: string, value: string, options: { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: 'lax' | 'strict' | 'none' }) {
+            request.cookies.set({ name, value, ...options })
             response = NextResponse.next({
               request: {
                 headers: request.headers,
               },
             })
-            response.cookies.set({
-              name,
-              value,
-              ...options,
-            })
+            response.cookies.set({ name, value, ...options })
           },
-          remove(name: string, options: { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: string }) {
-            request.cookies.set({
-              name,
-              value: '',
-              ...options,
-            })
+          remove(name: string, options: { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: 'lax' | 'strict' | 'none' }) {
+            request.cookies.set({ name, value: '', ...options })
             response = NextResponse.next({
               request: {
                 headers: request.headers,
               },
             })
-            response.cookies.set({
-              name,
-              value: '',
-              ...options,
-            })
+            response.cookies.set({ name, value: '', ...options })
           },
         },
       }
     )
 
     return { supabase, response }
+  }
+
+  // Minimal mock client for when Supabase is not configured
+  private static createMockClient() {
+    return {
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
+        signOut: async () => ({ error: null }),
+      },
+      from: (_table: string) => ({
+        select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
+      }),
+    } as unknown
   }
 
   /**
@@ -189,7 +174,7 @@ export class AuthService {
    * Get current user on server side
    */
   static async getCurrentUserServer(): Promise<AuthUser | null> {
-    const supabase = this.getServerClient()
+    const supabase = await this.getServerClient()
     if (!supabase) return null
     const { data: { user }, error } = await supabase.auth.getUser()
     

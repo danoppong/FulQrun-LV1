@@ -98,7 +98,12 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
   }
 
   const getRoleSpecificWidgets = () => {
-    // Filter widgets based on user role and permissions
+    // Admin users have access to ALL widgets
+    if (userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN) {
+      return widgets; // All widgets available for admin users
+    }
+    
+    // Filter widgets based on user role and permissions for non-admin users
     return widgets.filter(widget => {
       switch (userRole) {
         case UserRole.SALESMAN:

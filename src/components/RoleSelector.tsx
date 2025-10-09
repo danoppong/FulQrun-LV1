@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { UserRole } from '@/lib/roles';
 
 interface RoleSelectorProps {
@@ -9,6 +9,24 @@ interface RoleSelectorProps {
 
 const RoleSelector = ({ currentRole, onRoleChange }: RoleSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
 
   const roles = [
     { value: UserRole.SALESMAN, label: 'Salesman', description: 'Individual contributor' },
@@ -21,7 +39,7 @@ const RoleSelector = ({ currentRole, onRoleChange }: RoleSelectorProps) => {
   const currentRoleInfo = roles.find(role => role.value === currentRole)
 
   return (
-    <div className="relative">
+    <div className="relative z-50" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -35,7 +53,7 @@ const RoleSelector = ({ currentRole, onRoleChange }: RoleSelectorProps) => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg z-50 border border-gray-200">
+        <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-2xl z-[9999] border border-gray-200 ring-1 ring-black ring-opacity-5">
           <div className="py-1">
             <div className="px-4 py-2 border-b border-gray-100">
               <h3 className="text-sm font-medium text-gray-900">Switch Role (Demo)</h3>

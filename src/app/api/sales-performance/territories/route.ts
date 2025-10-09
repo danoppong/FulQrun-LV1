@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase-server'
 import { AuthService } from '@/lib/auth-unified';
 
 export const dynamic = 'force-dynamic'
@@ -10,9 +9,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const organizationId = searchParams.get('organizationId') || '9ed327f2-c46a-445a-952b-70addaee33b8'
 
-    const supabase = createServerClient()
+  const supabase = await AuthService.getServerClient()
 
-    const { data: territories, error } = await supabase
+    const { data: territories, error } = await (supabase as unknown as {
+      from: (table: string) => {
+        select: (cols: string) => {
+          eq: (col: string, val: string) => { order: (col: string, opts: { ascending: boolean }) => Promise<{ data: unknown; error: unknown }> }
+        }
+      }
+    })
       .from('sales_territories')
       .select(`
         *,
@@ -86,9 +91,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+  const supabase = await AuthService.getServerClient()
 
-    const { data: territory, error } = await supabase
+    const { data: territory, error } = await (supabase as unknown as {
+      from: (table: string) => {
+        insert: (values: unknown) => { select: () => { single: () => Promise<{ data: unknown; error: unknown }> } }
+      }
+    })
       .from('sales_territories')
       .insert({
         name,

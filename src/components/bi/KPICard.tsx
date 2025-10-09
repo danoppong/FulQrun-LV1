@@ -16,6 +16,8 @@ interface KPICardProps {
   metadata?: Record<string, unknown>;
   format?: 'number' | 'percentage' | 'currency' | 'ratio';
   precision?: number;
+  onClick?: () => void;
+  clickable?: boolean;
 }
 
 export function KPICard({
@@ -26,7 +28,9 @@ export function KPICard({
   confidence,
   metadata = {},
   format = 'number',
-  precision = 0
+  precision = 0,
+  onClick,
+  clickable = false
 }: KPICardProps) {
   const formatValue = (val: number): string => {
     switch (format) {
@@ -73,7 +77,12 @@ export function KPICard({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow">
+    <div 
+      className={`bg-white rounded-lg shadow p-6 transition-shadow ${
+        clickable ? 'hover:shadow-lg cursor-pointer hover:bg-gray-50' : 'hover:shadow-md'
+      }`}
+      onClick={clickable ? onClick : undefined}
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-gray-900 truncate">{title}</h3>
         <div className="flex items-center space-x-2">
@@ -91,7 +100,7 @@ export function KPICard({
           </p>
           {metadata.periodStart && metadata.periodEnd && (
             <p className="text-xs text-gray-500 mt-1">
-              {new Date(metadata.periodStart).toLocaleDateString()} - {new Date(metadata.periodEnd).toLocaleDateString()}
+              {new Date(metadata.periodStart as string | number | Date).toLocaleDateString()} - {new Date(metadata.periodEnd as string | number | Date).toLocaleDateString()}
             </p>
           )}
         </div>
@@ -109,52 +118,52 @@ export function KPICard({
           <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
             {metadata.productId && (
               <div>
-                <span className="font-medium">Product:</span> {metadata.productId}
+                <span className="font-medium">Product:</span> {String(metadata.productId)}
               </div>
             )}
             {metadata.territoryId && (
               <div>
-                <span className="font-medium">Territory:</span> {metadata.territoryId}
+                <span className="font-medium">Territory:</span> {String(metadata.territoryId)}
               </div>
             )}
             {metadata.totalHCPs && (
               <div>
-                <span className="font-medium">Total HCPs:</span> {metadata.totalHCPs}
+                <span className="font-medium">Total HCPs:</span> {Number(metadata.totalHCPs)}
               </div>
             )}
             {metadata.engagedHCPs && (
               <div>
-                <span className="font-medium">Engaged:</span> {metadata.engagedHCPs}
+                <span className="font-medium">Engaged:</span> {Number(metadata.engagedHCPs)}
               </div>
             )}
             {metadata.totalCalls && (
               <div>
-                <span className="font-medium">Total Calls:</span> {metadata.totalCalls}
+                <span className="font-medium">Total Calls:</span> {Number(metadata.totalCalls)}
               </div>
             )}
             {metadata.uniqueHCPs && (
               <div>
-                <span className="font-medium">Unique HCPs:</span> {metadata.uniqueHCPs}
+                <span className="font-medium">Unique HCPs:</span> {Number(metadata.uniqueHCPs)}
               </div>
             )}
             {metadata.totalSamples && (
               <div>
-                <span className="font-medium">Samples:</span> {metadata.totalSamples}
+                <span className="font-medium">Samples:</span> {Number(metadata.totalSamples)}
               </div>
             )}
             {metadata.nrx && (
               <div>
-                <span className="font-medium">NRx:</span> {metadata.nrx}
+                <span className="font-medium">NRx:</span> {Number(metadata.nrx)}
               </div>
             )}
             {metadata.totalAccounts && (
               <div>
-                <span className="font-medium">Accounts:</span> {metadata.totalAccounts}
+                <span className="font-medium">Accounts:</span> {Number(metadata.totalAccounts)}
               </div>
             )}
             {metadata.favorableAccounts && (
               <div>
-                <span className="font-medium">Favorable:</span> {metadata.favorableAccounts}
+                <span className="font-medium">Favorable:</span> {Number(metadata.favorableAccounts)}
               </div>
             )}
           </div>
