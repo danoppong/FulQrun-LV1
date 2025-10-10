@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "src/app/api/dashboard/salesman-kpis/route.ts",
+    "src/lib/analytics/enterprise-analytics.ts",
+    "src/components/dashboard/widgets/DrillDownModal.tsx",
+    "src/lib/services/salesman-kpi-engine.ts",
+    "src/lib/api/companies.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "src/tests",
+    "src/__tests__"
+  ]
+}

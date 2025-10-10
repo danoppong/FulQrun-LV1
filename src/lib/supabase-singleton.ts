@@ -7,19 +7,19 @@
  * IMPORTANT: All client-side Supabase access should import from this file.
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { supabaseConfig } from '@/lib/config'
 import type { Database } from '@/lib/types/supabase';
 
 // Global singleton client instance for browser
-let browserClientInstance: ReturnType<typeof createClient<Database>> | null = null
+let browserClientInstance: SupabaseClient<Database> | null = null
 
 /**
  * Get the global singleton Supabase client for browser/client-side use
  * This ensures only ONE GoTrueClient is created per browser context
  */
-export function getSupabaseBrowserClient() {
+export function getSupabaseBrowserClient(): SupabaseClient<Database> {
   // Return existing instance if already created
   if (browserClientInstance) {
     return browserClientInstance
@@ -34,7 +34,7 @@ export function getSupabaseBrowserClient() {
 
   // Create the singleton instance
   try {
-    browserClientInstance = createClient<Database>(
+  browserClientInstance = createClient<Database>(
       supabaseConfig.url!,
       supabaseConfig.anonKey!,
       {
@@ -64,7 +64,7 @@ export function createSupabaseServerClient(cookieStore: {
   get: (name: string) => { value: string } | undefined
   set: (name: string, value: string, options: CookieOptions) => void
   remove: (name: string, options: CookieOptions) => void
-}) {
+}): SupabaseClient<Database> {
   if (!supabaseConfig.isConfigured) {
     return createMockBrowserClient()
   }
@@ -80,14 +80,14 @@ export function createSupabaseServerClient(cookieStore: {
         set(name: string, value: string, options: CookieOptions) {
           try {
             cookieStore.set(name, value, options)
-          } catch (error) {
+          } catch (_error) {
             // Cookie setting can fail in some contexts (e.g., middleware)
           }
         },
         remove(name: string, options: CookieOptions) {
           try {
             cookieStore.remove(name, options)
-          } catch (error) {
+          } catch (_error) {
             // Cookie removal can fail in some contexts
           }
         },
@@ -109,7 +109,7 @@ export function resetSupabaseBrowserClient() {
 /**
  * Create a mock client for development/testing when Supabase is not configured
  */
-function createMockBrowserClient() {
+function createMockBrowserClient(): SupabaseClient<Database> {
   return {
     auth: {
       getUser: async () => ({
@@ -133,7 +133,7 @@ function createMockBrowserClient() {
         data: { provider: null as unknown, url: null as unknown },
         error: { message: 'Supabase not configured' } as unknown,
       }),
-      onAuthStateChange: (_callback: (event: string, session: any) => void) => ({
+      onAuthStateChange: (_callback: (event: string, session: unknown) => void) => ({
         data: { subscription: { unsubscribe: () => {} } },
       }),
     },
@@ -164,5 +164,5 @@ function createMockBrowserClient() {
         eq: async () => ({ error: { message: 'Database not configured' } }),
       }),
     }),
-  } as unknown
+  } as unknown as SupabaseClient<Database>
 }

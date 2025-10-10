@@ -9,7 +9,7 @@ import { X, TrendingUp, TrendingDown, Minus, Calendar, MapPin, Package } from 'l
 import { PharmaKPICardData } from '@/lib/types/dashboard';
 import { DetailedAnalytics } from '../analytics/DetailedAnalytics';
 import { HistoricalChart } from '../charts/HistoricalChart';
-import { TrendAnalysis } from '../analytics/TrendAnalysis';
+import { TrendAnalysis } from '@/components/dashboard/analytics/TrendAnalysis';
 import { TimePeriodSelector, TimePeriod } from '../controls/TimePeriodSelector';
 import { useTimePeriod, TimePeriodPreset } from '@/hooks/useTimePeriod';
 

@@ -6,6 +6,7 @@ import { CriticalErrorBoundary } from '@/components/error-boundaries/CriticalErr
 import { PerformanceToggle } from '@/components/performance/PerformanceToggle'
 import ThemeProvider from '@/components/ThemeProvider';
 import DevelopmentBanner from '@/components/DevelopmentBanner';
+import AuthSessionGuard from '@/components/AuthSessionGuard';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -86,6 +87,7 @@ export default function RootLayout({
       >
         <CriticalErrorBoundary context="Application Root">
           <ThemeProvider>
+            <AuthSessionGuard />
             <DevelopmentBanner />
             <ConditionalLayout>
               {children}

@@ -1,8 +1,9 @@
 // src/app/dashboard/page.tsx
-// Main dashboard page - now using Enhanced Dashboard
-// Replaced legacy dashboard with enhanced version for better UX
+// Main dashboard page - Role-based dashboard routing
+// Shows appropriate dashboard based on user role
 
-import EnhancedRoleBasedDashboard from '@/components/dashboard/EnhancedRoleBasedDashboard';
+import PremiumEnhancedDashboard from '@/components/dashboard/PremiumEnhancedDashboard';
+import PremiumSalesmanDashboard from '@/components/dashboard/PremiumSalesmanDashboard';
 import { UserRole } from '@/lib/roles';
 import { AuthService } from '@/lib/auth-unified';
 // no direct cookies usage here; server client handles it
@@ -32,30 +33,45 @@ export default async function DashboardPage() {
   const orgId = user?.profile?.organization_id ?? null;
   const orgName = await getOrganizationNameSSR(orgId);
 
+  // Route to appropriate dashboard based on role
+  // Admin and Super Admin have access to all dashboards via role selector in PremiumEnhancedDashboard
+  const isSalesman = role === UserRole.SALESMAN;
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Pharmaceutical Sales Dashboard</h1>
-              <p className="text-gray-600">Real-time analytics and performance insights</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <a href="/dashboard/builder" className="px-3 py-1 rounded-md text-sm bg-blue-600 text-white hover:bg-blue-700">Open Builder</a>
-              <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                Enhanced Version
+      {!isSalesman && (
+        <div className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Pharmaceutical Sales Dashboard</h1>
+                <p className="text-gray-600">Real-time analytics and performance insights</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <a href="/dashboard/builder" className="px-3 py-1 rounded-md text-sm bg-blue-600 text-white hover:bg-blue-700">Open Builder</a>
+                <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                  Enhanced Version
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <EnhancedRoleBasedDashboard 
-        userRole={role}
-        userId={user?.id || 'anonymous'}
-        organizationNameSSR={orgName}
-      />
+      {isSalesman ? (
+        <PremiumSalesmanDashboard 
+          userId={user?.id || 'anonymous'}
+          userRole={role}
+          organizationId={orgId || ''}
+          darkMode={false}
+        />
+      ) : (
+        <PremiumEnhancedDashboard 
+          userRole={role}
+          userId={user?.id || 'anonymous'}
+          organizationNameSSR={orgName}
+        />
+      )}
     </div>
   );
 }

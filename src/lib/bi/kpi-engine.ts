@@ -427,6 +427,164 @@ export class KPIEngine {
   }
 
   /**
+   * Calculate KOL (Key Opinion Leader) Engagement Rate
+   * Measures the percentage of KOLs actively engaged vs. total target KOLs
+   */
+  async calculateKOLEngagement(params: KPICalculationParams): Promise<KPICalculation> {
+    const { organizationId, productId, territoryId, periodStart, periodEnd } = params;
+
+    // Get total target KOLs for the territory/product
+    const { data: targetKOLs, error: targetError } = await this.supabase
+      .from('hcp_profiles')
+      .select('id')
+      .eq('organization_id', organizationId)
+      .eq('is_kol', true)
+      .modify((query) => {
+        if (territoryId) query.eq('territory_id', territoryId);
+        if (productId) query.contains('prescribing_products', [productId]);
+      });
+
+    if (targetError) {
+      throw new Error(`KOL target calculation failed: ${targetError.message}`);
+    }
+
+    // Get engaged KOLs (those with recent interactions)
+    const { data: engagedKOLs, error: engagedError } = await this.supabase
+      .from('call_activities')
+      .select('hcp_id')
+      .eq('organization_id', organizationId)
+      .gte('call_date', periodStart.toISOString())
+      .lte('call_date', periodEnd.toISOString())
+      .in('hcp_id', (targetKOLs || []).map(k => k.id))
+      .modify((query) => {
+        if (productId) query.eq('product_id', productId);
+      });
+
+    if (engagedError) {
+      throw new Error(`KOL engagement calculation failed: ${engagedError.message}`);
+    }
+
+    const uniqueEngagedKOLs = new Set(engagedKOLs?.map(c => c.hcp_id) || []).size;
+    const totalKOLs = targetKOLs?.length || 0;
+    const engagementRate = totalKOLs > 0 ? (uniqueEngagedKOLs / totalKOLs) * 100 : 0;
+
+    return {
+      kpiId: 'kol_engagement',
+      kpiName: 'KOL Engagement Rate',
+      value: engagementRate,
+      confidence: 0.92,
+      calculatedAt: new Date(),
+      metadata: {
+        totalKOLs,
+        engagedKOLs: uniqueEngagedKOLs,
+        periodStart: periodStart.toISOString(),
+        periodEnd: periodEnd.toISOString(),
+        productId,
+        territoryId
+      }
+    };
+  }
+
+  /**
+   * Calculate Formulary Win Rate
+   * Percentage of formulary submissions that resulted in favorable access
+   */
+  async calculateFormularyWinRate(params: KPICalculationParams): Promise<KPICalculation> {
+    const { organizationId, productId, territoryId, periodStart, periodEnd } = params;
+
+    // Get all formulary submissions in the period
+    const { data: submissions, error: submissionError } = await this.supabase
+      .from('formulary_submissions')
+      .select('id, status')
+      .eq('organization_id', organizationId)
+      .gte('submission_date', periodStart.toISOString())
+      .lte('submission_date', periodEnd.toISOString())
+      .modify((query) => {
+        if (productId) query.eq('product_id', productId);
+        if (territoryId) query.eq('territory_id', territoryId);
+      });
+
+    if (submissionError) {
+      throw new Error(`Formulary submission calculation failed: ${submissionError.message}`);
+    }
+
+    const totalSubmissions = submissions?.length || 0;
+    const wins = submissions?.filter(s => 
+      s.status === 'approved' || s.status === 'preferred' || s.status === 'tier1'
+    ).length || 0;
+
+    const winRate = totalSubmissions > 0 ? (wins / totalSubmissions) * 100 : 0;
+
+    return {
+      kpiId: 'formulary_win_rate',
+      kpiName: 'Formulary Win Rate',
+      value: winRate,
+      confidence: 0.88,
+      calculatedAt: new Date(),
+      metadata: {
+        totalSubmissions,
+        wins,
+        losses: totalSubmissions - wins,
+        periodStart: periodStart.toISOString(),
+        periodEnd: periodEnd.toISOString(),
+        productId,
+        territoryId
+      }
+    };
+  }
+
+  /**
+   * Calculate Sample Efficiency Index
+   * Ratio of prescriptions generated per sample distributed (Sample-to-Script effectiveness)
+   */
+  async calculateSampleEfficiency(params: KPICalculationParams): Promise<KPICalculation> {
+    const { organizationId, productId, territoryId, periodStart, periodEnd } = params;
+
+    // Get total samples distributed
+    const { data: sampleData, error: sampleError } = await this.supabase
+      .from('sample_distributions')
+      .select('quantity')
+      .eq('organization_id', organizationId)
+      .gte('distribution_date', periodStart.toISOString())
+      .lte('distribution_date', periodEnd.toISOString())
+      .modify((query) => {
+        if (productId) query.eq('product_id', productId);
+        if (territoryId) query.eq('territory_id', territoryId);
+      });
+
+    if (sampleError) {
+      throw new Error(`Sample distribution calculation failed: ${sampleError.message}`);
+    }
+
+    const totalSamples = sampleData?.reduce((sum, s) => sum + (s.quantity || 0), 0) || 0;
+
+    // Get TRx for the same period (reuse existing method)
+    const trxResult = await this.calculateTRx(params);
+    const totalPrescriptions = trxResult.value;
+
+    // Calculate efficiency: prescriptions per 100 samples
+    const efficiency = totalSamples > 0 ? (totalPrescriptions / totalSamples) * 100 : 0;
+
+    return {
+      kpiId: 'sample_efficiency',
+      kpiName: 'Sample Efficiency Index',
+      value: efficiency,
+      confidence: 0.85,
+      calculatedAt: new Date(),
+      metadata: {
+        totalSamples,
+        totalPrescriptions,
+        efficiencyRatio: totalSamples > 0 ? totalPrescriptions / totalSamples : 0,
+        periodStart: periodStart.toISOString(),
+        periodEnd: periodEnd.toISOString(),
+        productId,
+        territoryId,
+        unit: 'Rx per 100 samples'
+      }
+    };
+  }
+
+  /**
    * Calculate all pharmaceutical KPIs for a given set of parameters
    */
   async calculateAllKPIs(params: KPICalculationParams): Promise<KPICalculation[]> {
@@ -438,7 +596,10 @@ export class KPIEngine {
       this.calculateFrequency(params),
       this.calculateCallEffectiveness(params),
       this.calculateSampleToScriptRatio(params),
-      this.calculateFormularyAccess(params)
+      this.calculateFormularyAccess(params),
+      this.calculateKOLEngagement(params),
+      this.calculateFormularyWinRate(params),
+      this.calculateSampleEfficiency(params)
     ]);
 
     return calculations

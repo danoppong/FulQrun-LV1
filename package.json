@@ -8,13 +8,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "npx eslint . --ext .ts,.tsx,.js,.jsx --fix",
+  "lint:focus": "npx eslint src/app/api/dashboard/salesman-kpis/route.ts src/lib/analytics/enterprise-analytics.ts src/components/dashboard/widgets/DrillDownModal.tsx src/lib/services/salesman-kpi-engine.ts src/lib/api/companies.ts --ext .ts,.tsx --max-warnings=0",
     "test": "node --max-old-space-size=8192 node_modules/.bin/jest",
     "test:watch": "node --max-old-space-size=8192 node_modules/.bin/jest --watch",
     "test:coverage": "node --max-old-space-size=8192 node_modules/.bin/jest --coverage",
     "test:ci": "node --max-old-space-size=8192 node_modules/.bin/jest --ci --coverage --watchAll=false",
     "lint:check": "npx eslint . --ext .ts,.tsx,.js,.jsx",
     "type-check": "npx tsc --noEmit",
-    "build:check": "npm run type-check && npm run lint:check && npm run build"
+    "type-check:focus": "npx tsc -p tsconfig.focus.json",
+    "build:check": "npm run type-check && npm run lint:check && npm run build",
+    "build:focus": "npm run type-check:focus && npm run lint:focus"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

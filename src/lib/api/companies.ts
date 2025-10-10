@@ -1,5 +1,6 @@
 import { createClientComponentClient } from '@/lib/auth'
-import { Database } from '@/lib/supabase'
+import type { Database } from '@/lib/types/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors';
 
 type Company = Database['public']['Tables']['companies']['Row']
@@ -15,7 +16,26 @@ export interface CompanyWithStats extends Company {
 
 export class CompanyAPI {
   private get supabase() {
-    return createClientComponentClient()
+    // Cast to typed client so Postgrest generics resolve correctly
+    return createClientComponentClient() as unknown as SupabaseClient<Database>
+  }
+
+  // Narrow builder for 'companies' to avoid 'any' and TS 'never' issues
+  private companiesTable() {
+    type Insert = Database['public']['Tables']['companies']['Insert']
+    type Update = Database['public']['Tables']['companies']['Update']
+    // Postgrest builder minimal surface we need, typed narrowly
+    type InsertBuilder = {
+      select: () => { single: () => Promise<{ data: Company | null; error: unknown | null }> }
+    }
+    type UpdateBuilder = {
+      eq: (column: 'id', value: string) => { select: () => { single: () => Promise<{ data: Company | null; error: unknown | null }> } }
+    }
+    interface CompaniesBuilder {
+      insert: (values: Insert) => InsertBuilder
+      update: (values: Update) => UpdateBuilder
+    }
+    return (this.supabase.from('companies') as unknown) as CompaniesBuilder
   }
 
   async getCompanies(): Promise<ApiResponse<CompanyWithStats[]>> {
@@ -34,13 +54,20 @@ export class CompanyAPI {
         return { data: null, error: normalizeError(error) }
       }
 
-      // Calculate total_deal_value in the application layer and fix count objects
-      const companiesWithStats = data?.map((company: Record<string, unknown>) => ({
+      // Normalize counts and aggregate total_deal_value
+      type Raw = (CompanyWithStats & {
+        contact_count?: number | { count: number }
+        opportunity_count?: number | { count: number }
+        opportunities?: Array<{ deal_value: number | null }> | null
+      })
+      const rows = (data ?? []) as unknown as Raw[]
+      const companiesWithStats: CompanyWithStats[] = rows.map((company) => ({
         ...company,
-        contact_count: typeof company.contact_count === 'number' ? company.contact_count : (company.contact_count?.count || 0),
-        opportunity_count: typeof company.opportunity_count === 'number' ? company.opportunity_count : (company.opportunity_count?.count || 0),
-        total_deal_value: company.opportunities?.reduce((sum: number, opp: { deal_value: number }) => sum + (opp.deal_value || 0), 0) || 0
-      })) || []
+        contact_count: typeof company.contact_count === 'number' ? company.contact_count : ((company.contact_count as { count?: number })?.count ?? 0),
+        opportunity_count: typeof company.opportunity_count === 'number' ? company.opportunity_count : ((company.opportunity_count as { count?: number })?.count ?? 0),
+        total_deal_value: (company.opportunities ?? [])
+          .reduce((sum: number, opp) => sum + (opp?.deal_value ?? 0), 0),
+      }))
 
       return { data: companiesWithStats, error: null }
     } catch (error) {
@@ -66,9 +93,10 @@ export class CompanyAPI {
       }
 
       // Calculate total_deal_value in the application layer
-      const companyWithStats = {
-        ...data,
-        total_deal_value: data.opportunities?.reduce((sum: number, opp: { deal_value: number }) => sum + (opp.deal_value || 0), 0) || 0
+      const raw = data as unknown as CompanyWithStats & { opportunities?: Array<{ deal_value: number | null }> | null }
+      const companyWithStats: CompanyWithStats = {
+        ...raw,
+        total_deal_value: (raw.opportunities ?? []).reduce((sum, opp) => sum + (opp?.deal_value ?? 0), 0),
       }
 
       return { data: companyWithStats, error: null }
@@ -90,18 +118,19 @@ export class CompanyAPI {
         .from('users')
         .select('organization_id')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
       if (!profile) {
         return { data: null, error: { message: 'User profile not found' } }
       }
+      type UserRow = Database['public']['Tables']['users']['Row']
+      const orgId: UserRow['organization_id'] = (profile as UserRow).organization_id
 
-      const { data, error } = await this.supabase
-        .from('companies')
+      const { data, error } = await this.companiesTable()
         .insert({
           ...company,
-          organization_id: profile.organization_id,
-          created_by: user.id
+          organization_id: orgId,
+          created_by: user.id,
         })
         .select()
         .single()
@@ -114,8 +143,7 @@ export class CompanyAPI {
 
   async updateCompany(id: string, updates: CompanyUpdate): Promise<ApiResponse<Company>> {
     try {
-      const { data, error } = await this.supabase
-        .from('companies')
+      const { data, error } = await this.companiesTable()
         .update(updates)
         .eq('id', id)
         .select()
@@ -158,12 +186,19 @@ export class CompanyAPI {
       }
 
       // Calculate total_deal_value in the application layer and fix count objects
-      const companiesWithStats = data?.map((company: Record<string, unknown>) => ({
+      type Raw = (CompanyWithStats & {
+        contact_count?: number | { count: number }
+        opportunity_count?: number | { count: number }
+        opportunities?: Array<{ deal_value: number | null }> | null
+      })
+      const rows = (data ?? []) as unknown as Raw[]
+      const companiesWithStats: CompanyWithStats[] = rows.map((company) => ({
         ...company,
-        contact_count: typeof company.contact_count === 'number' ? company.contact_count : (company.contact_count?.count || 0),
-        opportunity_count: typeof company.opportunity_count === 'number' ? company.opportunity_count : (company.opportunity_count?.count || 0),
-        total_deal_value: company.opportunities?.reduce((sum: number, opp: { deal_value: number }) => sum + (opp.deal_value || 0), 0) || 0
-      })) || []
+        contact_count: typeof company.contact_count === 'number' ? company.contact_count : ((company.contact_count as { count?: number })?.count ?? 0),
+        opportunity_count: typeof company.opportunity_count === 'number' ? company.opportunity_count : ((company.opportunity_count as { count?: number })?.count ?? 0),
+        total_deal_value: (company.opportunities ?? [])
+          .reduce((sum: number, opp) => sum + (opp?.deal_value ?? 0), 0),
+      }))
 
       return { data: companiesWithStats, error: null }
     } catch (error) {

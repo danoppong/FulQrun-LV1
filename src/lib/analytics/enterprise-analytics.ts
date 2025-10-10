@@ -176,7 +176,7 @@ export class EnterpriseAnalyticsAPI {
         .select('kpis')
         .eq('organization_id', organizationId);
 
-      let kpiDefinition: Record<string, unknown> | null = null;
+  let kpiDefinition: Partial<KPIMetric> | null = null;
       dashboards?.forEach(dashboard => {
         const kpi = dashboard.kpis.find((k: { id: string }) => k.id === kpiId);
         if (kpi) kpiDefinition = kpi;
@@ -188,7 +188,7 @@ export class EnterpriseAnalyticsAPI {
       let currentValue = 0;
       let previousValue = 0;
 
-      switch (kpiDefinition.metricType) {
+  switch (kpiDefinition.metricType as KPIMetric['metricType']) {
         case 'revenue':
           const revenueData = await this.calculateRevenueMetrics(organizationId);
           currentValue = revenueData.current;
@@ -224,10 +224,19 @@ export class EnterpriseAnalyticsAPI {
                    currentValue < previousValue ? 'down' : 'stable';
 
       return {
-        ...kpiDefinition,
+        id: (kpiDefinition.id as string) || kpiId,
+        name: (kpiDefinition.name as string) || 'KPI',
+        description: (kpiDefinition.description as string) || '',
+        metricType: (kpiDefinition.metricType as KPIMetric['metricType']) || 'custom',
+        calculation: (kpiDefinition.calculation as string) || '',
+        target: (kpiDefinition.target as number) || 0,
         currentValue,
         previousValue,
-        trend
+        trend,
+        unit: (kpiDefinition.unit as KPIMetric['unit']) || 'number',
+        format: (kpiDefinition.format as KPIMetric['format']) || 'number',
+        color: (kpiDefinition.color as string) || '#6366F1',
+        isActive: (kpiDefinition.isActive as boolean) ?? true,
       };
     } catch (error) {
       console.error('Error calculating KPI metric:', error);
@@ -245,15 +254,15 @@ export class EnterpriseAnalyticsAPI {
       .select('deal_value')
       .eq('organization_id', organizationId)
       .eq('stage', 'closed_won')
-      .gte('closed_at', currentMonth.toISOString());
+  .gte('close_date', currentMonth.toISOString());
 
     const { data: previousRevenue } = await supabase
       .from('opportunities')
       .select('deal_value')
       .eq('organization_id', organizationId)
       .eq('stage', 'closed_won')
-      .gte('closed_at', previousMonth.toISOString())
-      .lt('closed_at', currentMonth.toISOString());
+  .gte('close_date', previousMonth.toISOString())
+  .lt('close_date', currentMonth.toISOString());
 
     return {
       current: currentRevenue?.reduce((sum, opp) => sum + (opp.deal_value || 0), 0) || 0,
@@ -271,15 +280,15 @@ export class EnterpriseAnalyticsAPI {
       .select('id')
       .eq('organization_id', organizationId)
       .eq('stage', 'closed_won')
-      .gte('closed_at', currentMonth.toISOString());
+  .gte('close_date', currentMonth.toISOString());
 
     const { data: previousDeals } = await supabase
       .from('opportunities')
       .select('id')
       .eq('organization_id', organizationId)
       .eq('stage', 'closed_won')
-      .gte('closed_at', previousMonth.toISOString())
-      .lt('closed_at', currentMonth.toISOString());
+  .gte('close_date', previousMonth.toISOString())
+  .lt('close_date', currentMonth.toISOString());
 
     return {
       current: currentDeals?.length || 0,
@@ -298,7 +307,7 @@ export class EnterpriseAnalyticsAPI {
       .select('id')
       .eq('organization_id', organizationId)
       .eq('stage', 'closed_won')
-      .gte('closed_at', currentMonth.toISOString());
+  .gte('close_date', currentMonth.toISOString());
 
     const { data: currentTotal } = await supabase
       .from('opportunities')
@@ -312,8 +321,8 @@ export class EnterpriseAnalyticsAPI {
       .select('id')
       .eq('organization_id', organizationId)
       .eq('stage', 'closed_won')
-      .gte('closed_at', previousMonth.toISOString())
-      .lt('closed_at', currentMonth.toISOString());
+  .gte('close_date', previousMonth.toISOString())
+  .lt('close_date', currentMonth.toISOString());
 
     const { data: previousTotal } = await supabase
       .from('opportunities')
@@ -421,7 +430,7 @@ export class EnterpriseAnalyticsAPI {
     organizationId: string,
     forecastType: string,
     period: string
-  ): Promise<Array<Record<string, unknown>>> {
+  ): Promise<Array<{ id: string; type: string; timestamp: string; value: number; context: Record<string, unknown> }>> {
     const endDate = new Date();
     const startDate = new Date();
     
@@ -445,34 +454,31 @@ export class EnterpriseAnalyticsAPI {
       case 'revenue':
         const { data: revenueData } = await supabase
           .from('opportunities')
-          .select('deal_value, closed_at')
+          .select('deal_value, close_date')
           .eq('organization_id', organizationId)
           .eq('stage', 'closed_won')
-          .gte('closed_at', startDate.toISOString())
-          .lte('closed_at', endDate.toISOString());
-        
-        return revenueData || [];
+          .gte('close_date', startDate.toISOString())
+          .lte('close_date', endDate.toISOString());
+        return (revenueData || []).map((r, idx) => ({ id: String(idx), type: 'revenue', timestamp: (r.close_date as string), value: (r.deal_value || 0), context: {} }));
       
       case 'deals':
         const { data: dealsData } = await supabase
           .from('opportunities')
-          .select('id, closed_at')
+          .select('id, close_date')
           .eq('organization_id', organizationId)
           .eq('stage', 'closed_won')
-          .gte('closed_at', startDate.toISOString())
-          .lte('closed_at', endDate.toISOString());
-        
-        return dealsData || [];
+          .gte('close_date', startDate.toISOString())
+          .lte('close_date', endDate.toISOString());
+        return (dealsData || []).map((d) => ({ id: d.id, type: 'deals', timestamp: (d.close_date as string), value: 1, context: {} }));
       
       case 'conversion':
         const { data: conversionData } = await supabase
           .from('opportunities')
-          .select('id, created_at, closed_at, stage')
+          .select('id, created_at, close_date, stage')
           .eq('organization_id', organizationId)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString());
-        
-        return conversionData || [];
+        return (conversionData || []).map((c) => ({ id: c.id, type: 'conversion', timestamp: (c.created_at as string), value: 1, context: {} }));
       
       default:
         return [];
@@ -502,7 +508,7 @@ export class EnterpriseAnalyticsAPI {
 
     // Calculate trend
     const x = Array.from({ length: dataPoints }, (_, i) => i);
-    const y = historicalData.map((_, i) => historicalData[i].deal_value || 1);
+  const y = historicalData.map((p) => p.value || 1);
     
     const n = dataPoints;
     const sumX = x.reduce((a, b) => a + b, 0);
@@ -689,7 +695,7 @@ export class EnterpriseAnalyticsAPI {
         .from('opportunities')
         .select('*')
         .eq('organization_id', organizationId);
-      return data;
+      return { rows: data || [] } as unknown as Record<string, unknown>;
     }
     
     if (query.includes('contacts')) {
@@ -697,10 +703,10 @@ export class EnterpriseAnalyticsAPI {
         .from('contacts')
         .select('*')
         .eq('organization_id', organizationId);
-      return data;
+      return { rows: data || [] } as unknown as Record<string, unknown>;
     }
     
-    return [];
+  return { rows: [] } as unknown as Record<string, unknown>;
   }
 
   private static async executeCustomAnalytics(
@@ -749,7 +755,7 @@ export class EnterpriseAnalyticsAPI {
       });
     }
     
-    return performance;
+  return { rows: performance } as unknown as Record<string, unknown>;
   }
 
   private static async getConversionFunnel(organizationId: string, _parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -783,7 +789,7 @@ export class EnterpriseAnalyticsAPI {
   private static async getCustomerLifetimeValue(organizationId: string, _parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     const { data: opportunities } = await supabase
       .from('opportunities')
-      .select('deal_value, company_id, closed_at')
+  .select('deal_value, company_id, close_date')
       .eq('organization_id', organizationId)
       .eq('stage', 'closed_won');
 
@@ -796,10 +802,7 @@ export class EnterpriseAnalyticsAPI {
       }
     });
 
-    return Array.from(customerValue.entries()).map(([companyId, value]) => ({
-      companyId,
-      lifetimeValue: value
-    }));
+    return { rows: Array.from(customerValue.entries()).map(([companyId, value]) => ({ companyId, lifetimeValue: value })) } as unknown as Record<string, unknown>;
   }
 
   // Executive Reporting
@@ -833,19 +836,22 @@ export class EnterpriseAnalyticsAPI {
       };
 
       // Generate detailed metrics
-      report.metrics = {
+      const perf = await this.calculatePerformanceMetrics(organizationId);
+      const activity = await this.calculateActivityMetrics(organizationId);
+      const metrics = {
         revenue: revenueMetrics,
         deals: dealsMetrics,
         conversion: conversionMetrics,
-        performance: await this.calculatePerformanceMetrics(organizationId),
-        activity: await this.calculateActivityMetrics(organizationId)
+        performance: perf,
+        activity
       };
+      report.metrics = metrics as unknown as Record<string, unknown>;
 
       // Generate insights
-      report.insights = await this.generateInsights(organizationId, report.metrics);
+      report.insights = await this.generateInsights(organizationId, metrics);
 
       // Generate recommendations
-      report.recommendations = await this.generateRecommendations(organizationId, report.metrics);
+      report.recommendations = await this.generateRecommendations(organizationId, metrics);
 
       return report;
     } catch (error) {
@@ -854,7 +860,13 @@ export class EnterpriseAnalyticsAPI {
     }
   }
 
-  private static async generateInsights(organizationId: string, metrics: Record<string, unknown>): Promise<string[]> {
+  private static async generateInsights(organizationId: string, metrics: {
+    revenue: { current: number; previous: number };
+    deals: { current: number; previous: number };
+    conversion: { current: number; previous: number };
+    performance: { current: number; previous: number };
+    activity: { current: number; previous: number };
+  }): Promise<string[]> {
     const insights = [];
 
     if (metrics.revenue.current > metrics.revenue.previous) {
@@ -872,7 +884,13 @@ export class EnterpriseAnalyticsAPI {
     return insights;
   }
 
-  private static async generateRecommendations(organizationId: string, metrics: Record<string, unknown>): Promise<string[]> {
+  private static async generateRecommendations(organizationId: string, metrics: {
+    revenue: { current: number; previous: number };
+    deals: { current: number; previous: number };
+    conversion: { current: number; previous: number };
+    performance: { current: number; previous: number };
+    activity: { current: number; previous: number };
+  }): Promise<string[]> {
     const recommendations = [];
 
     if (metrics.conversion.current < 20) {
