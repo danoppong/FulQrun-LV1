@@ -1,9 +1,10 @@
-'use client'
+ 'use client'
 
 import { useState, Suspense } from 'react'
 import { AuthClientService } from '@/lib/auth-client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link';
+import { HeroBackground } from '@/components/marketing/hero-bg'
 
 const LoginForm = () => {
   const [email, setEmail] = useState('')
@@ -56,13 +57,17 @@ const LoginForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-40 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C92AC%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
-      
-      <div className="relative max-w-md w-full">
+    <div className="relative isolate min-h-screen overflow-hidden flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Background Image + Overlays */}
+      <div aria-hidden className="absolute inset-0">
+        <HeroBackground />
+        <div className="absolute inset-0 bg-slate-900/60 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
+      </div>
+
+      <div className="relative z-10 max-w-md w-full">
         {/* Main Card */}
-        <div className="bg-white bg-opacity-80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white border-opacity-20 p-8 space-y-8">
+        <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl ring-1 ring-white/20 p-8 space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">
             <div className="flex justify-center">
@@ -172,7 +177,7 @@ const LoginForm = () => {
             {/* Sign Up Link */}
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link
                   href="/auth/signup"
                   className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors duration-200"

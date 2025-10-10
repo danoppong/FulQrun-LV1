@@ -380,17 +380,17 @@ export default function Navigation() {
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${sidebarOpen ? 'block opacity-100' : 'hidden opacity-0'}`}>
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-        <div className="fixed inset-y-0 left-0 flex w-72 flex-col bg-white dark:bg-gray-900 backdrop-blur-xl border-r border-border/50 shadow-2xl">
+        <div className="fixed inset-y-0 left-0 flex w-72 flex-col bg-white dark:bg-gray-950/80 backdrop-blur-xl border-r border-border/50 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
           <div className="flex h-20 items-center justify-between px-6 border-b border-border/50">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-inner ring-1 ring-inset ring-white/15">
                 <SparklesIcon className="h-5 w-5 text-white" />
               </div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">FulQrun</h1>
             </div>
             <button
               type="button"
-              className="p-3 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors touch-manipulation"
+              className="p-3 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-white/5 transition-colors ring-1 ring-inset ring-white/10 touch-manipulation"
               onClick={() => setSidebarOpen(false)}
               aria-label="Close navigation menu"
             >
@@ -414,11 +414,11 @@ export default function Navigation() {
 
       {/* Desktop sidebar */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-72'}`}>
-        <div className="flex flex-grow flex-col overflow-y-auto bg-white dark:bg-gray-900 border-r border-border/50 shadow-xl">
+        <div className="flex flex-grow flex-col overflow-y-auto bg-white dark:bg-gray-950/50 border-r border-border/50 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] ring-1 ring-inset ring-white/10">
           <div className="flex h-20 items-center justify-between px-6 border-b border-border/50">
             {!sidebarCollapsed && (
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-lg ring-1 ring-inset ring-white/10">
                   <SparklesIcon className="h-6 w-6 text-white" />
                 </div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">FulQrun</h1>
@@ -434,7 +434,7 @@ export default function Navigation() {
             {!sidebarCollapsed && (
               <button
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ring-1 ring-inset ring-white/5"
                 aria-label="Collapse sidebar"
               >
                 <ChevronRightIcon className="h-5 w-5" />
@@ -448,7 +448,7 @@ export default function Navigation() {
             <div className="border-t border-border/50 p-3 flex justify-center">
               <button
                 onClick={() => setSidebarCollapsed(false)}
-                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ring-1 ring-inset ring-white/5"
                 aria-label="Expand sidebar"
               >
                 <ChevronRightIcon className="h-5 w-5 transform rotate-180" />
@@ -470,7 +470,7 @@ export default function Navigation() {
             <div className="border-t border-border/50 p-3 flex justify-center">
               <button
                 onClick={handleLogout}
-                className="p-2 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                className="p-2 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors ring-1 ring-inset ring-white/5"
                 aria-label="Sign out"
               >
                 <ArrowRightOnRectangleIcon className="h-5 w-5" />

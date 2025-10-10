@@ -15,6 +15,11 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
   if (pathname.startsWith('/auth/')) {
     return <>{children}</>
   }
+
+  // Do not wrap the public landing page with the app chrome (no sidebar)
+  if (pathname === '/') {
+    return <>{children}</>
+  }
   
   // Wrap all other pages with ClientLayout
   return <ClientLayout>{children}</ClientLayout>
