@@ -1,12 +1,28 @@
 import { createClientComponentClient } from '@/lib/auth'
-import { Database } from '@/lib/supabase'
-import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors';
+import { ApiResponse, ApiError, normalizeError } from '@/lib/types/errors'
 
-type Opportunity = Database['public']['Tables']['opportunities']['Row']
-type OpportunityInsert = Database['public']['Tables']['opportunities']['Insert']
-type OpportunityUpdate = Database['public']['Tables']['opportunities']['Update']
-
-export interface OpportunityWithDetails extends Opportunity {
+// Local runtime shape matching our app's opportunities usage. We don't rely on generated DB types here
+export interface OpportunityWithDetails {
+  id: string
+  name: string
+  contact_id?: string | null
+  company_id?: string | null
+  description?: string | null
+  assigned_to?: string | null
+  peak_stage?: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
+  meddpicc_score?: number | null
+  deal_value?: number | null
+  probability?: number | null
+  close_date?: string | null
+  metrics?: string | null
+  economic_buyer?: string | null
+  decision_criteria?: string | null
+  decision_process?: string | null
+  paper_process?: string | null
+  identify_pain?: string | null
+  implicate_pain?: string | null
+  champion?: string | null
+  competition?: string | null
   contact?: {
     id: string
     first_name: string
@@ -75,11 +91,14 @@ export class OpportunityAPI {
   /**
    * Validate opportunity data before saving
    */
-  private validateOpportunityData(data: Partial<OpportunityFormData>): { isValid: boolean; errors: string[] } {
+  private validateOpportunityData(
+    data: Partial<OpportunityFormData>,
+    requireName: boolean = true
+  ): { isValid: boolean; errors: string[] } {
     const errors: string[] = []
 
     // Required fields
-    if (!data.name || data.name.trim() === '') {
+    if (requireName && (!data.name || data.name.trim() === '')) {
       errors.push('Opportunity name is required')
     }
 
@@ -156,13 +175,13 @@ export class OpportunityAPI {
     }
   }
 
-  async createOpportunity(opportunity: Omit<OpportunityFormData, 'id' | 'organization_id' | 'created_by' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Opportunity>> {
+  async createOpportunity(opportunity: Omit<OpportunityFormData, 'id' | 'organization_id' | 'created_by' | 'created_at' | 'updated_at'>): Promise<ApiResponse<null>> {
     try {
       // Validate data
-      const validation = this.validateOpportunityData(opportunity)
+      const validation = this.validateOpportunityData(opportunity, true)
       if (!validation.isValid) {
         return { 
-          data: null, 
+          data: null,
           error: { 
             message: 'Validation failed', 
             details: validation.errors.join(', ') 
@@ -186,9 +205,10 @@ export class OpportunityAPI {
       if (profileError || !profile) {
         return { data: null, error: { message: 'User profile not found' } }
       }
+      const organizationId = (profile as unknown as { organization_id: string }).organization_id
 
       // Prepare data for insertion
-      const insertData: OpportunityInsert = {
+      const insertData = {
         name: opportunity.name.trim(),
         contact_id: opportunity.contact_id || null,
         company_id: opportunity.company_id || null,
@@ -207,30 +227,35 @@ export class OpportunityAPI {
         implicate_pain: opportunity.implicate_pain || null,
         champion: opportunity.champion || null,
         competition: opportunity.competition || null,
-        organization_id: profile.organization_id,
-        created_by: user.id
+        organization_id: organizationId,
+        created_by: user.id,
       }
 
-      const { data, error } = await this.supabase
+      const t0 = performance.now()
+      const { error } = await this.supabase
         .from('opportunities')
-        .insert(insertData)
-        .select()
-        .single()
+        .insert(insertData as unknown as never)
+      const t1 = performance.now()
 
-      return { data, error: error ? normalizeError(error) : null }
+      if (error) {
+        return { data: null, error: normalizeError(error) }
+      }
+      console.log(`Opportunity created in ${Math.round(t1 - t0)}ms`)
+      // Return minimal payload to keep client fast; caller doesn’t require row data
+      return { data: null, error: null }
     } catch (error) {
       return { data: null, error: normalizeError(error) }
     }
   }
 
-  async updateOpportunity(id: string, updates: Partial<OpportunityFormData>): Promise<ApiResponse<Opportunity>> {
+  async updateOpportunity(id: string, updates: Partial<OpportunityFormData>): Promise<ApiResponse<null>> {
     try {
       if (!id) {
         return { data: null, error: { message: 'Opportunity ID is required' } }
       }
 
       // Validate data
-      const validation = this.validateOpportunityData(updates)
+      const validation = this.validateOpportunityData(updates, false)
       if (!validation.isValid) {
         return { 
           data: null, 
@@ -242,7 +267,7 @@ export class OpportunityAPI {
       }
 
       // Prepare update data, only including fields that are provided
-      const updateData: Partial<OpportunityUpdate> = {}
+      const updateData: Record<string, unknown> = {}
       
       if (updates.name !== undefined) updateData.name = updates.name.trim()
       if (updates.contact_id !== undefined) updateData.contact_id = updates.contact_id
@@ -264,20 +289,21 @@ export class OpportunityAPI {
       if (updates.champion !== undefined) updateData.champion = updates.champion
       if (updates.competition !== undefined) updateData.competition = updates.competition
 
-      const { data, error } = await this.supabase
+      const t0 = performance.now()
+      const { error } = await this.supabase
         .from('opportunities')
-        .update(updateData)
+        .update(updateData as unknown as never)
         .eq('id', id)
-        .select()
-        .single()
+      const t1 = performance.now()
 
       if (error) {
         console.error('Supabase update error:', error)
         return { data: null, error: normalizeError(error) }
       }
 
-      console.log('Opportunity updated successfully:', data)
-      return { data, error: null }
+      console.log(`Opportunity ${id} updated successfully in ${Math.round(t1 - t0)}ms`)
+      // Return minimal payload to avoid large response deserialization cost
+      return { data: null, error: null }
     } catch (error) {
       console.error('Unexpected error updating opportunity:', error)
       return { data: null, error: normalizeError(error) }
@@ -333,7 +359,7 @@ export class OpportunityAPI {
     }
   }
 
-  async updatePeakStage(id: string, stage: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'): Promise<ApiResponse<Opportunity>> {
+  async updatePeakStage(id: string, stage: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'): Promise<ApiResponse<null>> {
     try {
       if (!id) {
         return { data: null, error: { message: 'Opportunity ID is required' } }
@@ -343,14 +369,18 @@ export class OpportunityAPI {
         return { data: null, error: { message: 'Invalid peak stage' } }
       }
 
-      const { data, error } = await this.supabase
+      const t0 = performance.now()
+      const { error } = await this.supabase
         .from('opportunities')
-        .update({ peak_stage: stage })
+        .update({ peak_stage: stage } as unknown as never)
         .eq('id', id)
-        .select()
-        .single()
+      const t1 = performance.now()
 
-      return { data, error: error ? normalizeError(error) : null }
+      if (error) {
+        return { data: null, error: normalizeError(error) }
+      }
+      console.log(`Peak stage for ${id} updated in ${Math.round(t1 - t0)}ms`)
+      return { data: null, error: null }
     } catch (error) {
       return { data: null, error: normalizeError(error) }
     }
@@ -359,13 +389,13 @@ export class OpportunityAPI {
   /**
    * Update PEAK data specifically
    */
-  async updatePEAKData(id: string, peakData: { peak_stage?: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'; deal_value?: number | null; probability?: number | null; close_date?: string | null }): Promise<ApiResponse<Opportunity>> {
+  async updatePEAKData(id: string, peakData: { peak_stage?: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'; deal_value?: number | null; probability?: number | null; close_date?: string | null }): Promise<ApiResponse<null>> {
     try {
       if (!id) {
         return { data: null, error: { message: 'Opportunity ID is required' } }
       }
 
-      const validation = this.validateOpportunityData(peakData)
+  const validation = this.validateOpportunityData(peakData, false)
       if (!validation.isValid) {
         return { 
           data: null, 
@@ -376,38 +406,39 @@ export class OpportunityAPI {
         }
       }
 
-      const updateData: Partial<OpportunityUpdate> = {}
+  const updateData: Record<string, unknown> = {}
       if (peakData.peak_stage !== undefined) updateData.peak_stage = peakData.peak_stage
       if (peakData.deal_value !== undefined) updateData.deal_value = peakData.deal_value
       if (peakData.probability !== undefined) updateData.probability = peakData.probability
       if (peakData.close_date !== undefined) updateData.close_date = peakData.close_date
 
-      const { data, error } = await this.supabase
+      const t0 = performance.now()
+      const { error } = await this.supabase
         .from('opportunities')
-        .update(updateData)
+        .update(updateData as unknown as never)
         .eq('id', id)
-        .select()
-        .single()
+      const t1 = performance.now()
 
       if (error) {
         console.error('Error updating PEAK data:', error)
         return { data: null, error: normalizeError(error) }
       }
 
-      return { data, error: null }
+      console.log(`PEAK data for ${id} updated in ${Math.round(t1 - t0)}ms`)
+      return { data: null, error: null }
     } catch (error) {
       console.error('Unexpected error updating PEAK data:', error)
       return { data: null, error: normalizeError(error) }
     }
   }
 
-  async updateMEDDPICC(id: string, meddpiccData: MEDDPICCData): Promise<ApiResponse<Opportunity>> {
+  async updateMEDDPICC(id: string, meddpiccData: MEDDPICCData): Promise<ApiResponse<null>> {
     try {
       if (!id) {
         return { data: null, error: { message: 'Opportunity ID is required' } }
       }
 
-      const updateData: Partial<OpportunityUpdate> = {}
+  const updateData: Record<string, unknown> = {}
       if (meddpiccData.metrics !== undefined) updateData.metrics = meddpiccData.metrics
       if (meddpiccData.economic_buyer !== undefined) updateData.economic_buyer = meddpiccData.economic_buyer
       if (meddpiccData.decision_criteria !== undefined) updateData.decision_criteria = meddpiccData.decision_criteria
@@ -418,21 +449,86 @@ export class OpportunityAPI {
       if (meddpiccData.champion !== undefined) updateData.champion = meddpiccData.champion
       if (meddpiccData.competition !== undefined) updateData.competition = meddpiccData.competition
 
-      const { data, error } = await this.supabase
+      const t0 = performance.now()
+      const { error } = await this.supabase
         .from('opportunities')
-        .update(updateData)
+        .update(updateData as unknown as never)
         .eq('id', id)
-        .select()
-        .single()
+      const t1 = performance.now()
 
       if (error) {
         console.error('Error updating MEDDPICC data:', error)
         return { data: null, error: normalizeError(error) }
       }
 
-      return { data, error: null }
+      console.log(`MEDDPICC data for ${id} updated in ${Math.round(t1 - t0)}ms`)
+      return { data: null, error: null }
     } catch (error) {
       console.error('Unexpected error updating MEDDPICC data:', error)
+      return { data: null, error: normalizeError(error) }
+    }
+  }
+
+  /**
+   * Unified transactional update that merges PEAK, MEDDPICC, and general fields
+   * into a single write to reduce parallel updates and race conditions.
+   */
+  async saveAll(
+    id: string,
+    payload: Partial<OpportunityFormData>
+  ): Promise<ApiResponse<null>> {
+    try {
+      if (!id) {
+        return { data: null, error: { message: 'Opportunity ID is required' } }
+      }
+
+      // For updates, do not require name unless explicitly changing it
+      const validation = this.validateOpportunityData(payload, payload.name !== undefined)
+      if (!validation.isValid) {
+        return {
+          data: null,
+          error: {
+            message: 'Validation failed',
+            details: validation.errors.join(', ')
+          }
+        }
+      }
+
+  const updateData: Record<string, unknown> = {}
+      if (payload.name !== undefined) updateData.name = payload.name.trim()
+      if (payload.contact_id !== undefined) updateData.contact_id = payload.contact_id
+      if (payload.company_id !== undefined) updateData.company_id = payload.company_id
+      if (payload.description !== undefined) updateData.description = payload.description
+      if (payload.assigned_to !== undefined) updateData.assigned_to = payload.assigned_to
+      if (payload.peak_stage !== undefined) updateData.peak_stage = payload.peak_stage
+      if (payload.meddpicc_score !== undefined) updateData.meddpicc_score = payload.meddpicc_score
+      if (payload.deal_value !== undefined) updateData.deal_value = payload.deal_value
+      if (payload.probability !== undefined) updateData.probability = payload.probability
+      if (payload.close_date !== undefined) updateData.close_date = payload.close_date
+      if (payload.metrics !== undefined) updateData.metrics = payload.metrics
+      if (payload.economic_buyer !== undefined) updateData.economic_buyer = payload.economic_buyer
+      if (payload.decision_criteria !== undefined) updateData.decision_criteria = payload.decision_criteria
+      if (payload.decision_process !== undefined) updateData.decision_process = payload.decision_process
+      if (payload.paper_process !== undefined) updateData.paper_process = payload.paper_process
+      if (payload.identify_pain !== undefined) updateData.identify_pain = payload.identify_pain
+      if (payload.implicate_pain !== undefined) updateData.implicate_pain = payload.implicate_pain
+      if (payload.champion !== undefined) updateData.champion = payload.champion
+      if (payload.competition !== undefined) updateData.competition = payload.competition
+
+      const t0 = performance.now()
+      const { error } = await this.supabase
+        .from('opportunities')
+        .update(updateData as unknown as never)
+        .eq('id', id)
+      const t1 = performance.now()
+
+      if (error) {
+        return { data: null, error: normalizeError(error) }
+      }
+
+      console.log(`saveAll for ${id} wrote ${Object.keys(updateData).length} fields in ${Math.round(t1 - t0)}ms`)
+      return { data: null, error: null }
+    } catch (error) {
       return { data: null, error: normalizeError(error) }
     }
   }
@@ -460,9 +556,15 @@ export class OpportunityAPI {
         }
       }
 
-      data?.forEach((opp: Record<string, unknown>) => {
-        const value = opp.deal_value || 0
-        const probability = opp.probability || 0
+      type PipelineRow = {
+        peak_stage: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
+        deal_value: number | null
+        probability: number | null
+      }
+      const rows: PipelineRow[] = (data ?? []) as unknown as PipelineRow[]
+      rows.forEach((opp) => {
+        const value = opp.deal_value ?? 0
+        const probability = opp.probability ?? 0
         const weightedValue = value * (probability / 100)
 
         summary.totalValue += value

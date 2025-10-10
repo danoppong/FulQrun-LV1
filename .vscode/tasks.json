@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "run jest targeted",
+			"type": "shell",
+			"command": "node --max-old-space-size=8192 node_modules/.bin/jest",
+			"args": [
+				"src/tests/enhanced-kpi-widget.test.tsx",
+				"src/tests/ai-insights-engine.test.ts"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "test"
+		}
+	]
+}

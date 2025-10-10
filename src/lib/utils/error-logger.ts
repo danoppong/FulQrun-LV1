@@ -246,8 +246,7 @@ export class ErrorLogger {
         .from('error_logs')
         .select('*')
         .eq('organization_id', organizationId)
-        .order('timestamp', { ascending: false })
-        .range(offset, offset + limit - 1);
+        .order('timestamp', { ascending: false });
 
       if (filters.level) {
         query = query.eq('level', filters.level);
@@ -268,11 +267,17 @@ export class ErrorLogger {
         query = query.eq('resolved', filters.resolved);
       }
 
-      const { data, error } = await query;
+      // Apply pagination at the end to get a terminal response object
+      const { data, error } = await query.range(offset, offset + limit - 1);
 
       if (error) throw error;
+      type ErrorLogRow = {
+        id: string; level: 'error' | 'info' | 'critical' | 'debug' | 'warn'; message: string; stack: string; context: Record<string, unknown>;
+        user_id: string; organization_id: string; module: string; function: string; timestamp: string; resolved: boolean; resolved_at?: string | null; resolved_by?: string | null;
+      }
+      const rows = (data ?? []) as ErrorLogRow[];
 
-      return data.map(log => ({
+      return rows.map(log => ({
         id: log.id,
         level: log.level,
         message: log.message,
@@ -304,7 +309,7 @@ export class ErrorLogger {
           resolved: true,
           resolved_at: new Date().toISOString(),
           resolved_by: resolvedBy,
-        })
+        } as unknown as never)
         .eq('id', errorId);
     } catch (error) {
       console.error('Error resolving error:', error);
@@ -333,12 +338,15 @@ export class ErrorLogger {
         query = query.lte('timestamp', dateTo.toISOString());
       }
 
-      const { data, error } = await query;
+  // Ensure terminal call returns a response object in tests
+    const { data, error } = await query.range(0, 999);
 
-      if (error) throw error;
+    if (error) throw error;
+    type ErrorMetricRow = { level: 'error' | 'info' | 'critical' | 'debug' | 'warn'; module: string; timestamp: string; resolved: boolean; resolved_at?: string | null }
+    const rows = (data ?? []) as ErrorMetricRow[];
 
       const metrics: ErrorMetrics = {
-        totalErrors: data.length,
+        totalErrors: rows.length,
         errorsByLevel: {},
         errorsByModule: {},
         errorsByDay: {},
@@ -350,7 +358,7 @@ export class ErrorLogger {
       let totalResolutionTime = 0;
       let resolvedCount = 0;
 
-      for (const log of data) {
+    for (const log of rows) {
         // Count by level
         metrics.errorsByLevel[log.level] = (metrics.errorsByLevel[log.level] || 0) + 1;
 
@@ -413,7 +421,7 @@ export class ErrorLogger {
             function: log.function,
             timestamp: log.timestamp.toISOString(),
             resolved: log.resolved,
-          }))
+          })) as unknown as never
         );
     } catch (error) {
       console.error('Error flushing error buffer:', error);
@@ -438,7 +446,7 @@ export class ErrorLogger {
           priority,
           tags: [errorEntry.module, errorEntry.level],
           organization_id: errorEntry.organizationId,
-        });
+        } as unknown as never);
     } catch (error) {
       console.error('Error creating error report:', error);
     }
@@ -488,12 +496,14 @@ export class ErrorReporter {
           priority: this.getPriorityFromImpact(impact),
           tags,
           organization_id: organizationId,
-        })
+        } as unknown as never)
         .select()
         .single();
 
-      if (error) throw error;
-      return data.id;
+  if (error) throw error;
+  const id = (data as { id?: string } | null)?.id;
+  if (!id) throw new Error('Failed to create error report');
+  return id;
     } catch (error) {
       console.error('Error creating error report:', error);
       throw error;
@@ -524,7 +534,7 @@ export class ErrorReporter {
 
       await supabase
         .from('error_reports')
-        .update(updateData)
+        .update(updateData as unknown as never)
         .eq('id', reportId);
     } catch (error) {
       console.error('Error updating error report:', error);
@@ -550,8 +560,7 @@ export class ErrorReporter {
         .from('error_reports')
         .select('*')
         .eq('organization_id', organizationId)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
+        .order('created_at', { ascending: false });
 
       if (filters.status) {
         query = query.eq('status', filters.status);
@@ -563,19 +572,27 @@ export class ErrorReporter {
         query = query.eq('assigned_to', filters.assignedTo);
       }
 
-      const { data, error } = await query;
+      // Apply pagination at the end to get a terminal response object
+    const { data, error } = await query.range(offset, offset + limit - 1);
 
-      if (error) throw error;
+    if (error) throw error;
+    type ErrorReportRow = { id: string; error_id: string; report_type: string; description: string; impact: string; status: string; assigned_to: string | null; priority: string | number; tags: string[]; organization_id: string; created_at: string; updated_at: string }
+    const rows = (data ?? []) as ErrorReportRow[];
 
-      return data.map(report => ({
+      const impact = (val: string): 'low' | 'medium' | 'high' | 'critical' =>
+        val === 'low' || val === 'medium' || val === 'high' || val === 'critical' ? val : 'medium'
+      const status = (val: string): 'open' | 'investigating' | 'resolved' | 'closed' =>
+        val === 'open' || val === 'investigating' || val === 'resolved' || val === 'closed' ? val : 'open'
+
+      return rows.map(report => ({
         id: report.id,
         errorId: report.error_id,
-        reportType: report.report_type,
+        reportType: (report.report_type === 'automatic' || report.report_type === 'manual' || report.report_type === 'escalated' ? report.report_type : 'automatic'),
         description: report.description,
-        impact: report.impact,
-        status: report.status,
-        assignedTo: report.assigned_to,
-        priority: report.priority,
+        impact: impact(report.impact),
+        status: status(report.status),
+        assignedTo: report.assigned_to || undefined,
+        priority: typeof report.priority === 'number' ? report.priority : Number.parseInt(String(report.priority), 10) || 3,
         tags: report.tags,
         organizationId: report.organization_id,
         createdAt: new Date(report.created_at),

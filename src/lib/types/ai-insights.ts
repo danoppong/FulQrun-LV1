@@ -32,6 +32,8 @@ export interface AIInsight {
     hcp?: string;
     segment?: string;
     timeperiod: string;
+  // Optional convenience mirror of performance.accuracy for compatibility
+  accuracy?: number;
   };
   
   recommendations: AIRecommendation[];
@@ -41,6 +43,9 @@ export interface AIInsight {
     algorithm: string;
     dataSource: string[];
     generatedAt: string;
+    // Optional test/consumer-facing metadata for compatibility
+    analysis_timestamp?: string;
+    data_points?: number;
     expiresAt?: string;
     version: string;
   };
@@ -83,7 +88,12 @@ export interface AIAction {
   id: string;
   type: 'navigate' | 'filter' | 'export' | 'schedule' | 'alert' | 'external';
   label: string;
+  // Optional enriched fields used by some consumers/tests
+  metric?: string;
+  period?: string;
   description?: string;
+  // Optional duplicate of `type` for compatibility with tests expecting `action`
+  action?: string;
   
   target: {
     type: 'dashboard' | 'report' | 'url' | 'function';
@@ -103,6 +113,8 @@ export interface PredictiveModel {
   
   target_metric: string;
   features: string[];
+  // Convenience: mirror top-level accuracy for easy access in tests
+  accuracy?: number;
   
   performance: {
     accuracy: number;
@@ -114,6 +126,8 @@ export interface PredictiveModel {
   };
   
   training_data: {
+  // Backwards-compat alias for tests expecting `trigger_conditions`
+  trigger_conditions?: SmartAlert['trigger'];
     records: number;
     timespan: string;
     last_updated: string;
@@ -136,6 +150,9 @@ export interface PredictiveResult {
   model_id: string;
   prediction_date: string;
   target_date: string;
+  // Optional fields for consumer compatibility
+  metric?: string;
+  period?: string;
   
   predicted_value: number;
   confidence_interval: {
@@ -170,6 +187,8 @@ export interface SmartAlert {
     timeframe: string;
     consecutive_periods?: number;
   };
+  // Alias for backwards compatibility
+  trigger_conditions?: SmartAlert['trigger'];
   
   filters: {
     territories?: string[];
@@ -282,6 +301,8 @@ export interface CallPlanning {
       last_visit: string;
       total_visits: number;
       average_frequency: number;
+      // Optional duplicate field for compatibility with tests expecting `action`
+      action?: string;
       engagement_score: number;
     };
     

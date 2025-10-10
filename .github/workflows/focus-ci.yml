@@ -1,0 +1,34 @@
+name: Focused CI (KPI/Analytics)
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  focus-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Type check (focused)
+        run: npm run type-check:focus
+
+      - name: Lint (focused)
+        run: npm run lint:focus
+
+      - name: Build (compile)
+        run: npm run build

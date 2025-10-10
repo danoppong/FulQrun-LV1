@@ -3,9 +3,6 @@
 // Provides comprehensive dashboard data with role-based filtering
 
 import { NextRequest, NextResponse } from 'next/server'
-import { AuthService } from '@/lib/auth-unified'
-import { kpiEngine } from '@/lib/bi/kpi-engine'
-import { createServerClient } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,14 +17,15 @@ export async function GET(request: NextRequest) {
     }
     */
 
-    const { searchParams } = new URL(request.url);
-    const organizationId = searchParams.get('organizationId') || '00000000-0000-0000-0000-000000000000';
-    const periodStart = searchParams.get('periodStart') || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const periodEnd = searchParams.get('periodEnd') || new Date().toISOString().split('T')[0];
-    const territoryId = searchParams.get('territoryId');
-    const productId = searchParams.get('productId');
+  const { searchParams } = new URL(request.url);
+  const _organizationId = searchParams.get('organizationId') || '00000000-0000-0000-0000-000000000000';
+  const _periodStart = searchParams.get('periodStart') || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const _periodEnd = searchParams.get('periodEnd') || new Date().toISOString().split('T')[0];
+  const _territoryId = searchParams.get('territoryId');
+  const _productId = searchParams.get('productId');
 
-    const supabase = createServerClient();
+  // Note: Avoid creating a server client here to prevent async cookies() issues in Next.js 15
+  // If/when real data is needed, use AuthService.getServerClient() which correctly awaits cookies()
 
     // For testing, return mock data structure
     const mockDashboardData = {

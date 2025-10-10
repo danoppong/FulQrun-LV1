@@ -511,7 +511,7 @@ export class FeaturePipeline {
 
   // Aggregation functions
   private aggregateSum(data: unknown[]): number {
-    return data.reduce((sum: number, val) => sum + Number(val), 0);
+    return data.reduce<number>((sum, val) => sum + Number(val), 0);
   }
 
   private aggregateMean(data: unknown[]): number {

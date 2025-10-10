@@ -205,7 +205,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     
     setLoading(true)
     try {
-      const { error } = await opportunityAPI.updateOpportunity(opportunityId, peakData)
+  const { error } = await opportunityAPI.saveAll(opportunityId, peakData)
       if (error) {
         setError('Failed to save PEAK data')
       } else {
@@ -225,7 +225,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     
     setLoading(true)
     try {
-      const { error } = await opportunityAPI.updateMEDDPICC(opportunityId, meddpiccData)
+  const { error } = await opportunityAPI.saveAll(opportunityId, meddpiccData)
       if (error) {
         setError('Failed to save MEDDPICC data')
       } else {
@@ -259,7 +259,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
         if (mode === 'create') {
           result = await opportunityAPI.createOpportunity(opportunityData)
         } else if (opportunityId) {
-          result = await opportunityAPI.updateOpportunity(opportunityId, opportunityData)
+          result = await opportunityAPI.saveAll(opportunityId, opportunityData)
         }
 
         if (result?.error) {

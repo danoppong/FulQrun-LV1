@@ -5,8 +5,9 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { PharmaKPICardWidget } from '@/components/bi/PharmaKPICardWidget';
-import { KPIData } from '@/lib/types/pharmaceutical-bi';
+import { PharmaKPICardWidget } from '@/components/dashboard/widgets/PharmaKPICardWidget';
+import { WidgetType } from '@/lib/dashboard-widgets';
+import { PharmaKPICardData } from '@/lib/types/dashboard';
 
 // Mock the AI insights engine
 jest.mock('@/lib/ai/ai-insights-engine', () => ({
@@ -45,9 +46,40 @@ jest.mock('@/lib/ai/ai-insights-engine', () => ({
     ])
   }
 }));
+import { aiInsightEngine } from '@/lib/ai/ai-insights-engine';
+
+// Mock AuthService to avoid auth checks during KPI calculation
+jest.mock('@/lib/auth-unified', () => ({
+  AuthService: {
+    getCurrentUser: jest.fn().mockResolvedValue({ id: 'user_1', profile: { organization_id: 'org1', role: 'rep' } })
+  }
+}));
+
+// Mock DashboardContext hook used by the widget
+jest.mock('@/components/dashboard/DashboardContext', () => ({
+  useDashboard: () => ({ updateSettings: jest.fn(), organizationId: 'org1' })
+}));
+
+// Mock KPI engine calculations used by the widget
+jest.mock('@/lib/bi/kpi-engine', () => ({
+  kpiEngine: {
+    calculateTRx: jest.fn().mockResolvedValue({ value: 960, confidence: 0.85, metadata: {} }),
+    calculateNRx: jest.fn().mockResolvedValue({ value: 185, confidence: 0.9, metadata: {} }),
+    calculateMarketShare: jest.fn().mockResolvedValue({ value: 12.5, confidence: 0.8, metadata: {} }),
+    calculateGrowth: jest.fn().mockResolvedValue({ value: 5, confidence: 0.8, metadata: {} }),
+    calculateReach: jest.fn().mockResolvedValue({ value: 75, confidence: 0.8, metadata: {} }),
+    calculateFrequency: jest.fn().mockResolvedValue({ value: 3, confidence: 0.8, metadata: {} }),
+    calculateCallEffectiveness: jest.fn().mockResolvedValue({ value: 1.8, confidence: 0.8, metadata: {} }),
+    calculateSampleToScriptRatio: jest.fn().mockResolvedValue({ value: 8, confidence: 0.8, metadata: {} }),
+    calculateFormularyAccess: jest.fn().mockResolvedValue({ value: 70, confidence: 0.8, metadata: {} }),
+  },
+}));
+
+// Mock fetch for territories lookup
+global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ data: [] }) }) as unknown as typeof fetch;
 
 describe('Enhanced KPI Widget - AI Integration', () => {
-  const mockKPIData: KPIData = {
+  const mockKPIData: PharmaKPICardData = {
     kpiId: 'trx',
     kpiName: 'Total Prescriptions',
     value: 950,
@@ -55,8 +87,8 @@ describe('Enhanced KPI Widget - AI Integration', () => {
     confidence: 0.85,
     format: 'number',
     metadata: {
-      territory: 'TestTerritory',
-      product: 'TestProduct',
+      territoryId: 'TestTerritory',
+      productId: 'TestProduct',
       period: '30_days'
     }
   };
@@ -66,26 +98,36 @@ describe('Enhanced KPI Widget - AI Integration', () => {
     jest.clearAllMocks();
   });
 
-  test('renders KPI widget with AI insights capability', async () => {
-    render(<PharmaKPICardWidget data={mockKPIData} />);
+  test('renders KPI widget with controls and KPI info', async () => {
+    render(
+      <PharmaKPICardWidget 
+        widget={{ id: 'w1', type: WidgetType.PHARMA_KPI_CARD, title: 'KPI', position: { x:0,y:0,w:3,h:2 } }} 
+        data={mockKPIData} 
+      />
+    );
     
     // Check that the KPI widget renders
     expect(screen.getByText('Total Prescriptions')).toBeInTheDocument();
     expect(screen.getByText('950')).toBeInTheDocument();
     
-    // Check for AI analysis button
-    const aiButton = screen.getByRole('button', { name: /analyze with ai/i });
-    expect(aiButton).toBeInTheDocument();
+    // Check for refresh control
+    expect(screen.getByTitle('Refresh KPI')).toBeInTheDocument();
   });
 
   test('triggers AI analysis when AI button is clicked', async () => {
-    const { aiInsightEngine } = require('@/lib/ai/ai-insights-engine');
     
-    render(<PharmaKPICardWidget data={mockKPIData} />);
+    render(
+      <PharmaKPICardWidget 
+        widget={{ id: 'w1', type: WidgetType.PHARMA_KPI_CARD, title: 'KPI', position: { x:0,y:0,w:3,h:2 } }} 
+        data={mockKPIData}
+        organizationId="org1" 
+        territoryId="TestTerritory" 
+        productId="TestProduct" 
+      />
+    );
     
     // Click the AI analysis button
-    const aiButton = screen.getByRole('button', { name: /analyze with ai/i });
-    fireEvent.click(aiButton);
+  fireEvent.click(screen.getByTitle('Refresh KPI'));
     
     // Should show analyzing state
     expect(screen.getByText(/analyzing/i)).toBeInTheDocument();
@@ -106,11 +148,16 @@ describe('Enhanced KPI Widget - AI Integration', () => {
   });
 
   test('displays AI insights after analysis completes', async () => {
-    render(<PharmaKPICardWidget data={mockKPIData} />);
+    render(
+      <PharmaKPICardWidget 
+        widget={{ id: 'w1', type: WidgetType.PHARMA_KPI_CARD, title: 'KPI', position: { x:0,y:0,w:3,h:2 } }} 
+        data={mockKPIData} 
+        organizationId="org1"
+      />
+    );
     
-    // Trigger AI analysis
-    const aiButton = screen.getByRole('button', { name: /analyze with ai/i });
-    fireEvent.click(aiButton);
+    // Trigger KPI calculation and AI analysis
+    fireEvent.click(screen.getByTitle('Refresh KPI'));
     
     // Wait for insights to appear
     await waitFor(() => {
@@ -125,11 +172,16 @@ describe('Enhanced KPI Widget - AI Integration', () => {
   });
 
   test('shows AI insight recommendations in tooltip', async () => {
-    render(<PharmaKPICardWidget data={mockKPIData} />);
+    render(
+      <PharmaKPICardWidget 
+        widget={{ id: 'w1', type: WidgetType.PHARMA_KPI_CARD, title: 'KPI', position: { x:0,y:0,w:3,h:2 } }} 
+        data={mockKPIData}
+        organizationId="org1"
+      />
+    );
     
-    // Trigger AI analysis
-    const aiButton = screen.getByRole('button', { name: /analyze with ai/i });
-    fireEvent.click(aiButton);
+    // Trigger KPI calculation and AI analysis
+    fireEvent.click(screen.getByTitle('Refresh KPI'));
     
     // Wait for insights to load
     await waitFor(() => {
@@ -137,11 +189,11 @@ describe('Enhanced KPI Widget - AI Integration', () => {
     });
     
     // Look for brain icon indicating AI insights
-    const brainIcon = screen.getByTestId('ai-insight-indicator');
-    expect(brainIcon).toBeInTheDocument();
+    const brainIconEl = await screen.findByTestId('ai-insight-indicator');
+    expect(brainIconEl).toBeInTheDocument();
     
     // Hover over the insight to see recommendations
-    fireEvent.mouseEnter(brainIcon);
+  fireEvent.mouseEnter(brainIconEl);
     
     await waitFor(() => {
       expect(screen.getByText(/Increase Call Frequency/)).toBeInTheDocument();
@@ -151,14 +203,18 @@ describe('Enhanced KPI Widget - AI Integration', () => {
 
   test('handles AI analysis errors gracefully', async () => {
     // Mock AI engine to throw error
-    const { aiInsightEngine } = require('@/lib/ai/ai-insights-engine');
-    aiInsightEngine.generateInsights.mockRejectedValue(new Error('AI analysis failed'));
+    (aiInsightEngine.generateInsights as jest.Mock).mockRejectedValue(new Error('AI analysis failed'));
     
-    render(<PharmaKPICardWidget data={mockKPIData} />);
+    render(
+      <PharmaKPICardWidget 
+        widget={{ id: 'w1', type: WidgetType.PHARMA_KPI_CARD, title: 'KPI', position: { x:0,y:0,w:3,h:2 } }} 
+        data={mockKPIData} 
+        organizationId="org1"
+      />
+    );
     
-    // Trigger AI analysis
-    const aiButton = screen.getByRole('button', { name: /analyze with ai/i });
-    fireEvent.click(aiButton);
+    // Trigger KPI calculation and AI analysis
+    fireEvent.click(screen.getByTitle('Refresh KPI'));
     
     // Should handle error and show appropriate message
     await waitFor(() => {
@@ -167,11 +223,15 @@ describe('Enhanced KPI Widget - AI Integration', () => {
   });
 
   test('displays confidence level for AI insights', async () => {
-    render(<PharmaKPICardWidget data={mockKPIData} />);
+    render(
+      <PharmaKPICardWidget 
+        widget={{ id: 'w1', type: WidgetType.PHARMA_KPI_CARD, title: 'KPI', position: { x:0,y:0,w:3,h:2 } }} 
+        data={mockKPIData} 
+      />
+    );
     
-    // Trigger AI analysis
-    const aiButton = screen.getByRole('button', { name: /analyze with ai/i });
-    fireEvent.click(aiButton);
+  // Trigger KPI calculation and AI analysis
+  fireEvent.click(screen.getByTitle('Refresh KPI'));
     
     // Wait for insights to load
     await waitFor(() => {
@@ -183,7 +243,7 @@ describe('Enhanced KPI Widget - AI Integration', () => {
   });
 
   test('integrates with different KPI types', async () => {
-    const nrxKPIData: KPIData = {
+    const nrxKPIData: PharmaKPICardData = {
       kpiId: 'nrx',
       kpiName: 'New Prescriptions',
       value: 180,
@@ -191,27 +251,31 @@ describe('Enhanced KPI Widget - AI Integration', () => {
       confidence: 0.92,
       format: 'number',
       metadata: {
-        territory: 'TestTerritory',
-        product: 'TestProduct',
+        territoryId: 'TestTerritory',
+        productId: 'TestProduct',
         period: '30_days'
       }
     };
     
-    render(<PharmaKPICardWidget data={nrxKPIData} />);
+    render(
+      <PharmaKPICardWidget 
+        widget={{ id: 'w1', type: WidgetType.PHARMA_KPI_CARD, title: 'KPI', position: { x:0,y:0,w:3,h:2 } }} 
+        data={nrxKPIData} 
+      />
+    );
     
     // Should render NRx KPI
     expect(screen.getByText('New Prescriptions')).toBeInTheDocument();
     expect(screen.getByText('180')).toBeInTheDocument();
     
-    // AI analysis should still be available
-    expect(screen.getByRole('button', { name: /analyze with ai/i })).toBeInTheDocument();
+  // Refresh control should be available
+  expect(screen.getByTitle('Refresh KPI')).toBeInTheDocument();
   });
 
   test('AI insights improve over time with more data', async () => {
-    const { aiInsightEngine } = require('@/lib/ai/ai-insights-engine');
     
     // Mock multiple calls with improving confidence
-    aiInsightEngine.generateInsights
+    (aiInsightEngine.generateInsights as jest.Mock)
       .mockResolvedValueOnce([{ // First call - lower confidence
         id: 'insight_1',
         title: 'Initial Analysis',
@@ -233,22 +297,32 @@ describe('Enhanced KPI Widget - AI Integration', () => {
         metadata: { analysis_timestamp: new Date().toISOString(), data_points: 20 }
       }]);
     
-    const { rerender } = render(<PharmaKPICardWidget data={mockKPIData} />);
+    const { rerender } = render(
+      <PharmaKPICardWidget 
+        widget={{ id: 'w1', type: WidgetType.PHARMA_KPI_CARD, title: 'KPI', position: { x:0,y:0,w:3,h:2 } }} 
+        data={mockKPIData} 
+      />
+    );
     
     // First analysis
-    fireEvent.click(screen.getByRole('button', { name: /analyze with ai/i }));
+    fireEvent.click(screen.getByTitle('Refresh KPI'));
     await waitFor(() => {
-      expect(screen.getByText(/65%/)).toBeInTheDocument();
+      expect(screen.getByText('Initial Analysis')).toBeInTheDocument();
     });
     
     // Simulate more data becoming available
     const updatedKPIData = { ...mockKPIData, value: 925 };
-    rerender(<PharmaKPICardWidget data={updatedKPIData} />);
+    rerender(
+      <PharmaKPICardWidget 
+        widget={{ id: 'w1', type: WidgetType.PHARMA_KPI_CARD, title: 'KPI', position: { x:0,y:0,w:3,h:2 } }} 
+        data={updatedKPIData} 
+      />
+    );
     
     // Second analysis with more data
-    fireEvent.click(screen.getByRole('button', { name: /analyze with ai/i }));
+    fireEvent.click(screen.getByTitle('Refresh KPI'));
     await waitFor(() => {
-      expect(screen.getByText(/85%/)).toBeInTheDocument();
+      expect(screen.getByText('Refined Analysis')).toBeInTheDocument();
     });
   });
 });

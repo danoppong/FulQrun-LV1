@@ -520,21 +520,32 @@ export class SalesmanKPIEngine {
    * Get salesman information
    */
   private async getSalesmanInfo(salesmanId: string): Promise<{ name: string; managerId?: string }> {
-    const { data, error } = await this.supabase
+    // Fetch manager_id from user_profiles (does not contain full_name in some schemas)
+    const { data: profileData, error: profileError } = await this.supabase
       .from('user_profiles')
-      .select('full_name, manager_id')
+      .select('manager_id')
       .eq('id', salesmanId)
       .single()
 
-    if (error || !data) {
-      console.error('Error fetching salesman info:', error)
-      return { name: 'Unknown' }
+    if (profileError) {
+      console.error('Error fetching salesman profile:', profileError)
     }
 
-    return {
-      name: (data as unknown as { full_name: string | null }).full_name || 'Unknown',
-      managerId: (data as unknown as { manager_id?: string | null }).manager_id || undefined
+    // Fetch display name from users table, which reliably has full_name
+    const { data: userData, error: userError } = await this.supabase
+      .from('users')
+      .select('full_name')
+      .eq('id', salesmanId)
+      .single()
+
+    if (userError) {
+      console.error('Error fetching salesman user:', userError)
     }
+
+    const name = (userData as unknown as { full_name?: string | null } | null)?.full_name || 'Unknown'
+    const managerId = (profileData as unknown as { manager_id?: string | null } | null)?.manager_id || undefined
+
+    return { name, managerId }
   }
 
   private async getTeamSalesmanIds(managerId: string, organizationId: string): Promise<string[]> {

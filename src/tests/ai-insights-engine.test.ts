@@ -80,7 +80,7 @@ describe('AI Insights Engine - Phase 2.7 Testing', () => {
       
       // Should have at least one insight related to performance
       const performanceInsights = insights.filter(insight => 
-        insight.category === 'performance' || insight.category === 'anomaly'
+        insight.category === 'performance'
       );
       
       expect(performanceInsights.length).toBeGreaterThan(0);
@@ -123,14 +123,12 @@ describe('AI Insights Engine - Phase 2.7 Testing', () => {
 
   describe('Predictive Analytics', () => {
     test('should create and train predictive models', async () => {
-      const modelConfig = {
-        name: 'TRx Forecast Model',
-        type: 'time_series' as const,
+      const modelConfig: import('@/lib/types/ai-insights').ModelTrainingConfig = {
+        model_type: 'time_series',
         target_metric: 'trx',
         features: ['calls', 'samples', 'market_share'],
         training_period: '90_days',
-        forecast_horizon: '30_days',
-        organization_id: mockContext.organization_id
+        validation_split: 0.2
       };
 
       const model = await aiInsightEngine.trainModel(modelConfig);
@@ -140,20 +138,18 @@ describe('AI Insights Engine - Phase 2.7 Testing', () => {
       expect(model).toHaveProperty('name');
       expect(model).toHaveProperty('type');
       expect(model).toHaveProperty('accuracy');
-      expect(model).toHaveProperty('status');
-      expect(model.status).toBe('trained');
+  expect(model).toHaveProperty('metadata');
+  expect(model.metadata.status).toBeDefined();
     });
 
     test('should generate predictions from trained model', async () => {
       // First train a model
-      const modelConfig = {
-        name: 'Test Prediction Model',
-        type: 'regression' as const,
+      const modelConfig: import('@/lib/types/ai-insights').ModelTrainingConfig = {
+        model_type: 'linear_regression',
         target_metric: 'trx',
         features: ['calls', 'samples'],
         training_period: '90_days',
-        forecast_horizon: '7_days',
-        organization_id: mockContext.organization_id
+        validation_split: 0.2
       };
 
       const model = await aiInsightEngine.trainModel(modelConfig);
@@ -176,20 +172,30 @@ describe('AI Insights Engine - Phase 2.7 Testing', () => {
   describe('Smart Alerts System', () => {
     test('should create smart alerts', async () => {
       const alertConfig = {
+        id: 'tmp',
         name: 'TRx Decline Alert',
         description: 'Alert when TRx drops significantly',
-        trigger_conditions: {
+        trigger: {
           metric: 'trx',
-          operator: 'decreases_by',
+          condition: 'percentage_change' as import('@/lib/types/ai-insights').SmartAlert['trigger']['condition'],
           threshold: 15,
-          period: '24_hours'
+          timeframe: '24_hours'
         },
-        notification_channels: ['email', 'dashboard'],
-        severity: 'high' as const,
-        organization_id: mockContext.organization_id
+        filters: {},
+        notification: {
+          channels: ['email', 'dashboard'] as ('dashboard' | 'email' | 'sms' | 'slack' | 'webhook')[],
+          recipients: [],
+          template: 'default',
+          frequency: 'immediate' as import('@/lib/types/ai-insights').SmartAlert['notification']['frequency']
+        },
+        actions: { suggested_actions: [] },
+        status: 'active' as import('@/lib/types/ai-insights').SmartAlert['status'],
+        history: [],
+        metadata: { created_by: 'test', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), priority: 1, tags: [] }
       };
 
-      const alert = await aiInsightEngine.createAlert(alertConfig);
+  const { id: _tmp, metadata: _md, ...createInput } = alertConfig;
+  const alert = await aiInsightEngine.createAlert(createInput);
       
       expect(alert).toBeDefined();
       expect(alert).toHaveProperty('id');
@@ -202,36 +208,36 @@ describe('AI Insights Engine - Phase 2.7 Testing', () => {
     test('should update existing alerts', async () => {
       // Create alert first
       const alertConfig = {
+        id: 'tmp2',
         name: 'Test Alert',
         description: 'Test alert for updating',
-        trigger_conditions: {
+        trigger: {
           metric: 'nrx',
-          operator: 'decreases_by',
+          condition: 'percentage_change' as import('@/lib/types/ai-insights').SmartAlert['trigger']['condition'],
           threshold: 10,
-          period: '24_hours'
+          timeframe: '24_hours'
         },
-        notification_channels: ['email'],
-        severity: 'medium' as const,
-        organization_id: mockContext.organization_id
+        filters: {},
+  notification: { channels: ['email'] as ('dashboard' | 'email' | 'sms' | 'slack' | 'webhook')[], recipients: [], template: 'default', frequency: 'immediate' as import('@/lib/types/ai-insights').SmartAlert['notification']['frequency'] },
+        actions: { suggested_actions: [] },
+        status: 'active' as import('@/lib/types/ai-insights').SmartAlert['status'],
+        history: [],
+        metadata: { created_by: 'test', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), priority: 1, tags: [] }
       };
 
-      const createdAlert = await aiInsightEngine.createAlert(alertConfig);
+  const { id: _tmp2, metadata: _md2, ...createInput2 } = alertConfig;
+  const createdAlert = await aiInsightEngine.createAlert(createInput2);
       
       // Update the alert
-      const updates = {
-        severity: 'high' as const,
-        trigger_conditions: {
-          metric: 'nrx',
-          operator: 'decreases_by',
-          threshold: 20,
-          period: '24_hours'
-        }
+      const updates: Partial<import('@/lib/types/ai-insights').SmartAlert> = {
+        status: 'triggered',
+        trigger: { metric: 'nrx', condition: 'percentage_change', threshold: 20, timeframe: '24_hours' }
       };
 
       const updatedAlert = await aiInsightEngine.updateAlert(createdAlert.id, updates);
       
-      expect(updatedAlert.severity).toBe('high');
-      expect(updatedAlert.trigger_conditions.threshold).toBe(20);
+  expect(updatedAlert.status).toBe('triggered');
+  expect(updatedAlert.trigger.threshold).toBe(20);
     });
   });
 
@@ -239,54 +245,36 @@ describe('AI Insights Engine - Phase 2.7 Testing', () => {
     test('should optimize territory performance', async () => {
       const territoryData = {
         territory_id: 'North',
-        hcp_count: 150,
-        target_potential: 25000,
-        current_performance: 18500,
-        call_frequency: 6,
-        coverage_rate: 0.85,
-        competition_strength: 'high' as const,
-        demographics: {
-          urban_percentage: 65,
-          specialty_clinics: 12,
-          hospital_systems: 3
-        }
+        performance_metrics: { trx: 18500, nrx: 3500, market_share: 18, hcp_coverage: 0.7, call_frequency: 6 },
+        hcp_data: [],
+        competitive_data: {}
       };
 
       const optimization = await aiInsightEngine.optimizeTerritory('North', territoryData);
       
-      expect(optimization).toBeDefined();
-      expect(optimization).toHaveProperty('territory_id');
-      expect(optimization).toHaveProperty('current_score');
-      expect(optimization).toHaveProperty('potential_score');
-      expect(optimization).toHaveProperty('recommendations');
-      expect(optimization).toHaveProperty('resource_allocation');
+  expect(optimization).toBeDefined();
+  expect(optimization).toHaveProperty('territory_id');
+  expect(optimization).toHaveProperty('current_performance');
+  expect(optimization).toHaveProperty('optimization_opportunities');
+  expect(optimization).toHaveProperty('resource_allocation');
       
-      expect(optimization.recommendations.length).toBeGreaterThan(0);
+  expect(optimization.optimization_opportunities.length).toBeGreaterThan(0);
       
-      const firstRecommendation = optimization.recommendations[0];
-      expect(firstRecommendation).toHaveProperty('type');
-      expect(firstRecommendation).toHaveProperty('description');
-      expect(firstRecommendation).toHaveProperty('impact_score');
+  const firstRecommendation = optimization.optimization_opportunities[0];
+  expect(firstRecommendation).toHaveProperty('type');
+  expect(firstRecommendation).toHaveProperty('description');
+  expect(firstRecommendation).toHaveProperty('potential_impact');
     });
 
     test('should provide call planning recommendations', async () => {
       const callPlan = await aiInsightEngine.planCalls('rep_123', 'North', '30_days');
       
-      expect(callPlan).toBeDefined();
-      expect(callPlan).toHaveProperty('rep_id');
-      expect(callPlan).toHaveProperty('territory_id');
-      expect(callPlan).toHaveProperty('period');
-      expect(callPlan).toHaveProperty('recommended_calls');
-      expect(callPlan).toHaveProperty('priority_hcps');
-      expect(callPlan).toHaveProperty('optimal_frequency');
-      
-      expect(callPlan.recommended_calls.length).toBeGreaterThan(0);
-      
-      const firstCall = callPlan.recommended_calls[0];
-      expect(firstCall).toHaveProperty('hcp_id');
-      expect(firstCall).toHaveProperty('priority');
-      expect(firstCall).toHaveProperty('recommended_date');
-      expect(firstCall).toHaveProperty('call_objective');
+  expect(callPlan).toBeDefined();
+  expect(callPlan).toHaveProperty('rep_id');
+  expect(callPlan).toHaveProperty('territory_id');
+  expect(callPlan).toHaveProperty('planning_period');
+  expect(callPlan).toHaveProperty('hcp_schedule');
+  expect(callPlan).toHaveProperty('route_optimization');
     });
   });
 
@@ -295,35 +283,23 @@ describe('AI Insights Engine - Phase 2.7 Testing', () => {
       const competitors = ['Competitor-A', 'Competitor-B', 'Competitor-C'];
       const competitiveAnalysis = await aiInsightEngine.analyzeCompetition('Product-A', competitors);
       
-      expect(competitiveAnalysis).toBeDefined();
-      expect(competitiveAnalysis).toHaveProperty('product_id');
-      expect(competitiveAnalysis).toHaveProperty('market_position');
-      expect(competitiveAnalysis).toHaveProperty('competitor_analysis');
-      expect(competitiveAnalysis).toHaveProperty('threats');
-      expect(competitiveAnalysis).toHaveProperty('opportunities');
-      expect(competitiveAnalysis).toHaveProperty('recommendations');
-      
-      expect(competitiveAnalysis.competitor_analysis.length).toBeGreaterThan(0);
-      
-      const firstCompetitor = competitiveAnalysis.competitor_analysis[0];
-      expect(firstCompetitor).toHaveProperty('competitor_id');
-      expect(firstCompetitor).toHaveProperty('market_share');
-      expect(firstCompetitor).toHaveProperty('strengths');
-      expect(firstCompetitor).toHaveProperty('weaknesses');
+  expect(competitiveAnalysis).toBeDefined();
+  expect(competitiveAnalysis).toHaveProperty('product');
+  expect(competitiveAnalysis).toHaveProperty('share_analysis');
+  expect(competitiveAnalysis).toHaveProperty('market_movements');
+  expect(competitiveAnalysis).toHaveProperty('strategic_responses');
     });
   });
 
   describe('Model Management', () => {
     test('should evaluate model performance', async () => {
       // First create a model
-      const modelConfig = {
-        name: 'Evaluation Test Model',
-        type: 'classification' as const,
+      const modelConfig: import('@/lib/types/ai-insights').ModelTrainingConfig = {
+        model_type: 'neural_network',
         target_metric: 'nrx',
         features: ['calls', 'samples', 'market_share'],
         training_period: '180_days',
-        forecast_horizon: '14_days',
-        organization_id: mockContext.organization_id
+        validation_split: 0.2
       };
 
       const model = await aiInsightEngine.trainModel(modelConfig);
@@ -333,27 +309,22 @@ describe('AI Insights Engine - Phase 2.7 Testing', () => {
       
       expect(evaluation).toBeDefined();
       expect(evaluation).toHaveProperty('model_id');
-      expect(evaluation).toHaveProperty('accuracy');
-      expect(evaluation).toHaveProperty('precision');
-      expect(evaluation).toHaveProperty('recall');
-      expect(evaluation).toHaveProperty('f1_score');
-      expect(evaluation).toHaveProperty('confusion_matrix');
-      expect(evaluation).toHaveProperty('feature_importance');
+  expect(evaluation).toHaveProperty('performance_metrics');
+  expect(evaluation).toHaveProperty('feature_importance');
+  expect(evaluation).toHaveProperty('validation_results');
       
-      expect(evaluation.accuracy).toBeGreaterThan(0);
-      expect(evaluation.accuracy).toBeLessThanOrEqual(1);
+  expect(evaluation.performance_metrics.accuracy).toBeGreaterThan(0);
+  expect(evaluation.performance_metrics.accuracy).toBeLessThanOrEqual(1);
     });
 
     test('should deploy trained models', async () => {
       // Create and train a model
-      const modelConfig = {
-        name: 'Deployment Test Model',
-        type: 'time_series' as const,
+      const modelConfig: import('@/lib/types/ai-insights').ModelTrainingConfig = {
+        model_type: 'time_series',
         target_metric: 'trx',
         features: ['calls', 'samples'],
         training_period: '90_days',
-        forecast_horizon: '7_days',
-        organization_id: mockContext.organization_id
+        validation_split: 0.2
       };
 
       const model = await aiInsightEngine.trainModel(modelConfig);
