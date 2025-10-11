@@ -6,6 +6,7 @@ import PremiumEnhancedDashboard from '@/components/dashboard/PremiumEnhancedDash
 import PremiumSalesmanDashboard from '@/components/dashboard/PremiumSalesmanDashboard';
 import { UserRole } from '@/lib/roles';
 import { AuthService } from '@/lib/auth-unified';
+import { redirect } from 'next/navigation';
 // no direct cookies usage here; server client handles it
 
 type QuerySingle<T> = Promise<{ data: T | null; error: unknown }>
@@ -29,6 +30,9 @@ async function getOrganizationNameSSR(orgId: string | null) {
 export default async function DashboardPage() {
   // Server-side auth
   const user = await AuthService.getCurrentUserServer();
+  if (!user) {
+    redirect('/auth/login?next=/dashboard')
+  }
   const role = (user?.profile?.role as UserRole) || UserRole.SALESMAN;
   const orgId = user?.profile?.organization_id ?? null;
   const orgName = await getOrganizationNameSSR(orgId);
@@ -70,6 +74,7 @@ export default async function DashboardPage() {
           userRole={role}
           userId={user?.id || 'anonymous'}
           organizationNameSSR={orgName}
+          organizationId={orgId}
         />
       )}
     </div>

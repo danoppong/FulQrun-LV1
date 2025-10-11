@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server';
+import { requireApiAuth } from '@/lib/security/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporary bypass for testing - remove in production
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const { searchParams } = new URL(request.url)
     const organizationId = searchParams.get('organizationId') || '9ed327f2-c46a-445a-952b-70addaee33b8'
     const userId = searchParams.get('userId')

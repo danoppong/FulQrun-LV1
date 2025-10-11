@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DashboardLayoutsService } from '@/lib/services/dashboard-layouts'
+import { requireApiAuth } from '@/lib/security/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
+    const auth = await requireApiAuth()
+    if (!auth.ok) return auth.response
     const found = await DashboardLayoutsService.getMyLayout()
     if (!found) {
       return NextResponse.json({ exists: false }, { status: 200 })
@@ -23,6 +26,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireApiAuth()
+    if (!auth.ok) return auth.response
     const body = await req.json()
     const { name, layout } = body || {}
     if (!Array.isArray(layout)) {

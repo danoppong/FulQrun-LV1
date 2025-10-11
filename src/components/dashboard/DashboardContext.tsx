@@ -63,12 +63,17 @@ export const useDashboard = () => {
 interface DashboardProviderProps {
   children: ReactNode;
   initialSettings?: Partial<DashboardSettings>;
+  initialContext?: {
+    userId?: string | null;
+    organizationId?: string | null;
+    userRole?: UserRole | null;
+  };
 }
 
-export function DashboardProvider({ children, initialSettings = {} }: DashboardProviderProps) {
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
+export function DashboardProvider({ children, initialSettings = {}, initialContext }: DashboardProviderProps) {
+  const [organizationId, setOrganizationId] = useState<string | null>(initialContext?.organizationId ?? null);
+  const [userId, setUserId] = useState<string | null>(initialContext?.userId ?? null);
+  const [userRole, setUserRole] = useState<UserRole | null>(initialContext?.userRole ?? null);
   const [isInitializing, setIsInitializing] = useState(true);
   
   // Dashboard settings
@@ -86,23 +91,33 @@ export function DashboardProvider({ children, initialSettings = {} }: DashboardP
   useEffect(() => {
     const initializeContext = async () => {
       try {
+        // If SSR passed initial context, skip fetching
+        if (initialContext?.userId && initialContext?.organizationId && initialContext?.userRole) {
+          return;
+        }
+
         const user = await AuthService.getCurrentUser();
         if (user) {
           setUserId(user.id);
           if (user.profile) {
             setOrganizationId(user.profile.organization_id);
             setUserRole(user.profile.role as UserRole);
-            console.log('Dashboard context initialized:', {
-              userId: user.id,
-              organizationId: user.profile.organization_id,
-              role: user.profile.role
-            });
+            if (process.env.NODE_ENV === 'development') {
+              console.debug('Dashboard context initialized', {
+                userId: user.id,
+                organizationId: user.profile.organization_id,
+                role: user.profile.role
+              });
+            }
           } else {
-            console.warn('User profile not found, using defaults');
             setUserRole(UserRole.SALESMAN);
           }
         } else {
-          console.warn('No authenticated user found');
+          // No user on client; middleware or page guard should have redirected already
+          // Avoid noisy logs in production
+          if (process.env.NODE_ENV === 'development') {
+            console.debug('No authenticated user found (client)');
+          }
         }
       } catch (error) {
         console.error('Failed to initialize dashboard context:', error);
@@ -113,8 +128,8 @@ export function DashboardProvider({ children, initialSettings = {} }: DashboardP
       }
     };
 
-    initializeContext();
-  }, []);
+    void initializeContext();
+  }, [initialContext]);
 
   // Hydrate settings from localStorage (client-side persistence)
   useEffect(() => {

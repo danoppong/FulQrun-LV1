@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, TooltipProps } from 'recharts'
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 
 export interface DonutChartData {
   name: string
@@ -32,12 +33,13 @@ export function PremiumDonutChart({ data, height = 300, darkMode = false }: Prem
     }
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (!active || !payload || !payload[0]) return null
-    
+  const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) => {
+    if (!active || !payload || !Array.isArray(payload) || !payload[0]) return null
+
     const data = payload[0]
-    const total = payload[0].payload.total || 100
-    const percentage = ((data.value / total) * 100).toFixed(1)
+    const total = (data.payload as { total?: number }).total ?? 100
+    const rawValue = typeof data.value === 'number' ? data.value : Number(data.value ?? 0)
+    const percentage = ((rawValue / total) * 100).toFixed(1)
     
     return (
       <div 
@@ -48,14 +50,14 @@ export function PremiumDonutChart({ data, height = 300, darkMode = false }: Prem
           color: theme.tooltip.text
         }}
       >
-        <p className="font-semibold mb-1">{data.name}</p>
+        <p className="font-semibold mb-1">{String(data.name)}</p>
         <div className="flex items-center gap-2 text-sm">
           <div 
             className="w-3 h-3 rounded-full" 
-            style={{ backgroundColor: data.payload.color }}
+            style={{ backgroundColor: (data.payload as { color?: string }).color || '#999' }}
           />
           <span>Value:</span>
-          <span className="font-semibold">{data.value?.toLocaleString()}</span>
+          <span className="font-semibold">{rawValue.toLocaleString()}</span>
         </div>
         <div className="text-sm text-gray-400 mt-1">{percentage}% of total</div>
       </div>

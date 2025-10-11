@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
 import { AuthService } from '@/lib/auth-unified';
+import { requireApiAuth } from '@/lib/security/api-auth'
+import type { Database } from '@/lib/types/supabase'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
     // Temporary bypass for testing - remove in production
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const { searchParams } = new URL(request.url)
     const organizationId = searchParams.get('organizationId') || '9ed327f2-c46a-445a-952b-70addaee33b8'
     const scenarioType = searchParams.get('scenarioType')
@@ -63,6 +67,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const user = await AuthService.getCurrentUserServer()
     if (!user?.profile) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -96,23 +102,26 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerClient()
 
+    const insertPayload: Database['public']['Tables']['scenario_plans']['Insert'] = {
+      name,
+      description: description ?? null,
+      scenario_type,
+      base_scenario_id: base_scenario_id || null,
+      assumptions: assumptions || {},
+      quota_changes: quota_changes || {},
+      territory_changes: territory_changes || {},
+      compensation_changes: compensation_changes || {},
+      impact_analysis: impact_analysis || {},
+      budget_variance: budget_variance || 0,
+      fairness_score: fairness_score || 0,
+      organization_id: user.profile.organization_id,
+      created_by: user.id
+    }
+
     const { data: scenario, error } = await supabase
       .from('scenario_plans')
-      .insert({
-        name,
-        description,
-        scenario_type,
-        base_scenario_id: base_scenario_id || null,
-        assumptions: assumptions || {},
-        quota_changes: quota_changes || {},
-        territory_changes: territory_changes || {},
-        compensation_changes: compensation_changes || {},
-        impact_analysis: impact_analysis || {},
-        budget_variance: budget_variance || 0,
-        fairness_score: fairness_score || 0,
-        organization_id: user.profile.organization_id,
-        created_by: user.id
-      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .insert(insertPayload as any)
       .select()
       .single()
 

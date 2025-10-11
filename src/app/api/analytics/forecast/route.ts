@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/validation'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 300 // Cache for 5 minutes
 
-export async function GET(_request: NextRequest) {
+function getClientIp(req: NextRequest): string {
+  const xff = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const xri = req.headers.get('x-real-ip')?.trim()
+  return xff || xri || '127.0.0.1'
+}
+
+export async function GET(request: NextRequest) {
   try {
+    const ip = getClientIp(request)
+    if (!checkRateLimit(ip, 60, 60_000)) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+    }
+
     // Add a small delay to prevent resource exhaustion
     await new Promise(resolve => setTimeout(resolve, 100))
 

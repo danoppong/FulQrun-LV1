@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
 import { AuthService } from '@/lib/auth-unified';
+import { requireApiAuth } from '@/lib/security/api-auth'
+import type { Database } from '@/lib/types/supabase'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporary bypass for testing - remove in production
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const { searchParams } = new URL(request.url)
     const organizationId = searchParams.get('organizationId') || '9ed327f2-c46a-445a-952b-70addaee33b8'
     const userId = searchParams.get('userId')
@@ -64,10 +67,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const user = await AuthService.getCurrentUserServer()
-    if (!user?.profile) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     if (!['manager', 'admin'].includes(user.profile.role)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
@@ -96,22 +98,24 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerClient()
 
+    const payload: Database['public']['Tables']['quota_plans']['Insert'] = {
+      name,
+      description: description ?? null,
+      plan_type,
+      start_date,
+      end_date,
+      target_revenue: target_revenue || 0,
+      target_deals: target_deals || 0,
+      target_activities: target_activities || 0,
+      territory_id: territory_id || null,
+      user_id: user_id || null,
+      organization_id: user.profile.organization_id,
+      created_by: user.id
+    }
+
     const { data: quotaPlan, error } = await supabase
       .from('quota_plans')
-      .insert({
-        name,
-        description,
-        plan_type,
-        start_date,
-        end_date,
-        target_revenue: target_revenue || 0,
-        target_deals: target_deals || 0,
-        target_activities: target_activities || 0,
-        territory_id: territory_id || null,
-        user_id: user_id || null,
-        organization_id: user.profile.organization_id,
-        created_by: user.id
-      })
+  .insert(payload as never)
       .select()
       .single()
 

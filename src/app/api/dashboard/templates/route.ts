@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { AuthService } from '@/lib/auth-unified'
+import { requireApiAuth } from '@/lib/security/api-auth'
 
 // Minimal type for stored templates
 interface RoleTemplate {
@@ -18,9 +19,11 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
     const role = url.searchParams.get('role') || undefined
-    const supabase = await AuthService.getServerClient()
-    const user = await AuthService.getCurrentUserServer()
-    if (!user?.profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await AuthService.getServerClient()
+  const auth = await requireApiAuth()
+  if (!auth.ok) return auth.response
+  const user = await AuthService.getCurrentUserServer()
+  if (!user?.profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const orgId = user.profile.organization_id
     // Build query with conditional role filter
@@ -49,9 +52,11 @@ export async function GET(req: Request) {
 // POST /api/dashboard/templates  { role, name, layout }
 export async function POST(req: Request) {
   try {
-    const supabase = await AuthService.getServerClient()
-    const user = await AuthService.getCurrentUserServer()
-    if (!user?.profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await AuthService.getServerClient()
+  const auth = await requireApiAuth()
+  if (!auth.ok) return auth.response
+  const user = await AuthService.getCurrentUserServer()
+  if (!user?.profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const orgId = user.profile.organization_id
     const body = (await req.json()) as { role?: string; name?: string; layout?: unknown; isDefault?: boolean }
     const role = body.role || user.profile.role
@@ -96,9 +101,11 @@ export async function POST(req: Request) {
 // PATCH to set/unset default flag for a template
 export async function PATCH(req: Request) {
   try {
-    const supabase = await AuthService.getServerClient()
-    const user = await AuthService.getCurrentUserServer()
-    if (!user?.profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await AuthService.getServerClient()
+  const auth = await requireApiAuth()
+  if (!auth.ok) return auth.response
+  const user = await AuthService.getCurrentUserServer()
+  if (!user?.profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const orgId = user.profile.organization_id
     const body = (await req.json()) as { id?: string; isDefault?: boolean }
     if (!body.id) return NextResponse.json({ error: 'Missing template id' }, { status: 400 })

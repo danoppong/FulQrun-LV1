@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr'
 import { supabaseConfig } from '@/lib/config';
+import { PROTECTED_PREFIXES } from '@/lib/security/protected-routes';
+
+type CookieOptions = {
+  path?: string
+  domain?: string
+  maxAge?: number
+  secure?: boolean
+  httpOnly?: boolean
+  sameSite?: 'lax' | 'strict' | 'none'
+}
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -9,6 +19,8 @@ export async function middleware(request: NextRequest) {
       headers: request.headers,
     },
   })
+
+  const { pathname } = request.nextUrl
 
   // Enhanced security headers
   response.headers.set('X-Content-Type-Options', 'nosniff')
@@ -45,7 +57,7 @@ export async function middleware(request: NextRequest) {
           get(name: string) {
             return request.cookies.get(name)?.value
           },
-          set(name: string, value: string, options: any) {
+          set(name: string, value: string, options: CookieOptions) {
             request.cookies.set({
               name,
               value,
@@ -62,7 +74,7 @@ export async function middleware(request: NextRequest) {
               ...options,
             })
           },
-          remove(name: string, options: any) {
+          remove(name: string, options: CookieOptions) {
             request.cookies.set({
               name,
               value: '',
@@ -84,7 +96,31 @@ export async function middleware(request: NextRequest) {
     )
 
     // Refresh session if expired
-    await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Route protection: require auth for protected pages
+    const isApiRoute = pathname.startsWith('/api/')
+    const isAuthRoute = pathname.startsWith('/auth/')
+    // Pages that should always require authentication
+    const protectedPrefixes = PROTECTED_PREFIXES
+    const isProtected = protectedPrefixes.some((p) => pathname === p || pathname.startsWith(p + '/'))
+
+    if (!isApiRoute) {
+      // If hitting protected page without a session, redirect to login with next param
+      if (isProtected && !user && !isAuthRoute) {
+        const loginUrl = request.nextUrl.clone()
+        loginUrl.pathname = '/auth/login'
+        loginUrl.searchParams.set('next', pathname)
+        return NextResponse.redirect(loginUrl)
+      }
+
+      // If already authenticated and trying to access login/signup, redirect to dashboard
+      if (user && isAuthRoute) {
+        const dashboardUrl = request.nextUrl.clone()
+        dashboardUrl.pathname = '/dashboard'
+        return NextResponse.redirect(dashboardUrl)
+      }
+    }
   }
   
   return response

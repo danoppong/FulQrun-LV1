@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
 import { AuthService } from '@/lib/auth-unified';
+import { requireApiAuth } from '@/lib/security/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporary bypass for testing - remove in production
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const { searchParams } = new URL(request.url)
     const organizationId = searchParams.get('organizationId') || '9ed327f2-c46a-445a-952b-70addaee33b8'
     const category = searchParams.get('category')
@@ -126,10 +128,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const user = await AuthService.getCurrentUserServer()
-    if (!user?.profile) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     // Allow all authenticated users to create metric templates for now
     // The RLS policies are too restrictive

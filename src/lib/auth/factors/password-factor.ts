@@ -8,12 +8,12 @@
  * - Password history
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, type Session, type User as SupabaseUser } from '@supabase/supabase-js'
 
 export interface PasswordAuthResult {
   success: boolean
-  user?: any
-  session?: any
+  user?: SupabaseUser
+  session?: Session
   requireMFA?: boolean
   message?: string
 }

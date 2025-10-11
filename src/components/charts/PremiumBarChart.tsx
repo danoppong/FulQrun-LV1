@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, TooltipProps } from 'recharts'
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 
 export interface BarChartData {
   name: string
@@ -35,8 +36,16 @@ export function PremiumBarChart({ data, dataKeys, height = 300, darkMode = false
     }
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload) return null
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
+    if (!active || !payload || !Array.isArray(payload)) return null
+
+    type TooltipEntry = { color?: string; name?: NameType; value?: ValueType }
+    const entries = payload as unknown as TooltipEntry[]
+
+    const formatValue = (val: ValueType) => {
+      if (Array.isArray(val)) return val.join(', ')
+      return typeof val === 'number' ? val.toLocaleString() : String(val)
+    }
     
     return (
       <div 
@@ -48,14 +57,14 @@ export function PremiumBarChart({ data, dataKeys, height = 300, darkMode = false
         }}
       >
         <p className="font-semibold mb-2">{label}</p>
-        {payload.map((entry: any, index: number) => (
+        {entries.map((entry, index) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div 
               className="w-3 h-3 rounded" 
-              style={{ backgroundColor: entry.color }}
+              style={{ backgroundColor: entry.color || '#999' }}
             />
-            <span>{entry.name}:</span>
-            <span className="font-semibold">{entry.value?.toLocaleString()}</span>
+            <span>{String(entry.name)}:</span>
+            <span className="font-semibold">{formatValue(entry.value ?? '')}</span>
           </div>
         ))}
       </div>

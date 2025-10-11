@@ -2,16 +2,17 @@
 // Pharmaceutical BI Dashboard Page
 // Main page for accessing pharmaceutical sales intelligence
 
-'use client';
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import { AuthService } from '@/lib/auth-unified'
+import type { AuthUser } from '@/lib/auth-unified'
 import PharmaceuticalDashboard from '@/components/bi/PharmaceuticalDashboard';
 import { ClockIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 export default function PharmaceuticalBIPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -19,25 +20,12 @@ export default function PharmaceuticalBIPage() {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        // Temporarily bypass authentication for testing
-        const mockUser = {
-          profile: {
-            id: 'test-user',
-            organization_id: 'test-org',
-            role: 'rep'
-          }
-        };
-        setUser(mockUser);
-        
-        // Uncomment below for production authentication
-        /*
         const currentUser = await AuthService.getCurrentUser();
         if (!currentUser) {
-          router.push('/auth/login');
+          router.push('/auth/login?next=/pharmaceutical-bi');
           return;
         }
         setUser(currentUser);
-        */
       } catch (err) {
         setError('Failed to load user data');
         console.error('User loading error:', err);
@@ -60,12 +48,12 @@ export default function PharmaceuticalBIPage() {
     );
   }
 
-  if (error || !user) {
+  if (error || !user || !user.profile) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <ExclamationTriangleIcon className="h-12 w-12 text-red-600 mx-auto mb-4" />
-          <p className="text-red-600 mb-4">{error || 'User not found'}</p>
+          <p className="text-red-600 mb-4">{error || 'User profile not found'}</p>
           <button
             onClick={() => router.push('/auth/login')}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"

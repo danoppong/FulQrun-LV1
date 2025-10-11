@@ -26,6 +26,7 @@ interface EnhancedRoleBasedDashboardProps {
   userRole: UserRole
   userId: string
   organizationNameSSR?: string | null
+  organizationId?: string | null
 }
 
 // Mock data for charts
@@ -867,7 +868,10 @@ function DashboardContent({ userRole: initialUserRole, userId: _userId, organiza
 
 export default function EnhancedRoleBasedDashboard(props: EnhancedRoleBasedDashboardProps) {
   return (
-    <DashboardProvider initialSettings={{ autoRefresh: true, refreshInterval: 15, defaultPeriodDays: 30 }}>
+    <DashboardProvider
+      initialSettings={{ autoRefresh: true, refreshInterval: 15, defaultPeriodDays: 30 }}
+      initialContext={{ userId: props.userId, userRole: props.userRole, organizationId: props.organizationId ?? null }}
+    >
       <DashboardContent {...props} />
     </DashboardProvider>
   )

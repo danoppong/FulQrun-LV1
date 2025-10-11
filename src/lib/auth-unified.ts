@@ -51,7 +51,7 @@ export class AuthService {
       const { cookies: nextCookies } = await import('next/headers')
       const cookieStore = await nextCookies()
 
-      return createServerClient(
+      return createServerClient<Database>(
         supabaseConfig.url!,
         supabaseConfig.anonKey!,
         {

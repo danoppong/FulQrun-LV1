@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
 import { AuthService } from '@/lib/auth-unified';
+import { requireApiAuth } from '@/lib/security/api-auth'
+import type { Database } from '@/lib/types/supabase'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporary bypass for testing - remove in production
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const { searchParams } = new URL(request.url)
     const organizationId = searchParams.get('organizationId') || '9ed327f2-c46a-445a-952b-70addaee33b8'
     const userId = searchParams.get('userId')
@@ -71,10 +74,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const user = await AuthService.getCurrentUserServer()
-    if (!user?.profile) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const body = await request.json()
     const {
@@ -100,22 +102,24 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerClient()
 
+    const insertPayload: Database['public']['Tables']['commission_calculations']['Insert'] = {
+      user_id,
+      compensation_plan_id,
+      period_start,
+      period_end,
+      base_salary: base_salary || 0,
+      commission_earned: commission_earned || 0,
+      bonus_earned: bonus_earned || 0,
+      total_compensation: total_compensation || 0,
+      quota_attainment: quota_attainment || 0,
+      commission_rate_applied: commission_rate_applied || 0,
+      adjustments: adjustments || {},
+      organization_id: user.profile.organization_id
+    }
+
     const { data: calculation, error } = await supabase
       .from('commission_calculations')
-      .insert({
-        user_id,
-        compensation_plan_id,
-        period_start,
-        period_end,
-        base_salary: base_salary || 0,
-        commission_earned: commission_earned || 0,
-        bonus_earned: bonus_earned || 0,
-        total_compensation: total_compensation || 0,
-        quota_attainment: quota_attainment || 0,
-        commission_rate_applied: commission_rate_applied || 0,
-        adjustments: adjustments || {},
-        organization_id: user.profile.organization_id
-      })
+      .insert(insertPayload as never)
       .select()
       .single()
 
@@ -135,10 +139,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const user = await AuthService.getCurrentUserServer()
-    if (!user?.profile) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     if (!['manager', 'admin'].includes(user.profile.role)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
@@ -156,23 +159,23 @@ export async function PUT(request: NextRequest) {
 
     const supabase = createServerClient()
 
-    const updateData: unknown = {
+    const updateData: Database['public']['Tables']['commission_calculations']['Update'] = {
       status,
       updated_at: new Date().toISOString()
     }
 
     if (status === 'approved') {
-      updateData.approved_by = user.id
-      updateData.approved_at = new Date().toISOString()
+  updateData.approved_by = user.id
+  updateData.approved_at = new Date().toISOString()
     }
 
     if (adjustments) {
-      updateData.adjustments = adjustments
+  updateData.adjustments = adjustments
     }
 
     const { data: calculation, error } = await supabase
       .from('commission_calculations')
-      .update(updateData)
+      .update(updateData as never)
       .eq('id', id)
       .select()
       .single()
