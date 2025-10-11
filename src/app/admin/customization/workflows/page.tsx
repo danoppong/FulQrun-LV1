@@ -170,7 +170,7 @@ interface WorkflowCondition {
 interface ConditionConfiguration {
   field?: string;
   operator?: string;
-  value?: any;
+  value?: unknown;
   lookupTable?: string;
   lookupField?: string;
   customScript?: string;
@@ -516,7 +516,7 @@ function WorkflowBuilder({ config, onUpdate }: { config: WorkflowBuilderConfigur
                 <div className="bg-blue-50 p-4 rounded-md">
                   <h4 className="text-sm font-medium text-blue-800 mb-2">Workflow Builder</h4>
                   <p className="text-sm text-blue-700">
-                    After creating the workflow, you'll be able to use the visual workflow builder to add triggers, 
+                    After creating the workflow, you&apos;ll be able to use the visual workflow builder to add triggers, 
                     steps, conditions, and actions.
                   </p>
                 </div>

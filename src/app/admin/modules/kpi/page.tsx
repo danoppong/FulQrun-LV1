@@ -70,7 +70,7 @@ interface KPICalculation {
   change?: number;
   changePercentage?: number;
   calculatedAt: Date;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 interface KPIThreshold {
@@ -101,7 +101,7 @@ interface DashboardKPI {
   position: { x: number; y: number; width: number; height: number };
   chartType: 'line' | 'bar' | 'pie' | 'number' | 'gauge';
   timeRange: string;
-  filters?: any;
+  filters?: Record<string, unknown>;
 }
 
 interface DashboardLayout {

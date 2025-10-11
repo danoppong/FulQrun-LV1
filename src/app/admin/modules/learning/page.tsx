@@ -61,7 +61,7 @@ interface ModuleContent {
   videoUrl?: string;
   documentUrl?: string;
   externalUrl?: string;
-  interactiveContent?: any;
+  interactiveContent?: Record<string, unknown>;
   transcript?: string;
   resources: ContentResource[];
 }
