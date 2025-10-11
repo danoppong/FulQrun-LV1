@@ -23,7 +23,7 @@ interface QualityCheck {
   criteria: {
     field: string
     condition: 'required' | 'format' | 'range' | 'pattern' | 'reference'
-    value?: any
+  value?: unknown
     weight: number
   }[]
   enabled: boolean

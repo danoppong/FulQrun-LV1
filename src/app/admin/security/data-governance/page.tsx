@@ -186,7 +186,7 @@ interface DataGovernanceEvent {
   ipAddress: string;
   userAgent: string;
   timestamp: Date;
-  details?: any;
+  details?: unknown;
 }
 
 // =============================================================================

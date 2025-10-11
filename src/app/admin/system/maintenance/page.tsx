@@ -135,7 +135,7 @@ interface MaintenanceLog {
   level: 'info' | 'warn' | 'error' | 'debug';
   category: 'maintenance' | 'announcement' | 'task' | 'system';
   message: string;
-  details?: any;
+  details?: unknown;
   userId?: string;
   taskId?: string;
   scheduleId?: string;

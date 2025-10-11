@@ -39,7 +39,7 @@ interface ConversionJob {
   status: 'PENDING' | 'IN_PROGRESS' | 'SUCCEEDED' | 'FAILED' | 'ROLLED_BACK'
   idempotency_key: string
   request_payload: unknown
-  response_payload?: any
+  response_payload?: unknown
   created_at: string
   updated_at: string
 }
@@ -51,7 +51,7 @@ interface OpportunityData {
   probability: number
   close_date?: string
   description?: string
-  meddpicc_data?: any
+  meddpicc_data?: unknown
 }
 
 export function LeadConversionWorkflow() {

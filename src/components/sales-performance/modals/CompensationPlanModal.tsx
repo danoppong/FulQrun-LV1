@@ -8,7 +8,7 @@ interface CompensationPlanModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
-  compensationPlan?: any
+  compensationPlan?: unknown
   organizationId: string
   users: unknown[]
   territories: unknown[]

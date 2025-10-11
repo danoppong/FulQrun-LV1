@@ -1,27 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  TrendingUp, 
-  TrendingDown, 
-  Target, 
-  DollarSign, 
-  Clock, 
-  Users, 
+  TrendingUp,
+  TrendingDown,
+  XCircle,
+  Target,
+  DollarSign,
+  Clock,
+  Users,
   Activity,
   BarChart3,
   PieChart,
   LineChart,
-  AlertTriangle,
   CheckCircle,
-  XCircle
+  AlertTriangle,
 } from 'lucide-react';
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
+
+type KPIThresholds = { thresholds?: { excellent: number; good: number; average: number } };
 
 interface KPIData {
   win_rate?: {
@@ -86,8 +88,19 @@ interface KPIData {
     presentations: number;
     activities_per_day: number;
   };
-  trends?: unknown[];
-  benchmarks?: any;
+  trends?: Array<Record<string, unknown>>;
+  benchmarks?: {
+    win_rate?: KPIThresholds;
+    revenue_growth?: KPIThresholds;
+    avg_deal_size?: KPIThresholds;
+    sales_cycle_length?: KPIThresholds;
+    lead_conversion_rate?: KPIThresholds;
+    cac?: KPIThresholds;
+    quota_attainment?: KPIThresholds;
+    clv?: KPIThresholds;
+    pipeline_coverage?: KPIThresholds;
+    activities_per_rep?: KPIThresholds;
+  };
 }
 
 interface KPIDashboardProps {
@@ -113,11 +126,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
   const [selectedKPI, setSelectedKPI] = useState('all');
   const [viewMode, setViewMode] = useState<'overview' | 'detailed' | 'trends'>('overview');
 
-  useEffect(() => {
-    fetchKPIData();
-  }, [organizationId, userId, territoryId, selectedPeriod, selectedKPI]);
-
-  const fetchKPIData = async () => {
+  const fetchKPIData = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -146,9 +155,14 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId, userId, territoryId, selectedPeriod, selectedKPI]);
 
-  const getPerformanceTier = (value: number, thresholds: any) => {
+  useEffect(() => {
+    fetchKPIData();
+  }, [fetchKPIData]);
+
+  type TierThresholds = { excellent: number; good: number; average: number } | undefined;
+  const getPerformanceTier = (value: number, thresholds: TierThresholds) => {
     if (!thresholds) return 'average';
     
     if (value >= thresholds.excellent) return 'excellent';
@@ -245,7 +259,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             </SelectContent>
           </Select>
 
-          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as unknown)}>
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'overview' | 'detailed' | 'trends')}>
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="detailed">Detailed</TabsTrigger>
@@ -520,21 +534,24 @@ interface DetailedKPICardProps {
 }
 
 function DetailedKPICard({ title, data, type }: DetailedKPICardProps) {
+  interface ActivitiesDetails { calls?: number; emails?: number; meetings?: number; demos?: number; presentations?: number }
+  interface DealSizeDetails { avg_deal_size: number; median_deal_size: number; largest_deal: number; smallest_deal: number }
   const renderChart = () => {
     switch (type) {
       case 'activities_per_rep':
+        const a = data as ActivitiesDetails;
         const activityData = [
-          { name: 'Calls', value: data.calls, color: CHART_COLORS[0] },
-          { name: 'Emails', value: data.emails, color: CHART_COLORS[1] },
-          { name: 'Meetings', value: data.meetings, color: CHART_COLORS[2] },
-          { name: 'Demos', value: data.demos, color: CHART_COLORS[3] },
-          { name: 'Presentations', value: data.presentations, color: CHART_COLORS[4] }
+          { name: 'Calls', value: a.calls ?? 0, color: CHART_COLORS[0] },
+          { name: 'Emails', value: a.emails ?? 0, color: CHART_COLORS[1] },
+          { name: 'Meetings', value: a.meetings ?? 0, color: CHART_COLORS[2] },
+          { name: 'Demos', value: a.demos ?? 0, color: CHART_COLORS[3] },
+          { name: 'Presentations', value: a.presentations ?? 0, color: CHART_COLORS[4] }
         ];
 
         return (
           <ResponsiveContainer width="100%" height={200}>
             <RechartsPieChart>
-              <RechartsPieChart
+              <Pie
                 data={activityData}
                 cx="50%"
                 cy="50%"
@@ -546,18 +563,19 @@ function DetailedKPICard({ title, data, type }: DetailedKPICardProps) {
                 {activityData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
-              </RechartsPieChart>
+              </Pie>
               <Tooltip />
             </RechartsPieChart>
           </ResponsiveContainer>
         );
 
       case 'avg_deal_size':
+        const d = data as DealSizeDetails;
         const dealData = [
-          { name: 'Average', value: data.avg_deal_size },
-          { name: 'Median', value: data.median_deal_size },
-          { name: 'Largest', value: data.largest_deal },
-          { name: 'Smallest', value: data.smallest_deal }
+          { name: 'Average', value: d.avg_deal_size },
+          { name: 'Median', value: d.median_deal_size },
+          { name: 'Largest', value: d.largest_deal },
+          { name: 'Smallest', value: d.smallest_deal }
         ];
 
         return (

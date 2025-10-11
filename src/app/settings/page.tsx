@@ -37,7 +37,7 @@ export default function SettingsPage() {
               </h3>
               <div className="mt-2 text-sm text-blue-700">
                 <p>
-                  We've launched a comprehensive administration module with advanced features including:
+                  We&apos;ve launched a comprehensive administration module with advanced features including:
                 </p>
                 <ul className="mt-2 list-disc list-inside space-y-1">
                   <li>User & Role Management</li>

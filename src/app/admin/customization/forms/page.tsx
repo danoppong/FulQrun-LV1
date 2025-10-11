@@ -79,6 +79,9 @@ interface FormTemplate {
   updatedAt: Date;
 }
 
+// Generic JSON-safe value type for dynamic defaults and validation rule values
+type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
+
 interface FormSection {
   id: string;
   name: string;
@@ -101,7 +104,7 @@ interface FormField {
   helpText?: string;
   isRequired: boolean;
   isReadOnly: boolean;
-  defaultValue?: any;
+  defaultValue?: JSONValue;
   options?: FieldOption[];
   validation: FieldValidationRule[];
   styling: FieldStyling;
@@ -162,7 +165,7 @@ interface FormValidation {
 interface ValidationRule {
   fieldId: string;
   type: 'required' | 'min_length' | 'max_length' | 'min_value' | 'max_value' | 'pattern' | 'custom';
-  value?: any;
+  value?: JSONValue;
   message: string;
 }
 
@@ -176,7 +179,7 @@ interface FieldOption {
 
 interface FieldValidationRule {
   type: 'required' | 'min_length' | 'max_length' | 'min_value' | 'max_value' | 'pattern' | 'custom';
-  value?: any;
+  value?: JSONValue;
   message: string;
   isActive: boolean;
 }
@@ -474,7 +477,7 @@ function FormDesigner({ config, onUpdate }: { config: FormDesignerConfiguration;
                 <div className="bg-blue-50 p-4 rounded-md">
                   <h4 className="text-sm font-medium text-blue-800 mb-2">Form Designer</h4>
                   <p className="text-sm text-blue-700">
-                    After creating the form, you'll be able to use the visual form designer to add sections, 
+                    After creating the form, you&apos;ll be able to use the visual form designer to add sections, 
                     fields, and customize the layout and styling.
                   </p>
                 </div>

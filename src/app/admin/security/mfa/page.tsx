@@ -144,7 +144,7 @@ interface MFAEvent {
   ipAddress: string;
   userAgent: string;
   timestamp: Date;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 interface MFAUser {

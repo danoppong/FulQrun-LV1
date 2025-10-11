@@ -577,7 +577,7 @@ export class RiskAssessmentEngine {
     }
   }
 
-  private async cacheRiskAssessment(userId: string, assessment: any): Promise<void> {
+  private async cacheRiskAssessment(userId: string, assessment: { score: number; factors: unknown; timestamp: Date }): Promise<void> {
     await this.supabase
       .from('risk_assessments')
       .insert({

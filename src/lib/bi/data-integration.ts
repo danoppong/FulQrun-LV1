@@ -482,7 +482,7 @@ export class DataIntegrationService {
     ];
   }
 
-  private async fetchSnowflakeData(config: DataSourceConfig): Promise<any[]> {
+  private async fetchSnowflakeData(config: DataSourceConfig): Promise<unknown[]> {
     // Mock Snowflake data - in real implementation, this would query Snowflake
     return [
       {

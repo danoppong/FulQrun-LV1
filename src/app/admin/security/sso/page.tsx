@@ -392,7 +392,7 @@ function SSOProviders({ config, onUpdate }: { config: SSOConfiguration; onUpdate
                 <div className="bg-yellow-50 p-4 rounded-md">
                   <h4 className="text-sm font-medium text-yellow-800 mb-2">Configuration Required</h4>
                   <p className="text-sm text-yellow-700">
-                    After creating the provider, you'll need to configure authentication endpoints, 
+                    After creating the provider, you&apos;ll need to configure authentication endpoints, 
                     certificates, and other provider-specific settings.
                   </p>
                 </div>

@@ -159,7 +159,7 @@ function PasswordPolicyConfig({ config, onUpdate }: { config: AuthenticationConf
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [policies, setPolicies] = useState<any[]>([]);
+  const [policies, setPolicies] = useState<unknown[]>([]);
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
 
   // Load password policies from database

@@ -883,7 +883,7 @@ function RBACConfiguration({
 
   const [testUser, setTestUser] = useState('');
   const [testPermission, setTestPermission] = useState('');
-  const [testResult, setTestResult] = useState<any>(null);
+  const [testResult, setTestResult] = useState<null | { user: string; permission: string; hasAccess: boolean; reason?: string; timestamp: string }>(null);
   const [loadingSettings, setLoadingSettings] = useState(false);
   const [loadingTest, setLoadingTest] = useState(false);
 
@@ -918,7 +918,7 @@ function RBACConfiguration({
     }
   };
 
-  const handleRbacSettingChange = async (key: string, value: any) => {
+  const handleRbacSettingChange = async (key: string, value: unknown) => {
     const newSettings = { ...rbacSettings, [key]: value };
     setRbacSettings(newSettings);
 

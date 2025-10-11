@@ -53,6 +53,9 @@ const supabase = getSupabaseClient();
 // TYPES AND INTERFACES
 // =============================================================================
 
+// JSON-safe value used for defaults and dynamic template variables
+type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
+
 interface EmailTemplatesConfiguration {
   templates: EmailTemplate[];
   categories: EmailCategory[];
@@ -94,7 +97,7 @@ interface EmailVariable {
   label: string;
   description?: string;
   type: 'text' | 'number' | 'date' | 'boolean' | 'url' | 'email' | 'phone';
-  defaultValue?: any;
+  defaultValue?: JSONValue;
   isRequired: boolean;
   isActive: boolean;
   createdAt: Date;
@@ -1536,7 +1539,7 @@ function EmailLayouts({ config, onUpdate }: { config: EmailTemplatesConfiguratio
                   <h4 className="text-sm font-medium text-blue-800 mb-2">Layout Usage</h4>
                   <p className="text-sm text-blue-700">
                     This layout can be selected when creating or editing email templates. 
-                    The <code className="bg-blue-200 px-1 rounded">{`{{content}}`}</code> placeholder will be replaced with the template's HTML content.
+                    The <code className="bg-blue-200 px-1 rounded">{`{{content}}`}</code> placeholder will be replaced with the template&apos;s HTML content.
                   </p>
                 </div>
 

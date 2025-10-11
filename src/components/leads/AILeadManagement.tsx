@@ -488,7 +488,7 @@ export function AILeadManagement() {
                       <p className="font-medium text-orange-800">⚠️ Currently Using Demo Data</p>
                       <p className="text-sm text-orange-700">
                         The AI Lead Management system is currently using <strong>fake demonstration data</strong> for testing purposes. 
-                        Companies like "MedTech Solutions" and websites like "medtechsolutions.com" are <strong>not real</strong>.
+                        Companies like &quot;MedTech Solutions&quot; and websites like &quot;medtechsolutions.com&quot; are <strong>not real</strong>.
                       </p>
                       <div className="flex space-x-2 mt-3">
                         <Button 

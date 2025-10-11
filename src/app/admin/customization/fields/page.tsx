@@ -42,6 +42,9 @@ const supabase = getSupabaseClient();
 // TYPES AND INTERFACES
 // =============================================================================
 
+// Generic JSON-safe value type used for default values and dynamic rule payloads
+type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
+
 interface CustomFieldsConfiguration {
   fields: CustomField[];
   fieldGroups: FieldGroup[];
@@ -61,7 +64,7 @@ interface CustomField {
   isUnique: boolean;
   isSearchable: boolean;
   isVisible: boolean;
-  defaultValue?: any;
+  defaultValue?: JSONValue;
   options?: FieldOption[];
   validation: FieldValidationRule[];
   displayOrder: number;
@@ -104,7 +107,7 @@ interface FieldOption {
 
 interface FieldValidationRule {
   type: 'required' | 'min_length' | 'max_length' | 'min_value' | 'max_value' | 'pattern' | 'custom';
-  value?: any;
+  value?: JSONValue;
   message: string;
   isActive: boolean;
 }
@@ -127,12 +130,12 @@ interface FieldDependency {
 
 interface DependencyCondition {
   operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'is_empty' | 'is_not_empty';
-  value?: any;
+  value?: JSONValue;
 }
 
 interface DependencyAction {
   type: 'show' | 'hide' | 'enable' | 'disable' | 'require' | 'optional' | 'set_value' | 'clear_value';
-  value?: any;
+  value?: JSONValue;
 }
 
 // =============================================================================

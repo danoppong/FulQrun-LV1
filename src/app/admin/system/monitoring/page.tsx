@@ -162,7 +162,7 @@ interface SystemLog {
   level: 'debug' | 'info' | 'warn' | 'error' | 'fatal';
   source: string;
   message: string;
-  details?: any;
+  details?: unknown;
   userId?: string;
   sessionId?: string;
   requestId?: string;

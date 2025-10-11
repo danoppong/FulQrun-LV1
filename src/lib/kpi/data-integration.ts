@@ -1,8 +1,17 @@
 'use client';
 
-import { createClient } from '@/lib/supabase/client';
+import { getSupabaseBrowserClient as createClient } from '@/lib/supabase-singleton';
 
-export interface KPIDataIntegrationService {
+type OpportunityLite = {
+  stage?: string
+  organization_id?: string
+  assigned_to?: string
+  companies?: { sales_territories?: Array<{ id?: string }> }
+  deal_value?: number
+  close_date?: string
+}
+
+export interface IKPIDataIntegrationService {
   syncOpportunityData(opportunityId: string): Promise<void>;
   syncActivityData(activityId: string): Promise<void>;
   syncLeadData(leadId: string): Promise<void>;
@@ -26,11 +35,13 @@ export interface DataIssue {
   suggestedFix: string;
 }
 
-export class KPIDataIntegrationService implements KPIDataIntegrationService {
-  private supabase;
+export class KPIDataIntegrationService implements IKPIDataIntegrationService {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private supabase: any;
 
   constructor() {
-    this.supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  this.supabase = createClient() as any;
   }
 
   /**
@@ -53,30 +64,30 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
           )
         `)
         .eq('id', opportunityId)
-        .single();
+  .single() as unknown as { data: OpportunityLite | null; error: { message: string } | null };
 
       if (oppError || !opportunity) {
         throw new Error(`Failed to fetch opportunity: ${oppError?.message}`);
       }
 
       // Determine affected users and territories
-      const affectedUsers = [opportunity.assigned_to].filter(Boolean);
-      const affectedTerritories = opportunity.companies?.sales_territories?.map((t: unknown) => t.id) || [];
+  const _affectedUsers = [opportunity?.assigned_to].filter(Boolean);
+  const _affectedTerritories = opportunity?.companies?.sales_territories?.map((t: { id?: string }) => t.id) || [];
 
       // Trigger KPI recalculation for affected users/territories
       await this.recalculateKPIs(
-        opportunity.organization_id,
+  opportunity?.organization_id as string,
         undefined, // Recalculate for all users in organization
         undefined  // Recalculate for all territories
       );
 
       // Update specific KPI metrics
-      await this.updateWinRateMetrics(opportunity);
-      await this.updateRevenueGrowthMetrics(opportunity);
-      await this.updateDealSizeMetrics(opportunity);
-      await this.updateSalesCycleMetrics(opportunity);
-      await this.updateQuotaAttainmentMetrics(opportunity);
-      await this.updatePipelineCoverageMetrics(opportunity);
+  await this.updateWinRateMetrics(opportunity as OpportunityLite);
+  await this.updateRevenueGrowthMetrics(opportunity as OpportunityLite);
+  await this.updateDealSizeMetrics(opportunity as OpportunityLite);
+  await this.updateSalesCycleMetrics(opportunity as OpportunityLite & { created_at?: string; close_date?: string });
+  await this.updateQuotaAttainmentMetrics(opportunity as OpportunityLite);
+  await this.updatePipelineCoverageMetrics(opportunity as OpportunityLite);
 
       console.log(`Successfully synced opportunity data for opportunity ${opportunityId}`);
     } catch (error) {
@@ -105,20 +116,20 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
           )
         `)
         .eq('id', activityId)
-        .single();
+  .single() as unknown as { data: { organization_id?: string; assigned_to?: string; users?: { sales_territories?: Array<{ id?: string }> }; type?: string } | null; error: { message: string } | null };
 
       if (actError || !activity) {
         throw new Error(`Failed to fetch activity: ${actError?.message}`);
       }
 
       // Update activities per rep metrics
-      await this.updateActivitiesPerRepMetrics(activity);
+  await this.updateActivitiesPerRepMetrics(activity as { organization_id?: string; assigned_to?: string; users?: { sales_territories?: Array<{ id?: string }> }; type?: string });
 
       // Trigger KPI recalculation for the user
       await this.recalculateKPIs(
-        activity.organization_id,
-        activity.assigned_to,
-        activity.users?.sales_territories?.[0]?.id
+  activity?.organization_id as string,
+  activity?.assigned_to as string,
+  activity?.users?.sales_territories?.[0]?.id as string
       );
 
       console.log(`Successfully synced activity data for activity ${activityId}`);
@@ -148,20 +159,20 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
           )
         `)
         .eq('id', leadId)
-        .single();
+  .single() as unknown as { data: { organization_id?: string; created_by?: string; users?: { sales_territories?: Array<{ id?: string }> }; status?: string } | null; error: { message: string } | null };
 
       if (leadError || !lead) {
         throw new Error(`Failed to fetch lead: ${leadError?.message}`);
       }
 
       // Update lead conversion metrics
-      await this.updateLeadConversionMetrics(lead);
+  await this.updateLeadConversionMetrics(lead as { organization_id?: string; created_by?: string; users?: { sales_territories?: Array<{ id?: string }> }; status?: string });
 
       // Trigger KPI recalculation for the user
       await this.recalculateKPIs(
-        lead.organization_id,
-        lead.created_by,
-        lead.users?.sales_territories?.[0]?.id
+  lead?.organization_id as string,
+  lead?.created_by as string,
+  lead?.users?.sales_territories?.[0]?.id as string
       );
 
       console.log(`Successfully synced lead data for lead ${leadId}`);
@@ -281,7 +292,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
 
   // Private helper methods
 
-  private async updateWinRateMetrics(opportunity: unknown): Promise<void> {
+  private async updateWinRateMetrics(opportunity: OpportunityLite): Promise<void> {
     if (opportunity.stage === 'closed_won' || opportunity.stage === 'closed_lost') {
       const { error } = await this.supabase
         .from('win_rate_metrics')
@@ -303,7 +314,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updateRevenueGrowthMetrics(opportunity: unknown): Promise<void> {
+  private async updateRevenueGrowthMetrics(opportunity: OpportunityLite): Promise<void> {
     if (opportunity.stage === 'closed_won' && opportunity.deal_value) {
       const { error } = await this.supabase
         .from('revenue_growth_metrics')
@@ -326,7 +337,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updateDealSizeMetrics(opportunity: unknown): Promise<void> {
+  private async updateDealSizeMetrics(opportunity: OpportunityLite): Promise<void> {
     if (opportunity.stage === 'closed_won' && opportunity.deal_value) {
       const { error } = await this.supabase
         .from('avg_deal_size_metrics')
@@ -351,7 +362,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updateSalesCycleMetrics(opportunity: unknown): Promise<void> {
+  private async updateSalesCycleMetrics(opportunity: OpportunityLite & { created_at?: string; close_date?: string }): Promise<void> {
     if (opportunity.stage === 'closed_won' && opportunity.close_date) {
       const cycleLength = Math.ceil((new Date(opportunity.close_date).getTime() - new Date(opportunity.created_at).getTime()) / (1000 * 60 * 60 * 24));
       
@@ -378,7 +389,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updateQuotaAttainmentMetrics(opportunity: unknown): Promise<void> {
+  private async updateQuotaAttainmentMetrics(opportunity: OpportunityLite): Promise<void> {
     if (opportunity.stage === 'closed_won' && opportunity.deal_value) {
       const { error } = await this.supabase
         .from('quota_attainment_metrics')
@@ -400,12 +411,12 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updatePipelineCoverageMetrics(opportunity: unknown): Promise<void> {
+  private async updatePipelineCoverageMetrics(_opportunity: unknown): Promise<void> {
     // This would calculate pipeline coverage based on all opportunities
     // Implementation would be similar to other metrics
   }
 
-  private async updateActivitiesPerRepMetrics(activity: unknown): Promise<void> {
+  private async updateActivitiesPerRepMetrics(activity: { organization_id?: string; assigned_to?: string; users?: { sales_territories?: Array<{ id?: string }> }; type?: string }): Promise<void> {
     const { error } = await this.supabase
       .from('activities_per_rep_metrics')
       .upsert({
@@ -429,7 +440,7 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
     }
   }
 
-  private async updateLeadConversionMetrics(lead: unknown): Promise<void> {
+  private async updateLeadConversionMetrics(lead: { organization_id?: string; created_by?: string; users?: { sales_territories?: Array<{ id?: string }> }; status?: string }): Promise<void> {
     const { error } = await this.supabase
       .from('lead_conversion_metrics')
       .upsert({
@@ -475,27 +486,28 @@ export class KPIDataIntegrationService implements KPIDataIntegrationService {
   }
 
   private extractKPIValue(data: unknown, kpiName: string): number {
+    const d = (data as Record<string, number | undefined>) || {};
     switch (kpiName) {
       case 'win_rate':
-        return data.win_rate || 0;
+        return d.win_rate || 0;
       case 'revenue_growth':
-        return data.growth_percentage || 0;
+        return d.growth_percentage || 0;
       case 'avg_deal_size':
-        return data.avg_deal_size || 0;
+        return d.avg_deal_size || 0;
       case 'sales_cycle_length':
-        return data.avg_cycle_length || 0;
+        return d.avg_cycle_length || 0;
       case 'lead_conversion_rate':
-        return data.conversion_rate || 0;
+        return d.conversion_rate || 0;
       case 'cac':
-        return data.cac || 0;
+        return d.cac || 0;
       case 'quota_attainment':
-        return data.attainment_percentage || 0;
+        return d.attainment_percentage || 0;
       case 'clv':
-        return data.clv || 0;
+        return d.clv || 0;
       case 'pipeline_coverage':
-        return data.coverage_ratio || 0;
+        return d.coverage_ratio || 0;
       case 'activities_per_rep':
-        return data.activities_per_day || 0;
+        return d.activities_per_day || 0;
       default:
         return 0;
     }

@@ -88,8 +88,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 async function generateAccounts(
-  supabase: unknown,
+  supabase: SupabaseClient,
   body: unknown,
   organizationId: string
 ) {
@@ -158,7 +160,7 @@ async function generateAccounts(
 }
 
 async function generateContacts(
-  supabase: unknown,
+  supabase: SupabaseClient,
   body: unknown,
   organizationId: string
 ) {
@@ -195,7 +197,7 @@ async function generateContacts(
   }
 
   // Get accounts if account_ids provided
-  let accounts: unknown[] = []
+  let accounts: GeneratedAccount[] = []
   if (account_ids && account_ids.length > 0) {
     const { data: accountData, error: accountError } = await supabase
       .from('ai_accounts')
@@ -209,7 +211,7 @@ async function generateContacts(
         { status: 500 }
       )
     }
-    accounts = accountData || []
+  accounts = (accountData as GeneratedAccount[]) || []
   }
 
   // Generate AI contacts
@@ -244,15 +246,57 @@ async function generateContacts(
   })
 }
 
+interface LeadBriefInput {
+  id?: string
+  geography?: string
+  industry?: string
+  revenue_band?: string
+  employee_band?: string
+  entity_type?: string
+}
+
+interface GeneratedAccount {
+  id: string
+  legal_name: string
+  known_as: string
+  domain: string
+  country?: string
+  region?: string
+  industry_code: string
+  revenue_band?: string
+  employee_band?: string
+  entity_type?: string
+  provenance: {
+    source: string
+    model: string
+    confidence: number
+    enrichment_level: string
+    generated_at: string
+    lead_brief_id?: string
+  }
+}
+
+interface GeneratedContact {
+  id: string
+  account_id?: string
+  full_name: string
+  title: string
+  seniority: 'C-LEVEL' | 'VP' | 'DIR' | 'IC'
+  dept: string
+  email_pattern_hint: string
+  email_status: 'UNKNOWN' | 'VERIFIED' | 'BOUNCED'
+  provenance: GeneratedAccount['provenance']
+}
+
 async function generateAIAccounts(
-  leadBrief: unknown,
+  leadBrief: LeadBriefInput,
   count: number,
   enrichmentLevel: string
-): Promise<any[]> {
+): Promise<GeneratedAccount[]> {
   // This is a placeholder implementation
   // In a real implementation, this would call an AI service or use data providers
   
-  const accounts: unknown[] = []
+  const accounts: GeneratedAccount[] = []
   
   for (let i = 0; i < count; i++) {
     accounts.push({
@@ -260,7 +304,7 @@ async function generateAIAccounts(
       legal_name: `Generated Company ${i + 1}`,
       known_as: `Company ${i + 1}`,
       domain: `company${i + 1}.com`,
-      country: getRandomCountry(leadBrief.geography),
+      country: getRandomCountry(leadBrief.geography || 'US'),
       region: leadBrief.geography,
       industry_code: leadBrief.industry || 'SOFTWARE',
       revenue_band: leadBrief.revenue_band || '$10–50M',
@@ -281,15 +325,15 @@ async function generateAIAccounts(
 }
 
 async function generateAIContacts(
-  leadBrief: unknown,
+  leadBrief: LeadBriefInput,
   count: number,
   enrichmentLevel: string,
-  accounts: unknown[] = []
-): Promise<any[]> {
+  accounts: GeneratedAccount[] = []
+): Promise<GeneratedContact[]> {
   // This is a placeholder implementation
   // In a real implementation, this would call an AI service or use data providers
   
-  const contacts: unknown[] = []
+  const contacts: GeneratedContact[] = []
   
   for (let i = 0; i < count; i++) {
     const randomAccount = accounts.length > 0 ? accounts[Math.floor(Math.random() * accounts.length)] : null

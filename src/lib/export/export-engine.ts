@@ -531,7 +531,19 @@ startxref
   /**
    * Get export metrics
    */
-  async getExportMetrics(): Promise<any> {
+  async getExportMetrics(): Promise<{
+    totalExports: number;
+    exportsByFormat: {
+      pdf: number;
+      excel: number;
+      csv: number;
+      json: number;
+      powerpoint: number;
+    };
+    successRate: number;
+    averageGenerationTime: number;
+    popularReportTypes: string[];
+  }> {
     // Mock metrics - in real implementation, query from database
     return {
       totalExports: 1247,

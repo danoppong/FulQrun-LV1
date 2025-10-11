@@ -13,7 +13,7 @@ import { GamificationDashboard } from './GamificationDashboard';
 export function SalesPerformanceDashboard() {
   const [activeTab, setActiveTab] = useState('performance')
   const [organizationId, setOrganizationId] = useState<string>('')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<unknown>(null)
 
   useEffect(() => {
     const getUser = async () => {

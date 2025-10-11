@@ -3,7 +3,7 @@
  * Integrates with actual data sources and AI services for lead generation
  */
 
-import { Database } from '@/lib/types/supabase';
+// import { Database } from '@/lib/types/supabase';
 
 export interface RealCompanyData {
   name: string
@@ -60,7 +60,14 @@ export class RealAIOrchestrationService {
       const enrichedCompanies = await this.enrichCompanyData(companies)
       
       // Step 3: Filter and score leads
-      const scoredLeads = await this.scoreAndFilterLeads(enrichedCompanies, request.criteria)
+      const eb = request.criteria.employee_band
+      const allowedBands = ['1–50','51–200','201–1k','1k–5k','>5k'] as const
+      const isAllowed = (val: string | undefined): val is typeof allowedBands[number] =>
+        !!val && (allowedBands as readonly string[]).includes(val)
+      const normalized = isAllowed(eb)
+        ? { ...request.criteria, employee_band: eb as typeof allowedBands[number] }
+        : { ...request.criteria, employee_band: undefined }
+      const scoredLeads = await this.scoreAndFilterLeads(enrichedCompanies, normalized)
       
       // Step 4: Return requested count
       return scoredLeads.slice(0, request.targetCount)
@@ -123,7 +130,7 @@ export class RealAIOrchestrationService {
   /**
    * Search Clearbit Company API
    */
-  private async searchClearbit(criteria: unknown): Promise<Partial<RealCompanyData>[]> {
+  private async searchClearbit(_criteria: unknown): Promise<Partial<RealCompanyData>[]> {
     const response = await fetch('https://company.clearbit.com/v1/domains/find', {
       method: 'GET',
       headers: {
@@ -154,9 +161,10 @@ export class RealAIOrchestrationService {
   /**
    * Search Apollo.io API
    */
-  private async searchApollo(criteria: unknown): Promise<Partial<RealCompanyData>[]> {
+  private async searchApollo(criteria: { industry?: string } | unknown): Promise<Partial<RealCompanyData>[]> {
+    const ind = (criteria as { industry?: string } | undefined)?.industry || ''
     const searchParams = new URLSearchParams({
-      q_organization_domains: criteria.industry || '',
+      q_organization_domains: ind,
       page: '1',
       per_page: '25'
     })
@@ -175,13 +183,22 @@ export class RealAIOrchestrationService {
     
     const data = await response.json()
     
-    return data.organizations?.map((org: unknown) => ({
-      name: org.name,
-      domain: org.primary_domain,
-      industry: org.industry,
-      location: org.city + ', ' + org.state,
-      employeeCount: org.estimated_num_employees,
-      description: org.short_description,
+    return (data.organizations as Array<{
+      name?: string
+      primary_domain?: string
+      industry?: string
+      city?: string
+      state?: string
+      estimated_num_employees?: number
+      short_description?: string
+      linkedin_url?: string
+    }> | undefined)?.map((org) => ({
+      name: org.name || 'Unknown Company',
+      domain: org.primary_domain || '',
+      industry: org.industry || 'Unknown',
+      location: ((org.city || '') + ', ' + (org.state || '')).trim(),
+      employeeCount: org.estimated_num_employees || 0,
+      description: org.short_description || 'No description available',
       website: org.primary_domain ? `https://${org.primary_domain}` : undefined,
       linkedinUrl: org.linkedin_url,
       verified: true,
@@ -192,8 +209,9 @@ export class RealAIOrchestrationService {
   /**
    * Search Hunter.io API
    */
-  private async searchHunter(criteria: unknown): Promise<Partial<RealCompanyData>[]> {
-    const response = await fetch(`https://api.hunter.io/v2/domain-search?domain=${criteria.industry}&api_key=${this.apiKeys.hunter}`)
+  private async searchHunter(criteria: { industry?: string } | unknown): Promise<Partial<RealCompanyData>[]> {
+    const domain = (criteria as { industry?: string } | undefined)?.industry || ''
+    const response = await fetch(`https://api.hunter.io/v2/domain-search?domain=${domain}&api_key=${this.apiKeys.hunter}`)
     
     if (!response.ok) {
       throw new Error(`Hunter API error: ${response.status}`)
@@ -217,7 +235,7 @@ export class RealAIOrchestrationService {
   /**
    * Search ZoomInfo API
    */
-  private async searchZoomInfo(criteria: unknown): Promise<Partial<RealCompanyData>[]> {
+  private async searchZoomInfo(_criteria: unknown): Promise<Partial<RealCompanyData>[]> {
     // ZoomInfo API implementation would go here
     // This requires a ZoomInfo API key and specific endpoint
     return []
@@ -266,13 +284,13 @@ export class RealAIOrchestrationService {
     if (!website) return false
     
     try {
-      const response = await fetch(website, { 
+      const _response = await fetch(website, { 
         method: 'HEAD',
         mode: 'no-cors',
         signal: AbortSignal.timeout(5000)
       })
       return true
-    } catch (error) {
+    } catch (_error) {
       return false
     }
   }
@@ -290,7 +308,15 @@ export class RealAIOrchestrationService {
   /**
    * Score and filter leads based on criteria
    */
-  private async scoreAndFilterLeads(companies: RealCompanyData[], criteria: any): Promise<RealCompanyData[]> {
+  private async scoreAndFilterLeads(
+    companies: RealCompanyData[],
+    criteria: {
+      employee_band?: '1–50' | '51–200' | '201–1k' | '1k–5k' | '>5k'
+      industry?: string
+      geography?: string
+      [k: string]: unknown
+    }
+  ): Promise<RealCompanyData[]> {
     return companies
       .filter(company => this.matchesCriteria(company, criteria))
       .sort((a, b) => this.calculateScore(b, criteria) - this.calculateScore(a, criteria))
@@ -299,7 +325,15 @@ export class RealAIOrchestrationService {
   /**
    * Check if company matches criteria
    */
-  private matchesCriteria(company: RealCompanyData, criteria: any): boolean {
+  private matchesCriteria(
+    company: RealCompanyData,
+    criteria: {
+      employee_band?: '1–50' | '51–200' | '201–1k' | '1k–5k' | '>5k'
+      industry?: string
+      geography?: string
+      [k: string]: unknown
+    }
+  ): boolean {
     // Filter by employee band
     if (criteria.employee_band) {
       const employeeCount = company.employeeCount
@@ -338,7 +372,13 @@ export class RealAIOrchestrationService {
   /**
    * Calculate lead score
    */
-  private calculateScore(company: RealCompanyData, criteria: any): number {
+  private calculateScore(
+    company: RealCompanyData,
+    criteria: {
+      employee_band?: '1–50' | '51–200' | '201–1k' | '1k–5k' | '>5k'
+      [k: string]: unknown
+    }
+  ): number {
     let score = 50 // Base score
     
     // Higher score for verified companies

@@ -4,6 +4,25 @@ import { getSupabaseBrowserClient } from '@/lib/supabase-singleton'
 
 const supabase = getSupabaseBrowserClient()
 
+// JSON-safe value type for flexible config fields
+type JSONValue = string | number | boolean | null | JSONValue[] | { [k: string]: JSONValue }
+
+interface AlgorithmSettings {
+  text_scoring: {
+    base_points: number
+    min_length_points: number
+    good_detail_points: number
+    comprehensive_points: number
+    very_detailed_points: number
+    min_length: number
+    good_detail_length: number
+    comprehensive_length: number
+    very_detailed_length: number
+    max_keyword_bonus: number
+  }
+  quality_keywords: string[]
+}
+
 export interface MEDDPICCConfigurationRecord {
   id: string
   organization_id: string
@@ -12,21 +31,7 @@ export interface MEDDPICCConfigurationRecord {
   version: number
   is_active: boolean
   configuration_data: MEDDPICCConfig
-  algorithm_settings: {
-    text_scoring: {
-      base_points: number
-      min_length_points: number
-      good_detail_points: number
-      comprehensive_points: number
-      very_detailed_points: number
-      min_length: number
-      good_detail_length: number
-      comprehensive_length: number
-      very_detailed_length: number
-      max_keyword_bonus: number
-    }
-    quality_keywords: string[]
-  }
+  algorithm_settings: AlgorithmSettings
   created_at: string
   updated_at: string
   created_by?: string
@@ -40,7 +45,7 @@ export interface MEDDPICCConfigurationHistory {
   change_type: 'CREATE' | 'UPDATE' | 'DELETE' | 'ACTIVATE' | 'DEACTIVATE'
   previous_version?: number
   new_version?: number
-  changes_summary: any
+  changes_summary: Record<string, JSONValue>
   previous_configuration?: MEDDPICCConfig
   new_configuration?: MEDDPICCConfig
   changed_at: string
@@ -87,14 +92,15 @@ export class MEDDPICCConfigurationService {
   static async getConfigurationRecord(): Promise<MEDDPICCConfigurationRecord | null> {
     try {
       const user = await AuthService.getCurrentUser()
-      if (!user?.organization_id) {
+      const orgId = user?.profile?.organization_id
+      if (!orgId) {
         return null
       }
 
       const { data, error } = await supabase
         .from('meddpicc_configurations')
         .select('*')
-        .eq('organization_id', user.organization_id)
+  .eq('organization_id', orgId)
         .eq('is_active', true)
         .single()
 
@@ -117,7 +123,7 @@ export class MEDDPICCConfigurationService {
     options: {
       name?: string
       description?: string
-      algorithmSettings?: any
+      algorithmSettings?: AlgorithmSettings
     } = {}
   ): Promise<MEDDPICCConfigurationRecord> {
     try {
@@ -287,7 +293,8 @@ export class MEDDPICCConfigurationService {
   static async getConfigurationHistory(): Promise<MEDDPICCConfigurationHistory[]> {
     try {
       const user = await AuthService.getCurrentUser()
-      if (!user?.organization_id) {
+      const orgId = user?.profile?.organization_id
+      if (!orgId) {
         return []
       }
 
@@ -297,7 +304,7 @@ export class MEDDPICCConfigurationService {
           *,
           changed_by_profile:user_profiles!changed_by(first_name, last_name, email)
         `)
-        .eq('organization_id', user.organization_id)
+  .eq('organization_id', orgId)
         .order('changed_at', { ascending: false })
         .limit(50)
 
@@ -315,19 +322,21 @@ export class MEDDPICCConfigurationService {
   static async resetToDefault(): Promise<void> {
     try {
       const user = await AuthService.getCurrentUser()
-      if (!user?.organization_id) {
+      const orgId = user?.profile?.organization_id
+      if (!orgId) {
         throw new Error('No organization found')
       }
 
       // Deactivate current configuration
-      const { error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
         .from('meddpicc_configurations')
         .update({
           is_active: false,
           modified_by: user.id,
           updated_at: new Date().toISOString()
         })
-        .eq('organization_id', user.organization_id)
+        .eq('organization_id', orgId)
         .eq('is_active', true)
 
       if (error) throw error
@@ -346,7 +355,8 @@ export class MEDDPICCConfigurationService {
   ): Promise<MEDDPICCConfigurationRecord> {
     try {
       const user = await AuthService.getCurrentUser()
-      if (!user || !user.role || !['admin', 'super_admin'].includes(user.role)) {
+      const role = user?.profile?.role
+      if (!role || !['admin', 'super_admin'].includes(role)) {
         throw new Error('Insufficient permissions')
       }
 
@@ -362,14 +372,16 @@ export class MEDDPICCConfigurationService {
       if (!sourceConfig) throw new Error('Source configuration not found')
 
       // Create new configuration for target organization
-      const { data, error } = await supabase
+      const src: MEDDPICCConfigurationRecord = sourceConfig as unknown as MEDDPICCConfigurationRecord
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from('meddpicc_configurations')
         .insert({
           organization_id: targetOrganizationId,
-          name: `${sourceConfig.name} (Cloned)`,
+          name: `${src.name} (Cloned)`,
           description: `Cloned from organization ${sourceOrganizationId}`,
-          configuration_data: sourceConfig.configuration_data,
-          algorithm_settings: sourceConfig.algorithm_settings,
+          configuration_data: src.configuration_data,
+          algorithm_settings: src.algorithm_settings,
           version: 1,
           is_active: true,
           created_by: user.id,
@@ -481,13 +493,14 @@ export class MEDDPICCConfigurationService {
   static async recalculateScores(): Promise<{ updated: number; errors: number }> {
     try {
       const user = await AuthService.getCurrentUser()
-      if (!user?.organization_id) {
+      const orgId = user?.profile?.organization_id
+      if (!orgId) {
         throw new Error('No organization found')
       }
 
       // This would trigger a background job to recalculate all scores
       // For now, we'll just return a placeholder
-      console.log('Triggering score recalculation for organization:', user.organization_id)
+  console.log('Triggering score recalculation for organization:', orgId)
       
       return { updated: 0, errors: 0 }
     } catch (error) {

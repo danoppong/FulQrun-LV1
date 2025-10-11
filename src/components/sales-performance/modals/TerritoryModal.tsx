@@ -8,7 +8,7 @@ interface TerritoryModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
-  territory?: any
+  territory?: unknown
   organizationId: string
   users: unknown[]
 }

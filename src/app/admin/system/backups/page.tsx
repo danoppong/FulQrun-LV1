@@ -698,7 +698,7 @@ function BackupDestinations({ config, onUpdate }: { config: BackupConfiguration;
                 <div className="bg-yellow-50 p-4 rounded-md">
                   <h4 className="text-sm font-medium text-yellow-800 mb-2">Configuration Required</h4>
                   <p className="text-sm text-yellow-700">
-                    After creating the destination, you'll need to configure connection details, 
+                    After creating the destination, you&apos;ll need to configure connection details, 
                     credentials, and other destination-specific settings.
                   </p>
                 </div>

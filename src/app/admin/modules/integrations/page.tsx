@@ -31,6 +31,9 @@ const supabase = getSupabaseClient();
 // TYPES AND INTERFACES
 // =============================================================================
 
+// JSON-safe value used across mapping defaults and API responses
+type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
+
 interface IntegrationConfiguration {
   connections: IntegrationConnection[];
   syncRules: SyncRule[];
@@ -93,7 +96,7 @@ interface FieldMapping {
   sourceField: string;
   targetField: string;
   transformation?: string;
-  defaultValue?: any;
+  defaultValue?: JSONValue;
   isRequired: boolean;
 }
 
@@ -120,7 +123,7 @@ interface DataTransformation {
   type: 'format' | 'calculate' | 'lookup' | 'conditional';
   formula?: string;
   lookupTable?: string;
-  conditions?: any;
+  conditions?: Record<string, JSONValue> | Array<Record<string, JSONValue>>;
 }
 
 interface WebhookConfiguration {
@@ -176,7 +179,7 @@ interface APIEndpoint {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   description?: string;
   parameters?: APIParameter[];
-  response?: any;
+  response?: JSONValue;
 }
 
 interface APIParameter {
@@ -184,7 +187,7 @@ interface APIParameter {
   type: 'string' | 'number' | 'boolean' | 'array' | 'object';
   required: boolean;
   description?: string;
-  defaultValue?: any;
+  defaultValue?: JSONValue;
 }
 
 interface RateLimit {
@@ -228,7 +231,7 @@ const SyncRuleSchema = z.object({
   isActive: z.boolean()
 });
 
-const WebhookConfigurationSchema = z.object({
+const _WebhookConfigurationSchema = z.object({
   name: z.string().min(1, 'Webhook name is required'),
   url: z.string().url('Must be a valid URL'),
   events: z.array(z.string()).min(1, 'At least one event is required'),
@@ -515,7 +518,7 @@ function IntegrationConnections({ config, onUpdate }: { config: IntegrationConfi
                 <div className="bg-yellow-50 p-4 rounded-md">
                   <h4 className="text-sm font-medium text-yellow-800 mb-2">Connection Settings</h4>
                   <p className="text-sm text-yellow-700">
-                    After creating the connection, you'll be able to configure authentication credentials, 
+                    After creating the connection, you&apos;ll be able to configure authentication credentials, 
                     sync settings, and field mappings.
                   </p>
                 </div>

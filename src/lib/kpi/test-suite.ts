@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/client';
 
-export interface KPITestSuite {
+type JSONValue = string | number | boolean | null | JSONValue[] | { [k: string]: JSONValue };
+
+export interface IKPITestSuite {
   runAllTests(): Promise<TestResults>;
   testWinRateCalculation(): Promise<TestResult>;
   testRevenueGrowthCalculation(): Promise<TestResult>;
@@ -21,7 +23,7 @@ export interface TestResult {
   passed: boolean;
   executionTime: number;
   error?: string;
-  details?: any;
+  details?: JSONValue;
   recommendations?: string[];
 }
 
@@ -34,8 +36,8 @@ export interface TestResults {
   summary: string;
 }
 
-export class KPITestSuite implements KPITestSuite {
-  private supabase;
+export class KPITestSuite implements IKPITestSuite {
+  private supabase: ReturnType<typeof createClient>;
 
   constructor() {
     this.supabase = createClient();
@@ -885,7 +887,7 @@ export class KPITestSuite implements KPITestSuite {
     }
   }
 
-  private async createTestOpportunity(organizationId: string, userId: string, opportunity: any): Promise<void> {
+  private async createTestOpportunity(organizationId: string, userId: string, opportunity: Partial<{ stage: string; deal_value: number; close_date: string; created_at: string }>): Promise<void> {
     const { error } = await this.supabase
       .from('opportunities')
       .insert({

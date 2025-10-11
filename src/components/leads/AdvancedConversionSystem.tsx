@@ -74,10 +74,10 @@ interface ConversionJob {
     estimated_value?: number
     close_date?: string
     description: string
-    meddpicc_data?: any
+  meddpicc_data?: unknown
   }
   handoff_data: {
-    assigned_user?: any
+  assigned_user?: unknown
     notifications_sent: string[]
     follow_up_task_id?: string
   }
@@ -102,8 +102,8 @@ interface QualifiedLead {
   revenue_band?: string
   employee_band?: string
   entity_type?: string
-  qualification_data?: any
-  meddpicc_data?: any
+  qualification_data?: unknown
+  meddpicc_data?: unknown
   ai_accounts?: unknown[]
   ai_contacts?: unknown[]
 }

@@ -23,7 +23,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { AuthWrapper } from '@/components/auth/AuthWrapper';
 
 // Function to create user record when they don't exist in database
-async function createUserRecord(user: unknown, supabase: any) {
+interface MinimalUser { id: string; email?: string; user_metadata?: { full_name?: string } }
+async function createUserRecord(user: MinimalUser) {
   try {
     // First, create a default organization if it doesn't exist
     const { data: orgData, error: orgError } = await supabase

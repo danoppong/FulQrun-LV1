@@ -23,7 +23,7 @@ export class WebAuthnFactor {
   /**
    * Enroll WebAuthn credential (to be implemented with @simplewebauthn/server)
    */
-  async enroll(userId: string, data: { email: string }): Promise<WebAuthnEnrollment> {
+  async enroll(_userId: string, _data: { email: string }): Promise<WebAuthnEnrollment> {
     // TODO: Implement with @simplewebauthn/server
     // 
     // const { generateRegistrationOptions } = require('@simplewebauthn/server')
@@ -50,7 +50,7 @@ export class WebAuthnFactor {
   /**
    * Verify WebAuthn credential (to be implemented)
    */
-  async verify(userId: string, verification: any): Promise<boolean> {
+  async verify(_userId: string, _verification: unknown): Promise<boolean> {
     // TODO: Implement with @simplewebauthn/server
     // 
     // const { verifyAuthenticationResponse } = require('@simplewebauthn/server')

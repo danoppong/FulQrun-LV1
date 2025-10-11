@@ -351,7 +351,7 @@ async function enrichLeadData(
 
 async function calculateLeadScores(
   lead: unknown,
-  weights?: any
+  weights?: Partial<{ fit: number; intent: number; engagement: number; viability: number; recency: number }>
 ): Promise<unknown> {
   // This is a placeholder implementation
   // In a real implementation, this would use ML models and data analysis

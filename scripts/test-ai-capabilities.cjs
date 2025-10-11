@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+// CommonJS script used for test harness; require() is intentional
 // scripts/test-ai-capabilities.js
 // Manual Test Script for AI Capabilities Validation
 // Run this script to validate Phase 2.7 AI implementation
