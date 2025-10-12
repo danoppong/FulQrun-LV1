@@ -10,44 +10,24 @@ import {
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpIcon,
   EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
-  CloudIcon,
   CircleStackIcon,
-  CogIcon,
-  ArrowPathIcon,
   DocumentTextIcon,
-  ServerIcon,
-  ShieldCheckIcon,
   BellIcon,
-  UserIcon,
-  TagIcon,
-  AdjustmentsHorizontalIcon,
-  Squares2X2Icon,
-  RectangleStackIcon,
-  CursorArrowRaysIcon,
-  PaintBrushIcon,
+  CloudIcon,
   PlayIcon,
   PauseIcon,
-  StopIcon,
-  ArrowRightIcon,
-  ArrowDownIcon,
   EnvelopeIcon,
+  TagIcon,
   PaperAirplaneIcon,
-  DocumentDuplicateIcon
+  MagnifyingGlassIcon,
+  ArrowUpIcon,
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -2061,6 +2041,7 @@ export default function EmailTemplatesManagement() {
 
   useEffect(() => {
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -2852,7 +2833,7 @@ export default function EmailTemplatesManagement() {
   const activeTemplates = config.templates.filter(t => t.isActive).length;
   const totalTemplates = config.templates.length;
   const activeCategories = config.categories.filter(c => c.isActive).length;
-  const totalCategories = config.categories.length;
+  const _totalCategories = config.categories.length;
 
   return (
     <div className="space-y-6">

@@ -8,43 +8,17 @@ import {
   PlusIcon, 
   PencilIcon, 
   TrashIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
-  CloudIcon,
-  CircleStackIcon,
-  CogIcon,
-  ArrowPathIcon,
-  DocumentTextIcon,
-  ServerIcon,
-  ShieldCheckIcon,
-  BellIcon,
-  UserIcon,
-  TagIcon,
-  AdjustmentsHorizontalIcon,
-  Squares2X2Icon,
-  RectangleStackIcon,
-  CursorArrowRaysIcon,
-  PaintBrushIcon,
   PlayIcon,
   PauseIcon,
-  StopIcon,
-  ArrowRightIcon,
-  ArrowDownIcon
+  ArrowPathIcon,
+  DocumentTextIcon,
+  CogIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -312,7 +286,7 @@ function WorkflowBuilder({ config, onUpdate }: { config: WorkflowBuilderConfigur
     });
   };
 
-  const handleToggleWorkflow = (workflowId: string) => {
+  const _handleToggleWorkflow = (workflowId: string) => {
     const updatedWorkflows = workflows.map(w => 
       w.id === workflowId ? { ...w, isActive: !w.isActive, updatedAt: new Date() } : w
     );
@@ -792,6 +766,7 @@ export default function WorkflowBuilderManagement() {
 
   useEffect(() => {
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -940,7 +915,7 @@ export default function WorkflowBuilderManagement() {
   const activeWorkflows = config.workflows.filter(w => w.isActive).length;
   const totalWorkflows = config.workflows.length;
   const activeTemplates = config.templates.filter(t => t.isActive).length;
-  const totalTemplates = config.templates.length;
+  const _totalTemplates = config.templates.length;
 
   return (
     <div className="space-y-6">

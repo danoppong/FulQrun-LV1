@@ -14,19 +14,17 @@ import {
   MagnifyingGlassIcon,
   ArrowsUpDownIcon,
   CheckCircleIcon,
-  XCircleIcon,
   UserGroupIcon,
   BuildingOfficeIcon,
   ChartBarIcon,
   ArrowRightIcon,
-  ArrowDownIcon,
   ChevronRightIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -665,7 +663,7 @@ export default function TeamHierarchyManagement() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<TeamHierarchy | undefined>();
-  const [showMembers, setShowMembers] = useState<TeamHierarchy | undefined>();
+  const [_showMembers, setShowMembers] = useState<TeamHierarchy | undefined>();
   const [activeTab, setActiveTab] = useState<'hierarchy' | 'members'>('hierarchy');
 
   useEffect(() => {
@@ -674,7 +672,7 @@ export default function TeamHierarchyManagement() {
 
   useEffect(() => {
     filterMembers();
-  }, [allMembers, filters]);
+  }, [allMembers, filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {

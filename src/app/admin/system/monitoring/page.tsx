@@ -6,34 +6,21 @@
 import React, { useState, useEffect } from 'react';
 import {
   ChartBarIcon, 
-  ServerIcon, 
   PlusIcon, 
   PencilIcon, 
   TrashIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
   EyeIcon,
-  EyeSlashIcon,
-  ClockIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon,
-  LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
-  CloudIcon,
-  CircleStackIcon,
   CogIcon,
   ArrowPathIcon,
-  SignalIcon,
   CpuChipIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -836,7 +823,7 @@ export default function SystemMonitoring() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {
@@ -1028,7 +1015,7 @@ export default function SystemMonitoring() {
   ];
 
   const activeMetrics = config.metrics.filter(m => m.isActive).length;
-  const totalMetrics = config.metrics.length;
+  const _totalMetrics = config.metrics.length;
   const healthyChecks = config.healthChecks.filter(c => c.status === 'healthy').length;
   const totalChecks = config.healthChecks.length;
   const criticalAlerts = config.alerts.filter(a => a.severity === 'critical').length;

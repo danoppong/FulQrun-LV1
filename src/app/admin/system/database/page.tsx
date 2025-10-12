@@ -15,17 +15,11 @@ import {
   MagnifyingGlassIcon,
   ArrowUpIcon,
   EyeIcon,
-  EyeSlashIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
   LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
-  CloudIcon,
   ChartBarIcon,
   CogIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseBrowserClient } from '@/lib/supabase-singleton'
 import { z } from 'zod';
@@ -170,7 +164,7 @@ interface DatabasePerformance {
   timestamp: Date;
 }
 
-interface DatabaseBackup {
+interface _DatabaseBackup {
   id: string;
   name: string;
   connectionId: string;
@@ -2097,7 +2091,7 @@ function DatabaseMigrations({ config, onUpdate }: { config: DatabaseConfiguratio
 
 function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfiguration; onUpdate: (config: DatabaseConfiguration) => void }) {
   const [selectedTimeRange, setSelectedTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
-  const [selectedMetric, setSelectedMetric] = useState<'overview' | 'queries' | 'connections' | 'storage'>('overview');
+  const [_selectedMetric, _setSelectedMetric] = useState<'overview' | 'queries' | 'connections' | 'storage'>('overview');
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -2864,13 +2858,13 @@ export default function DatabaseManagement() {
     migrations: []
   });
 
-  const [performance, setPerformance] = useState<DatabasePerformance[]>([]);
+  const [_performance, setPerformance] = useState<DatabasePerformance[]>([]);
   const [activeTab, setActiveTab] = useState('connections');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {

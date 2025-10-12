@@ -12,23 +12,15 @@ import {
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon,
   LockClosedIcon,
-  FingerPrintIcon,
-  DevicePhoneMobileIcon,
-  CloudIcon,
   ServerIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -644,7 +636,7 @@ export default function SSOConfiguration() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {

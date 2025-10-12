@@ -5,35 +5,22 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  CogIcon, 
+  CogIcon,
   ExclamationTriangleIcon, 
   PlusIcon, 
   PencilIcon, 
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
-  InformationCircleIcon,
-  LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
-  CloudIcon,
-  DatabaseIcon,
   ArrowPathIcon,
   DocumentTextIcon,
-  ServerIcon,
-  ShieldCheckIcon,
-  BellIcon,
-  UserIcon
+  BellIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -155,7 +142,7 @@ const MaintenanceScheduleSchema = z.object({
   isActive: z.boolean()
 });
 
-const MaintenanceAnnouncementSchema = z.object({
+const _MaintenanceAnnouncementSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   message: z.string().min(1, 'Message is required'),
   type: z.enum(['info', 'warning', 'error', 'success']),
@@ -164,7 +151,7 @@ const MaintenanceAnnouncementSchema = z.object({
   isActive: z.boolean()
 });
 
-const MaintenanceTaskSchema = z.object({
+const _MaintenanceTaskSchema = z.object({
   name: z.string().min(1, 'Task name is required'),
   description: z.string().optional(),
   type: z.enum(['database', 'server', 'application', 'security', 'custom']),
@@ -694,7 +681,7 @@ export default function MaintenanceModeManagement() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {
@@ -773,7 +760,7 @@ export default function MaintenanceModeManagement() {
   ];
 
   const activeSchedules = config.schedules.filter(s => s.isActive).length;
-  const totalSchedules = config.schedules.length;
+  const _totalSchedules = config.schedules.length;
   const upcomingSchedules = config.schedules.filter(s => s.startTime > new Date()).length;
   const activeAnnouncements = config.announcements.filter(a => a.isActive).length;
 
