@@ -106,12 +106,18 @@ export async function middleware(request: NextRequest) {
     const isProtected = protectedPrefixes.some((p) => pathname === p || pathname.startsWith(p + '/'))
 
     if (!isApiRoute) {
-      // If hitting protected page without a session, redirect to login with next param
+      // SECURITY: If hitting protected page without a session, redirect to login with next param
       if (isProtected && !user && !isAuthRoute) {
+        console.warn(`🚨 SECURITY: Unauthorized access attempt to protected route: ${pathname}`)
         const loginUrl = request.nextUrl.clone()
         loginUrl.pathname = '/auth/login'
         loginUrl.searchParams.set('next', pathname)
         return NextResponse.redirect(loginUrl)
+      }
+
+      // Log successful access to protected routes for monitoring
+      if (isProtected && user) {
+        console.log(`✅ SECURITY: Authorized access to protected route: ${pathname} by user: ${user.id}`)
       }
 
       // If already authenticated and trying to access login/signup, redirect to dashboard

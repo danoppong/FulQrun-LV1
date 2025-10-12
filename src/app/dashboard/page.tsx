@@ -4,6 +4,7 @@
 
 import PremiumEnhancedDashboard from '@/components/dashboard/PremiumEnhancedDashboard';
 import PremiumSalesmanDashboard from '@/components/dashboard/PremiumSalesmanDashboard';
+import DashboardClientWrapper from '@/components/dashboard/DashboardClientWrapper';
 import { UserRole } from '@/lib/roles';
 import { AuthService } from '@/lib/auth-unified';
 import { redirect } from 'next/navigation';
@@ -28,11 +29,19 @@ async function getOrganizationNameSSR(orgId: string | null) {
 }
 
 export default async function DashboardPage() {
-  // Server-side auth
+  // CRITICAL SECURITY: Server-side auth validation
   const user = await AuthService.getCurrentUserServer();
+  
+  // SECURITY: Immediate redirect if no authenticated user
   if (!user) {
     redirect('/auth/login?next=/dashboard')
   }
+  
+  // SECURITY: Validate user has profile and organization
+  if (!user.profile?.organization_id) {
+    redirect('/auth/login?next=/dashboard&error=missing-organization')
+  }
+  
   const role = (user?.profile?.role as UserRole) || UserRole.SALESMAN;
   const orgId = user?.profile?.organization_id ?? null;
   const orgName = await getOrganizationNameSSR(orgId);
@@ -42,41 +51,43 @@ export default async function DashboardPage() {
   const isSalesman = role === UserRole.SALESMAN;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {!isSalesman && (
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Pharmaceutical Sales Dashboard</h1>
-                <p className="text-gray-600">Real-time analytics and performance insights</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <a href="/dashboard/builder" className="px-3 py-1 rounded-md text-sm bg-blue-600 text-white hover:bg-blue-700">Open Builder</a>
-                <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  Enhanced Version
+    <DashboardClientWrapper>
+      <div className="min-h-screen bg-gray-50">
+        {!isSalesman && (
+          <div className="bg-white shadow-sm border-b border-gray-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Pharmaceutical Sales Dashboard</h1>
+                  <p className="text-gray-600">Real-time analytics and performance insights</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <a href="/dashboard/builder" className="px-3 py-1 rounded-md text-sm bg-blue-600 text-white hover:bg-blue-700">Open Builder</a>
+                  <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Enhanced Version
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isSalesman ? (
-        <PremiumSalesmanDashboard 
-          userId={user?.id || 'anonymous'}
-          userRole={role}
-          organizationId={orgId || ''}
-          darkMode={false}
-        />
-      ) : (
-        <PremiumEnhancedDashboard 
-          userRole={role}
-          userId={user?.id || 'anonymous'}
-          organizationNameSSR={orgName}
-          organizationId={orgId}
-        />
-      )}
-    </div>
+        {isSalesman ? (
+          <PremiumSalesmanDashboard 
+            userId={user?.id || 'anonymous'}
+            userRole={role}
+            organizationId={orgId || ''}
+            darkMode={false}
+          />
+        ) : (
+          <PremiumEnhancedDashboard 
+            userRole={role}
+            userId={user?.id || 'anonymous'}
+            organizationNameSSR={orgName}
+            organizationId={orgId}
+          />
+        )}
+      </div>
+    </DashboardClientWrapper>
   );
 }
