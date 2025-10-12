@@ -37,8 +37,8 @@ export default function AuthGuard({ children, redirectTo = '/auth/login' }: Auth
         } else {
           setIsAuthenticated(true);
         }
-      } catch (error) {
-        console.error('Auth check failed:', error);
+      } catch (_error) {
+        console.error('Auth check failed:', _error);
         if (!mounted) return;
         
         // SECURITY: Auth check failed - redirect to login

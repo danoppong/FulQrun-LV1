@@ -5,7 +5,7 @@
 'use client';
 
 import React from 'react';
-import { UserGroupIcon, PhoneIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { UserGroupIcon, PhoneIcon } from '@heroicons/react/24/outline';
 
 interface HCPEngagementWidgetProps {
   hcpEngagement: {

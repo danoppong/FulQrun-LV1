@@ -8,27 +8,20 @@ import {
   ShieldCheckIcon, 
   KeyIcon, 
   UserCircleIcon, 
-  PlusIcon, 
   PencilIcon, 
-  TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
   ArrowPathIcon,
-  EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
   LockClosedIcon,
-  FingerPrintIcon,
   DevicePhoneMobileIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -104,7 +97,7 @@ interface SecurityEvent {
   resolution?: string;
 }
 
-interface SecurityAlert {
+interface _SecurityAlert {
   id: string;
   title: string;
   description: string;
@@ -159,7 +152,7 @@ function PasswordPolicyConfig({ config, onUpdate }: { config: AuthenticationConf
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [policies, setPolicies] = useState<unknown[]>([]);
+  const [_policies, setPolicies] = useState<unknown[]>([]);
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
 
   // Load password policies from database

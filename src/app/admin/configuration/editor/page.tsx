@@ -3,31 +3,26 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   CogIcon, 
-  DocumentTextIcon, 
   CheckCircleIcon, 
   ExclamationTriangleIcon,
   InformationCircleIcon,
   ClockIcon,
   ArrowPathIcon,
-  EyeIcon,
   PencilIcon,
   DocumentIcon,
   XMarkIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
   Bars3Icon,
-  CodeBracketIcon,
-  DocumentDuplicateIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
-import { ConfigurationService } from '@/lib/admin/services/ConfigurationService'
+import { ConfigurationService as _ConfigurationService } from '@/lib/admin/services/ConfigurationService'
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -50,7 +45,7 @@ interface ConfigurationItem {
   version: number;
 }
 
-interface ConfigurationHistory {
+interface _ConfigurationHistory {
   id: string;
   configId: string;
   oldValue: unknown;
@@ -119,7 +114,7 @@ function ConfigurationValueEditor({
       const parsed = JSON.parse(jsonString);
       setJsonError(null);
       onChange(parsed);
-    } catch (error) {
+    } catch (_error) {
       setJsonError('Invalid JSON format');
     }
   };
@@ -833,7 +828,7 @@ export default function ConfigurationEditor() {
 
   useEffect(() => {
     filterConfigurations();
-  }, [configurations, filters]);
+  }, [configurations, filters, filterConfigurations]);
 
   const loadConfigurations = async () => {
     try {
@@ -930,7 +925,7 @@ export default function ConfigurationEditor() {
     }
   };
 
-  const filterConfigurations = () => {
+  const filterConfigurations = useCallback(() => {
     let filtered = [...configurations];
 
     if (filters.search) {
@@ -962,7 +957,7 @@ export default function ConfigurationEditor() {
     }
 
     setFilteredConfigurations(filtered);
-  };
+  }, [configurations, filters]);
 
   const handleCreateConfig = () => {
     setEditingConfig(undefined);

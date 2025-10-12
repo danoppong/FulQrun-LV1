@@ -7,17 +7,11 @@ import React, { useState, useEffect } from 'react';
 import {
   ClipboardDocumentListIcon, 
   MagnifyingGlassIcon, 
-  FunnelIcon,
   ArrowsUpDownIcon,
   EyeIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-  CheckCircleIcon,
-  ClockIcon,
   UserIcon,
-  ComputerDesktopIcon,
-  GlobeAltIcon,
-  DocumentTextIcon,
   CalendarIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -25,7 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES

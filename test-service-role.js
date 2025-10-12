@@ -1,5 +1,5 @@
 // Test script to verify service role key functionality
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 async function testServiceRole() {
   console.log('🧪 Testing Service Role Key functionality...');

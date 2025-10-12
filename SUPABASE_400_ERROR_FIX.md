@@ -3,7 +3,7 @@
 ## 🚨 Issue Identified
 
 **Error**: `Failed to load resource: the server responded with a status of 400 ()`
-**URL**: `khwkwuefwxazewlspdvk.supabase.co/rest/v1/contacts?select=*`
+**URL**: `[SUPABASE_URL]/rest/v1/contacts?select=*`
 **Root Cause**: Mock Supabase client not properly handling `select()` method chaining
 
 ## 🔍 Root Cause Analysis

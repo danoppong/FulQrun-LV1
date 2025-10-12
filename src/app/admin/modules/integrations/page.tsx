@@ -5,16 +5,12 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  PuzzlePieceIcon, 
   CogIcon, 
   PlusIcon, 
   PencilIcon, 
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
   DocumentTextIcon,
   ClockIcon,
   CloudIcon,
@@ -25,7 +21,7 @@ import {
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES

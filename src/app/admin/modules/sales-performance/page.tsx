@@ -5,25 +5,18 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  ChartBarIcon, 
   TrophyIcon, 
   CurrencyDollarIcon, 
   PlusIcon, 
   PencilIcon, 
   TrashIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
   MapIcon,
-  UserGroupIcon,
-  CalendarIcon,
   PresentationChartBarIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -264,7 +257,7 @@ const CompensationPlanSchema = z.object({
 
 function TerritoryManagement({ config, onUpdate }: { config: SalesPerformanceConfiguration; onUpdate: (config: SalesPerformanceConfiguration) => void }) {
   const [regions, setRegions] = useState<TerritoryRegion[]>(config.territories.regions);
-  const [assignments, setAssignments] = useState<TerritoryAssignment[]>(config.territories.assignments);
+  const [assignments, _setAssignments] = useState<TerritoryAssignment[]>(config.territories.assignments);
   const [showRegionForm, setShowRegionForm] = useState(false);
   const [editingRegion, setEditingRegion] = useState<TerritoryRegion | undefined>();
 
@@ -456,7 +449,7 @@ function TerritoryManagement({ config, onUpdate }: { config: SalesPerformanceCon
 
 function QuotaManagement({ config, onUpdate }: { config: SalesPerformanceConfiguration; onUpdate: (config: SalesPerformanceConfiguration) => void }) {
   const [plans, setPlans] = useState<QuotaPlan[]>(config.quotas.plans);
-  const [periods, setPeriods] = useState<QuotaPeriod[]>(config.quotas.periods);
+  const [periods, _setPeriods] = useState<QuotaPeriod[]>(config.quotas.periods);
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<QuotaPlan | undefined>();
 
