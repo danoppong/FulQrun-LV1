@@ -2,7 +2,7 @@
 // Sales Forecasting Models for Phase 2.9
 // Predictive models for TRx, NRx, revenue, and sales performance
 
-import { inferenceEngine, type PredictionRequest, type PredictionResponse } from '../infrastructure/inference-engine';
+import { inferenceEngine, type PredictionRequest, type PredictionResponse as _PredictionResponse } from '../infrastructure/inference-engine';
 
 export interface SalesMetrics {
   trx: number;

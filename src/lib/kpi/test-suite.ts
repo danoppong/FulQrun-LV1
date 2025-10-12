@@ -802,7 +802,7 @@ export class KPITestSuite implements IKPITestSuite {
 
       // Measure calculation time
       const calcStartTime = Date.now();
-      const { data, error } = await this.supabase.rpc('calculate_all_kpis', {
+      const { data: _data, error } = await this.supabase.rpc('calculate_all_kpis', {
         p_organization_id: testOrgId,
         p_user_id: testUserId,
         p_territory_id: null,

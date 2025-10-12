@@ -13,7 +13,6 @@ import {
   UsersIcon,
   CheckIcon,
   XMarkIcon,
-  MagnifyingGlassIcon,
   ArrowsUpDownIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon
@@ -21,7 +20,7 @@ import {
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -864,8 +863,8 @@ function PermissionManagement({
 function RBACConfiguration({ 
   roles, 
   permissions, 
-  matrix, 
-  onPermissionChange 
+  _matrix, 
+  _onPermissionChange 
 }: {
   roles: Role[];
   permissions: Permission[];
@@ -884,7 +883,7 @@ function RBACConfiguration({
   const [testUser, setTestUser] = useState('');
   const [testPermission, setTestPermission] = useState('');
   const [testResult, setTestResult] = useState<null | { user: string; permission: string; hasAccess: boolean; reason?: string; timestamp: string }>(null);
-  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [_loadingSettings, setLoadingSettings] = useState(false);
   const [loadingTest, setLoadingTest] = useState(false);
 
   // Load RBAC settings on component mount
