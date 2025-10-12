@@ -10,6 +10,11 @@ import {
   PlusIcon,
   PencilIcon,
   TrashIcon,
+  PhotoIcon,
+  SwatchIcon,
+  EnvelopeIcon,
+  CodeBracketIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline'
 
 export default function OrganizationBranding() {

@@ -11,6 +11,9 @@ import {
   UserGroupIcon,
   CogIcon,
   ClipboardDocumentCheckIcon,
+  LockClosedIcon,
+  ClockIcon,
+  DocumentCheckIcon
 } from '@heroicons/react/24/outline'
 
 export default function OrganizationCompliance() {

@@ -19,7 +19,7 @@ import {
   AdjustmentsHorizontalIcon,
   UserIcon,
   CloudIcon,
-} from '@heroicons/24/outline'
+} from '@heroicons/react/24/outline'
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
