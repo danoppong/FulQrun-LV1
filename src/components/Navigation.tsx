@@ -5,7 +5,6 @@ import { useState } from 'react'
 import Link from 'next/link';
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile'
 import {
   HomeIcon,
@@ -156,6 +155,7 @@ const navigation: MenuItem[] = [
     icon: BuildingOfficeIcon,
     submenu: [
       { name: 'Organization Settings', href: '/admin/organization/settings' },
+      { name: 'Organization Data', href: '/admin/organization/data' },
       { name: 'Features & Modules', href: '/admin/organization/features' },
       { name: 'Compliance', href: '/admin/organization/compliance' },
       { name: 'Branding', href: '/admin/organization/branding' },
@@ -226,7 +226,6 @@ export default function Navigation() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [expandedMenus, setExpandedMenus] = useState<string[]>([])
   const pathname = usePathname()
-  const router = useRouter()
   const { data: currentUser } = useCurrentUserProfile()
 
   const firstName = React.useMemo(() => {
@@ -249,10 +248,18 @@ export default function Navigation() {
 
   const handleLogout = async () => {
     try {
+      // Call server-side sign out API to properly clear all auth state
+      await fetch('/api/auth/sign-out', { method: 'POST' })
+      
+      // Also call client-side sign out for immediate local state clearing
       await supabase.auth.signOut()
-      router.push('/auth/login')
+      
+      // Force a full page replacement to login page
+      window.location.replace('/auth/login')
     } catch (_error) {
-      // Handle sign out error
+      // Handle sign out error - still try to redirect
+      console.error('Sign out error:', _error)
+      window.location.replace('/auth/login')
     }
   }
 

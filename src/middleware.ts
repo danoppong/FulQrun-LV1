@@ -115,7 +115,18 @@ export async function middleware(request: NextRequest) {
       }
 
       // If already authenticated and trying to access login/signup, redirect to dashboard
-      if (user && isAuthRoute) {
+      // UNLESS they're coming from a sign out (check for sign out indication)
+      if (user && isAuthRoute && pathname.startsWith('/auth/')) {
+        // Check if this is a fresh request that might be from sign out
+        const referer = request.headers.get('referer')
+        const isFromSignOut = !referer || referer.includes('/dashboard') || referer.includes('/admin')
+        
+        // If this looks like a sign out redirect, allow it to proceed to login
+        if (isFromSignOut && pathname === '/auth/login') {
+          // Allow the login page to load - the user will be signed out
+          return response
+        }
+        
         const dashboardUrl = request.nextUrl.clone()
         dashboardUrl.pathname = '/dashboard'
         return NextResponse.redirect(dashboardUrl)

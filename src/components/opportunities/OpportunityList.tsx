@@ -34,7 +34,7 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
   const [selectedStage, setSelectedStage] = useState(stageFilter)
   const [meddpiccScores, setMeddpiccScores] = useState<Record<string, number>>({})
   const [ownersMap, setOwnersMap] = useState<Record<string, string>>({})
-  const [ownerTerritoryMap, setOwnerTerritoryMap] = useState<Record<string, string>>({})
+  const [ownerRegionsMap, setOwnerRegionsMap] = useState<Record<string, string>>({})
   const [ownerFilter, setOwnerFilter] = useState<string>('')
   const [regionFilter, setRegionFilter] = useState<string>('')
   // Owner options now provided by shared UserSelect; keep only selected owner id
@@ -57,9 +57,6 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
     }, [value, delay])
     return debounced
   }
-
-  // Stable supabase client (avoid adding to effect deps)
-  const supabase = React.useMemo(() => AuthService.getClient(), [])
 
   // Load current org id once for RLS-safe queries
   useEffect(() => {
@@ -121,10 +118,10 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
     }
   }, [])
 
-  // Helper: normalize Region via territories: region = assigned owner's territory name
+  // Helper: get region from user data instead of territory mapping
   const getRegion = (opp: OpportunityWithDetails): string | null => {
     const ownerId = (opp as Partial<OpportunityWithDetails> & { assigned_to?: string | null }).assigned_to || ''
-    return (ownerId && ownerTerritoryMap[ownerId]) || null
+    return (ownerId && ownerRegionsMap[ownerId]) || null
   }
 
   // Load owner display names and derive filter options
@@ -138,91 +135,58 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
       ) as string[]
 
       const map: Record<string, string> = {}
+      const regionMap: Record<string, string> = {}
       if (ownerIds.length > 0) {
-        // Fetch display names from user_profiles; fallback to org-wide fetch if IN fails
-        let users: Array<{ id: string; full_name: string | null }> | null = null
+        // Fetch user data from admin users API (reads from users table with regions included)
         try {
-          // Avoid IN() with empty arrays; try primary select; on error retry aliasing email
-          if (ownerIds.length === 0) {
-            users = []
-          } else {
-            const qUsers = supabase
-              .from('user_profiles' as const)
-              .select('id, full_name')
-              .in('id', ownerIds)
-              .eq('organization_id', orgId as string)
-            const res = await qUsers
-            if (res.error) throw res.error
-            users = (Array.isArray(res.data) ? res.data : null) as Array<{ id: string; full_name: string | null }> | null
+          const response = await fetch('/api/admin/users?limit=1000&includeRegions=true')
+          if (response.ok) {
+            const result = await response.json()
+            const users = result.users || []
+            for (const user of users) {
+              if (user.id && ownerIds.includes(user.id)) {
+                map[user.id] = user.fullName || user.email || user.id
+                if (user.region) {
+                  regionMap[user.id] = user.region
+                }
+              }
+            }
           }
-        } catch (_e) {
-          // Fallback: fetch org-wide and filter locally
-          const { data, error } = await supabase
-            .from('user_profiles' as const)
-            .select('id, full_name')
-            .eq('organization_id', orgId as string)
-            .limit(1000)
-          users = (Array.isArray(data) ? data : null) as Array<{ id: string; full_name: string | null }> | null
-          if ((!users || error) && ownerIds.length > 0) {
-            // Retry aliasing email to full_name for environments missing the column
-            const { data: data2 } = await supabase
-              .from('user_profiles' as const)
-              .select('id, email:full_name')
-              .eq('organization_id', orgId as string)
-              .limit(1000)
-            users = (Array.isArray(data2) ? data2 : null) as Array<{ id: string; full_name: string | null }> | null
+        } catch (error) {
+          console.error('Failed to fetch user names:', error)
+          // Fallback: use user IDs as display names
+          for (const id of ownerIds) {
+            map[id] = id
           }
-          if (users) users = users.filter(u => ownerIds.includes(u.id))
-        }
-        for (const u of (users || [])) {
-          if (u && u.id) map[u.id] = u.full_name || u.id
         }
       }
       setOwnersMap(map)
+      setOwnerRegionsMap(regionMap)
 
-      // Fetch territories for these owners and build Region (territory) map
-  const territoryMap: Record<string, string> = {}
-      if (ownerIds.length > 0) {
-        let territories: Array<{ assigned_user_id: string | null; name: string | null }> | null = null
-        try {
-          if (ownerIds.length === 0) {
-            territories = []
-          } else {
-            const qTerr = supabase
-              .from('sales_territories' as const)
-              .select('assigned_user_id, name')
-              .in('assigned_user_id', ownerIds)
-              .eq('organization_id', orgId as string)
-            const res = await qTerr
-            if (res.error) throw res.error
-            territories = (Array.isArray(res.data) ? res.data : null) as Array<{ assigned_user_id: string | null; name: string | null }> | null
-          }
-        } catch (_e) {
-          // Fallback: fetch all territories for the org and filter locally
-          const { data } = await supabase
-            .from('sales_territories' as const)
-            .select('assigned_user_id, name')
-            .eq('organization_id', orgId as string)
-            .limit(2000)
-          territories = (Array.isArray(data) ? data : null) as Array<{ assigned_user_id: string | null; name: string | null }> | null
-          if (territories) territories = territories.filter(t => t.assigned_user_id && ownerIds.includes(t.assigned_user_id))
+      // Fetch regions from organization data API
+      let regions: string[] = []
+      try {
+        const response = await fetch('/api/admin/organization/data?type=region&isActive=true')
+        if (response.ok) {
+          const result = await response.json()
+          const regionData = result.data || []
+          regions = regionData
+            .filter((item: { type: string; name: string }) => item.type === 'region' && item.name)
+            .map((item: { name: string }) => item.name)
+            .sort()
         }
-        if (Array.isArray(territories)) {
-          for (const t of territories) {
-            if (t.assigned_user_id && t.name) territoryMap[t.assigned_user_id] = t.name
-          }
-        }
+      } catch (error) {
+        console.error('Failed to fetch regions from organization data:', error)
+        // No fallback - organization data is the primary source for regions
       }
-      setOwnerTerritoryMap(territoryMap)
 
-      const regions = Array.from(new Set(Object.values(territoryMap))).filter(Boolean) as string[]
-      setRegionOptions([{ value: '', label: 'All Regions' }, ...regions.sort().map(r => ({ value: r, label: r }))])
+      setRegionOptions([{ value: '', label: 'All Regions' }, ...regions.map(r => ({ value: r, label: r }))])
     } catch (e) {
       // Non-fatal; leave filters minimal
-  console.warn('Failed loading owner/region metadata', e)
-  setRegionOptions([{ value: '', label: 'All Regions' }])
+      console.warn('Failed loading owner/region metadata', e)
+      setRegionOptions([{ value: '', label: 'All Regions' }])
     }
-  }, [supabase, orgId])
+  }, [orgId])
 
   const loadOpportunities = useCallback(async (query: string = '', stage: string = '', resetList = true, explicitOffset?: number) => {
     if (resetList) setLoading(true)

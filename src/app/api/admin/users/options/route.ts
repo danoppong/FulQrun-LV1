@@ -26,34 +26,71 @@ export async function GET(_request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const organizationId = await getOrgIfAdmin(user.id)
 
-    // Departments from users table
+    // Try to get data from managed organization_data table first
     const departments = new Set<string>()
-    try {
-      const { data } = await supa
-        .from('users' as const)
-        .select('department')
-        .eq('organization_id', organizationId)
-      for (const row of (data as Array<{ department?: string | null }> | null) || []) {
-        const d = (row.department || '').trim()
-        if (d) departments.add(d)
-      }
-    } catch { /* ignore */ }
-
-    // Regions and countries from user_profiles with safe fallbacks
     const regionSet = new Set<string>()
     const countrySet = new Set<string>()
+
     try {
-      const { data } = await supa
-        .from('user_profiles' as const)
-        .select('region, territory_name, territory, country')
+      // Get from organization_data table
+      const { data: orgData } = await supa
+        .from('organization_data' as const)
+        .select('type, name')
         .eq('organization_id', organizationId)
-      for (const row of (data as Array<{ region?: string | null; territory_name?: string | null; territory?: string | null; country?: string | null }> | null) || []) {
-        const region = (row.region || row.territory_name || row.territory || '').trim()
-        const country = (row.country || '').trim()
-        if (region) regionSet.add(region)
-        if (country) countrySet.add(country)
+        .eq('is_active', true)
+
+      if (orgData && orgData.length > 0) {
+        for (const item of orgData) {
+          if (item.type === 'department') departments.add(item.name)
+          if (item.type === 'region') regionSet.add(item.name)
+          if (item.type === 'country') countrySet.add(item.name)
+        }
+      } else {
+        throw new Error('No managed data found, falling back to user data extraction')
       }
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.log('Falling back to extracting from user tables:', e)
+      
+      // Fallback: Departments from users table
+      try {
+        const { data } = await supa
+          .from('users' as const)
+          .select('department')
+          .eq('organization_id', organizationId)
+        for (const row of (data as Array<{ department?: string | null }> | null) || []) {
+          const d = (row.department || '').trim()
+          if (d) departments.add(d)
+        }
+      } catch { /* ignore */ }
+
+      // Fallback: Regions and countries from users table (now that we added the columns)
+      try {
+        const { data } = await supa
+          .from('users' as const)
+          .select('region, country')
+          .eq('organization_id', organizationId)
+        for (const row of (data as Array<{ region?: string | null; country?: string | null }> | null) || []) {
+          const region = (row.region || '').trim()
+          const country = (row.country || '').trim()
+          if (region) regionSet.add(region)
+          if (country) countrySet.add(country)
+        }
+      } catch { 
+        // If users table doesn't have region/country columns yet, try user_profiles as backup
+        try {
+          const { data } = await supa
+            .from('user_profiles' as const)
+            .select('region, territory_name, territory, country')
+            .eq('organization_id', organizationId)
+          for (const row of (data as Array<{ region?: string | null; territory_name?: string | null; territory?: string | null; country?: string | null }> | null) || []) {
+            const region = (row.region || row.territory_name || row.territory || '').trim()
+            const country = (row.country || '').trim()
+            if (region) regionSet.add(region)
+            if (country) countrySet.add(country)
+          }
+        } catch { /* ignore */ }
+      }
+    }
 
     const toSortedArray = (s: Set<string>) => Array.from(s).sort((a,b) => a.localeCompare(b))
     return NextResponse.json({

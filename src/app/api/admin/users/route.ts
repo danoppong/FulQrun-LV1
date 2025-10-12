@@ -66,10 +66,10 @@ export async function GET(request: NextRequest) {
   const includeRegions = includeRegionsStr === 'true'
   const isActiveFilter = typeof isActiveStr === 'string' ? isActiveStr === 'true' : undefined
 
-    // Safe select: attempt richer fields then fall back if schema lacks them
-  const selectPrimary = 'id, email, full_name, role, organization_id, manager_id, created_at, updated_at'
-  const selectExtended = selectPrimary + ', last_login_at, mfa_enabled, enterprise_role, department, cost_center, hire_date'
-  const selectEmailAsFullName = 'id, email, full_name:email, role, organization_id, manager_id, created_at, updated_at'
+  // Safe select: attempt richer fields then fall back if schema lacks them
+  const selectPrimary = 'id, email, full_name, role, organization_id, manager_id, created_at, updated_at, department, region, country'
+  const selectExtended = selectPrimary + ', last_login_at, mfa_enabled, enterprise_role, cost_center, hire_date'
+  const selectEmailAsFullName = 'id, email, full_name:email, role, organization_id, manager_id, created_at, updated_at, department, region, country'
 
     type UserRow = {
       id: string
@@ -84,6 +84,8 @@ export async function GET(request: NextRequest) {
       mfa_enabled?: boolean | null
       enterprise_role?: string | null
       department?: string | null
+      region?: string | null
+      country?: string | null
       cost_center?: string | null
       hire_date?: string | null
     }
@@ -157,52 +159,57 @@ export async function GET(request: NextRequest) {
       mfaEnabled: u.mfa_enabled ?? null,
       hireDate: u.hire_date ?? null,
       costCenter: u.cost_center ?? null,
-      // placeholders for enrichment
-      region: null as string | null,
-      country: null as string | null,
+      // Use region and country directly from users table (added in migration)
+      region: u.region ?? null,
+      country: u.country ?? null,
     }))
 
-    // Optional enrichment: region/country from user_profiles when requested
+    // Optional enrichment: region/country from user_profiles when requested and data is missing from users table
     try {
       if (includeRegions && transformed.length > 0) {
-        const ids = transformed.map((u) => u.id)
-        // Try selecting common columns; fall back gracefully if schema differs
-        type ProfRow = { user_id: string; region?: string | null; country?: string | null; business_unit?: string | null; territory_name?: string | null; territory?: string | null }
-        let regions: ProfRow[] | null = null
-        {
-          const { data, error } = await supa
-            .from('user_profiles' as const)
-            .select('user_id, region, country, business_unit')
-            .in('user_id', ids)
-            .eq('organization_id', organizationId)
-          if (!error && Array.isArray(data)) regions = data as ProfRow[]
-        }
-        if (!regions) {
-          const { data, error } = await supa
-            .from('user_profiles' as const)
-            .select('user_id, territory_name, country')
-            .in('user_id', ids)
-            .eq('organization_id', organizationId)
-          if (!error && Array.isArray(data)) regions = data as ProfRow[]
-        }
-        if (!regions) {
-          const { data } = await supa
-            .from('user_profiles' as const)
-            .select('user_id, territory, country')
-            .in('user_id', ids)
-            .eq('organization_id', organizationId)
-          regions = (data as ProfRow[] | null) ?? null
-        }
-        if (regions) {
-          const map = new Map<string, { region: string | null; country: string | null }>()
-          for (const r of regions) {
-            const reg = (r.region ?? r.territory_name ?? r.territory ?? null) || null
-            map.set(r.user_id, { region: reg, country: r.country ?? null })
+        // Only enrich users that don't already have region/country data from the users table
+        const usersNeedingEnrichment = transformed.filter(u => !u.region && !u.country)
+        
+        if (usersNeedingEnrichment.length > 0) {
+          const ids = usersNeedingEnrichment.map((u) => u.id)
+          // Try selecting common columns; fall back gracefully if schema differs
+          type ProfRow = { user_id: string; region?: string | null; country?: string | null; business_unit?: string | null; territory_name?: string | null; territory?: string | null }
+          let regions: ProfRow[] | null = null
+          {
+            const { data, error } = await supa
+              .from('user_profiles' as const)
+              .select('user_id, region, country, business_unit')
+              .in('user_id', ids)
+              .eq('organization_id', organizationId)
+            if (!error && Array.isArray(data)) regions = data as ProfRow[]
           }
-          transformed = transformed.map((u) => {
-            const m = map.get(u.id)
-            return m ? { ...u, region: m.region, country: m.country } : u
-          })
+          if (!regions) {
+            const { data, error } = await supa
+              .from('user_profiles' as const)
+              .select('user_id, territory_name, country')
+              .in('user_id', ids)
+              .eq('organization_id', organizationId)
+            if (!error && Array.isArray(data)) regions = data as ProfRow[]
+          }
+          if (!regions) {
+            const { data } = await supa
+              .from('user_profiles' as const)
+              .select('user_id, territory, country')
+              .in('user_id', ids)
+              .eq('organization_id', organizationId)
+            regions = (data as ProfRow[] | null) ?? null
+          }
+          if (regions) {
+            const map = new Map<string, { region: string | null; country: string | null }>()
+            for (const r of regions) {
+              const reg = (r.region ?? r.territory_name ?? r.territory ?? null) || null
+              map.set(r.user_id, { region: reg, country: r.country ?? null })
+            }
+            transformed = transformed.map((u) => {
+              const m = map.get(u.id)
+              return m ? { ...u, region: m.region, country: m.country } : u
+            })
+          }
         }
       }
     } catch { /* ignore enrichment errors */ }

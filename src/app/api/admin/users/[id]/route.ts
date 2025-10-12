@@ -148,9 +148,12 @@ export async function PUT(
 
     if (email !== undefined) updateData.email = email;
     if (fullName !== undefined) updateData.full_name = fullName;
-  if (role !== undefined) updateData.role = role;
+    if (role !== undefined) updateData.role = role;
     if (department !== undefined) updateData.department = department;
     if (managerId !== undefined) updateData.manager_id = managerId || null;
+    // Add region and country to users table (same as department)
+    if (region !== undefined) updateData.region = region;
+    if (country !== undefined) updateData.country = country;
 
     console.log('📝 Update data:', updateData);
 
@@ -186,11 +189,28 @@ export async function PUT(
 
     if (updateError) {
       console.error('❌ Error updating user in database:', updateError);
+      
+      // Check if error is due to missing region/country columns
+      const errorMessage = String((updateError as Error).message || updateError)
+      const errorCode = (updateError as { code?: string } | null)?.code
+      
+      if (errorMessage.includes('column "region"') || errorMessage.includes('column "country"')) {
+        return NextResponse.json(
+          { 
+            error: 'Database schema update required',
+            details: 'Region and country columns need to be added to the users table. Please run the database migration.',
+            migrationNeeded: true,
+            sqlCommand: 'ALTER TABLE users ADD COLUMN region TEXT, ADD COLUMN country TEXT;'
+          },
+          { status: 400 }
+        );
+      }
+      
       return NextResponse.json(
         { 
           error: 'Failed to update user in database',
-          details: String((updateError as Error).message || updateError),
-          code: (updateError as { code?: string } | null)?.code
+          details: errorMessage,
+          code: errorCode
         },
         { status: 500 }
       );
@@ -239,49 +259,6 @@ export async function PUT(
       }
     }
 
-    // Update region/country in user_profiles when provided
-    if (region !== undefined || country !== undefined) {
-      try {
-        const payload: Record<string, unknown> = { updated_at: new Date().toISOString() }
-        if (region !== undefined) payload.region = region
-        if (country !== undefined) payload.country = country
-
-        // Try upsert with current client first (RLS may allow org admins)
-        type UpsertClient = {
-          from: (t: string) => {
-            upsert: (v: Record<string, unknown>, opts: { onConflict?: string }) => {
-              select: (cols: string) => { single: () => Promise<{ data: { user_id: string } | null; error: unknown }> }
-            }
-          }
-        }
-        let ok = false
-        try {
-          const { data: up1, error: err1 } = await (supabase as unknown as UpsertClient)
-            .from('user_profiles')
-            .upsert({ user_id: userId, organization_id: organizationId, ...payload }, { onConflict: 'user_id' })
-            .select('user_id')
-            .single()
-          if (!err1 && up1) ok = true
-        } catch { /* ignore */ }
-        if (!ok) {
-          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-          if (serviceKey) {
-            const { createClient } = await import('@supabase/supabase-js')
-            const { supabaseConfig } = await import('@/lib/config')
-            const admin = createClient(supabaseConfig.url!, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
-            const { error: err2 } = await admin
-              .from('user_profiles')
-              .upsert({ user_id: userId, organization_id: organizationId, ...payload }, { onConflict: 'user_id' })
-            if (err2) console.error('⚠️ Failed to upsert user_profiles:', err2)
-          } else {
-            console.warn('Service role not configured; skipping user_profiles update')
-          }
-        }
-      } catch (e) {
-        console.error('⚠️ Error updating user_profiles:', e)
-      }
-    }
-
     return NextResponse.json({
       success: true,
       user: {
@@ -294,8 +271,8 @@ export async function PUT(
         managerId: updatedUser.manager_id,
         updatedAt: updatedUser.updated_at,
         isActive: typeof isActive === 'boolean' ? isActive : true,
-        region: region ?? undefined,
-        country: country ?? undefined,
+        region: updatedUser.region || region || undefined,
+        country: updatedUser.country || country || undefined,
       }
     });
 
