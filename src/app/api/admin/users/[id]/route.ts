@@ -32,6 +32,19 @@ type UpdateClient<T> = {
   }
 }
 
+// Narrow type for validating roles with a chained eq + maybeSingle
+type RolesSelectClient = {
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        eq: (column: string, value: string) => {
+          maybeSingle: () => Promise<{ data: { id: string } | null; error: unknown }>
+        }
+      }
+    }
+  }
+}
+
 type UserRow = {
   id: string
   email: string | null
@@ -71,17 +84,31 @@ export async function PUT(
     const organizationId = await checkAdminPermission(supabase, user.id);
 
     const { id: userId } = await params;
+    // Helper to coerce empty string -> null
+    const emptyToNull = <T>(schema: z.ZodType<T>) => z.preprocess((v) => {
+      if (typeof v === 'string' && v.trim() === '') return null
+      return v
+    }, schema)
     const schema = z.object({
       email: z.string().email().optional(),
       fullName: z.string().min(1).optional(),
-      role: z.enum(['rep','manager','admin','super_admin']).optional(),
+      // Accept any non-empty string; validate against roles table below
+      role: z.string().min(1).optional(),
       department: z.string().optional(),
-      managerId: z.string().uuid().nullable().optional(),
+      managerId: emptyToNull(z.string().uuid().nullable()).optional(),
       isActive: z.boolean().optional(),
-      region: z.string().min(1).nullable().optional(),
-      country: z.string().min(1).nullable().optional(),
+      region: emptyToNull(z.string().min(1).nullable()).optional(),
+      country: emptyToNull(z.string().min(1).nullable()).optional(),
     })
-    const { email, fullName, role, department, managerId, isActive, region, country } = schema.parse(await request.json())
+    const body = await request.json()
+    const parsed = schema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', issues: parsed.error.issues },
+        { status: 400 }
+      )
+    }
+    const { email, fullName, role, department, managerId, isActive, region, country } = parsed.data
 
   console.log('✏️ Updating user:', userId, { email, fullName, role, department, managerId, isActive, region, country });
 
@@ -121,11 +148,32 @@ export async function PUT(
 
     if (email !== undefined) updateData.email = email;
     if (fullName !== undefined) updateData.full_name = fullName;
-    if (role !== undefined) updateData.role = role;
+  if (role !== undefined) updateData.role = role;
     if (department !== undefined) updateData.department = department;
     if (managerId !== undefined) updateData.manager_id = managerId || null;
 
     console.log('📝 Update data:', updateData);
+
+    // If a role is provided, validate it exists for this organization
+    if (typeof role === 'string') {
+      try {
+        const { data: roleRow, error: roleErr } = await (supabase as unknown as RolesSelectClient)
+          .from('roles')
+          .select('id')
+          .eq('organization_id', organizationId)
+          .eq('role_key', role)
+          .maybeSingle()
+        if (roleErr) {
+          console.error('❌ Error validating role:', roleErr)
+          return NextResponse.json({ error: 'Role validation failed', details: String((roleErr as Error).message || roleErr) }, { status: 500 })
+        }
+        if (!roleRow) {
+          return NextResponse.json({ error: 'Invalid role', details: `Role "${role}" does not exist for this organization` }, { status: 400 })
+        }
+      } catch (e) {
+        return NextResponse.json({ error: 'Role validation failed', details: e instanceof Error ? e.message : String(e) }, { status: 500 })
+      }
+    }
 
     // Update the user record
     const { data: updatedUserRaw, error: updateError } = await (supabase as unknown as UpdateClient<UserRow>)
@@ -258,7 +306,7 @@ export async function PUT(
     if (error && typeof error === 'object') {
       console.error('Error details:', JSON.stringify(error, null, 2));
     }
-    
+    // If this was an explicit validation error above, it would have returned 400 already.
     return NextResponse.json(
       { 
         error: 'Failed to update user',

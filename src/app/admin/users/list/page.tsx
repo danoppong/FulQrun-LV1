@@ -8,7 +8,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   UsersIcon, 
   PencilIcon, 
@@ -35,7 +35,7 @@ interface User {
   id: string;
   email: string;
   fullName: string;
-  role: 'rep' | 'manager' | 'admin';
+  role: string; // dynamic role key from roles API
   enterpriseRole?: 'user' | 'manager' | 'admin' | 'super_admin';
   organizationId: string;
   lastLoginAt?: Date;
@@ -52,7 +52,7 @@ interface User {
 interface UserFormData {
   email: string;
   fullName: string;
-  role: 'rep' | 'manager' | 'admin';
+  role: string; // dynamic role key from roles API
   isActive: boolean;
   department?: string;
   managerId?: string;
@@ -82,7 +82,7 @@ interface UserTableColumn {
 const UserFormSchema = z.object({
   email: z.string().email('Invalid email address'),
   fullName: z.string().min(1, 'Full name is required'),
-  role: z.enum(['rep', 'manager', 'admin']),
+  role: z.string().min(1, 'Role is required'),
   isActive: z.boolean(),
   department: z.string().optional(),
   managerId: z.string().optional(),
@@ -364,12 +364,23 @@ function UserFilters({
   filters: UserFilters;
   onFiltersChange: (filters: UserFilters) => void;
 }) {
-  const roles = [
-    { value: '', label: 'All Roles' },
-    { value: 'rep', label: 'Sales Rep' },
-    { value: 'manager', label: 'Manager' },
-    { value: 'admin', label: 'Admin' }
-  ];
+  const [roleOptions, setRoleOptions] = useState<Array<{ value: string; label: string }>>([
+    { value: '', label: 'All Roles' }
+  ])
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/roles', { credentials: 'include' })
+        if (!res.ok) return
+        const data = await res.json()
+        type RoleRow = { role_key: string; role_name: string }
+        const opts = Array.isArray(data.roles)
+          ? (data.roles as RoleRow[]).map((r) => ({ value: r.role_key, label: r.role_name }))
+          : []
+        setRoleOptions([{ value: '', label: 'All Roles' }, ...opts])
+      } catch {}
+    })()
+  }, [])
 
   const departments = [
     { value: '', label: 'All Departments' },
@@ -403,7 +414,7 @@ function UserFilters({
             onChange={(e) => onFiltersChange({ ...filters, role: e.target.value || undefined })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
-            {roles.map(role => (
+            {roleOptions.map(role => (
               <option key={role.value} value={role.value}>{role.label}</option>
             ))}
           </select>
@@ -471,6 +482,7 @@ function UserForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [options, setOptions] = useState<{ departments: string[]; regions: string[]; countries: string[] }>({ departments: [], regions: [], countries: [] });
   const [_loadingOptions, setLoadingOptions] = useState(false);
+  const [roleOptions, setRoleOptions] = useState<Array<{ value: string; label: string }>>([])
 
   useEffect(() => {
     // Load dropdown options
@@ -486,6 +498,16 @@ function UserForm({
             countries: Array.isArray(data.countries) ? data.countries : [],
           });
         }
+        // Load roles as well
+        try {
+          const rr = await fetch('/api/admin/roles', { credentials: 'include' })
+          if (rr.ok) {
+            const payload = await rr.json()
+            type RoleRow = { role_key: string; role_name: string }
+            const opts = Array.isArray(payload.roles) ? (payload.roles as RoleRow[]).map((r) => ({ value: r.role_key, label: r.role_name })) : []
+            setRoleOptions(opts)
+          }
+        } catch {}
       } finally {
         setLoadingOptions(false);
       }
@@ -593,12 +615,20 @@ function UserForm({
               <label className="block text-sm font-medium text-gray-700">Role</label>
               <select
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as UserFormData['role'] })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
-                <option value="rep">Sales Rep</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
+                {roleOptions.length > 0 ? (
+                  roleOptions.map((r) => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))
+                ) : (
+                  <>
+                    <option value="rep">Sales Rep</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                  </>
+                )}
               </select>
             </div>
 
@@ -743,6 +773,7 @@ export default function UserManagement() {
   params.set('includeRegions', 'true');
   if (filters.role) params.set('role', filters.role);
   if (filters.department) params.set('department', filters.department);
+    if (filters.isActive !== undefined) params.set('isActive', String(filters.isActive));
 
       const response = await fetch(`/api/admin/users?${params.toString()}`, {
         credentials: 'include'
@@ -791,14 +822,7 @@ export default function UserManagement() {
     }
   };
 
-  const filteredUsers = useMemo(() => {
-    let filtered = [...users];
-    // Server-side search/role/department are applied in loadUsers; only apply client-side filters below
-    if (filters.isActive !== undefined) {
-      filtered = filtered.filter(user => user.isActive === filters.isActive);
-    }
-    return filtered;
-  }, [users, filters.isActive]);
+  const filteredUsers = users; // All filtering is now server-side (search/role/department/isActive)
 
   const handleCreateUser = () => {
     setEditingUser(undefined);
@@ -812,15 +836,29 @@ export default function UserManagement() {
 
   const handleSaveUser = async (userData: UserFormData) => {
     try {
+      // Normalize optional fields: treat empty strings as null
+      type ApiUserFormData = Omit<UserFormData, 'managerId' | 'region' | 'country'> & {
+        managerId?: string | null;
+        region?: string | null;
+        country?: string | null;
+      }
+      const toNull = (v: string | null | undefined): string | null | undefined =>
+        typeof v === 'string' && v.trim() === '' ? null : v
+      const sanitized: ApiUserFormData = {
+        ...userData,
+        managerId: toNull(userData.managerId),
+        region: toNull(userData.region ?? undefined) ?? null,
+        country: toNull(userData.country ?? undefined) ?? null,
+      }
       if (editingUser) {
         // Update existing user
-        console.log('📤 Sending update request:', userData);
+        console.log('📤 Sending update request:', sanitized);
         
         const response = await fetch(`/api/admin/users/${editingUser.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify(userData)
+          body: JSON.stringify(sanitized)
         });
 
         console.log('📥 Update response status:', response.status);
@@ -843,13 +881,13 @@ export default function UserManagement() {
         await loadUsers(); // Reload users to get updated data
       } else {
         // Create new user
-        console.log('📤 Sending create request:', userData);
+        console.log('📤 Sending create request:', sanitized);
         
         const response = await fetch('/api/admin/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify(userData)
+          body: JSON.stringify(sanitized)
         });
 
         console.log('📥 Create response status:', response.status);

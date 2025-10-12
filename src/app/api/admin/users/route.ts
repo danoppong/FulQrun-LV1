@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { AuthService } from '@/lib/auth-unified'
-import { checkRateLimit, validateRequest, validateSearchParams } from '@/lib/validation'
+import { checkRateLimit, validateSearchParams } from '@/lib/validation'
 import { supabaseConfig } from '@/lib/config'
 
 function getIp(request: NextRequest) {
@@ -36,6 +36,7 @@ async function getOrgIfAdmin(userId: string) {
 // - includeRegions: 'true' | 'false' to enrich each user with region/country from user_profiles
 // - role: optional exact role filter (rep|manager|admin|super_admin or org-specific)
 // - department: optional exact department filter
+// - isActive: 'true' | 'false' optional; filters by Supabase Auth banned status (best-effort)
 // Response JSON:
 // {
 //   users: Array<{ id, email, fullName, role, organizationId, ... }>,
@@ -48,6 +49,7 @@ const listSchema = z.object({
   includeRegions: z.enum(['true', 'false']).optional(),
   role: z.string().min(1).optional(),
   department: z.string().min(1).optional(),
+  isActive: z.enum(['true','false']).optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -60,8 +62,9 @@ export async function GET(request: NextRequest) {
 
     const organizationId = await getOrgIfAdmin(user.id)
     const url = new URL(request.url)
-  const { search, limit, offset, includeRegions: includeRegionsStr, role, department } = validateSearchParams(listSchema, url.searchParams)
+  const { search, limit, offset, includeRegions: includeRegionsStr, role, department, isActive: isActiveStr } = validateSearchParams(listSchema, url.searchParams)
   const includeRegions = includeRegionsStr === 'true'
+  const isActiveFilter = typeof isActiveStr === 'string' ? isActiveStr === 'true' : undefined
 
     // Safe select: attempt richer fields then fall back if schema lacks them
   const selectPrimary = 'id, email, full_name, role, organization_id, manager_id, created_at, updated_at'
@@ -85,7 +88,7 @@ export async function GET(request: NextRequest) {
       hire_date?: string | null
     }
 
-    const buildQuery = (sel: string, useEmailAlias = false) => {
+    const buildQuery = (sel: string, useEmailAlias = false, applyRange = true, fetchLimit = 0) => {
       let q = supa
         .from('users' as const)
         .select(sel)
@@ -94,25 +97,48 @@ export async function GET(request: NextRequest) {
       if (search) q = q.ilike(useEmailAlias ? 'email' : 'full_name', `%${search}%`)
       if (role) q = q.eq('role', role)
       if (department) q = q.eq('department', department)
-      if (typeof offset === 'number' && typeof limit === 'number') q = q.range(offset, offset + limit - 1)
-      else if (typeof limit === 'number') q = q.limit(limit)
+      if (applyRange) {
+        if (typeof offset === 'number' && typeof limit === 'number') q = q.range(offset, offset + limit - 1)
+        else if (typeof limit === 'number') q = q.limit(limit)
+      } else if (fetchLimit > 0) {
+        q = q.range(0, fetchLimit - 1)
+      }
       return q
     }
 
     let users: UserRow[] | null = null
-    let ok = false
-    // Try extended with name filter
-    {
-      const { data, error } = await buildQuery(selectExtended)
-      if (!error && Array.isArray(data)) { users = data as UserRow[]; ok = true }
-    }
-    if (!ok) {
-      const { data, error } = await buildQuery(selectPrimary)
-      if (!error && Array.isArray(data)) { users = data as UserRow[]; ok = true }
-    }
-    if (!ok) {
-      const { data } = await buildQuery(selectEmailAsFullName, true)
-      users = (data as UserRow[] | null)
+    if (isActiveFilter === undefined) {
+      // Normal path with DB-side pagination
+      let ok = false
+      {
+        const { data, error } = await buildQuery(selectExtended)
+        if (!error && Array.isArray(data)) { users = data as UserRow[]; ok = true }
+      }
+      if (!ok) {
+        const { data, error } = await buildQuery(selectPrimary)
+        if (!error && Array.isArray(data)) { users = data as UserRow[]; ok = true }
+      }
+      if (!ok) {
+        const { data } = await buildQuery(selectEmailAsFullName, true)
+        users = (data as UserRow[] | null)
+      }
+    } else {
+      // When filtering by isActive (auth banned status), fetch a larger chunk and paginate after enrichment
+      const desired = (typeof offset === 'number' && typeof limit === 'number') ? offset + limit : (limit || 100)
+      const fetchLimit = Math.min(Math.max(desired, 100), 1000)
+      let ok = false
+      {
+        const { data, error } = await buildQuery(selectExtended, false, false, fetchLimit)
+        if (!error && Array.isArray(data)) { users = data as UserRow[]; ok = true }
+      }
+      if (!ok) {
+        const { data, error } = await buildQuery(selectPrimary, false, false, fetchLimit)
+        if (!error && Array.isArray(data)) { users = data as UserRow[]; ok = true }
+      }
+      if (!ok) {
+        const { data } = await buildQuery(selectEmailAsFullName, true, false, fetchLimit)
+        users = (data as UserRow[] | null)
+      }
     }
 
     let transformed = (users || []).map((u) => ({
@@ -201,12 +227,27 @@ export async function GET(request: NextRequest) {
           }
           return { ...u, isActive }
         })
+        // Apply isActive filter after enrichment
+        if (typeof isActiveFilter === 'boolean') {
+          transformed = transformed.filter((u) => u.isActive === isActiveFilter)
+        }
       }
     } catch { /* ignore enrichment errors */ }
 
     // totalCount for pagination (best-effort, schema-safe)
     let totalCount: number | undefined = undefined
     try {
+      if (typeof isActiveFilter === 'boolean') {
+        // When filtering by isActive (auth), DB can't count banned status; return filtered length
+        totalCount = transformed.length
+        // And we need to page after filter
+        if (typeof offset === 'number' && typeof limit === 'number') {
+          transformed = transformed.slice(offset, offset + limit)
+        } else if (typeof limit === 'number') {
+          transformed = transformed.slice(0, limit)
+        }
+        return NextResponse.json({ users: transformed, totalCount }, { headers: { 'Cache-Control': 'private, max-age=15' } })
+      }
       // Try counting with full_name filter first
       let countBase = supa
         .from('users' as const)
@@ -241,16 +282,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const emptyToNull = <T>(schema: z.ZodType<T>) => z.preprocess((v) => {
+  if (typeof v === 'string' && v.trim() === '') return null
+  return v
+}, schema)
 const createUserSchema = z.object({
   email: z.string().email(),
   fullName: z.string().min(1),
-  role: z.enum(['rep', 'manager', 'admin', 'super_admin']).or(z.string()).transform((v) => (['rep','manager','admin','super_admin'].includes(v) ? v : 'rep')),
+  // Accept any non-empty string; enforce existence against roles table below
+  role: z.string().min(1),
   department: z.string().optional(),
-  managerId: z.string().uuid().nullable().optional(),
+  managerId: emptyToNull(z.string().uuid().nullable()).optional(),
   password: z.string().min(8).optional(),
   isActive: z.boolean().optional(),
-  region: z.string().min(1).nullable().optional(),
-  country: z.string().min(1).nullable().optional(),
+  region: emptyToNull(z.string().min(1).nullable()).optional(),
+  country: emptyToNull(z.string().min(1).nullable()).optional(),
 })
 
 // POST /api/admin/users - Create a new user
@@ -263,11 +309,30 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const organizationId = await getOrgIfAdmin(user.id)
 
-  const input = validateRequest(createUserSchema, await request.json())
-  const { email, fullName, role, department, managerId, password, isActive, region, country } = input
+  const body = await request.json()
+  const parsed = createUserSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Validation error', issues: parsed.error.issues }, { status: 400 })
+  }
+  const { email, fullName, role, department, managerId, password, isActive, region, country } = parsed.data
 
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!serviceKey) return NextResponse.json({ error: 'Service role not configured' }, { status: 500 })
+
+    // Validate that the provided role exists for this organization
+    try {
+      const { data: roleRow } = await supa
+        .from('roles' as const)
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('role_key', role)
+        .maybeSingle()
+      if (!roleRow) {
+        return NextResponse.json({ error: 'Invalid role', details: `Role "${role}" does not exist for this organization` }, { status: 400 })
+      }
+    } catch (e) {
+      return NextResponse.json({ error: 'Role validation failed', details: e instanceof Error ? e.message : String(e) }, { status: 500 })
+    }
 
     const admin = createClient(supabaseConfig.url!, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
 
