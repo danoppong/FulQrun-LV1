@@ -5,38 +5,25 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  PlusIcon, 
-  PencilIcon, 
-  TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowsUpDownIcon,
-  EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
-  CloudIcon,
-  CircleStackIcon,
-  CogIcon,
-  ArrowPathIcon,
-  DocumentTextIcon,
-  ServerIcon,
-  ShieldCheckIcon,
-  BellIcon,
-  UserIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
   TagIcon,
+  DocumentTextIcon,
+  Squares2X2Icon,
+  ShieldCheckIcon,
+  ArrowPathIcon,
   AdjustmentsHorizontalIcon,
-  Squares2X2Icon
-} from '@heroicons/react/24/outline';
+  UserIcon,
+  CloudIcon,
+} from '@heroicons/24/outline'
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -795,7 +782,7 @@ export default function CustomFieldsManagement() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const loadData = async () => {
     try {
@@ -930,7 +917,7 @@ export default function CustomFieldsManagement() {
   const activeFields = config.fields.filter(f => f.isActive).length;
   const totalFields = config.fields.length;
   const activeGroups = config.fieldGroups.filter(g => g.isActive).length;
-  const totalGroups = config.fieldGroups.length;
+  const _totalGroups = config.fieldGroups.length;
 
   return (
     <div className="space-y-6">

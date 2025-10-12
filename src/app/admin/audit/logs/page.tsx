@@ -699,6 +699,7 @@ export default function AuditLogViewer() {
   useEffect(() => {
     filterEntries();
     calculateStats();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries, filters]);
 
   const loadAuditLogs = async () => {

@@ -3,8 +3,7 @@
 // Handles KPI calculations, definitions, and cached values
 
 import { NextRequest, NextResponse } from 'next/server'
-import { AuthService } from '@/lib/auth-unified'
-import { kpiEngine } from '@/lib/bi/kpi-engine';
+import { KPIEngine } from '@/lib/bi/kpi-engine'
 
 export const dynamic = 'force-dynamic';
 

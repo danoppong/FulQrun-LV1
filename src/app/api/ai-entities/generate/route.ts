@@ -291,7 +291,7 @@ interface GeneratedContact {
 async function generateAIAccounts(
   leadBrief: LeadBriefInput,
   count: number,
-  enrichmentLevel: string
+  _enrichmentLevel: string
 ): Promise<GeneratedAccount[]> {
   // This is a placeholder implementation
   // In a real implementation, this would call an AI service or use data providers

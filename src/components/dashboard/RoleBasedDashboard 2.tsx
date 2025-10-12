@@ -39,7 +39,7 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
     }
   }
 
-  const loadDashboardLayoutCallback = useCallback(loadDashboardLayout, [userId, supabase])
+  const loadDashboardLayoutCallback = useCallback(loadDashboardLayout, [userId])
 
   useEffect(() => {
     // Load user's custom dashboard layout

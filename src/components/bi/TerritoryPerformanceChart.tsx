@@ -5,7 +5,7 @@
 'use client';
 
 import React from 'react';
-import { MapIcon, UserGroupIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
+import { MapIcon } from '@heroicons/react/24/outline';
 
 interface TerritoryPerformanceChartProps {
   territoryPerformance: Array<{
@@ -15,7 +15,7 @@ interface TerritoryPerformanceChartProps {
   userRole: 'rep' | 'manager' | 'admin';
 }
 
-export function TerritoryPerformanceChart({ territoryPerformance, userRole }: TerritoryPerformanceChartProps) {
+export function TerritoryPerformanceChart({ territoryPerformance, userRole: _userRole }: TerritoryPerformanceChartProps) {
   // Ensure territoryPerformance is an array
   const safeTerritoryPerformance = Array.isArray(territoryPerformance) ? territoryPerformance : [];
   

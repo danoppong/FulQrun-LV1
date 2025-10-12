@@ -18,7 +18,7 @@ const LeadBriefSchema = z.object({
   icp_profile_id: z.string().uuid()
 })
 
-const LeadBriefUpdateSchema = LeadBriefSchema.partial().extend({
+const _LeadBriefUpdateSchema = z.object({
   status: z.enum(['draft', 'submitted', 'orchestrated']).optional()
 })
 
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       page_size: pageSize,
       total: count || 0
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

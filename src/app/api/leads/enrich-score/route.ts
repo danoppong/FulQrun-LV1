@@ -6,7 +6,6 @@ import { z } from 'zod';
 const EnrichmentSchema = z.object({
   lead_ids: z.array(z.string().uuid()),
   enrichment_level: z.enum(['BASIC', 'ENHANCED', 'PREMIUM']).optional().default('BASIC'),
-  providers: z.array(z.enum(['CLEARBIT', 'ZOOMINFO', 'OPPORTUNITY', 'COMPLIANCE'])).optional()
 })
 
 const ScoringSchema = z.object({

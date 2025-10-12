@@ -125,7 +125,7 @@ export default function ICPProfileManagement() {
       } else {
         setProfiles(data || [])
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -156,7 +156,7 @@ export default function ICPProfileManagement() {
       } else {
         await loadProfiles()
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to delete ICP profile')
     }
   }
@@ -180,7 +180,7 @@ export default function ICPProfileManagement() {
         setEditingProfile(undefined)
         await loadProfiles()
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setFormLoading(false)

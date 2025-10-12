@@ -10,36 +10,16 @@ import {
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
-  CloudIcon,
-  CircleStackIcon,
-  CogIcon,
-  ArrowPathIcon,
   DocumentTextIcon,
-  ServerIcon,
-  ShieldCheckIcon,
-  BellIcon,
-  UserIcon,
-  TagIcon,
   AdjustmentsHorizontalIcon,
   Squares2X2Icon,
   RectangleStackIcon,
-  CursorArrowRaysIcon,
   PaintBrushIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -902,7 +882,7 @@ export default function FormDesignerManagement() {
   const activeForms = config.forms.filter(f => f.isActive).length;
   const totalForms = config.forms.length;
   const activeTemplates = config.templates.filter(t => t.isActive).length;
-  const totalTemplates = config.templates.length;
+  const _totalTemplates = config.templates.length;
 
   return (
     <div className="space-y-6">

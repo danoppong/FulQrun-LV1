@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     const organizationId = await checkSuperAdminPermission(supabase, user.id);
 
     const body = await request.json();
-    const { userId, enterpriseRole, expiresAt } = body;
+    const { userId, enterpriseRole, expiresAt: _expiresAt } = body;
 
     if (!userId || !enterpriseRole) {
       return NextResponse.json(

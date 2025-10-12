@@ -1,7 +1,6 @@
 'use client'
 
 import { AuthClientService } from '@/lib/auth-client'
-import { getSupabaseBrowserClient } from '@/lib/supabase-singleton'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 

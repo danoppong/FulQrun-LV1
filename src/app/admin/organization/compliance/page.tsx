@@ -6,12 +6,12 @@
 import React, { useState } from 'react';
 import {
   ShieldCheckIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  DocumentCheckIcon,
-  LockClosedIcon,
-  ClockIcon
-} from '@heroicons/react/24/outline';
+  DocumentTextIcon,
+  XMarkIcon,
+  UserGroupIcon,
+  CogIcon,
+  ClipboardDocumentCheckIcon,
+} from '@heroicons/react/24/outline'
 
 export default function OrganizationCompliance() {
   const [complianceSettings, setComplianceSettings] = useState({

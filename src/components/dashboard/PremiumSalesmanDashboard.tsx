@@ -15,13 +15,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { 
-  ChartBarIcon, 
   TrophyIcon, 
   ArrowTrendingUpIcon,
   CurrencyDollarIcon,
   FunnelIcon,
-  UserGroupIcon,
-  CalendarIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline'
 import type { SalesmanKPIResults } from '@/lib/services/salesman-kpi-engine'
@@ -38,7 +35,7 @@ type TimeFrame = 'weekly' | 'monthly' | 'annually'
 export default function PremiumSalesmanDashboard({
   userId,
   userRole,
-  organizationId,
+  organizationId: _organizationId,
   darkMode = false
 }: PremiumSalesmanDashboardProps) {
   const [kpiData, setKpiData] = useState<SalesmanKPIResults | null>(null)

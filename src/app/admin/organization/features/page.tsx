@@ -7,7 +7,6 @@ import React, { useState, useEffect } from 'react';
 import {
   PuzzlePieceIcon,
   CheckCircleIcon,
-  XCircleIcon,
   ExclamationTriangleIcon,
   BeakerIcon,
   LockClosedIcon,

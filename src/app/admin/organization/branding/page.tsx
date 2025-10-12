@@ -5,13 +5,12 @@
 
 import React, { useState } from 'react';
 import {
-  PaintBrushIcon,
-  PhotoIcon,
-  SwatchIcon,
-  CodeBracketIcon,
-  EnvelopeIcon,
-  EyeIcon
-} from '@heroicons/react/24/outline';
+  CameraIcon,
+  DocumentArrowUpIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline'
 
 export default function OrganizationBranding() {
   const [brandingSettings, setBrandingSettings] = useState({
