@@ -2,37 +2,28 @@
 // Enables or disables a user account
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { supabaseConfig } from '@/lib/config';
+import { AuthService } from '@/lib/auth-unified'
+import { z } from 'zod'
 
 // Helper function to get authenticated user
-async function getAuthenticatedUser(request: NextRequest) {
-  const supabase = createServerClient(
-    supabaseConfig.url!,
-    supabaseConfig.anonKey!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set() {},
-        remove() {},
-      },
-    }
-  );
-
-  const { data: { user }, error } = await supabase.auth.getUser();
-  
-  if (error || !user) {
-    throw new Error('Not authenticated');
-  }
-
-  return { user, supabase };
+async function getAuthenticatedUser() {
+  const supabase = await AuthService.getServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  return { user, supabase }
 }
 
 // Helper function to check admin permission
+type SelectClient = {
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => { single: () => Promise<{ data: { role?: string; organization_id?: string } | null; error: unknown }> }
+    }
+  }
+}
+
 async function checkAdminPermission(supabase: unknown, userId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as unknown as SelectClient)
     .from('users')
     .select('role, organization_id')
     .eq('id', userId)
@@ -52,19 +43,19 @@ async function checkAdminPermission(supabase: unknown, userId: string) {
 // POST /api/admin/users/[id]/toggle-active - Toggle user active status
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { user, supabase } = await getAuthenticatedUser(request);
+    const { user, supabase } = await getAuthenticatedUser();
     const organizationId = await checkAdminPermission(supabase, user.id);
 
-    const userId = params.id;
-    const { isActive } = await request.json();
+    const { id: userId } = await context.params;
+    const { isActive } = z.object({ isActive: z.boolean() }).parse(await request.json());
 
     console.log('🔄 Toggling user active status:', userId, 'to', isActive);
 
     // Verify the user belongs to the same organization
-    const { data: targetUser, error: checkError } = await supabase
+    const { data: targetUser, error: checkError } = await (supabase as unknown as SelectClient)
       .from('users')
       .select('organization_id')
       .eq('id', userId)
@@ -92,16 +83,18 @@ export async function POST(
       );
     }
 
-    // Update the auth user status
-    // Note: Supabase doesn't have a direct "isActive" field, but we can ban/unban users
+    // Update the auth user status via service-role client
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) {
+      return NextResponse.json({ error: 'Service role key not configured' }, { status: 500 })
+    }
+    const { createClient } = await import('@supabase/supabase-js')
+    const { supabaseConfig } = await import('@/lib/config')
+    const admin = createClient(supabaseConfig.url!, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
     if (isActive) {
-      await supabase.auth.admin.updateUserById(userId, { 
-        ban_duration: 'none'
-      });
+      await admin.auth.admin.updateUserById(userId, { ban_duration: 'none' })
     } else {
-      await supabase.auth.admin.updateUserById(userId, { 
-        ban_duration: '876000h' // 100 years (effectively permanent)
-      });
+      await admin.auth.admin.updateUserById(userId, { ban_duration: '876000h' })
     }
 
     console.log('✅ User active status toggled successfully');

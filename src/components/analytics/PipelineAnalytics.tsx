@@ -1,0 +1,301 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { opportunityAPI } from '@/lib/api/opportunities'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { formatCurrencySafe } from '@/lib/format'
+
+interface PipelineData {
+  stage: string
+  count: number
+  value: number
+  weightedValue: number
+  [key: string]: string | number
+}
+
+interface PipelineSummary {
+  totalValue: number
+  weightedValue: number
+  byStage: {
+    prospecting: { count: number; value: number; weightedValue: number }
+    engaging: { count: number; value: number; weightedValue: number }
+    advancing: { count: number; value: number; weightedValue: number }
+    key_decision: { count: number; value: number; weightedValue: number }
+  }
+}
+
+const COLORS = ['#3B82F6', '#F59E0B', '#EF4444', '#10B981']
+
+export default function PipelineAnalytics() {
+  const [data, setData] = useState<PipelineData[]>([])
+  const [summary, setSummary] = useState<PipelineSummary | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    loadPipelineData()
+  }, [])
+
+  const loadPipelineData = async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const { data: summaryData, error } = await opportunityAPI.getPipelineSummary()
+      
+      if (error) {
+        setError(error.message || 'Failed to load pipeline data')
+      } else if (summaryData) {
+        setSummary(summaryData)
+        
+        // Transform data for charts
+        const chartData = [
+          {
+            stage: 'Prospecting',
+            count: summaryData.byStage.prospecting.count,
+            value: summaryData.byStage.prospecting.value,
+            weightedValue: summaryData.byStage.prospecting.weightedValue
+          },
+          {
+            stage: 'Engaging',
+            count: summaryData.byStage.engaging.count,
+            value: summaryData.byStage.engaging.value,
+            weightedValue: summaryData.byStage.engaging.weightedValue
+          },
+          {
+            stage: 'Advancing',
+            count: summaryData.byStage.advancing.count,
+            value: summaryData.byStage.advancing.value,
+            weightedValue: summaryData.byStage.advancing.weightedValue
+          },
+          {
+            stage: 'Key Decision',
+            count: summaryData.byStage.key_decision.count,
+            value: summaryData.byStage.key_decision.value,
+            weightedValue: summaryData.byStage.key_decision.weightedValue
+          }
+        ]
+        
+        setData(chartData)
+      }
+    } catch (_err) {
+      setError('An unexpected error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Use shared, NaN-safe currency formatter
+  const fmt = (value: unknown) => formatCurrencySafe(value)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="text-sm text-red-700">{error}</div>
+      </div>
+    )
+  }
+
+  if (!summary || data.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="mx-auto h-12 w-12 text-gray-400">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2z" />
+          </svg>
+        </div>
+        <h3 className="mt-2 text-sm font-medium text-gray-900">No pipeline data</h3>
+        <p className="mt-1 text-sm text-gray-500">
+          Create some opportunities to see your pipeline analytics.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">$</span>
+                </div>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Total Pipeline Value
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {fmt(summary.totalValue)}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">%</span>
+                </div>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Weighted Pipeline Value
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {fmt(summary.weightedValue)}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">#</span>
+                </div>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Total Opportunities
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {data.reduce((sum, item) => sum + item.count, 0)}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Pipeline Value by Stage */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Pipeline Value by Stage
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="stage" />
+              <YAxis tickFormatter={(v: number) => fmt(v)} />
+              <Tooltip formatter={(value) => fmt(Number(value))} />
+              <Bar dataKey="value" fill="#3B82F6" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Opportunity Count by Stage */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Opportunities by Stage
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="count"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Stage Details Table */}
+      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <div className="px-4 py-5 sm:p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Stage Details
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Stage
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Count
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total Value
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Weighted Value
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Avg Value
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {data.map((item, index) => (
+                  <tr key={item.stage}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div 
+                          className="w-3 h-3 rounded-full mr-2"
+                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                        />
+                        <span className="text-sm font-medium text-gray-900">
+                          {item.stage}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.count}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {fmt(item.value)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {fmt(item.weightedValue)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {fmt(item.count > 0 ? item.value / item.count : 0)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

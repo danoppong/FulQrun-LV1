@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { formatCurrencySafe } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,13 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileText, 
   Download, 
-  Calendar,
-  Users,
+  
   TrendingUp,
   BarChart3,
-  PieChart,
   Target,
-  Clock,
   DollarSign
 } from 'lucide-react';
 import {
@@ -29,9 +27,9 @@ import {
   LineChart, 
   Line,
   PieChart as RechartsPieChart,
+  Pie,
   Cell,
-  ScatterChart,
-  Scatter
+  
 } from 'recharts';
 
 interface ReportData {
@@ -88,7 +86,7 @@ interface ReportingEngineProps {
   territoryId?: string;
 }
 
-const CHART_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+// Note: Chart color constants can be added here if needed
 
 export function ReportingEngine({ organizationId, userId, territoryId }: ReportingEngineProps) {
   const [reportData, setReportData] = useState<ReportData | null>(null);
@@ -98,11 +96,7 @@ export function ReportingEngine({ organizationId, userId, territoryId }: Reporti
   const [selectedReportType, setSelectedReportType] = useState('executive');
   const [reportFormat, setReportFormat] = useState('pdf');
 
-  useEffect(() => {
-    fetchReportData();
-  }, [organizationId, userId, territoryId, selectedPeriod]);
-
-  const fetchReportData = async () => {
+  const fetchReportData = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -129,7 +123,11 @@ export function ReportingEngine({ organizationId, userId, territoryId }: Reporti
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId, userId, territoryId, selectedPeriod, selectedReportType]);
+
+  useEffect(() => {
+    fetchReportData();
+  }, [fetchReportData]);
 
   const exportReport = async (format: string) => {
     try {
@@ -164,14 +162,7 @@ export function ReportingEngine({ organizationId, userId, territoryId }: Reporti
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
-  };
+  const formatCurrency = (value: number) => formatCurrencySafe(value);
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;
@@ -432,7 +423,7 @@ export function ReportingEngine({ organizationId, userId, territoryId }: Reporti
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <RechartsPieChart>
-                  <RechartsPieChart
+                  <Pie
                     data={[
                       { name: 'Excellent', value: reportData.rep_scorecards.filter(r => r.performance_tier === 'excellent').length },
                       { name: 'Good', value: reportData.rep_scorecards.filter(r => r.performance_tier === 'good').length },
@@ -454,7 +445,7 @@ export function ReportingEngine({ organizationId, userId, territoryId }: Reporti
                     ].map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
-                  </RechartsPieChart>
+                  </Pie>
                   <Tooltip />
                 </RechartsPieChart>
               </ResponsiveContainer>

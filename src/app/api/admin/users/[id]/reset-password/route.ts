@@ -2,37 +2,29 @@
 // Sends a password reset email to the user
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { supabaseConfig } from '@/lib/config';
+import { AuthService } from '@/lib/auth-unified'
+import { createClient } from '@supabase/supabase-js'
+import { supabaseConfig } from '@/lib/config'
 
 // Helper function to get authenticated user
-async function getAuthenticatedUser(request: NextRequest) {
-  const supabase = createServerClient(
-    supabaseConfig.url!,
-    supabaseConfig.anonKey!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set() {},
-        remove() {},
-      },
-    }
-  );
-
-  const { data: { user }, error } = await supabase.auth.getUser();
-  
-  if (error || !user) {
-    throw new Error('Not authenticated');
-  }
-
-  return { user, supabase };
+async function getAuthenticatedUser() {
+  const supabase = await AuthService.getServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  return { user, supabase }
 }
 
 // Helper function to check admin permission
+type SelectClient<T> = {
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => { single: () => Promise<{ data: T | null; error: unknown }> }
+    }
+  }
+}
+
 async function checkAdminPermission(supabase: unknown, userId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as unknown as SelectClient<{ role?: string; organization_id?: string }>)
     .from('users')
     .select('role, organization_id')
     .eq('id', userId)
@@ -52,18 +44,18 @@ async function checkAdminPermission(supabase: unknown, userId: string) {
 // POST /api/admin/users/[id]/reset-password - Reset user password
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { user, supabase } = await getAuthenticatedUser(request);
+    const { user, supabase } = await getAuthenticatedUser();
     const organizationId = await checkAdminPermission(supabase, user.id);
 
-    const userId = params.id;
+    const { id: userId } = await context.params;
 
     console.log('🔑 Resetting password for user:', userId);
 
     // Get the target user's email
-    const { data: targetUser, error: userError } = await supabase
+    const { data: targetUser, error: userError } = await (supabase as unknown as SelectClient<{ email: string; organization_id: string }>)
       .from('users')
       .select('email, organization_id')
       .eq('id', userId)
@@ -83,11 +75,20 @@ export async function POST(
       );
     }
 
-    // Generate a password reset link using Supabase Admin API
-    const { error: resetError } = await supabase.auth.admin.generateLink({
-      type: 'recovery',
-      email: targetUser.email,
-    });
+    // Validate target has an email
+    if (!targetUser.email) {
+      return NextResponse.json(
+        { error: 'User has no email', details: 'Cannot send a reset link without an email address' },
+        { status: 400 }
+      )
+    }
+
+    // Generate a password reset link using Supabase Admin API (service role)
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) return NextResponse.json({ error: 'Service role key not configured', details: 'Set SUPABASE_SERVICE_ROLE_KEY in your environment to enable admin password resets.' }, { status: 500 })
+  if (!supabaseConfig.url) return NextResponse.json({ error: 'Supabase URL not configured', details: 'Set NEXT_PUBLIC_SUPABASE_URL in your environment.' }, { status: 500 })
+    const admin = createClient(supabaseConfig.url!, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
+    const { error: resetError } = await admin.auth.admin.generateLink({ type: 'recovery', email: targetUser.email })
 
     if (resetError) {
       console.error('❌ Error generating password reset link:', resetError);

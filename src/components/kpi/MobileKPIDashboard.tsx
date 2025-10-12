@@ -128,12 +128,15 @@ export function MobileKPIDashboard({ organizationId, userId, territoryId }: Mobi
   };
 
   const formatCurrency = (value: number) => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`;
+    // Normalize to a finite number; default to 0 to avoid rendering "$NaNK"
+    const n = typeof value === 'number' ? value : Number(value);
+    const v = Number.isFinite(n) ? n : 0;
+    if (v >= 1_000_000) {
+      return `$${(v / 1_000_000).toFixed(1)}M`;
+    } else if (v >= 1_000) {
+      return `$${(v / 1_000).toFixed(1)}K`;
     }
-    return `$${value.toFixed(0)}`;
+    return `$${v.toFixed(0)}`;
   };
 
   const formatPercentage = (value: number) => {
@@ -431,11 +434,14 @@ function MobileDetailedCard({ title, data, type }: MobileDetailedCardProps) {
   const renderChart = () => {
     switch (type) {
       case 'activities_per_rep':
+        const a = (data || {}) as Partial<{
+          calls: number; emails: number; meetings: number; demos: number
+        }>
         const activityData = [
-          { name: 'Calls', value: data.calls || 0, color: CHART_COLORS[0] },
-          { name: 'Emails', value: data.emails || 0, color: CHART_COLORS[1] },
-          { name: 'Meetings', value: data.meetings || 0, color: CHART_COLORS[2] },
-          { name: 'Demos', value: data.demos || 0, color: CHART_COLORS[3] }
+          { name: 'Calls', value: a.calls || 0, color: CHART_COLORS[0] },
+          { name: 'Emails', value: a.emails || 0, color: CHART_COLORS[1] },
+          { name: 'Meetings', value: a.meetings || 0, color: CHART_COLORS[2] },
+          { name: 'Demos', value: a.demos || 0, color: CHART_COLORS[3] }
         ];
 
         return (

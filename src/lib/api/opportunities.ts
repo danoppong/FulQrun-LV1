@@ -14,6 +14,8 @@ export interface OpportunityWithDetails {
   deal_value?: number | null
   probability?: number | null
   close_date?: string | null
+  created_at?: string
+  updated_at?: string
   metrics?: string | null
   economic_buyer?: string | null
   decision_criteria?: string | null
@@ -23,6 +25,12 @@ export interface OpportunityWithDetails {
   implicate_pain?: string | null
   champion?: string | null
   competition?: string | null
+  // Optional AI and territory/region metadata commonly present in our schema
+  ai_risk_score?: number | null
+  ai_next_action?: string | null
+  region?: string | null
+  territory_name?: string | null
+  territory?: string | null
   contact?: {
     id: string
     first_name: string
@@ -88,6 +96,24 @@ export class OpportunityAPI {
     return createClientComponentClient()
   }
 
+  // Cache organization id per instance to avoid repeated lookups
+  private orgIdPromise: Promise<string | null> | null = null
+
+  private async getOrganizationId(): Promise<string | null> {
+    if (this.orgIdPromise) return this.orgIdPromise
+    this.orgIdPromise = (async () => {
+      const { data: { user } } = await this.supabase.auth.getUser()
+      if (!user) return null
+      const { data: profile } = await this.supabase
+        .from('users')
+        .select('organization_id')
+        .eq('id', (user as unknown as { id: string }).id)
+        .single()
+      return (profile as unknown as { organization_id?: string } | null)?.organization_id ?? null
+    })()
+    return this.orgIdPromise
+  }
+
   /**
    * Validate opportunity data before saving
    */
@@ -142,7 +168,8 @@ export class OpportunityAPI {
 
   async getOpportunities(): Promise<ApiResponse<OpportunityWithDetails[]>> {
     try {
-      const { data, error } = await this.supabase
+      const orgId = await this.getOrganizationId()
+      let query = this.supabase
         .from('opportunities')
         .select(`
           *,
@@ -150,6 +177,47 @@ export class OpportunityAPI {
           company:companies(id, name, domain, industry)
         `)
         .order('created_at', { ascending: false })
+
+      if (orgId) {
+        query = query.eq('organization_id', orgId)
+      }
+
+      const { data, error } = await query
+
+      return { data, error: error ? normalizeError(error) : null }
+    } catch (error) {
+      return { data: null, error: normalizeError(error) }
+    }
+  }
+
+  /**
+   * Optimized, paginated opportunities list for fast dashboards/tables.
+   * Only selects fields needed for listing, supports search and stage filters.
+   */
+  async getOpportunitiesList(params?: {
+    search?: string
+    stage?: 'prospecting' | 'engaging' | 'advancing' | 'key_decision' | ''
+    limit?: number
+    offset?: number
+  }): Promise<ApiResponse<OpportunityWithDetails[]>> {
+    try {
+      const orgId = await this.getOrganizationId()
+      const { search = '', stage = '', limit = 50, offset = 0 } = params || {}
+
+      let query = this.supabase
+        .from('opportunities')
+        .select(`
+          id, name, assigned_to, peak_stage, meddpicc_score, deal_value, probability,
+          company:companies(id, name)
+        `)
+        .order('created_at', { ascending: false })
+        .range(offset, Math.max(offset, offset + limit - 1))
+
+      if (orgId) query = query.eq('organization_id', orgId)
+      if (stage) query = query.eq('peak_stage', stage)
+      if (search) query = query.ilike('name', `%${search}%`)
+
+      const { data, error } = await query
 
       return { data, error: error ? normalizeError(error) : null }
     } catch (error) {
@@ -159,7 +227,8 @@ export class OpportunityAPI {
 
   async getOpportunity(id: string): Promise<ApiResponse<OpportunityWithDetails>> {
     try {
-      const { data, error } = await this.supabase
+      const orgId = await this.getOrganizationId()
+      let query = this.supabase
         .from('opportunities')
         .select(`
           *,
@@ -167,7 +236,13 @@ export class OpportunityAPI {
           company:companies(id, name, domain, industry)
         `)
         .eq('id', id)
-        .single()
+        .limit(1)
+
+      if (orgId) {
+        query = query.eq('organization_id', orgId)
+      }
+
+      const { data, error } = await query.single()
 
       return { data, error: error ? normalizeError(error) : null }
     } catch (error) {
@@ -325,15 +400,25 @@ export class OpportunityAPI {
 
   async searchOpportunities(query: string): Promise<ApiResponse<OpportunityWithDetails[]>> {
     try {
-      const { data, error } = await this.supabase
+      const orgId = await this.getOrganizationId()
+      let q = this.supabase
         .from('opportunities')
         .select(`
           *,
           contact:contacts(id, first_name, last_name, email, title),
           company:companies(id, name, domain, industry)
         `)
-        .or(`name.ilike.%${query}%`)
         .order('created_at', { ascending: false })
+
+      // Apply org scoping if available
+      if (orgId) {
+        q = q.eq('organization_id', orgId)
+      }
+
+      // Safer single-column search; extend to more fields as needed
+      q = q.ilike('name', `%${query}%`)
+
+      const { data, error } = await q
 
       return { data, error: error ? normalizeError(error) : null }
     } catch (error) {
@@ -343,7 +428,8 @@ export class OpportunityAPI {
 
   async getOpportunitiesByStage(stage: string): Promise<ApiResponse<OpportunityWithDetails[]>> {
     try {
-      const { data, error } = await this.supabase
+      const orgId = await this.getOrganizationId()
+      let query = this.supabase
         .from('opportunities')
         .select(`
           *,
@@ -352,6 +438,12 @@ export class OpportunityAPI {
         `)
         .eq('peak_stage', stage)
         .order('created_at', { ascending: false })
+
+      if (orgId) {
+        query = query.eq('organization_id', orgId)
+      }
+
+      const { data, error } = await query
 
       return { data, error: error ? normalizeError(error) : null }
     } catch (error) {
@@ -535,10 +627,17 @@ export class OpportunityAPI {
 
   async getPipelineSummary(): Promise<ApiResponse<PipelineSummary>> {
     try {
-      const { data, error } = await this.supabase
+      const orgId = await this.getOrganizationId()
+      let query = this.supabase
         .from('opportunities')
         .select('peak_stage, deal_value, probability')
         .not('deal_value', 'is', null)
+
+      if (orgId) {
+        query = query.eq('organization_id', orgId)
+      }
+
+      const { data, error } = await query
 
       if (error) {
         return { data: null, error: normalizeError(error) }

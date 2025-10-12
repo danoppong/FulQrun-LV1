@@ -108,7 +108,7 @@ const createValidationSchema = (config: typeof MEDDPICC_CONFIG) => {
 
 export default function MEDDPICCQualification({
   opportunityId,
-  initialData = [],
+  initialData,
   onSave,
   onStageGateReady,
   className = ''
@@ -120,7 +120,11 @@ export default function MEDDPICCQualification({
   const [isLoading, setIsLoading] = useState(process.env.NODE_ENV === 'test' ? false : true)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<MEDDPICCAssessment | null>(null)
-  const [responses, setResponses] = useState<MEDDPICCResponse[]>(initialData.filter((item): item is MEDDPICCResponse => item !== undefined))
+  // Stabilize initialData to avoid effect loops from new array identities each render
+  const initialDataStable = React.useMemo(() => initialData ?? [], [initialData])
+  const [responses, setResponses] = useState<MEDDPICCResponse[]>(
+    (initialDataStable || []).filter((item): item is MEDDPICCResponse => item !== undefined)
+  )
   
   // Error state management
   const [errors, setErrors] = useState<ErrorState>({
@@ -338,9 +342,9 @@ export default function MEDDPICCQualification({
 
   // Load existing opportunity data and current score
   useEffect(() => {
-    if (process.env.NODE_ENV === 'test' && initialData && initialData.length > 0) {
+    if (process.env.NODE_ENV === 'test' && initialDataStable && initialDataStable.length > 0) {
       try {
-        const resp = initialData as MEDDPICCResponse[]
+        const resp = initialDataStable as MEDDPICCResponse[]
         const assessment = calculateMEDDPICCScore(resp)
         setResponses(resp)
         setCurrentAssessment(assessment)
@@ -416,7 +420,16 @@ export default function MEDDPICCQualification({
       }, 100)
       return () => clearTimeout(timer)
     }
-  }, [opportunityId, convertLegacyToComprehensive, initialData])
+  }, [opportunityId, convertLegacyToComprehensive, initialDataStable])
+
+  // Safety: never let the loader hang indefinitely in dev/slow networks
+  useEffect(() => {
+    if (!isLoading) return
+    const timeout = setTimeout(() => {
+      setIsLoading(false)
+    }, 4000)
+    return () => clearTimeout(timeout)
+  }, [isLoading])
 
   // Memoize the stage gate notification to prevent infinite loops
   const _notifyStageGateReadiness = useCallback((assessment: MEDDPICCAssessment) => {

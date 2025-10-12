@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { formatCurrencySafe } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -171,22 +172,9 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
     return 'below_average';
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
-  };
-
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
-  };
-
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('en-US').format(value);
-  };
+  const formatCurrency = (value: number) => formatCurrencySafe(value);
+  const percentageFmt = (value: number) => `${value.toFixed(1)}%`;
+  const numberFmt = (value: number) => new Intl.NumberFormat('en-US').format(value);
 
   if (loading) {
     return (
@@ -276,7 +264,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
           {kpiData.win_rate && (
             <KPICard
               title="Win Rate"
-              value={formatPercentage(kpiData.win_rate.win_rate)}
+              value={percentageFmt(kpiData.win_rate.win_rate)}
               subtitle={`${kpiData.win_rate.won_opportunities}/${kpiData.win_rate.total_opportunities} deals`}
               icon={<Target className="h-5 w-5" />}
               trend={kpiData.win_rate.win_rate > 25 ? 'up' : kpiData.win_rate.win_rate < 15 ? 'down' : 'neutral'}
@@ -288,7 +276,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
           {kpiData.revenue_growth && (
             <KPICard
               title="Revenue Growth"
-              value={formatPercentage(kpiData.revenue_growth.growth_percentage)}
+              value={percentageFmt(kpiData.revenue_growth.growth_percentage)}
               subtitle={formatCurrency(kpiData.revenue_growth.growth_amount)}
               icon={<TrendingUp className="h-5 w-5" />}
               trend={kpiData.revenue_growth.growth_percentage > 0 ? 'up' : 'down'}
@@ -301,7 +289,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             <KPICard
               title="Avg Deal Size"
               value={formatCurrency(kpiData.avg_deal_size.avg_deal_size)}
-              subtitle={`${formatNumber(kpiData.avg_deal_size.total_deals)} deals`}
+              subtitle={`${numberFmt(kpiData.avg_deal_size.total_deals)} deals`}
               icon={<DollarSign className="h-5 w-5" />}
               trend="neutral"
               performanceTier={getPerformanceTier(kpiData.avg_deal_size.avg_deal_size, kpiData.benchmarks?.avg_deal_size?.thresholds)}
@@ -313,7 +301,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             <KPICard
               title="Sales Cycle"
               value={`${kpiData.sales_cycle_length.avg_cycle_length.toFixed(0)} days`}
-              subtitle={`${formatNumber(kpiData.sales_cycle_length.total_deals)} deals`}
+              subtitle={`${numberFmt(kpiData.sales_cycle_length.total_deals)} deals`}
               icon={<Clock className="h-5 w-5" />}
               trend={kpiData.sales_cycle_length.avg_cycle_length < 30 ? 'up' : 'down'}
               performanceTier={getPerformanceTier(kpiData.sales_cycle_length.avg_cycle_length, kpiData.benchmarks?.sales_cycle_length?.thresholds)}
@@ -324,7 +312,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
           {kpiData.lead_conversion_rate && (
             <KPICard
               title="Lead Conversion"
-              value={formatPercentage(kpiData.lead_conversion_rate.conversion_rate)}
+              value={percentageFmt(kpiData.lead_conversion_rate.conversion_rate)}
               subtitle={`${kpiData.lead_conversion_rate.qualified_opportunities}/${kpiData.lead_conversion_rate.total_leads} leads`}
               icon={<Users className="h-5 w-5" />}
               trend={kpiData.lead_conversion_rate.conversion_rate > 3 ? 'up' : 'down'}
@@ -337,7 +325,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             <KPICard
               title="Customer Acquisition Cost"
               value={formatCurrency(kpiData.cac.cac)}
-              subtitle={`${formatNumber(kpiData.cac.new_customers)} customers`}
+              subtitle={`${numberFmt(kpiData.cac.new_customers)} customers`}
               icon={<Activity className="h-5 w-5" />}
               trend="neutral"
               performanceTier={getPerformanceTier(kpiData.cac.cac, kpiData.benchmarks?.cac?.thresholds)}
@@ -348,7 +336,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
           {kpiData.quota_attainment && (
             <KPICard
               title="Quota Attainment"
-              value={formatPercentage(kpiData.quota_attainment.attainment_percentage)}
+              value={percentageFmt(kpiData.quota_attainment.attainment_percentage)}
               subtitle={formatCurrency(kpiData.quota_attainment.actual_achievement)}
               icon={<BarChart3 className="h-5 w-5" />}
               trend={kpiData.quota_attainment.attainment_percentage >= 100 ? 'up' : 'down'}
@@ -385,7 +373,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             <KPICard
               title="Activities per Rep"
               value={`${kpiData.activities_per_rep.activities_per_day.toFixed(1)}/day`}
-              subtitle={`${formatNumber(kpiData.activities_per_rep.total_activities)} total`}
+              subtitle={`${numberFmt(kpiData.activities_per_rep.total_activities)} total`}
               icon={<Activity className="h-5 w-5" />}
               trend={kpiData.activities_per_rep.activities_per_day > 15 ? 'up' : 'down'}
               performanceTier={getPerformanceTier(kpiData.activities_per_rep.activities_per_day, kpiData.benchmarks?.activities_per_rep?.thresholds)}
@@ -536,6 +524,8 @@ interface DetailedKPICardProps {
 function DetailedKPICard({ title, data, type }: DetailedKPICardProps) {
   interface ActivitiesDetails { calls?: number; emails?: number; meetings?: number; demos?: number; presentations?: number }
   interface DealSizeDetails { avg_deal_size: number; median_deal_size: number; largest_deal: number; smallest_deal: number }
+  const pct = (value: number) => `${value.toFixed(1)}%`
+  const num = (value: number) => new Intl.NumberFormat('en-US').format(value)
   const renderChart = () => {
     switch (type) {
       case 'activities_per_rep':
@@ -584,7 +574,7 @@ function DetailedKPICard({ title, data, type }: DetailedKPICardProps) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+              <Tooltip formatter={(value) => formatCurrencySafe(Number(value))} />
               <Bar dataKey="value" fill="#3B82F6" />
             </BarChart>
           </ResponsiveContainer>
@@ -616,11 +606,11 @@ function DetailedKPICard({ title, data, type }: DetailedKPICardProps) {
                 </span>
                 <span className="font-medium">
                   {typeof value === 'number' 
-                    ? (key.includes('rate') || key.includes('percentage') 
-                        ? formatPercentage(value) 
-                        : key.includes('cost') || key.includes('value') || key.includes('size')
-                        ? formatCurrency(value)
-                        : formatNumber(value))
+          ? (key.includes('rate') || key.includes('percentage') 
+                        ? pct(value) 
+            : key.includes('cost') || key.includes('value') || key.includes('size')
+            ? formatCurrencySafe(value)
+                        : num(value))
                     : String(value)
                   }
                 </span>

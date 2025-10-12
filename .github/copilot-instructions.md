@@ -1,267 +1,83 @@
-# FulQrun Sales Operations Platform - AI Agent Guide
+# FulQrun AI agent working notes (concise)
 
-## Architecture Overview
+Big picture
+- Next.js 15 (App Router, React 19) + Supabase with strict RLS; multi-tenant isolation by organization_id.
+- Core domains: MEDDPICC/PEAK sales methodology, BI KPI engine, Workflow automation, AI insights.
+- Server-first: prefer React Server Components; keep 'use client' minimal and isolated.
 
-This is a **Next.js 14 + Supabase** pharmaceutical sales operations platform implementing **MEDDPICC + PEAK** methodologies with enterprise-grade BI analytics and workflow automation. The app uses App Router with server components by default and follows clean architecture patterns.
+Where things live (examples)
+- Auth: `src/lib/auth-unified.ts` (use AuthService.getClient/getServerClient); Supabase singleton: `src/lib/supabase-singleton.ts` (never instantiate clients ad hoc).
+- MEDDPICC: `src/lib/meddpicc.ts` (config + scoring), unified service `src/lib/services/meddpicc-scoring.ts` used in `components/opportunities/OpportunityList.tsx`.
+- KPIs: `src/lib/bi/kpi-engine.ts` uses Supabase RPC (calculate_trx, calculate_nrx, calculate_market_share) and local caching helpers.
+- AI: `src/lib/ai/insights-engine.ts` orchestrates OpenAI via `openai-client.ts` and persists via `AIInsightsAPI`.
+- Workflows: `src/lib/workflows/workflow-engine.ts` executes multi-step enterprise workflows against tables like workflow_executions and workflow_step_executions.
 
-### Key Technologies & Patterns
-- **Next.js 14** with App Router (prefer server components, minimize `'use client'`)
-- **Supabase** with Row Level Security (RLS) - critical for multi-tenant data isolation
-- **TypeScript** with strict typing - use existing type definitions in `src/lib/types/`
-- **Tailwind CSS** + **Radix UI** components (mobile-first approach)
-- **React Hook Form + Zod** for validation
-- **OpenAI/Anthropic** integration for conversational analytics
-- **Pharmaceutical KPI Engine** for TRx, NRx, Market Share calculations
+Data access and RLS
+- Always get clients from AuthService or `getSupabaseBrowserClient()`; never create new Supabase clients.
+- Include organization context in filters; all tables enforce RLS on organization_id.
+- Avoid bypassing RLS with admin-like operations unless in vetted SQL migrations.
 
-## Critical File Structure
+Component and UI conventions
+- File names: kebab-case (`my-widget.tsx`); named exports preferred.
+- Tailwind + Radix UI; mobile-first; accessibility via aria-* and keyboard handlers; early returns.
+- Layout: `src/components/ConditionalLayout.tsx` wraps non-auth pages with app chrome; auth routes and `/` are unwrapped.
 
-```
-src/
-├── app/                     # Next.js App Router pages
-│   ├── pharmaceutical-bi/   # BI dashboard main page
-│   └── api/                 # API routes for KPIs, workflows
-├── components/
-│   ├── ui/                 # Reusable Radix UI components
-│   ├── bi/                 # Pharmaceutical BI widgets & dashboards
-│   ├── forms/              # Form components with validation
-│   └── [feature]/          # Feature-specific components
-├── lib/
-│   ├── auth-unified.ts     # AuthService singleton - use this for all auth
-│   ├── supabase-singleton.ts # Supabase client management
-│   ├── meddpicc.ts         # MEDDPICC scoring logic & PEAK stages
-│   ├── validation.ts       # Zod schemas
-│   ├── ai/                 # AI insights engine & OpenAI client
-│   ├── bi/                 # KPI engine, conversational analytics
-│   ├── workflows/          # Workflow automation engine
-│   ├── pharmaceutical-*    # Pharma-specific data services
-│   └── services/           # Business logic services
-└── middleware.ts           # Security headers + auth routing
-```
+Patterns to follow (code-level)
+- Auth (client): `const supabase = AuthService.getClient(); const user = await AuthService.getCurrentUser();`
+- Auth (server): `const supabase = await AuthService.getServerClient();`
+- KPI example: `await kpiEngine.calculateTRx({ organizationId, productId, territoryId, periodStart, periodEnd });`
+- MEDDPICC example: `const { score } = await meddpiccScoringService.getOpportunityScore(opportunityId, opportunity);`
 
-## Essential Development Patterns
+Developer workflows
+- Dev/build/lint: `npm run dev`, `npm run build`, `npm run lint`.
+- Tests: Jest uses large heap (8192 MB). Run `npm test` or the VS Code task “run jest targeted” (targets KPI and AI insight tests).
+- Migrations: `npx supabase db push` (RLS-heavy repo; validate policies in isolation before merging).
 
-### 1. Authentication (Critical)
-**Always use the unified auth service:**
-```typescript
-import { AuthService } from '@/lib/auth-unified'
+Common pitfalls (watch-outs)
+- Multiple Supabase clients (use the singleton); missing organization filters; computing MEDDPICC directly (use service); client/server boundary leaks; RPC names must match DB functions.
 
-// Client-side
-const client = AuthService.getClient()
-const user = await AuthService.getCurrentUser()
+Useful file references
+- Auth: `src/lib/auth-unified.ts`, Supabase: `src/lib/supabase-singleton.ts`.
+- MEDDPICC service: `src/lib/services/meddpicc-scoring.ts` (exports `meddpiccScoringService`).
+- KPIs: `src/lib/bi/kpi-engine.ts`.
+- AI: `src/lib/ai/insights-engine.ts`.
+- Validation/rate limits: `src/lib/validation.ts`.
 
-// Server-side  
-const serverClient = AuthService.getServerClient()
-```
+Latest session highlights (2025-10-11)
+- Route security: middleware route guards and SSR redirects are enforced for protected pages; keep this pattern when adding routes/APIs. Standardize Cache-Control headers for API responses.
+- API hygiene: use `checkRateLimit` from `src/lib/validation.ts` for basic per-IP rate limiting on endpoints.
+- Opportunities UI: Owner and Region quick filters added; owner names resolved via `user_profiles.full_name` (using `AuthService.getClient()`); region derived from `region || territory_name || territory`. MEDDPICC values come from `meddpiccScoringService` with fallback to stored score.
+- Types: prefer `unknown`/`Record<string, unknown>` over `any`. Minimal Supabase typings for workflow tables (`enterprise_workflows`, `workflow_executions`, `workflow_step_executions`) are pending and should be added when editing workflow modules.
 
-### 2. Database Access with RLS
-All database queries must respect Row Level Security:
-- Users only see data from their `organization_id`
-- Use the singleton Supabase clients from `@/lib/supabase-singleton`
-- Test RLS policies in isolated environments first
+Note: Keep new features server-first, RLS-safe, and integrated with the above services. Prefer existing services over re-implementing logic.
 
-### 3. MEDDPICC/PEAK Business Logic
-Core sales methodology implementations:
-- **MEDDPICC scoring**: Use `MEDDPICCScoringService` from `src/lib/services/meddpicc-scoring.ts`
-- **PEAK stages**: Reference `src/lib/meddpicc.ts` for stage configurations
-- **Opportunity tracking**: Opportunities table has embedded MEDDPICC fields
-
-### 4. Component Conventions
-- Use **kebab-case** for component files (`my-component.tsx`)
-- Prefer **server components** - only add `'use client'` when necessary
-- Wrap forms with `ConditionalLayout` for consistent auth handling
-- Use existing UI components from `src/components/ui/`
-- Follow accessibility patterns: `tabindex="0"`, `aria-label`, proper event handlers
-- Use descriptive variable names with auxiliary verbs (`isLoading`, `hasError`)
-- Prefer `const` over `function` declarations for components
-
-## Critical Workflows
-
-### Testing
-```bash
-npm test                    # Run Jest test suite
-npm run test:watch         # Watch mode
-npm run test:coverage      # Coverage report
-```
-**Memory constraints**: Tests use `--max-old-space-size=8192` due to large codebase
-
-### Database Migrations
-```bash
-# Apply migrations (be careful with RLS changes)
-npx supabase db push
-```
-**RLS Warning**: Many SQL migration files exist due to RLS complexity. Always test RLS changes in isolation.
-
-### Development
-```bash
-npm run dev                # Start dev server
-npm run build              # Production build
-npm run lint               # ESLint checking
-```
-
-## Security Requirements
-
-### 1. Input Validation
-Always use Zod schemas from `src/lib/validation.ts`:
-```typescript
-import { validateRequest, emailSchema } from '@/lib/validation'
-const data = validateRequest(emailSchema, input)
-```
-
-### 2. XSS Protection
-- DOMPurify is configured for HTML sanitization
-- CSP headers enforced in `middleware.ts`
-- Never bypass validation or sanitization
-
-### 3. Rate Limiting
-Basic rate limiting available in `validation.ts`:
-```typescript
-import { checkRateLimit } from '@/lib/validation'
-if (!checkRateLimit(userIP)) throw new Error('Rate limit exceeded')
-```
-
-## Database Schema Key Points
-
-### Core Tables
-- **user_profiles**: Role-based access (`rep`, `manager`, `admin`)
-- **opportunities**: MEDDPICC fields embedded, PEAK stage tracking
-- **organizations**: Multi-tenant isolation key
-- **metric_templates**: KPI definitions with organization-specific RLS
-
-### RLS Patterns
-- All tables filter by `organization_id` or user role
-- Complex RLS policies exist for metric templates and admin functions
-- Recursive RLS issues have been resolved (see migration files)
-
-## AI-Powered Intelligence
-
-### Insights Engine
-`src/lib/ai/insights-engine.ts` provides advanced analytics:
-- **Lead Scoring**: Source, company size, industry, engagement analysis
-- **Deal Risk Assessment**: MEDDPICC-based risk factors and mitigation strategies  
-- **Next Action Recommendations**: Context-aware sales guidance
-- **Forecasting**: Time series prediction with confidence intervals
-- **Anomaly Detection**: Prescription spikes/drops with root cause analysis
-
-```typescript
-import { AIInsightsEngine } from '@/lib/ai/insights-engine'
-
-const riskAssessment = await AIInsightsEngine.generateDealRiskAssessment(
-  opportunityId, opportunityData, context
-)
-```
-
-### OpenAI Integration
-Conversational AI capabilities:
-- Natural language KPI queries with voice input
-- Automated insight generation from dashboard data
-- Executive summary creation for presentations
-- What-if scenario analysis for call frequency impact
-
-## Performance Optimization Patterns
-
-### Database Optimization
-- **Supabase RPC**: Use stored procedures for complex KPI calculations
-- **Caching**: KPI results cached with TTL for performance
-- **Pagination**: Large datasets handled with cursor-based pagination
-- **Indexes**: Pharmaceutical queries optimized with territory/product indexes
-
-### Frontend Performance
-- **React Server Components**: Minimize `'use client'` usage
-- **Suspense Boundaries**: Wrap client components with fallbacks
-- **Dynamic Loading**: Non-critical components loaded asynchronously
-- **Mobile-First**: Touch-optimized UI for field sales teams
-
-## Pharmaceutical BI & Analytics Engine
-
-### Core KPI Calculations
-The `src/lib/bi/kpi-engine.ts` implements pharmaceutical-specific metrics:
-- **TRx (Total Prescriptions)**: Uses `calculate_trx` stored procedure
-- **NRx (New Prescriptions)**: Uses `calculate_nrx` stored procedure  
-- **Market Share**: Competitive positioning analysis
-- **Call Effectiveness Index**: HCP engagement impact measurement
-- **Sample-to-Script Ratio**: Distribution effectiveness tracking
-
-```typescript
-import { KPIEngine } from '@/lib/bi/kpi-engine'
-
-const trx = await KPIEngine.calculateTRx({
-  organizationId, productId, territoryId, 
-  periodStart, periodEnd
-})
-```
-
-### Conversational Analytics
-Natural language query processing in `src/lib/bi/conversational-analytics.ts`:
-- Query intent parsing with entity extraction
-- KPI keyword mapping (`trx`, `nrx`, `market_share`, etc.)
-- Territory and product recognition
-- Timeframe parsing with seasonal adjustments
-- AI-generated insights and recommendations
-
-### Dashboard Architecture
-Role-based pharmaceutical dashboards in `src/lib/pharmaceutical-dashboard-config.ts`:
-- **Salesman**: TRx, NRx, Market Share, Product Performance
-- **Sales Manager**: Team performance, Territory analysis, HCP engagement
-- **Regional Director**: Multi-territory aggregation, Competitive analysis
-
-## Workflow Automation Engine
-
-### Trigger-Based Workflows
-`src/lib/workflows/workflow-engine.ts` provides enterprise automation:
-- **PEAK Stage Triggers**: Automatic progression based on MEDDPICC scores
-- **Condition Evaluation**: Field-based rules with logical operators
-- **Action Execution**: Email, task creation, field updates, webhook calls
-- **Approval Processes**: Sequential/parallel approvals with escalation
-
-```typescript
-import { WorkflowEngine } from '@/lib/workflows/workflow-engine'
-
-await WorkflowEngine.executeWorkflow(
-  workflowId, 'opportunity', opportunityId, triggerData
-)
-```
-
-### PEAK + MEDDPICC Integration
-Workflow automation tied to sales methodology:
-- Stage gate validation using MEDDPICC criteria
-- Automatic next action recommendations
-- Deal risk assessment triggers
-- Compliance workflow enforcement
-
-## Development Conventions (from Cursor Rules)
-
-### Code Style & Structure
-- Write concise, technical TypeScript with accurate examples
-- Use functional and declarative programming patterns; avoid classes
-- Prefer iteration and modularization over code duplication
-- Use descriptive variable names with auxiliary verbs (`isLoading`, `hasError`)
-- Structure files: exported component, subcomponents, helpers, static content, types
-
-### Naming Conventions
-- Use lowercase with dashes for directories (`components/auth-wizard`)
-- Favor named exports for components
-- Use "handle" prefix for event functions (`handleClick`, `handleKeyDown`)
-
-### TypeScript Usage
-- Use TypeScript for all code; prefer interfaces over types
-- Avoid enums; use maps instead
-- Use functional components with TypeScript interfaces
-
-### UI & Styling Conventions
-- Always use Tailwind classes for styling; avoid CSS or style tags
-- Use `class:` instead of ternary operator in class tags when possible
-- Implement accessibility features: `tabindex="0"`, `aria-label`, event handlers
-- Use early returns for readability
-- Mobile-first responsive design with Tailwind CSS
-
-## Troubleshooting Quick Fixes
-
-1. **Auth issues**: Check Supabase config in `src/lib/config.ts`
-2. **RLS errors**: Verify organization_id context in queries
-3. **Build errors**: Often related to client/server component boundaries
-4. **Memory issues**: Tests may need memory flags, use existing npm scripts
-5. **MEDDPICC scoring**: Use the unified service, avoid direct calculations
-
----
-
-*This platform requires understanding of sales methodology (MEDDPICC/PEAK) for meaningful feature development. Reference business logic in `src/lib/meddpicc.ts` for scoring algorithms and stage definitions.*
+Quick pattern snippets
+- RLS-safe auth + query (client):
+	- Get client from AuthService; always filter by organization_id
+	- Example:
+		- `const supabase = AuthService.getClient();`
+		- `const { data } = await supabase.from('opportunities').select('*').eq('organization_id', orgId).limit(20);`
+- KPI RPC call:
+	- `const res = await kpiEngine.calculateTRx({ organizationId: orgId, productId, territoryId, periodStart, periodEnd });`
+- MEDDPICC score usage:
+	- `const { score } = await meddpiccScoringService.getOpportunityScore(opportunity.id, opportunity);`
+- Currency formatting (standardized):
+	- Use `formatCurrencySafe` from `src/lib/format.ts` for all currency displays; it’s NaN-safe and supports `{ compact: true }`.
+	- Example: `const fmt = (v: unknown) => formatCurrencySafe(v)`; `fmt(total)`, `fmt(count > 0 ? total / count : 0)`; chart formatters: `tickFormatter={(v) => fmt(v)}`.
+	- Avoid re-implementing `Intl.NumberFormat` in components.
+- Suspense-wrapped client component:
+	- Server comp fetches; client comp only for interactivity
+	- Example structure:
+		- Server: fetch data and render `<Suspense fallback={...}><ClientPart data={data}/></Suspense>`
+		- Client: `'use client'` with minimal state/effects
+	- Protected route SSR redirect (server):
+		- In a server component or route handler, require auth and redirect if needed
+		- `const supabase = await AuthService.getServerClient();`
+		- `const { data: { user } } = await supabase.auth.getUser(); if (!user) redirect('/auth/sign-in');`
+	- Middleware guard (edge):
+		- Use `AuthService.getMiddlewareClient(req)` to read/propagate cookies and gate routes
+		- Standardize response headers: Cache-Control per endpoint sensitivity
+	- API scaffold with rate limit + validation:
+		- `import { checkRateLimit, validateRequest, analyticsDashboardSchema } from '@/lib/validation'`
+		- `if (!checkRateLimit(req.ip)) return NextResponse.json({ error: 'Rate limit' }, { status: 429 });`
+		- `const { organizationId, startDate, endDate } = validateRequest(analyticsDashboardSchema, await req.json());`

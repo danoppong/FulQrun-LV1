@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { UserSelect } from '@/components/common/UserSelect'
 import { useRouter } from 'next/navigation'
 import { opportunityAPI, OpportunityWithDetails, MEDDPICCData } from '@/lib/api/opportunities'
 
@@ -79,7 +80,7 @@ export default function OpportunityFormEnhanced({
     handleSubmit,
     formState: { errors },
     watch,
-    setValue: _setValue,
+    setValue,
     reset,
   } = useForm<LocalOpportunityFormData>({
     resolver: zodResolver(opportunitySchema),
@@ -476,15 +477,14 @@ export default function OpportunityFormEnhanced({
               </div>
 
               <div>
-                <label htmlFor="assigned_to" className="block text-sm font-medium text-gray-700">
-                  Assigned To
-                </label>
-                <input
-                  {...register('assigned_to')}
-                  type="text"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  placeholder="Enter assigned user ID"
+                <UserSelect
+                  label="Assigned To"
+                  value={watch('assigned_to') || ''}
+                  onChange={(v) => setValue('assigned_to', v || '')}
+                  allowEmpty
+                  emptyLabel="Unassigned"
                 />
+                <input type="hidden" {...register('assigned_to')} />
               </div>
             </div>
           </div>

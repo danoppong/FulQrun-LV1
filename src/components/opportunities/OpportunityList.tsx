@@ -1,12 +1,15 @@
 'use client'
 import React from 'react';
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
 import { AuthService } from '@/lib/auth-unified'
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 import Link from 'next/link';
 import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { formatCurrencySafe } from '@/lib/format'
+import { UserSelect } from '@/components/common/UserSelect'
+import { useSearchParams } from 'next/navigation'
 
 interface OpportunityListProps {
   searchQuery?: string
@@ -23,19 +26,63 @@ const peakStages = [
 
 export default function OpportunityList({ searchQuery = '', stageFilter = '' }: OpportunityListProps) {
   const [opportunities, setOpportunities] = useState<OpportunityWithDetails[]>([])
+  const opportunitiesRef = React.useRef<OpportunityWithDetails[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState(searchQuery)
   const [selectedStage, setSelectedStage] = useState(stageFilter)
   const [meddpiccScores, setMeddpiccScores] = useState<Record<string, number>>({})
   const [ownersMap, setOwnersMap] = useState<Record<string, string>>({})
+  const [ownerTerritoryMap, setOwnerTerritoryMap] = useState<Record<string, string>>({})
   const [ownerFilter, setOwnerFilter] = useState<string>('')
   const [regionFilter, setRegionFilter] = useState<string>('')
-  const [ownerOptions, setOwnerOptions] = useState<Array<{ value: string; label: string }>>([])
+  // Owner options now provided by shared UserSelect; keep only selected owner id
   const [regionOptions, setRegionOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [offset, setOffset] = useState(0)
+  const [orgId, setOrgId] = useState<string | null>(null)
+  const pageSize = 50
+  const [hasMore, setHasMore] = useState(true)
+  const searchParams = useSearchParams()
+  const initializedFromURL = useRef(false)
+
+  // Debounced search term to avoid firing queries on each keystroke
+  const debouncedSearch = useDebouncedValue(searchTerm, 300)
+
+  function useDebouncedValue<T>(value: T, delay: number) {
+    const [debounced, setDebounced] = useState(value)
+    useEffect(() => {
+      const id = setTimeout(() => setDebounced(value), delay)
+      return () => clearTimeout(id)
+    }, [value, delay])
+    return debounced
+  }
 
   // Stable supabase client (avoid adding to effect deps)
   const supabase = React.useMemo(() => AuthService.getClient(), [])
+
+  // Load current org id once for RLS-safe queries
+  useEffect(() => {
+    let mounted = true
+    AuthService.getCurrentUser()
+      .then(u => { if (mounted) setOrgId(u?.profile?.organization_id || null) })
+      .catch(() => { if (mounted) setOrgId(null) })
+    return () => { mounted = false }
+  }, [])
+
+  // Initialize filters from URL search params (deep-link support) once
+  useEffect(() => {
+    if (initializedFromURL.current) return
+    const ownerId = searchParams.get('ownerId')
+    const region = searchParams.get('region')
+    const stage = searchParams.get('stage')
+    const q = searchParams.get('q')
+    if (ownerId) setOwnerFilter(ownerId)
+    if (region) setRegionFilter(region)
+    if (stage) setSelectedStage(stage)
+    if (q) setSearchTerm(q)
+    initializedFromURL.current = true
+  }, [searchParams])
 
   // Function to get MEDDPICC score for an opportunity using the unified service
   const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<number> => {
@@ -74,14 +121,15 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
     }
   }, [])
 
-  // Helper: compute region for an opportunity (region or territory fallback)
+  // Helper: normalize Region via territories: region = assigned owner's territory name
   const getRegion = (opp: OpportunityWithDetails): string | null => {
-    const anyOpp = opp as unknown as { region?: string | null; territory_name?: string | null; territory?: string | null }
-    return anyOpp.region || anyOpp.territory_name || anyOpp.territory || null
+    const ownerId = (opp as Partial<OpportunityWithDetails> & { assigned_to?: string | null }).assigned_to || ''
+    return (ownerId && ownerTerritoryMap[ownerId]) || null
   }
 
   // Load owner display names and derive filter options
   const loadOwnersAndRegions = useCallback(async (opps: OpportunityWithDetails[]) => {
+    if (!orgId) return
     try {
       const ownerIds = Array.from(
         new Set(
@@ -91,56 +139,117 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
 
       const map: Record<string, string> = {}
       if (ownerIds.length > 0) {
-        // Prefer user_profiles.full_name
-        const { data: profiles } = await supabase
-          .from('user_profiles' as const)
-          .select('id, full_name')
-          .in('id', ownerIds)
-
-        for (const p of (profiles || []) as Array<{ id: string; full_name: string | null }>) {
-          if (p && p.id) map[p.id] = p.full_name || p.id
+        // Fetch display names from user_profiles; fallback to org-wide fetch if IN fails
+        let users: Array<{ id: string; full_name: string | null }> | null = null
+        try {
+          // Avoid IN() with empty arrays; try primary select; on error retry aliasing email
+          if (ownerIds.length === 0) {
+            users = []
+          } else {
+            const qUsers = supabase
+              .from('user_profiles' as const)
+              .select('id, full_name')
+              .in('id', ownerIds)
+              .eq('organization_id', orgId as string)
+            const res = await qUsers
+            if (res.error) throw res.error
+            users = (Array.isArray(res.data) ? res.data : null) as Array<{ id: string; full_name: string | null }> | null
+          }
+        } catch (_e) {
+          // Fallback: fetch org-wide and filter locally
+          const { data, error } = await supabase
+            .from('user_profiles' as const)
+            .select('id, full_name')
+            .eq('organization_id', orgId as string)
+            .limit(1000)
+          users = (Array.isArray(data) ? data : null) as Array<{ id: string; full_name: string | null }> | null
+          if ((!users || error) && ownerIds.length > 0) {
+            // Retry aliasing email to full_name for environments missing the column
+            const { data: data2 } = await supabase
+              .from('user_profiles' as const)
+              .select('id, email:full_name')
+              .eq('organization_id', orgId as string)
+              .limit(1000)
+            users = (Array.isArray(data2) ? data2 : null) as Array<{ id: string; full_name: string | null }> | null
+          }
+          if (users) users = users.filter(u => ownerIds.includes(u.id))
+        }
+        for (const u of (users || [])) {
+          if (u && u.id) map[u.id] = u.full_name || u.id
         }
       }
       setOwnersMap(map)
-      setOwnerOptions([{ value: '', label: 'All Owners' }, ...Object.entries(map)
-        .map(([value, label]) => ({ value, label: label || value }))
-        .sort((a, b) => a.label.localeCompare(b.label))])
 
-      const regions = Array.from(new Set((opps || []).map(o => getRegion(o)).filter(Boolean))) as string[]
+      // Fetch territories for these owners and build Region (territory) map
+  const territoryMap: Record<string, string> = {}
+      if (ownerIds.length > 0) {
+        let territories: Array<{ assigned_user_id: string | null; name: string | null }> | null = null
+        try {
+          if (ownerIds.length === 0) {
+            territories = []
+          } else {
+            const qTerr = supabase
+              .from('sales_territories' as const)
+              .select('assigned_user_id, name')
+              .in('assigned_user_id', ownerIds)
+              .eq('organization_id', orgId as string)
+            const res = await qTerr
+            if (res.error) throw res.error
+            territories = (Array.isArray(res.data) ? res.data : null) as Array<{ assigned_user_id: string | null; name: string | null }> | null
+          }
+        } catch (_e) {
+          // Fallback: fetch all territories for the org and filter locally
+          const { data } = await supabase
+            .from('sales_territories' as const)
+            .select('assigned_user_id, name')
+            .eq('organization_id', orgId as string)
+            .limit(2000)
+          territories = (Array.isArray(data) ? data : null) as Array<{ assigned_user_id: string | null; name: string | null }> | null
+          if (territories) territories = territories.filter(t => t.assigned_user_id && ownerIds.includes(t.assigned_user_id))
+        }
+        if (Array.isArray(territories)) {
+          for (const t of territories) {
+            if (t.assigned_user_id && t.name) territoryMap[t.assigned_user_id] = t.name
+          }
+        }
+      }
+      setOwnerTerritoryMap(territoryMap)
+
+      const regions = Array.from(new Set(Object.values(territoryMap))).filter(Boolean) as string[]
       setRegionOptions([{ value: '', label: 'All Regions' }, ...regions.sort().map(r => ({ value: r, label: r }))])
     } catch (e) {
       // Non-fatal; leave filters minimal
-      console.warn('Failed loading owner/region metadata', e)
-      setOwnerOptions([{ value: '', label: 'All Owners' }])
-      setRegionOptions([{ value: '', label: 'All Regions' }])
+  console.warn('Failed loading owner/region metadata', e)
+  setRegionOptions([{ value: '', label: 'All Regions' }])
     }
-  }, [supabase])
+  }, [supabase, orgId])
 
-  const loadOpportunities = useCallback(async (query: string = '', stage: string = '') => {
-    setLoading(true)
+  const loadOpportunities = useCallback(async (query: string = '', stage: string = '', resetList = true, explicitOffset?: number) => {
+    if (resetList) setLoading(true)
     setError(null)
-    
     try {
-      let result
-      if (stage) {
-        result = await opportunityAPI.getOpportunitiesByStage(stage)
-      } else if (query) {
-        result = await opportunityAPI.searchOpportunities(query)
-      } else {
-        result = await opportunityAPI.getOpportunities()
+      const { data, error } = await opportunityAPI.getOpportunitiesList({
+        search: query,
+        stage: (stage || '') as 'prospecting' | 'engaging' | 'advancing' | 'key_decision' | '',
+        limit: pageSize,
+        offset: resetList ? 0 : (explicitOffset ?? 0),
+      })
+
+      if (error) {
+        setError(error.message || 'Failed to load opportunities')
+        return
       }
-      
-      if (result.error) {
-        setError(result.error.message || 'Failed to load opportunities')
-      } else {
-        const opportunitiesData = result.data || []
-        setOpportunities(opportunitiesData)
-        
-        // Calculate MEDDPICC scores for all opportunities (optimized)
+
+  const list = data || []
+  const merged = resetList ? list : [...opportunitiesRef.current, ...list]
+  setOpportunities(merged)
+  setHasMore(list.length === pageSize)
+  opportunitiesRef.current = merged
+
+      // Compute MEDDPICC scores only for the first page to avoid heavy bursts
+      if (resetList) {
         const scores: Record<string, number> = {}
-        
-        // Use Promise.all for parallel processing instead of sequential
-        const scorePromises = opportunitiesData.map(async (opportunity) => {
+        const scoreResults = await Promise.all(list.map(async (opportunity) => {
           try {
             const score = await getOpportunityMEDDPICCScore(opportunity)
             return { id: opportunity.id, score }
@@ -148,29 +257,38 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
             console.error(`Error calculating score for ${opportunity.id}:`, error)
             return { id: opportunity.id, score: opportunity.meddpicc_score || 0 }
           }
-        })
-        
-        const scoreResults = await Promise.all(scorePromises)
-        scoreResults.forEach(({ id, score }) => {
-          scores[id] = score
-        })
-        
+        }))
+        scoreResults.forEach(({ id, score }) => { scores[id] = score })
         setMeddpiccScores(scores)
-
-        // Resolve owner names and region options for quick filters
-        await loadOwnersAndRegions(opportunitiesData)
       }
+
+      await loadOwnersAndRegions(merged)
     } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
-      setLoading(false)
+      if (resetList) setLoading(false)
     }
-  }, [loadOwnersAndRegions])
+  }, [pageSize, loadOwnersAndRegions])
 
   // Trigger initial and subsequent loads when filters change
   useEffect(() => {
-    loadOpportunities(searchTerm, selectedStage)
-  }, [searchTerm, selectedStage, loadOpportunities])
+    setOffset(0)
+    // Call and include loadOpportunities in deps to satisfy lint; it's stable via useCallback
+    void (async () => {
+      await loadOpportunities(debouncedSearch, selectedStage, true, 0)
+    })()
+  }, [debouncedSearch, selectedStage, loadOpportunities])
+
+  const loadMore = useCallback(async () => {
+    try {
+      setLoadingMore(true)
+      const nextOffset = offset + pageSize
+      setOffset(nextOffset)
+      await loadOpportunities(debouncedSearch, selectedStage, false, nextOffset)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [offset, pageSize, debouncedSearch, selectedStage, loadOpportunities])
 
   const getStageColor = (stage: string) => {
     switch (stage) {
@@ -217,13 +335,9 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
   }
 
   const formatCurrency = (amount: number | null) => {
+    // Preserve existing display for falsy values (including 0) as 'N/A' to avoid UI regression
     if (!amount) return 'N/A'
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
+    return formatCurrencySafe(amount)
   }
 
   if (loading) {
@@ -290,15 +404,12 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
           </select>
         </div>
         <div className="sm:w-56">
-          <select
+          <UserSelect
             value={ownerFilter}
-            onChange={(e) => setOwnerFilter(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            {ownerOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+            onChange={setOwnerFilter}
+            allowEmpty
+            emptyLabel="All Owners"
+          />
         </div>
         <div className="sm:w-48">
           <select
@@ -321,15 +432,15 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
       )}
 
       {/* Column Headings (desktop) */}
-      <div className="hidden sm:grid grid-cols-12 gap-4 px-4 text-xs font-semibold text-gray-500">
+      <div className="hidden sm:grid grid-cols-12 gap-4 px-4 text-xs font-semibold text-gray-500 sticky top-0 z-10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b">
         <div className="col-span-3 uppercase">Opportunity</div>
         <div className="col-span-2 uppercase">Account</div>
         <div className="col-span-2 uppercase">Owner</div>
-        <div className="col-span-2 uppercase">Region</div>
+        <div className="col-span-1 uppercase">Region</div>
         <div className="col-span-1 uppercase">PEAK Stage</div>
         <div className="col-span-1 uppercase text-right">MEDDPICC</div>
         <div className="col-span-1 uppercase text-right">Amount</div>
-        <div className="col-span-1 uppercase text-right hidden">Close</div>
+        <div className="col-span-1 uppercase text-right">Actions</div>
       </div>
 
       {/* Opportunities Table */}
@@ -362,8 +473,8 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
             {filteredOpportunities.map((opportunity) => (
               <li key={opportunity.id}>
                 <div className="px-4 py-4 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-                  {/* Opportunity and Account */}
-                  <div className="sm:col-span-3 flex items-center">
+                  {/* Opportunity */}
+                  <div className="sm:col-span-3 flex items-center min-w-0">
                     <div className="flex-shrink-0 h-10 w-10">
                       <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
                         <span className="text-sm font-medium text-indigo-600">
@@ -371,20 +482,31 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
                         </span>
                       </div>
                     </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        <Link href={`/opportunities/${opportunity.id}`} className="hover:underline">
+                    <div className="ml-4 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate" title={opportunity.name}>
+                        <Link href={`/opportunities/${opportunity.id}`} className="hover:underline" title={opportunity.name}>
                           {opportunity.name}
                         </Link>
                       </div>
-                      <div className="text-xs text-gray-500">
+                      {/* Mobile-only: show account under name */}
+                      <div className="text-xs text-gray-500 sm:hidden truncate" title={opportunity.company?.name || '—'}>
                         {opportunity.company?.name || '—'}
                       </div>
                     </div>
                   </div>
 
+                  {/* Account */}
+                  <div className="hidden sm:block sm:col-span-2 text-sm text-gray-700 min-w-0">
+                    <div className="truncate" title={opportunity.company?.name || '—'}>
+                      {opportunity.company?.name || '—'}
+                    </div>
+                  </div>
+
                   {/* Owner */}
-                  <div className="sm:col-span-2 text-sm text-gray-700">
+                  <div className="sm:col-span-2 text-sm text-gray-700 whitespace-nowrap truncate" title={(() => {
+                    const ownerId = (opportunity as Partial<OpportunityWithDetails> & { assigned_to?: string | null }).assigned_to || ''
+                    return ownerId ? (ownersMap[ownerId] || ownerId) : '—'
+                  })()}>
                     {(() => {
                       const ownerId = (opportunity as Partial<OpportunityWithDetails> & { assigned_to?: string | null }).assigned_to || ''
                       return ownerId ? (ownersMap[ownerId] || ownerId) : '—'
@@ -392,12 +514,12 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
                   </div>
 
                   {/* Region */}
-                  <div className="sm:col-span-2 text-sm text-gray-700">
+                  <div className="sm:col-span-1 text-sm text-gray-700 whitespace-nowrap truncate" title={getRegion(opportunity) || '—'}>
                     {getRegion(opportunity) || '—'}
                   </div>
 
                   {/* PEAK Stage */}
-                  <div className="sm:col-span-1">
+                  <div className="sm:col-span-1 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(opportunity.peak_stage)}`}>
                       {getStageIcon(opportunity.peak_stage)} {opportunity.peak_stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </span>
@@ -412,7 +534,7 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
                   </div>
 
                   {/* Amount and probability */}
-                  <div className="sm:col-span-1 text-right">
+                  <div className="sm:col-span-1 text-right whitespace-nowrap" title={formatCurrency(opportunity.deal_value)}>
                     <div className="text-sm font-medium text-gray-900">
                       {formatCurrency(opportunity.deal_value)}
                     </div>
@@ -421,29 +543,27 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
                     )}
                   </div>
 
-                  {/* Close date (mobile shows below name; desktop here) */}
-                  <div className="hidden sm:block sm:col-span-1 text-right text-sm text-gray-700">
-                    {opportunity.close_date ? new Date(opportunity.close_date).toLocaleDateString() : '—'}
-                  </div>
-
                   {/* Actions */}
-                  <div className="sm:col-span-2 flex items-center justify-end space-x-2">
+                  <div className="sm:col-span-1 flex items-center justify-end space-x-2 whitespace-nowrap">
                     <Link
                       href={`/opportunities/${opportunity.id}`}
                       className="text-indigo-600 hover:text-indigo-900"
                       title="View Details"
+                      aria-label={`View details for ${opportunity.name}`}
                     >
                       <EyeIcon className="h-4 w-4" />
                     </Link>
                     <Link
                       href={`/opportunities/${opportunity.id}/edit`}
                       className="text-indigo-600 hover:text-indigo-900"
+                      aria-label={`Edit ${opportunity.name}`}
                     >
                       <PencilIcon className="h-4 w-4" />
                     </Link>
                     <button
                       onClick={() => handleDelete(opportunity.id)}
                       className="text-red-600 hover:text-red-900"
+                      aria-label={`Delete ${opportunity.name}`}
                     >
                       <TrashIcon className="h-4 w-4" />
                     </button>
@@ -452,6 +572,17 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
               </li>
             ))}
           </ul>
+          {hasMore && (
+            <div className="p-4 flex justify-center">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-4 py-2 text-sm rounded-md border bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Settings, Save, AlertTriangle, Info } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatCurrencySafe } from '@/lib/format'
 
 interface BenchmarkData {
   kpi_name: string;
@@ -177,12 +178,7 @@ export function KPIBenchmarking({ organizationId }: KPIBenchmarkingProps) {
       return `${value}%`;
     }
     if (kpiName.includes('cost') || kpiName.includes('value') || kpiName.includes('size') || kpiName.includes('clv')) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(value);
+      return formatCurrencySafe(value)
     }
     if (kpiName.includes('cycle') || kpiName.includes('activities')) {
       return `${value} days`;

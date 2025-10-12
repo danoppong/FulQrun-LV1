@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation';
+import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile'
 import {
   HomeIcon,
   BuildingOfficeIcon,
@@ -31,6 +32,7 @@ import {
   FunnelIcon,
   PresentationChartLineIcon
 } from '@heroicons/react/24/outline'
+import { UserCircleIcon } from '@heroicons/react/24/outline'
 
 interface SubMenuItem {
   name: string
@@ -225,6 +227,15 @@ export default function Navigation() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([])
   const pathname = usePathname()
   const router = useRouter()
+  const { data: currentUser } = useCurrentUserProfile()
+
+  const firstName = React.useMemo(() => {
+    const full = currentUser?.full_name || currentUser?.email || ''
+    if (!full) return null
+    if (full.includes('@')) return full.split('@')[0] || null
+    const parts = full.trim().split(/\s+/)
+    return parts[0] || null
+  }, [currentUser])
 
   // Update CSS variable for sidebar width
   React.useEffect(() => {
@@ -400,7 +411,15 @@ export default function Navigation() {
           <nav className="flex-1 space-y-1 px-4 py-6 overflow-y-auto">
             {renderNavigationWithSections(true)}
           </nav>
-          <div className="border-t border-border/50 p-4">
+          <div className="border-t border-border/50 p-4 space-y-2">
+            <Link
+              href="/settings/profile"
+              onClick={() => setSidebarOpen(false)}
+              className="flex w-full items-center px-4 py-3 text-sm font-medium rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+            >
+              <UserCircleIcon className="mr-3 h-5 w-5" />
+              {firstName || 'Profile'}
+            </Link>
             <button
               onClick={handleLogout}
               className="flex w-full items-center px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-xl transition-all duration-200"
@@ -456,7 +475,14 @@ export default function Navigation() {
             </div>
           )}
           {!sidebarCollapsed && (
-            <div className="border-t border-border/50 p-4">
+            <div className="border-t border-border/50 p-4 space-y-2">
+              <Link
+                href="/settings/profile"
+                className="flex w-full items-center px-4 py-3 text-sm font-medium rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+              >
+                <UserCircleIcon className="mr-3 h-5 w-5" />
+                {firstName || 'Profile'}
+              </Link>
               <button
                 onClick={handleLogout}
                 className="flex w-full items-center px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-xl transition-all duration-200"
@@ -467,7 +493,14 @@ export default function Navigation() {
             </div>
           )}
           {sidebarCollapsed && (
-            <div className="border-t border-border/50 p-3 flex justify-center">
+            <div className="border-t border-border/50 p-3 flex justify-center gap-3">
+              <Link
+                href="/settings/profile"
+                className="p-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors ring-1 ring-inset ring-white/5"
+                aria-label={firstName ? `${firstName} profile` : 'Profile'}
+              >
+                <UserCircleIcon className="h-5 w-5" />
+              </Link>
               <button
                 onClick={handleLogout}
                 className="p-2 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors ring-1 ring-inset ring-white/5"
