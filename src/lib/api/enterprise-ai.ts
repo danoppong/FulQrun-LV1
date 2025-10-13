@@ -7,8 +7,25 @@ const supabase = getSupabaseBrowserClient();
 const mockAIIntelligence = {
   generateAdvancedLeadScore: async () => ({ score: 0, factors: [] }),
   generateDealRiskAssessment: async () => ({ risk: 'low', factors: [] }),
-  generateCoachingRecommendations: async () => ({ recommendations: [] }),
-  generateSalesForecast: async () => ({ forecast: [] }),
+  generateCoachingRecommendations: async () => [],
+  generateSalesForecast: async (): Promise<ForecastingData> => ({
+    period: 'monthly' as const,
+    startDate: new Date(),
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    predictions: {
+      revenue: 0,
+      deals: 0,
+      conversionRate: 0,
+      confidence: 0
+    },
+    scenarios: {
+      optimistic: 0,
+      realistic: 0,
+      pessimistic: 0
+    },
+    factors: [],
+    organizationId: ''
+  }),
   generateAIContent: async () => ({ content: '' })
 };
 

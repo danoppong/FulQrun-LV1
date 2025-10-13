@@ -83,3 +83,50 @@ export function checkRateLimit(identifier: string, maxRequests: number = 100, wi
   current.count++
   return true
 }
+
+// ---------- Bulk import/export schemas ----------
+export const leadImportRowSchema = z.object({
+  first_name: z.string().min(1, 'first_name is required'),
+  last_name: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  source: z.string().optional(),
+  status: z.string().optional(),
+  external_id: z.string().optional(),
+})
+
+export const leadBulkImportSchema = z.object({
+  rows: z.array(leadImportRowSchema).min(1).max(5000),
+})
+
+export const opportunityImportRowSchema = z.object({
+  name: z.string().min(1, 'name is required'),
+  description: z.string().optional(),
+  value: z.number().optional(),
+  deal_value: z.number().optional(),
+  probability: z.number().min(0).max(100).optional(),
+  stage: z.enum(['prospecting','qualifying','proposal','negotiation','closed_won','closed_lost']).optional(),
+  close_date: z.string().optional(),
+  company_id: z.string().uuid().optional(),
+  contact_id: z.string().uuid().optional(),
+  assigned_to: z.string().uuid().optional(),
+  external_id: z.string().optional(),
+})
+
+export const opportunityBulkImportSchema = z.object({
+  rows: z.array(opportunityImportRowSchema).min(1).max(5000),
+})
+
+export const bulkExportQuerySchema = z.object({
+  format: z.enum(['json', 'csv']).optional().default('csv'),
+  limit: z.coerce.number().int().min(1).max(10000).optional().default(1000),
+  status: z.string().optional(),
+  stage: z.string().optional(),
+})
+
+export function getClientIpFromHeaders(headers: Headers): string {
+  const xff = headers.get('x-forwarded-for')
+  if (xff) return xff.split(',')[0]?.trim() || 'unknown'
+  return headers.get('x-real-ip') || 'unknown'
+}

@@ -167,16 +167,19 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
     }
   };
 
-  const formatValue = (value: number, format: string) => {
+  const formatValue = (value: number | undefined | null, format: string) => {
+    // Handle undefined/null values safely
+    const safeValue = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+    
     switch (format) {
       case 'currency':
         return formatCurrencySafe(value);
       case 'percentage':
-        return `${value.toFixed(1)}%`;
+        return `${safeValue.toFixed(1)}%`;
       case 'number':
-        return value.toLocaleString();
+        return safeValue.toLocaleString();
       default:
-        return value.toString();
+        return safeValue.toString();
     }
   };
 
@@ -281,7 +284,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                     <div className="text-right">
                       <p className={`text-sm font-medium ${getTrendColor(kpi.trend)}`}>
                         {kpi.trend === 'up' ? '+' : kpi.trend === 'down' ? '-' : ''}
-                        {formatValue(Math.abs(kpi.currentValue - kpi.previousValue), kpi.format)}
+                        {formatValue(Math.abs((kpi.currentValue || 0) - (kpi.previousValue || 0)), kpi.format)}
                       </p>
                       <p className="text-xs text-gray-500">vs previous</p>
                     </div>
@@ -299,8 +302,8 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {realTimeMetrics.map((metric) => (
                     <div key={metric.id} className="text-center">
-                      <p className="text-2xl font-bold text-gray-900">{metric.value.toLocaleString()}</p>
-                      <p className="text-sm text-gray-500 capitalize">{metric.metricName.replace('_', ' ')}</p>
+                      <p className="text-2xl font-bold text-gray-900">{(metric.value || 0).toLocaleString()}</p>
+                      <p className="text-sm text-gray-500 capitalize">{(metric.metricName || '').replace('_', ' ')}</p>
                       <p className="text-xs text-gray-400">
                         {new Date(metric.timestamp).toLocaleTimeString()}
                       </p>
@@ -373,7 +376,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                         <div className="flex items-center justify-between mb-4">
                           <div>
                             <h4 className="font-medium text-gray-900">{dashboard.dashboardName}</h4>
-                            <p className="text-sm text-gray-500 capitalize">{dashboard.dashboardType.replace('_', ' ')}</p>
+                            <p className="text-sm text-gray-500 capitalize">{(dashboard.dashboardType || '').replace('_', ' ')}</p>
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -388,8 +391,8 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                         </div>
                         
                         <div className="mb-4">
-                          <p className="text-sm text-gray-500 mb-2">KPIs: {dashboard.kpis.length}</p>
-                          <p className="text-sm text-gray-500">Refresh: {dashboard.refreshFrequencyMinutes} min</p>
+                          <p className="text-sm text-gray-500 mb-2">KPIs: {(dashboard.kpis || []).length}</p>
+                          <p className="text-sm text-gray-500">Refresh: {dashboard.refreshFrequencyMinutes || 0} min</p>
                         </div>
                         
                         <div className="flex items-center justify-between">
@@ -504,8 +507,8 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {realTimeMetrics.map((metric) => (
                     <div key={metric.id} className="text-center p-4 bg-gray-50 rounded-lg">
-                      <p className="text-3xl font-bold text-gray-900">{metric.value.toLocaleString()}</p>
-                      <p className="text-sm text-gray-500 capitalize">{metric.metricName.replace('_', ' ')}</p>
+                      <p className="text-3xl font-bold text-gray-900">{(metric.value || 0).toLocaleString()}</p>
+                      <p className="text-sm text-gray-500 capitalize">{(metric.metricName || '').replace('_', ' ')}</p>
                       <p className="text-xs text-gray-400 mt-1">
                         Last updated: {new Date(metric.timestamp).toLocaleTimeString()}
                       </p>

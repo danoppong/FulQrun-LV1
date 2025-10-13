@@ -1,0 +1,2 @@
+name,description,value,deal_value,probability,stage,close_date,company_id,contact_id,assigned_to,external_id
+"Acme Q4 Expansion","Optional description of the opportunity",250000,,75,prospecting,2025-12-31,,,,OPP-001

@@ -80,16 +80,13 @@ export async function createAnalyticsDashboard(
 ): Promise<AnalyticsDashboard> {
   try {
     const { data, error } = await supabase
-      .from('analytics_dashboards')
+      .from('metric_dashboards')
       .insert({
-        dashboard_name: dashboard.dashboardName,
-        dashboard_type: dashboard.dashboardType,
-        config: dashboard.config,
-        kpis: dashboard.kpis,
-        filters: dashboard.filters,
-        refresh_frequency_minutes: dashboard.refreshFrequencyMinutes,
-        is_public: dashboard.isPublic,
-        access_level: dashboard.accessLevel,
+        name: dashboard.dashboardName,
+        description: `${dashboard.dashboardType} dashboard`,
+        user_id: userId,
+        is_shared: dashboard.isPublic || false,
+        dashboard_config: dashboard.config || {},
         organization_id: dashboard.organizationId,
         created_by: userId
       })
@@ -107,7 +104,7 @@ export async function createAnalyticsDashboard(
 export async function getAnalyticsDashboards(organizationId: string): Promise<AnalyticsDashboard[]> {
   try {
     const { data, error } = await supabase
-      .from('analytics_dashboards')
+      .from('metric_dashboards')
       .select('*')
       .eq('organization_id', organizationId)
       .order('created_at', { ascending: false });
@@ -141,7 +138,7 @@ export async function calculateKPIs(organizationId: string): Promise<KPIMetric[]
 export async function getKPITemplates(organizationId: string): Promise<KPIMetric[]> {
   try {
     const { data, error } = await supabase
-      .from('kpi_templates')
+      .from('metric_templates')
       .select('*')
       .eq('organization_id', organizationId)
       .eq('is_active', true);
@@ -183,11 +180,11 @@ export async function generateForecast(organizationId: string, period: string): 
 export async function getRealTimeMetrics(organizationId: string): Promise<RealTimeMetric[]> {
   try {
     const { data, error } = await supabase
-      .from('real_time_metrics')
+      .from('performance_metrics')
       .select('*')
       .eq('organization_id', organizationId)
-      .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-      .order('timestamp', { ascending: false });
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];

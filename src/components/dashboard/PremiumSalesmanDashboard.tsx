@@ -68,6 +68,13 @@ export default function PremiumSalesmanDashboard({
 
   // Fetch KPI data
   const fetchKPIs = useCallback(async () => {
+    // Guard: Don't fetch if userId is not available
+    if (!userId || userId.trim() === '') {
+      setError('User ID not available')
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError(null)
     
@@ -104,8 +111,14 @@ export default function PremiumSalesmanDashboard({
   }, [userId, selectedTimeFrame, viewMode, getDateRange])
 
   useEffect(() => {
-    void fetchKPIs()
-  }, [fetchKPIs, refreshKey])
+    // Only fetch KPIs if userId is available
+    if (userId && userId.trim() !== '') {
+      void fetchKPIs()
+    } else {
+      setError('User ID not available')
+      setLoading(false)
+    }
+  }, [fetchKPIs, refreshKey, userId])
 
   // Manual refresh handler
   const handleRefresh = () => {
