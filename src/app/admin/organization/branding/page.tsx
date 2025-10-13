@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image'
 import {
   PhotoIcon,
@@ -26,6 +26,24 @@ export default function OrganizationBranding() {
 
   const [uploading, setUploading] = useState<{ logo: boolean; favicon: boolean; emailHeaderLogo: boolean }>({ logo: false, favicon: false, emailHeaderLogo: false })
   const [error, setError] = useState<string | null>(null)
+  const [policyStatus, setPolicyStatus] = useState<'unknown' | 'ok' | 'blocked' | 'missing-bucket' | 'error'>('unknown')
+  const [checking, setChecking] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    // Load existing settings
+    let active = true
+    fetch('/api/admin/organization/branding/settings')
+      .then(async (r) => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) }))
+      .then(({ ok, data }) => {
+        if (!active) return
+        if (ok && data?.settings) {
+          setBrandingSettings((prev) => ({ ...prev, ...data.settings }))
+        }
+      })
+      .catch(() => {/* ignore */})
+    return () => { active = false }
+  }, [])
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'favicon' | 'emailHeaderLogo') {
     try {
@@ -56,6 +74,47 @@ export default function OrganizationBranding() {
     }
   }
 
+  async function checkPolicy() {
+    try {
+      setChecking(true)
+      setError(null)
+      const res = await fetch('/api/admin/organization/branding/status')
+      const data = await res.json()
+      if (!res.ok) {
+        const msg: string = data?.error || 'Policy check failed'
+        if (res.status === 424) setPolicyStatus('missing-bucket')
+        else if (res.status === 403) setPolicyStatus('blocked')
+        else setPolicyStatus('error')
+        setError(msg)
+        return
+      }
+      setPolicyStatus('ok')
+    } catch (err) {
+      setPolicyStatus('error')
+      setError(err instanceof Error ? err.message : 'Policy check failed')
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  async function saveSettings() {
+    try {
+      setSaving(true)
+      setError(null)
+      const res = await fetch('/api/admin/organization/branding/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(brandingSettings),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Failed to save settings')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save settings')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const presetColors = [
     { name: 'Blue', primary: '#3B82F6', secondary: '#60A5FA' },
     { name: 'Green', primary: '#10B981', secondary: '#34D399' },
@@ -73,6 +132,40 @@ export default function OrganizationBranding() {
         <p className="mt-1 text-sm text-gray-500">
           Customize your organization&apos;s visual identity and branding
         </p>
+      </div>
+
+      {/* Storage Policy Status */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <PhotoIcon className="h-5 w-5 text-blue-600" />
+            <span className="text-sm font-medium text-gray-900">Branding Storage Policy</span>
+          </div>
+          <button
+            onClick={checkPolicy}
+            disabled={checking}
+            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-60"
+          >
+            {checking ? 'Checking…' : 'Check storage policy'}
+          </button>
+        </div>
+        <div className="mt-2 text-sm">
+          {policyStatus === 'unknown' && (
+            <p className="text-gray-500">Status not checked yet.</p>
+          )}
+          {policyStatus === 'ok' && (
+            <p className="text-green-700">Write access confirmed. Uploads should work.</p>
+          )}
+          {policyStatus === 'blocked' && (
+            <p className="text-amber-700">Write blocked by RLS. Ensure policies allow writes under your org folder (e.g., <code>{`<orgId>/...`}</code>).</p>
+          )}
+          {policyStatus === 'missing-bucket' && (
+            <p className="text-red-700">Bucket &quot;branding&quot; not found. Create a public bucket named &quot;branding&quot; in Supabase Storage.</p>
+          )}
+          {policyStatus === 'error' && (
+            <p className="text-red-700">Could not verify policies. See error below for details.</p>
+          )}
+        </div>
       </div>
 
       {/* Logo & Images */}
@@ -315,10 +408,10 @@ export default function OrganizationBranding() {
           Preview
         </button>
         <button
-          onClick={() => console.log('Saving branding settings:', brandingSettings)}
+          onClick={saveSettings}
           className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
-          Save Changes
+          {saving ? 'Saving…' : 'Save Changes'}
         </button>
       </div>
     </div>

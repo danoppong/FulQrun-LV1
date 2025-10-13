@@ -84,6 +84,7 @@ const navigation: MenuItem[] = [
       { name: 'Opportunity Listing', href: '/opportunities' },
       { name: 'MEDDPICC', href: '/opportunities/meddpicc' },
       { name: 'PEAK Pipeline', href: '/peak' },
+      { name: 'PEAK Summary', href: '/peak/summary' },
     ]
   },
   { 

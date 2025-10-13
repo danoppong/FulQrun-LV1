@@ -139,22 +139,39 @@ export async function POST(request: NextRequest) {
     if (!url) throw new HttpError(500, 'Failed to obtain public URL')
 
     // Upsert setting for convenience and homepage usage
-    const settingKey = type === 'favicon' ? 'branding.faviconUrl' : (type === 'logo' ? 'branding.logoUrl' : 'branding.emailHeaderLogo')
-    // organization_settings might not be in generated types yet; use untyped call
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: upsertError } = await (supa as any)
-      .from('organization_settings' as const)
-      .upsert({
-        organization_id: orgId,
-        setting_key: settingKey,
-        setting_value: url,
-        is_public: type !== 'emailHeaderLogo',
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'organization_id,setting_key' })
-
-    if (upsertError) {
-      // Don't fail the upload if settings upsert fails; return URL with warning
-      return NextResponse.json({ success: true, url, warning: 'Uploaded but failed to persist setting', details: String((upsertError as { message?: string }).message || upsertError) })
+    // Persist into organization_settings.settings JSONB under branding
+    const key = type === 'favicon' ? 'faviconUrl' : (type === 'logo' ? 'logoUrl' : 'emailHeaderLogo')
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: cur, error: selErr } = await (supa as any)
+        .from('organization_settings' as const)
+        .select('settings')
+        .eq('organization_id', orgId)
+        .maybeSingle()
+      if (selErr) throw selErr
+      const settings = (cur?.settings as Record<string, unknown> | undefined) || {}
+      const branding = (settings.branding as Record<string, unknown> | undefined) || {}
+      const newBranding = { ...branding, [key]: url }
+      const newSettings = { ...settings, branding: newBranding }
+      if (!cur) {
+        // insert
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: insErr } = await (supa as any)
+          .from('organization_settings' as const)
+          .insert({ organization_id: orgId, settings: newSettings })
+        if (insErr) throw insErr
+      } else {
+        // update
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: updErr } = await (supa as any)
+          .from('organization_settings' as const)
+          .update({ settings: newSettings })
+          .eq('organization_id', orgId)
+        if (updErr) throw updErr
+      }
+    } catch (persistErr) {
+      // Non-fatal: return URL with warning
+      return NextResponse.json({ success: true, url, warning: 'Uploaded but failed to persist branding URL', details: String((persistErr as { message?: string }).message || persistErr) })
     }
 
     return NextResponse.json({ success: true, url })

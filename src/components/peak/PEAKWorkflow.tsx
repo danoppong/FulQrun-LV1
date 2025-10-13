@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { StageDocuments } from './StageDocuments'
 import { SharePointDocument } from '@/lib/integrations/sharepoint';
+import { PEAK_STAGE_ORDER, getStageInfo, type PEAKStageId } from '@/lib/peak'
 
 interface PEAKWorkflowProps {
   opportunityId: string
@@ -35,17 +36,10 @@ export function PEAKWorkflow({
   const [stages, setStages] = useState<StageProgress[]>([])
   const [documents, setDocuments] = useState<Record<string, SharePointDocument[]>>({})
   const [selectedStage, setSelectedStage] = useState<string>(currentStage)
+  const [advancing, setAdvancing] = useState<boolean>(false)
+  const [advanceError, setAdvanceError] = useState<string | null>(null)
 
-  const peakStages = useMemo(() => [
-    { id: 'prospecting', name: 'Prospecting', description: 'Research and initial contact' },
-    { id: 'engaging', name: 'Engaging', description: 'Discovery and needs analysis' },
-    { id: 'advancing', name: 'Advancing', description: 'Proposal and demonstration' },
-    { id: 'key_decision', name: 'Key Decision', description: 'Final presentation and closing' }
-  ], [])
-
-  useEffect(() => {
-    loadStageProgress()
-  }, [loadStageProgress])
+  const peakStages = useMemo(() => PEAK_STAGE_ORDER.map(s => ({ id: s.id, name: s.name, description: s.description })), [])
 
   const loadStageProgress = useCallback(async () => {
     try {
@@ -65,6 +59,10 @@ export function PEAKWorkflow({
       // Handle error silently for now
     }
   }, [currentStage, peakStages])
+
+  useEffect(() => {
+    void loadStageProgress()
+  }, [loadStageProgress])
 
   const getRequiredDocumentCount = (stage: string): number => {
     const requirements: Record<string, number> = {
@@ -95,8 +93,19 @@ export function PEAKWorkflow({
         return
       }
 
-      // Simulate API call to advance stage
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      setAdvancing(true)
+      setAdvanceError(null)
+      const res = await fetch('/api/peak/transition', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunityId, from: fromStage, to: toStage })
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        setAdvanceError(j.error || 'Failed to advance stage')
+        setAdvancing(false)
+        return
+      }
       
       onStageChange(toStage)
       setSelectedStage(toStage)
@@ -108,7 +117,10 @@ export function PEAKWorkflow({
         progress: peakStages.findIndex(s => s.id === stage.stage) < peakStages.findIndex(s => s.id === toStage) ? 100 : 
                  peakStages.findIndex(s => s.id === stage.stage) === peakStages.findIndex(s => s.id === toStage) ? 0 : stage.progress
       })))
+      setAdvancing(false)
     } catch (_error) {
+      setAdvanceError('Failed to advance stage')
+      setAdvancing(false)
     }
   }
 
@@ -231,10 +243,10 @@ export function PEAKWorkflow({
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 capitalize">
-                    {peakStages.find(s => s.id === selectedStage)?.name} Stage
+                    {getStageInfo(selectedStage as PEAKStageId).name} Stage
                   </h3>
                   <p className="text-sm text-gray-600">
-                    {peakStages.find(s => s.id === selectedStage)?.description}
+                    {getStageInfo(selectedStage as PEAKStageId).description}
                   </p>
                 </div>
                 <div className="text-right">
@@ -301,13 +313,16 @@ export function PEAKWorkflow({
                     const nextStage = peakStages[currentIndex + 1]
                     handleAdvanceStage(currentStage, nextStage.id)
                   }}
-                  disabled={!stages.find(s => s.stage === selectedStage)?.completed}
+                  disabled={advancing || !stages.find(s => s.stage === selectedStage)?.completed}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Advance to Next Stage
+                  {advancing ? 'Advancing…' : 'Advance to Next Stage'}
                 </button>
               )}
             </div>
+            {advanceError && (
+              <p className="mt-2 text-sm text-red-600" role="alert">{advanceError}</p>
+            )}
           </div>
         )}
       </div>

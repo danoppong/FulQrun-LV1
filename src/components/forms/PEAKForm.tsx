@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod';
+import { getRecommendedActions, getStageInfo, type PEAKStageId } from '@/lib/peak'
 
 const peakFormSchema = z.object({
   peak_stage: z.enum(['prospecting', 'engaging', 'advancing', 'key_decision']),
@@ -24,34 +25,10 @@ interface PEAKFormProps {
 }
 
 const peakStages = [
-  { 
-    value: 'prospecting', 
-    label: 'Prospecting', 
-    description: 'Initial contact and qualification',
-    icon: '🔍',
-    color: 'bg-blue-100 text-blue-800'
-  },
-  { 
-    value: 'engaging', 
-    label: 'Engaging', 
-    description: 'Active communication and relationship building',
-    icon: '💬',
-    color: 'bg-yellow-100 text-yellow-800'
-  },
-  { 
-    value: 'advancing', 
-    label: 'Advancing', 
-    description: 'Solution presentation and negotiation',
-    icon: '📈',
-    color: 'bg-orange-100 text-orange-800'
-  },
-  { 
-    value: 'key_decision', 
-    label: 'Key Decision', 
-    description: 'Final decision and closing',
-    icon: '🎯',
-    color: 'bg-green-100 text-green-800'
-  }
+  { value: 'prospecting', label: 'Prospecting', icon: '🔍', color: 'bg-blue-100 text-blue-800' },
+  { value: 'engaging', label: 'Engaging', icon: '💬', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'advancing', label: 'Advancing', icon: '📈', color: 'bg-orange-100 text-orange-800' },
+  { value: 'key_decision', label: 'Key Decision', icon: '🎯', color: 'bg-green-100 text-green-800' }
 ]
 
 export default function PEAKForm({ initialData, onSave, loading = false, onSuccess }: PEAKFormProps) {
@@ -118,40 +95,7 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
     }
   }
 
-  const getStageRecommendations = (stage: string) => {
-    switch (stage) {
-      case 'prospecting':
-        return [
-          'Research the prospect thoroughly',
-          'Identify key decision makers',
-          'Understand their pain points',
-          'Qualify budget and timeline'
-        ]
-      case 'engaging':
-        return [
-          'Schedule discovery calls',
-          'Share relevant case studies',
-          'Build relationships with stakeholders',
-          'Understand their evaluation process'
-        ]
-      case 'advancing':
-        return [
-          'Present your solution',
-          'Address objections',
-          'Negotiate terms and pricing',
-          'Get buy-in from economic buyer'
-        ]
-      case 'key_decision':
-        return [
-          'Finalize contract terms',
-          'Coordinate with legal team',
-          'Prepare for implementation',
-          'Close the deal'
-        ]
-      default:
-        return []
-    }
-  }
+  const getStageRecommendations = (stage: PEAKStageId) => getRecommendedActions(stage)
 
   return (
     <div className="bg-card shadow sm:rounded-lg border border-border">
@@ -202,7 +146,7 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
                       </div>
                       {!isTest && (
                         <div className="text-xs text-muted-foreground">
-                          {stage.description}
+                          {getStageInfo(stage.value).description}
                         </div>
                       )}
                     </div>
@@ -231,7 +175,7 @@ export default function PEAKForm({ initialData, onSave, loading = false, onSucce
               {peakStages.find(s => s.value === selectedStage)?.label} Stage
             </h4>
             <p className="text-sm text-muted-foreground mb-3">
-              {peakStages.find(s => s.value === selectedStage)?.description}
+              {getStageInfo(selectedStage as PEAKStageId).description}
             </p>
             
             <div className="space-y-2">
