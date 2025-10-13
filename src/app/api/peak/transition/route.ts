@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/validation'
 import { peakStageService } from '@/lib/services/peak-stage-service'
@@ -18,19 +18,25 @@ function ip(req: NextRequest) {
   return xf.split(',')[0]?.trim() || 'unknown'
 }
 
+function json(body: unknown, init?: ResponseInit) {
+  const headers = new Headers(init?.headers)
+  if (!headers.has('content-type')) headers.set('content-type', 'application/json')
+  return new Response(JSON.stringify(body), { ...init, headers })
+}
+
 export async function POST(req: NextRequest) {
   if (!checkRateLimit(ip(req))) {
-    return NextResponse.json({ error: 'Rate limit' }, { status: 429 })
+    return json({ error: 'Rate limit' }, { status: 429 })
   }
   const body = await req.json().catch(() => null)
   const parsed = schema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+    return json({ error: 'Invalid payload' }, { status: 400 })
   }
   const input = parsed.data as PeakTransitionInput
   const res = await peakStageService.transition(input)
   if (!res.ok) {
-    return NextResponse.json({ error: res.error }, { status: res.status })
+    return json({ error: res.error }, { status: res.status })
   }
-  return NextResponse.json({ success: true, opportunityId: res.opportunityId, stage: res.stage })
+  return json({ success: true, opportunityId: res.opportunityId, stage: res.stage })
 }

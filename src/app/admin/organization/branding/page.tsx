@@ -190,8 +190,16 @@ export default function OrganizationBranding() {
               {uploading.logo && <span className="text-xs text-gray-500">Uploading…</span>}
             </div>
             {brandingSettings.logoUrl && (
-              <div className="mt-3 h-12 relative w-auto">
-                <Image src={brandingSettings.logoUrl} alt="Organization logo preview" width={256} height={48} className="h-12 w-auto object-contain" />
+              <div className="mt-3 relative w-auto">
+                <Image
+                  src={brandingSettings.logoUrl}
+                  alt="Organization logo preview"
+                  width={256}
+                  height={48}
+                  className="w-auto object-contain"
+                  // Ensure aspect ratio is maintained when CSS adjusts only one dimension
+                  style={{ height: 'auto', width: 'auto', maxHeight: '3rem' }}
+                />
               </div>
             )}
             <p className="mt-1 text-xs text-gray-500">Recommended width up to 256px. PNG or SVG.</p>
@@ -228,8 +236,16 @@ export default function OrganizationBranding() {
               {uploading.emailHeaderLogo && <span className="text-xs text-gray-500">Uploading…</span>}
             </div>
             {brandingSettings.emailHeaderLogo && (
-              <div className="mt-3 h-12 relative w-auto">
-                <Image src={brandingSettings.emailHeaderLogo} alt="Email header logo preview" width={600} height={120} className="h-12 w-auto object-contain" />
+              <div className="mt-3 relative w-auto">
+                <Image
+                  src={brandingSettings.emailHeaderLogo}
+                  alt="Email header logo preview"
+                  width={600}
+                  height={120}
+                  className="w-auto object-contain"
+                  // Ensure aspect ratio is maintained when CSS adjusts only one dimension
+                  style={{ height: 'auto', width: 'auto', maxHeight: '3rem' }}
+                />
               </div>
             )}
             <p className="mt-1 text-xs text-gray-500">We scale to max width 600px for email.</p>

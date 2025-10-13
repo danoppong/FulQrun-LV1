@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
         lower.includes('permission denied') ||
         lower.includes('not authorized')
       ) {
-        throw new HttpError(403, 'Storage write blocked by RLS. Ensure branding bucket policies allow authenticated users to write under their org prefix (e.g., \'<orgId>/...\').')
+        throw new HttpError(403, 'Storage write blocked by RLS. Ensure branding bucket policies allow authenticated users to write under their org prefix (e.g., \'<orgId>/...\'). In the app, open Admin → Organization → Branding and click “Check storage policy” to verify readiness.')
       }
       throw new HttpError(500, `Upload failed: ${message}`)
     }

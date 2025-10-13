@@ -1,5 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest, NextResponse } from 'next/server'
 import { supabaseConfig } from '@/lib/config'
 import type { Database } from '@/lib/types/supabase'
 import { getSupabaseBrowserClient } from '@/lib/supabase-singleton';
@@ -87,7 +87,9 @@ export class AuthService {
   /**
    * Get middleware client for Next.js middleware
    */
-  static getMiddlewareClient(request: NextRequest) {
+  static async getMiddlewareClient(request: NextRequest) {
+    // Lazy-import NextResponse to avoid pulling in web Request/Response in test environments
+    const { NextResponse } = await import('next/server')
     if (!supabaseConfig.isConfigured) {
       return {
         supabase: this.createMockClient(),

@@ -35,10 +35,6 @@ export function StageDocuments({
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [selectedRequirement, setSelectedRequirement] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadStageRequirements()
-  }, [loadStageRequirements])
-
   const loadStageRequirements = useCallback(() => {
     // Define PEAK stage requirements
     const stageRequirements: Record<string, StageRequirement[]> = {
@@ -166,6 +162,10 @@ export function StageDocuments({
 
     setRequirements(updatedReqs)
   }, [stage, documents])
+
+  useEffect(() => {
+    loadStageRequirements()
+  }, [loadStageRequirements])
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
