@@ -4,12 +4,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image'
 import {
-  CameraIcon,
-  DocumentArrowUpIcon,
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
   PhotoIcon,
   SwatchIcon,
   EnvelopeIcon,
@@ -27,6 +23,38 @@ export default function OrganizationBranding() {
     emailHeaderLogo: '',
     emailFooterText: ''
   });
+
+  const [uploading, setUploading] = useState<{ logo: boolean; favicon: boolean; emailHeaderLogo: boolean }>({ logo: false, favicon: false, emailHeaderLogo: false })
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'favicon' | 'emailHeaderLogo') {
+    try {
+      setError(null)
+      setUploading(prev => ({ ...prev, [type]: true }))
+      const files = e.target.files
+      if (!files || files.length === 0) return
+      const file = files[0]
+      const form = new FormData()
+      form.append('file', file)
+      form.append('type', type)
+      const res = await fetch('/api/admin/organization/branding/upload', {
+        method: 'POST',
+        body: form,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Upload failed')
+      const url: string = data.url
+      if (type === 'logo') setBrandingSettings(prev => ({ ...prev, logoUrl: url }))
+      if (type === 'favicon') setBrandingSettings(prev => ({ ...prev, faviconUrl: url }))
+      if (type === 'emailHeaderLogo') setBrandingSettings(prev => ({ ...prev, emailHeaderLogo: url }))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(prev => ({ ...prev, [type]: false }))
+      // Reset the input so same file can be re-selected if needed
+      e.target.value = ''
+    }
+  }
 
   const presetColors = [
     { name: 'Blue', primary: '#3B82F6', secondary: '#60A5FA' },
@@ -57,50 +85,61 @@ export default function OrganizationBranding() {
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Organization Logo URL
+              Organization Logo
             </label>
-            <input
-              type="url"
-              value={brandingSettings.logoUrl}
-              onChange={(e) => setBrandingSettings({ ...brandingSettings, logoUrl: e.target.value })}
-              placeholder="https://example.com/logo.png"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Recommended size: 200x60px, PNG or SVG format
-            </p>
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                onChange={(e) => handleUpload(e, 'logo')}
+                className="block w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              {uploading.logo && <span className="text-xs text-gray-500">Uploading…</span>}
+            </div>
+            {brandingSettings.logoUrl && (
+              <div className="mt-3 h-12 relative w-auto">
+                <Image src={brandingSettings.logoUrl} alt="Organization logo preview" width={256} height={48} className="h-12 w-auto object-contain" />
+              </div>
+            )}
+            <p className="mt-1 text-xs text-gray-500">Recommended width up to 256px. PNG or SVG.</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Favicon URL
-            </label>
-            <input
-              type="url"
-              value={brandingSettings.faviconUrl}
-              onChange={(e) => setBrandingSettings({ ...brandingSettings, faviconUrl: e.target.value })}
-              placeholder="https://example.com/favicon.ico"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Recommended size: 32x32px or 16x16px, ICO or PNG format
-            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml, image/x-icon, .ico"
+                onChange={(e) => handleUpload(e, 'favicon')}
+                className="block w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              {uploading.favicon && <span className="text-xs text-gray-500">Uploading…</span>}
+            </div>
+            {brandingSettings.faviconUrl && (
+              <div className="mt-3 h-8 w-8 relative">
+                <Image src={brandingSettings.faviconUrl} alt="Favicon preview" width={32} height={32} className="h-8 w-8" />
+              </div>
+            )}
+            <p className="mt-1 text-xs text-gray-500">We generate a 32x32 PNG automatically.</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Header Logo URL
-            </label>
-            <input
-              type="url"
-              value={brandingSettings.emailHeaderLogo}
-              onChange={(e) => setBrandingSettings({ ...brandingSettings, emailHeaderLogo: e.target.value })}
-              placeholder="https://example.com/email-logo.png"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Logo for email communications
-            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email Header Logo</label>
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                onChange={(e) => handleUpload(e, 'emailHeaderLogo')}
+                className="block w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              {uploading.emailHeaderLogo && <span className="text-xs text-gray-500">Uploading…</span>}
+            </div>
+            {brandingSettings.emailHeaderLogo && (
+              <div className="mt-3 h-12 relative w-auto">
+                <Image src={brandingSettings.emailHeaderLogo} alt="Email header logo preview" width={600} height={120} className="h-12 w-auto object-contain" />
+              </div>
+            )}
+            <p className="mt-1 text-xs text-gray-500">We scale to max width 600px for email.</p>
           </div>
         </div>
       </div>
@@ -261,6 +300,10 @@ export default function OrganizationBranding() {
           </p>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-md p-3">{error}</div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex justify-end space-x-3">

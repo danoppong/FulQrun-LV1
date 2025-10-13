@@ -6,11 +6,6 @@
 import React, { useState } from 'react';
 import {
   ShieldCheckIcon,
-  DocumentTextIcon,
-  XMarkIcon,
-  UserGroupIcon,
-  CogIcon,
-  ClipboardDocumentCheckIcon,
   LockClosedIcon,
   ClockIcon,
   DocumentCheckIcon

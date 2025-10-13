@@ -496,12 +496,14 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
             ))}
           </select>
         </div>
-        <div className="sm:w-56">
+        <div className="sm:w-48">
           <UserSelect
             value={ownerFilter}
             onChange={setOwnerFilter}
             allowEmpty
             emptyLabel="All Owners"
+            placeholder="Owner"
+            variant="combo"
           />
         </div>
         <div className="sm:w-48">

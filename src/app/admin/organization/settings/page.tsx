@@ -610,6 +610,12 @@ function BrandingSettings({ settings, onUpdate }: { settings: OrganizationSettin
         )}
       </div>
 
+      {/* Notice: Direct users to the dedicated Branding page for file uploads */}
+      <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
+        Looking to upload a logo or favicon? Use the new Branding page with file uploads and automatic resizing.
+        <a href="/admin/organization/branding" className="ml-2 inline-flex items-center text-amber-900 underline hover:no-underline">Go to Branding uploads →</a>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700">Logo URL</label>

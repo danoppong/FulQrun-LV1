@@ -49,6 +49,28 @@
 				"$eslint-stylish"
 			],
 			"group": "test"
+		},
+		{
+			"label": "build for owner filter combo",
+			"type": "shell",
+			"command": "npm run -s build && node --max-old-space-size=8192 node_modules/.bin/jest src/tests/enhanced-kpi-widget.test.tsx src/tests/ai-insights-engine.test.ts",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc",
+				"$eslint-stylish"
+			],
+			"group": "test"
+		},
+		{
+			"label": "build after owner alignment",
+			"type": "shell",
+			"command": "npm run -s build && node --max-old-space-size=8192 node_modules/.bin/jest src/tests/enhanced-kpi-widget.test.tsx src/tests/ai-insights-engine.test.ts",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc",
+				"$eslint-stylish"
+			],
+			"group": "test"
 		}
 	]
 }
