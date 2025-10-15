@@ -281,6 +281,11 @@ class PerformanceMonitor {
     const now = Date.now()
     const last5Minutes = this.metrics.filter(m => now - m.timestamp < 5 * 60 * 1000)
     const lastHour = this.metrics.filter(m => now - m.timestamp < 60 * 60 * 1000)
+    // Build constituent parts first, then derive recommendations (avoid recursive calls)
+    const webVitals = this.getWebVitalsReport()
+    const componentPerformance = this.getComponentPerformanceReport()
+    const apiPerformance = this.getAPIPerformanceReport()
+    const recommendations = this.getPerformanceRecommendations(webVitals, componentPerformance, apiPerformance)
 
     return {
       summary: {
@@ -288,30 +293,33 @@ class PerformanceMonitor {
         last5Minutes: last5Minutes.length,
         lastHour: lastHour.length
       },
-      webVitals: this.getWebVitalsReport(),
-      componentPerformance: this.getComponentPerformanceReport(),
-      apiPerformance: this.getAPIPerformanceReport(),
-      recommendations: this.getPerformanceRecommendations()
+      webVitals,
+      componentPerformance,
+      apiPerformance,
+      recommendations
     }
   }
 
   private getWebVitalsReport() {
+    type VitalsArray = number[]
+    interface VitalsStat { values: number[]; average: number; min: number; max: number }
     const webVitals = this.metrics.filter(m => m.context === 'web-vitals')
-    const report: Record<string, unknown> = {}
+    const accumulator: Record<string, VitalsArray> = {}
 
     webVitals.forEach(metric => {
-      if (!report[metric.name]) {
-        report[metric.name] = []
+      if (!accumulator[metric.name]) {
+        accumulator[metric.name] = []
       }
-      report[metric.name].push(metric.value)
+      accumulator[metric.name].push(metric.value)
     })
 
-    // Calculate averages
-    Object.keys(report).forEach(key => {
-      const values = report[key]
+    const report: Record<string, VitalsStat> = {}
+    Object.keys(accumulator).forEach(key => {
+      const values = accumulator[key]
+      if (!values.length) return
       report[key] = {
-        values,
-        average: values.reduce((a: number, b: number) => a + b, 0) / values.length,
+        values: [...values],
+        average: values.reduce((a, b) => a + b, 0) / values.length,
         min: Math.min(...values),
         max: Math.max(...values)
       }
@@ -352,39 +360,42 @@ class PerformanceMonitor {
     }))
   }
 
-  private getPerformanceRecommendations() {
+  private getPerformanceRecommendations(
+    webVitals: Record<string, { values: number[]; average: number; min: number; max: number }> ,
+    componentPerformance: Array<{ name: string; averageRenderTime: number; updateCount: number; lastUpdate: number; isFrequentlyUpdating: boolean }>,
+    apiPerformance: Array<{ endpoint: string; callCount: number; averageDuration: number; slowestCall: number }>
+  ) {
     const recommendations: string[] = []
-    const report = this.getPerformanceReport()
 
-    // Check Web Vitals
-    const fcp = report.webVitals.FCP?.average
-    if (fcp && fcp > 2000) {
+    // Web Vitals thresholds
+    const fcp = webVitals.FCP?.average
+    if (typeof fcp === 'number' && fcp > 2000) {
       recommendations.push('First Contentful Paint is slow (>2s). Consider optimizing critical rendering path.')
     }
 
-    const lcp = report.webVitals.LCP?.average
-    if (lcp && lcp > 4000) {
+    const lcp = webVitals.LCP?.average
+    if (typeof lcp === 'number' && lcp > 4000) {
       recommendations.push('Largest Contentful Paint is slow (>4s). Consider optimizing images and critical resources.')
     }
 
-    const cls = report.webVitals.CLS?.average
-    if (cls && cls > 0.1) {
+    const cls = webVitals.CLS?.average
+    if (typeof cls === 'number' && cls > 0.1) {
       recommendations.push('Cumulative Layout Shift is high (>0.1). Consider fixing layout shifts.')
     }
 
-    // Check component performance
-    const slowComponents = report.componentPerformance.filter(comp => comp.averageRenderTime > 16)
+    // Component performance
+    const slowComponents = componentPerformance.filter(comp => comp.averageRenderTime > 16)
     if (slowComponents.length > 0) {
       recommendations.push(`Components with slow render times: ${slowComponents.map(c => c.name).join(', ')}`)
     }
 
-    const frequentUpdaters = report.componentPerformance.filter(comp => comp.isFrequentlyUpdating)
+    const frequentUpdaters = componentPerformance.filter(comp => comp.isFrequentlyUpdating)
     if (frequentUpdaters.length > 0) {
       recommendations.push(`Components updating frequently: ${frequentUpdaters.map(c => c.name).join(', ')}`)
     }
 
-    // Check API performance
-    const slowAPIs = report.apiPerformance.filter(api => api.averageDuration > 2000)
+    // API performance
+    const slowAPIs = apiPerformance.filter(api => api.averageDuration > 2000)
     if (slowAPIs.length > 0) {
       recommendations.push(`Slow API endpoints: ${slowAPIs.map(api => api.endpoint).join(', ')}`)
     }
@@ -393,8 +404,9 @@ class PerformanceMonitor {
   }
 
   private sendToAnalytics(metric: PerformanceMetric) {
-    if (typeof window !== 'undefined' && (window as Window & { gtag?: (command: string, action: string, parameters: Record<string, unknown>) => void }).gtag) {
-      (window as Window & { gtag: (command: string, action: string, parameters: Record<string, unknown>) => void }).gtag('event', 'performance_metric', {
+    const w = typeof window !== 'undefined' ? window as unknown as (Window & { gtag?: (command: string, action: string, parameters: Record<string, unknown>) => void }) : undefined
+    if (w?.gtag) {
+      w.gtag('event', 'performance_metric', {
         metric_name: metric.name,
         metric_value: metric.value,
         metric_context: metric.context

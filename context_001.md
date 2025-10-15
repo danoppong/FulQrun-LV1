@@ -71,3 +71,74 @@ This session focused on securing protected routes, improving code quality, and e
 ---
 
 Prepared automatically to preserve session context for future development.
+
+---
+
+## Session Continuation — 2025-10-13
+
+This section captures the latest chat-driven work: wiring the PEAK Workflow to `/peak`, stabilizing tests around the PEAK transition API, and fixing a runtime bug in StageDocuments. It also notes build/lint/test status and logs highlights for future reference.
+
+### Overview
+
+- Goal: Ensure `/peak` shows the PEAK workflow without extra clicks; strengthen API route tests; fix StageDocuments runtime error.
+- Focus areas:
+  - PEAK page should automatically display the workflow for the user’s most recent opportunity when no `opportunityId` is provided.
+  - Jest testing for API route handlers should not pull in Next’s server runtime; ensure green test runs.
+  - Fix “Cannot access 'loadStageRequirements' before initialization” error in `StageDocuments`.
+
+### Actions Taken
+
+1) Wire PEAK Workflow to `/peak`
+- Updated `src/app/peak/page.tsx` to:
+  - Auto-select the most recently updated opportunity for the current user’s organization if `opportunityId` is missing.
+  - Use `AuthService.getClient()` and `AuthService.getCurrentUser()` to stay RLS-safe and multi-tenant aware.
+  - Replace URL with `?opportunityId=...&opportunityName=...` so the state is shareable and the workflow renders immediately.
+  - Keep the “View Opportunities” CTA, adding a hint that auto-selection is attempted.
+
+2) Stabilize PEAK transition API route tests
+- `src/app/api/peak/transition/route.ts`
+  - Changed to type-only import of `NextRequest` and removed `NextResponse` at module scope.
+  - Introduced a small `json()` helper that returns a standard Web `Response` object to avoid Next runtime in tests.
+  - Kept behavior identical in production (`runtime = 'nodejs'`).
+- `jest.setup.ts`
+  - Added minimal, typed polyfills for `Headers` and `Response` for test environment.
+  - Retained router mocks and `crypto.randomUUID` polyfill.
+- `src/tests/peak-transition-api.test.ts`
+  - Ensured mocks are registered before importing the route by dynamically importing in `beforeAll`.
+  - Built a minimal NextRequest-like object to call the handler directly.
+
+3) Fix StageDocuments runtime error
+- `src/components/peak/StageDocuments.tsx`
+  - Reordered hooks: defined `loadStageRequirements` with `useCallback` before referencing it inside `useEffect`.
+  - Eliminated temporal dead zone (“Cannot access 'loadStageRequirements' before initialization”).
+
+### Files Changed (latest session)
+
+- `src/app/peak/page.tsx` — Auto-select most recent opportunity when none provided; show workflow immediately.
+- `src/app/api/peak/transition/route.ts` — Avoid Next server import side-effects; use Web `Response` helper.
+- `jest.setup.ts` — Add Headers/Response polyfills for Node/JSDOM tests.
+- `src/tests/peak-transition-api.test.ts` — Import route after mocks; improved isolation and reliability.
+- `src/components/peak/StageDocuments.tsx` — Reorder hook definitions to fix runtime ReferenceError.
+
+### Verification and Quality Gates
+
+- Tests: PASS — 230/230 after changes. The PEAK API test that previously failed (Request/Response issues) now passes.
+- Lint: PASS — 0 errors (warnings remain elsewhere, non-blocking and unrelated to the above changes).
+- Build: PASS — Next.js build OK; dev server verified. `/peak` compiles and renders.
+
+### Logs and Diagnostics (highlights)
+
+- Dev server initially on port 3000; later Next selected port 3001 when 3000 was in use.
+- Console error fixed: “Cannot access 'loadStageRequirements' before initialization” from `StageDocuments`.
+- Jest failure resolved for PEAK transition API: replaced `NextResponse.json` with a `Response` helper and added Web API polyfills.
+
+### Try It
+
+- Navigate to `/peak` while authenticated. If there’s no `opportunityId` query param, the page auto-selects your most recent opportunity and renders the PEAK workflow.
+- Confirm advancing stage calls `/api/peak/transition` and updates stage UI.
+
+### Notes / Follow-ups
+
+- Optional: Convert `/peak` auto-selection to server-side redirect for fully server-first behavior.
+- Optional: Add more integration tests for PEAK API (rate-limit path, invalid transitions) if desired.
+- Branding uploads remain paused until Storage RLS policies are created by the bucket owner; status endpoint and UI guidance are already in place.
