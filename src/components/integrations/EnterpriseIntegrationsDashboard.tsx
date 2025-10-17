@@ -42,10 +42,6 @@ export default function EnterpriseIntegrationsDashboard({ organizationId, userId
   const [integrationForm, setIntegrationForm] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<'overview' | 'integrations' | 'templates'>('overview');
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
-
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
@@ -64,6 +60,10 @@ export default function EnterpriseIntegrationsDashboard({ organizationId, userId
       setLoading(false);
     }
   }, [organizationId]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const handleCreateIntegration = async () => {
     try {
