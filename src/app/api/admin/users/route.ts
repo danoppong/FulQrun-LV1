@@ -2,206 +2,407 @@
 // Handles listing and creating users
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { supabaseConfig } from '@/lib/config';
+import { z } from 'zod'
+import { createClient } from '@supabase/supabase-js'
+import { AuthService } from '@/lib/auth-unified'
+import { checkRateLimit, validateSearchParams } from '@/lib/validation'
+import { supabaseConfig } from '@/lib/config'
 
-// Helper function to get authenticated user
-async function getAuthenticatedUser(request: NextRequest) {
-  const supabase = createServerClient(
-    supabaseConfig.url!,
-    supabaseConfig.anonKey!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set() {},
-        remove() {},
-      },
-    }
-  );
-
-  const { data: { user }, error } = await supabase.auth.getUser();
-  
-  if (error || !user) {
-    throw new Error('Not authenticated');
-  }
-
-  return { user, supabase };
+function getIp(request: NextRequest) {
+  const xf = request.headers.get('x-forwarded-for') || ''
+  return xf.split(',')[0]?.trim() || 'unknown'
 }
 
-// Helper function to get organization ID and check admin permission
-async function getOrganizationAndCheckPermission(supabase: unknown, userId: string) {
-  const { data, error } = await supabase
-    .from('users')
+class HttpError extends Error { constructor(public status: number, message: string) { super(message) } }
+
+async function getOrgIfAdmin(userId: string) {
+  const supa = await AuthService.getServerClient()
+  const { data, error } = await supa
+    .from('users' as const)
     .select('organization_id, role')
     .eq('id', userId)
-    .single();
-
-  if (error || !data) {
-    throw new Error('User not found');
-  }
-
-  // Check if user has admin permission
-  if (!['admin', 'super_admin'].includes(data.role)) {
-    throw new Error('Insufficient permissions');
-  }
-
-  return data.organization_id;
+    .maybeSingle()
+  if (error || !data) throw new HttpError(404, 'User not found')
+  const role = (data as { role?: string }).role || ''
+  if (!['admin', 'super_admin'].includes(role)) throw new HttpError(403, 'Insufficient permissions')
+  return (data as { organization_id: string }).organization_id
 }
 
 // GET /api/admin/users - List all users in the organization
+// Query params:
+// - search: optional string to filter by name/email (case-insensitive)
+// - limit: number of rows to return (1..1000)
+// - offset: starting index (0-based)
+// - includeRegions: 'true' | 'false' to enrich each user with region/country from user_profiles
+// - role: optional exact role filter (rep|manager|admin|super_admin or org-specific)
+// - department: optional exact department filter
+// - isActive: 'true' | 'false' optional; filters by Supabase Auth banned status (best-effort)
+// Response JSON:
+// {
+//   users: Array<{ id, email, fullName, role, organizationId, ... }>,
+//   totalCount?: number // total matching rows (for pagination)
+// }
+const listSchema = z.object({
+  search: z.string().optional(),
+  limit: z.coerce.number().min(1).max(1000).optional(),
+  offset: z.coerce.number().min(0).max(100000).optional(),
+  includeRegions: z.enum(['true', 'false']).optional(),
+  role: z.string().min(1).optional(),
+  department: z.string().min(1).optional(),
+  isActive: z.enum(['true','false']).optional(),
+})
+
 export async function GET(request: NextRequest) {
   try {
-    const { user, supabase } = await getAuthenticatedUser(request);
-    const organizationId = await getOrganizationAndCheckPermission(supabase, user.id);
+    if (!checkRateLimit(getIp(request))) return NextResponse.json({ error: 'Rate limit' }, { status: 429 })
 
-    console.log('📋 Fetching users for organization:', organizationId);
+    const supa = await AuthService.getServerClient()
+    const { data: { user } } = await supa.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Fetch all users in the organization
-    const { data: users, error } = await supabase
-      .from('users')
-      .select(`
-        id,
-        email,
-        full_name,
-        role,
-        enterprise_role,
-        department,
-        cost_center,
-        manager_id,
-        hire_date,
-        last_login_at,
-        mfa_enabled,
-        organization_id,
-        created_at,
-        updated_at
-      `)
-      .eq('organization_id', organizationId)
-      .order('created_at', { ascending: false });
+    const organizationId = await getOrgIfAdmin(user.id)
+    const url = new URL(request.url)
+  const { search, limit, offset, includeRegions: includeRegionsStr, role, department, isActive: isActiveStr } = validateSearchParams(listSchema, url.searchParams)
+  const includeRegions = includeRegionsStr === 'true'
+  const isActiveFilter = typeof isActiveStr === 'string' ? isActiveStr === 'true' : undefined
 
-    if (error) {
-      console.error('❌ Error fetching users:', error);
-      throw error;
+  // Safe select: attempt richer fields then fall back if schema lacks them
+  const selectPrimary = 'id, email, full_name, role, organization_id, manager_id, created_at, updated_at, department, region, country'
+  const selectExtended = selectPrimary + ', last_login_at, mfa_enabled, enterprise_role, cost_center, hire_date'
+  const selectEmailAsFullName = 'id, email, full_name:email, role, organization_id, manager_id, created_at, updated_at, department, region, country'
+
+    type UserRow = {
+      id: string
+      email: string | null
+      full_name: string | null
+      role: string | null
+      organization_id: string
+      manager_id: string | null
+      created_at: string
+      updated_at: string
+      last_login_at?: string | null
+      mfa_enabled?: boolean | null
+      enterprise_role?: string | null
+      department?: string | null
+      region?: string | null
+      country?: string | null
+      cost_center?: string | null
+      hire_date?: string | null
     }
 
-    console.log(`✅ Found ${users?.length || 0} users`);
+    const buildQuery = (sel: string, useEmailAlias = false, applyRange = true, fetchLimit = 0) => {
+      let q = supa
+        .from('users' as const)
+        .select(sel)
+        .eq('organization_id', organizationId)
+        .order(useEmailAlias ? 'email' : 'full_name', { ascending: false })
+      if (search) q = q.ilike(useEmailAlias ? 'email' : 'full_name', `%${search}%`)
+      if (role) q = q.eq('role', role)
+      if (department) q = q.eq('department', department)
+      if (applyRange) {
+        if (typeof offset === 'number' && typeof limit === 'number') q = q.range(offset, offset + limit - 1)
+        else if (typeof limit === 'number') q = q.limit(limit)
+      } else if (fetchLimit > 0) {
+        q = q.range(0, fetchLimit - 1)
+      }
+      return q
+    }
 
-    // Transform users to match frontend interface
-    const transformedUsers = users?.map(u => ({
+    let users: UserRow[] | null = null
+    if (isActiveFilter === undefined) {
+      // Normal path with DB-side pagination
+      let ok = false
+      {
+        const { data, error } = await buildQuery(selectExtended)
+        if (!error && Array.isArray(data)) { users = data as UserRow[]; ok = true }
+      }
+      if (!ok) {
+        const { data, error } = await buildQuery(selectPrimary)
+        if (!error && Array.isArray(data)) { users = data as UserRow[]; ok = true }
+      }
+      if (!ok) {
+        const { data } = await buildQuery(selectEmailAsFullName, true)
+        users = (data as UserRow[] | null)
+      }
+    } else {
+      // When filtering by isActive (auth banned status), fetch a larger chunk and paginate after enrichment
+      const desired = (typeof offset === 'number' && typeof limit === 'number') ? offset + limit : (limit || 100)
+      const fetchLimit = Math.min(Math.max(desired, 100), 1000)
+      let ok = false
+      {
+        const { data, error } = await buildQuery(selectExtended, false, false, fetchLimit)
+        if (!error && Array.isArray(data)) { users = data as UserRow[]; ok = true }
+      }
+      if (!ok) {
+        const { data, error } = await buildQuery(selectPrimary, false, false, fetchLimit)
+        if (!error && Array.isArray(data)) { users = data as UserRow[]; ok = true }
+      }
+      if (!ok) {
+        const { data } = await buildQuery(selectEmailAsFullName, true, false, fetchLimit)
+        users = (data as UserRow[] | null)
+      }
+    }
+
+    let transformed = (users || []).map((u) => ({
       id: u.id,
       email: u.email,
       fullName: u.full_name || '',
       role: u.role,
-      enterpriseRole: u.enterprise_role,
+      enterpriseRole: u.enterprise_role ?? null,
       organizationId: u.organization_id,
-      department: u.department,
-      managerId: u.manager_id,
-      lastLoginAt: u.last_login_at,
-      isActive: true, // We'll determine this based on other criteria if needed
+      department: u.department ?? null,
+      managerId: u.manager_id ?? null,
+      lastLoginAt: u.last_login_at ?? null,
+      isActive: true,
       createdAt: u.created_at,
       updatedAt: u.updated_at,
-      mfaEnabled: u.mfa_enabled,
-      hireDate: u.hire_date,
-      costCenter: u.cost_center
-    })) || [];
+      mfaEnabled: u.mfa_enabled ?? null,
+      hireDate: u.hire_date ?? null,
+      costCenter: u.cost_center ?? null,
+      // Use region and country directly from users table (added in migration)
+      region: u.region ?? null,
+      country: u.country ?? null,
+    }))
 
-    return NextResponse.json({ users: transformedUsers });
+    // Optional enrichment: region/country from user_profiles when requested and data is missing from users table
+    try {
+      if (includeRegions && transformed.length > 0) {
+        // Only enrich users that don't already have region/country data from the users table
+        const usersNeedingEnrichment = transformed.filter(u => !u.region && !u.country)
+        
+        if (usersNeedingEnrichment.length > 0) {
+          const ids = usersNeedingEnrichment.map((u) => u.id)
+          // Try selecting common columns; fall back gracefully if schema differs
+          type ProfRow = { user_id: string; region?: string | null; country?: string | null; business_unit?: string | null; territory_name?: string | null; territory?: string | null }
+          let regions: ProfRow[] | null = null
+          {
+            const { data, error } = await supa
+              .from('user_profiles' as const)
+              .select('user_id, region, country, business_unit')
+              .in('user_id', ids)
+              .eq('organization_id', organizationId)
+            if (!error && Array.isArray(data)) regions = data as ProfRow[]
+          }
+          if (!regions) {
+            const { data, error } = await supa
+              .from('user_profiles' as const)
+              .select('user_id, territory_name, country')
+              .in('user_id', ids)
+              .eq('organization_id', organizationId)
+            if (!error && Array.isArray(data)) regions = data as ProfRow[]
+          }
+          if (!regions) {
+            const { data } = await supa
+              .from('user_profiles' as const)
+              .select('user_id, territory, country')
+              .in('user_id', ids)
+              .eq('organization_id', organizationId)
+            regions = (data as ProfRow[] | null) ?? null
+          }
+          if (regions) {
+            const map = new Map<string, { region: string | null; country: string | null }>()
+            for (const r of regions) {
+              const reg = (r.region ?? r.territory_name ?? r.territory ?? null) || null
+              map.set(r.user_id, { region: reg, country: r.country ?? null })
+            }
+            transformed = transformed.map((u) => {
+              const m = map.get(u.id)
+              return m ? { ...u, region: m.region, country: m.country } : u
+            })
+          }
+        }
+      }
+    } catch { /* ignore enrichment errors */ }
 
+    // Optional enrichment: reflect banned status from auth admin as isActive=false
+    try {
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+      if (serviceKey && transformed.length > 0) {
+        const { createClient } = await import('@supabase/supabase-js')
+        const admin = createClient(supabaseConfig.url!, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
+        const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
+        const map = new Map<string, string | null>()
+        if (Array.isArray(list?.users)) {
+          for (const au of list.users) map.set(au.id, (au as { banned_until?: string | null }).banned_until ?? null)
+        }
+        transformed = transformed.map((u) => {
+          const bannedUntil = map.get(u.id) || null
+          let isActive = true
+          if (bannedUntil) {
+            const ts = Date.parse(bannedUntil)
+            isActive = Number.isFinite(ts) ? ts <= Date.now() : false
+          }
+          return { ...u, isActive }
+        })
+        // Apply isActive filter after enrichment
+        if (typeof isActiveFilter === 'boolean') {
+          transformed = transformed.filter((u) => u.isActive === isActiveFilter)
+        }
+      }
+    } catch { /* ignore enrichment errors */ }
+
+    // totalCount for pagination (best-effort, schema-safe)
+    let totalCount: number | undefined = undefined
+    try {
+      if (typeof isActiveFilter === 'boolean') {
+        // When filtering by isActive (auth), DB can't count banned status; return filtered length
+        totalCount = transformed.length
+        // And we need to page after filter
+        if (typeof offset === 'number' && typeof limit === 'number') {
+          transformed = transformed.slice(offset, offset + limit)
+        } else if (typeof limit === 'number') {
+          transformed = transformed.slice(0, limit)
+        }
+        return NextResponse.json({ users: transformed, totalCount }, { headers: { 'Cache-Control': 'private, max-age=15' } })
+      }
+      // Try counting with full_name filter first
+      let countBase = supa
+        .from('users' as const)
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', organizationId)
+      if (role) countBase = countBase.eq('role', role)
+      if (department) countBase = countBase.eq('department', department)
+      const withName = search ? countBase.ilike('full_name', `%${search}%`) : countBase
+      const { count, error } = await withName
+      if (!error && typeof count === 'number') {
+        totalCount = count
+      } else {
+        // Fallback to email if full_name isn't present or count failed
+        let countEmailBase = supa
+          .from('users' as const)
+          .select('id', { count: 'exact', head: true })
+          .eq('organization_id', organizationId)
+        if (role) countEmailBase = countEmailBase.eq('role', role)
+        if (department) countEmailBase = countEmailBase.eq('department', department)
+        const withEmail = search ? countEmailBase.ilike('email', `%${search}%`) : countEmailBase
+        const { count: c2 } = await withEmail
+        if (typeof c2 === 'number') totalCount = c2
+      }
+    } catch {
+      // ignore count errors; API remains functional without totalCount
+    }
+
+    return NextResponse.json({ users: transformed, totalCount }, { headers: { 'Cache-Control': 'private, max-age=15' } })
   } catch (error) {
-    console.error('❌ Error in GET /api/admin/users:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch users',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: error instanceof Error && error.message === 'Insufficient permissions' ? 403 : 500 }
-    );
+    const status = error instanceof HttpError ? error.status : 500
+    return NextResponse.json({ error: 'Failed to fetch users', details: (error as Error).message }, { status })
   }
 }
+
+const emptyToNull = <T>(schema: z.ZodType<T>) => z.preprocess((v) => {
+  if (typeof v === 'string' && v.trim() === '') return null
+  return v
+}, schema)
+const createUserSchema = z.object({
+  email: z.string().email(),
+  fullName: z.string().min(1),
+  // Accept any non-empty string; enforce existence against roles table below
+  role: z.string().min(1),
+  department: z.string().optional(),
+  managerId: emptyToNull(z.string().uuid().nullable()).optional(),
+  password: z.string().min(8).optional(),
+  isActive: z.boolean().optional(),
+  region: emptyToNull(z.string().min(1).nullable()).optional(),
+  country: emptyToNull(z.string().min(1).nullable()).optional(),
+})
 
 // POST /api/admin/users - Create a new user
 export async function POST(request: NextRequest) {
   try {
-    const { user, supabase } = await getAuthenticatedUser(request);
-    const organizationId = await getOrganizationAndCheckPermission(supabase, user.id);
+    if (!checkRateLimit(getIp(request))) return NextResponse.json({ error: 'Rate limit' }, { status: 429 })
 
-    const body = await request.json();
-    const { email, fullName, role, department, managerId, password } = body;
+    const supa = await AuthService.getServerClient()
+    const { data: { user } } = await supa.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const organizationId = await getOrgIfAdmin(user.id)
 
-    if (!email || !fullName || !role) {
-      return NextResponse.json(
-        { error: 'Missing required fields: email, fullName, role' },
-        { status: 400 }
-      );
-    }
+  const body = await request.json()
+  const parsed = createUserSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Validation error', issues: parsed.error.issues }, { status: 400 })
+  }
+  const { email, fullName, role, department, managerId, password, isActive, region, country } = parsed.data
 
-    console.log('➕ Creating new user:', { email, fullName, role });
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) return NextResponse.json({ error: 'Service role not configured' }, { status: 500 })
 
-    // First, create the auth user in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password: password || Math.random().toString(36).slice(-8), // Generate random password if not provided
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName
+    // Validate that the provided role exists for this organization
+    try {
+      const { data: roleRow } = await supa
+        .from('roles' as const)
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('role_key', role)
+        .maybeSingle()
+      if (!roleRow) {
+        return NextResponse.json({ error: 'Invalid role', details: `Role "${role}" does not exist for this organization` }, { status: 400 })
       }
-    });
-
-    if (authError) {
-      console.error('❌ Error creating auth user:', authError);
-      throw new Error(`Failed to create auth user: ${authError.message}`);
+    } catch (e) {
+      return NextResponse.json({ error: 'Role validation failed', details: e instanceof Error ? e.message : String(e) }, { status: 500 })
     }
 
-    // Then, create the user record in the public.users table
-    const { data: userData, error: userError } = await supabase
+    const admin = createClient(supabaseConfig.url!, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
+
+    // Create auth user
+    const { data: authData, error: authError } = await admin.auth.admin.createUser({
+      email,
+      password: password || Math.random().toString(36).slice(-12),
+      email_confirm: true,
+      user_metadata: { full_name: fullName, organization_id: organizationId, role }
+    })
+    if (authError || !authData?.user) return NextResponse.json({ error: 'Failed to create auth user', details: authError?.message }, { status: 500 })
+
+    // Insert row in users table (service role to avoid RLS issues)
+    const { data: userRow, error: userErr } = await admin
       .from('users')
-      .insert({
-        id: authData.user.id,
-        email,
-        full_name: fullName,
-        role,
-        organization_id: organizationId,
-        department,
-        manager_id: managerId || null
-      })
+      .insert({ id: authData.user.id, email, full_name: fullName, role, organization_id: organizationId, department, manager_id: managerId ?? null })
       .select()
-      .single();
-
-    if (userError) {
-      console.error('❌ Error creating user record:', userError);
-      // Cleanup: delete the auth user if we failed to create the user record
-      await supabase.auth.admin.deleteUser(authData.user.id);
-      throw userError;
+      .maybeSingle()
+    if (userErr || !userRow) {
+      await admin.auth.admin.deleteUser(authData.user.id)
+      return NextResponse.json({ error: 'Failed to create user record', details: userErr?.message }, { status: 500 })
     }
 
-    console.log('✅ User created successfully:', userData.id);
+    // Upsert profile attributes (region/country) if provided
+    try {
+      if (region !== undefined || country !== undefined) {
+        const payload: Record<string, unknown> = { updated_at: new Date().toISOString() }
+        if (region !== undefined) payload.region = region
+        if (country !== undefined) payload.country = country
+        await admin.from('user_profiles').upsert({ user_id: userRow.id, organization_id: organizationId, ...payload }, { onConflict: 'user_id' })
+      }
+    } catch (e) {
+      console.warn('⚠️ Warning: Failed to upsert user_profiles on create', e)
+    }
 
-    return NextResponse.json({ 
+    // Respect initial active status: ban newly created user if requested inactive
+    try {
+      if (typeof isActive === 'boolean' && !isActive) {
+        await admin.auth.admin.updateUserById(userRow.id, { ban_duration: '876000h' })
+      }
+    } catch (e) {
+      console.warn('⚠️ Warning: Failed to set initial active status', e)
+    }
+
+    return NextResponse.json({
       success: true,
       user: {
-        id: userData.id,
-        email: userData.email,
-        fullName: userData.full_name,
-        role: userData.role,
-        organizationId: userData.organization_id,
-        department: userData.department,
-        managerId: userData.manager_id,
-        createdAt: userData.created_at,
-        updatedAt: userData.updated_at,
-        isActive: true
+        id: userRow.id,
+        email: userRow.email,
+        fullName: userRow.full_name,
+        role: userRow.role,
+        organizationId: userRow.organization_id,
+        department: userRow.department ?? null,
+        managerId: userRow.manager_id ?? null,
+        createdAt: userRow.created_at,
+        updatedAt: userRow.updated_at,
+        isActive: isActive === false ? false : true,
+        region: region ?? null,
+        country: country ?? null,
       }
-    });
-
+    })
   } catch (error) {
-    console.error('❌ Error in POST /api/admin/users:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to create user',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create user', details: (error as Error).message }, { status: 500 })
   }
 }
 

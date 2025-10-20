@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/types/supabase'
+import { AuthService } from '@/lib/auth-unified'
 import { z } from 'zod';
 
 const ProviderConfigSchema = z.object({
@@ -26,31 +27,24 @@ const ProviderTestSchema = z.object({
   }).optional()
 })
 
-export async function GET(request: NextRequest) {
+interface ProviderTestData {
+  domain?: string
+  email?: string
+  company_name?: string
+}
+
+interface ProviderTestResult {
+  success: boolean
+  message?: string
+  response_time?: number
+  rate_limit_remaining?: number
+  test_data?: ProviderTestData
+  error?: string
+}
+
+export async function GET(_request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              )
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      }
-    )
+    const supabase = (await AuthService.getServerClient()) as SupabaseClient<Database>
     
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -66,7 +60,7 @@ export async function GET(request: NextRequest) {
       .from('users')
       .select('organization_id')
       .eq('id', user.id)
-      .single()
+      .single<{ organization_id: string }>()
 
     if (!userProfile) {
       return NextResponse.json(
@@ -105,29 +99,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              )
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      }
-    )
+    const supabase = (await AuthService.getServerClient()) as SupabaseClient<Database>
     
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -143,7 +115,7 @@ export async function POST(request: NextRequest) {
       .from('users')
       .select('organization_id')
       .eq('id', user.id)
-      .single()
+      .single<{ organization_id: string }>()
 
     if (!userProfile) {
       return NextResponse.json(
@@ -180,7 +152,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function configureProvider(
-  supabase: unknown,
+  supabase: SupabaseClient<Database>,
   body: unknown,
   organizationId: string
 ) {
@@ -205,7 +177,7 @@ async function configureProvider(
     .eq('provider', provider)
     .eq('organization_id', organizationId)
     .is('deleted_at', null)
-    .single()
+    .single<Database['public']['Tables']['integration_providers']['Row']>()
 
   let result
   if (existingProvider) {
@@ -213,13 +185,10 @@ async function configureProvider(
     const { data, error } = await supabase
       .from('integration_providers')
       .update({
-        config: {
-          ...existingProvider.config,
-          ...config
-        },
+        config: { ...(existingProvider.config as Record<string, unknown>), ...(config as Record<string, unknown>) },
         updated_at: new Date().toISOString()
-      })
-      .eq('id', existingProvider.id)
+      } as never)
+      .eq('id', existingProvider.id as string)
       .select()
       .single()
 
@@ -237,9 +206,9 @@ async function configureProvider(
       .from('integration_providers')
       .insert({
         provider,
-        config,
+        config: config as Record<string, unknown>,
         organization_id: organizationId
-      })
+      } as never)
       .select()
       .single()
 
@@ -260,7 +229,7 @@ async function configureProvider(
 }
 
 async function testProvider(
-  supabase: unknown,
+  supabase: SupabaseClient<Database>,
   body: unknown,
   organizationId: string
 ) {
@@ -285,7 +254,7 @@ async function testProvider(
     .eq('provider', provider)
     .eq('organization_id', organizationId)
     .is('deleted_at', null)
-    .single()
+    .single<Database['public']['Tables']['integration_providers']['Row']>()
 
   if (configError || !providerConfig) {
     return NextResponse.json(
@@ -307,12 +276,20 @@ async function testProvider(
   })
 }
 
+const EnableDisableSchema = z.object({
+  provider: z.enum(['CLEARBIT', 'ZOOMINFO', 'OPPORTUNITY', 'COMPLIANCE'])
+})
+
 async function enableProvider(
-  supabase: unknown,
+  supabase: SupabaseClient<Database>,
   body: unknown,
   organizationId: string
 ) {
-  const { provider } = body
+  const parsed = EnableDisableSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Provider is required' }, { status: 400 })
+  }
+  const { provider } = parsed.data
 
   if (!provider) {
     return NextResponse.json(
@@ -329,7 +306,7 @@ async function enableProvider(
         enabled: true
       },
       updated_at: new Date().toISOString()
-    })
+    } as never)
     .eq('provider', provider)
     .eq('organization_id', organizationId)
     .select()
@@ -349,11 +326,15 @@ async function enableProvider(
 }
 
 async function disableProvider(
-  supabase: unknown,
+  supabase: SupabaseClient<Database>,
   body: unknown,
   organizationId: string
 ) {
-  const { provider } = body
+  const parsed = EnableDisableSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Provider is required' }, { status: 400 })
+  }
+  const { provider } = parsed.data
 
   if (!provider) {
     return NextResponse.json(
@@ -370,7 +351,7 @@ async function disableProvider(
         enabled: false
       },
       updated_at: new Date().toISOString()
-    })
+    } as never)
     .eq('provider', provider)
     .eq('organization_id', organizationId)
     .select()
@@ -392,8 +373,8 @@ async function disableProvider(
 async function testProviderConnection(
   provider: string,
   config: unknown,
-  testData?: any
-): Promise<unknown> {
+  testData?: ProviderTestData
+): Promise<ProviderTestResult> {
   // This is a placeholder implementation
   // In a real implementation, this would test actual API connections
   
@@ -414,7 +395,7 @@ async function testProviderConnection(
   }
 }
 
-async function testClearbitConnection(config: unknown, testData?: any): Promise<unknown> {
+async function testClearbitConnection(config: unknown, testData?: ProviderTestData): Promise<ProviderTestResult> {
   // Placeholder implementation
   return {
     success: true,
@@ -425,7 +406,7 @@ async function testClearbitConnection(config: unknown, testData?: any): Promise<
   }
 }
 
-async function testZoomInfoConnection(config: unknown, testData?: any): Promise<unknown> {
+async function testZoomInfoConnection(config: unknown, testData?: ProviderTestData): Promise<ProviderTestResult> {
   // Placeholder implementation
   return {
     success: true,
@@ -436,7 +417,7 @@ async function testZoomInfoConnection(config: unknown, testData?: any): Promise<
   }
 }
 
-async function testOpportunityConnection(config: unknown, testData?: any): Promise<unknown> {
+async function testOpportunityConnection(config: unknown, testData?: ProviderTestData): Promise<ProviderTestResult> {
   // Placeholder implementation
   return {
     success: true,
@@ -446,7 +427,7 @@ async function testOpportunityConnection(config: unknown, testData?: any): Promi
   }
 }
 
-async function testComplianceConnection(config: unknown, testData?: any): Promise<unknown> {
+async function testComplianceConnection(config: unknown, testData?: ProviderTestData): Promise<ProviderTestResult> {
   // Placeholder implementation
   return {
     success: true,

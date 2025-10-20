@@ -1,24 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Target, 
-  TrendingUp, 
-  BarChart3, 
-  Settings,
-  Save,
-  AlertTriangle,
-  CheckCircle,
-  Info
-} from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { Settings, Save, AlertTriangle, Info } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatCurrencySafe } from '@/lib/format'
 
 interface BenchmarkData {
   kpi_name: string;
@@ -46,6 +37,13 @@ interface BenchmarkData {
 
 interface KPIBenchmarkingProps {
   organizationId: string;
+}
+
+interface Thresholds {
+  excellent: number;
+  good: number;
+  average: number;
+  below_average: number;
 }
 
 const INDUSTRY_BENCHMARKS = {
@@ -93,22 +91,16 @@ export function KPIBenchmarking({ organizationId }: KPIBenchmarkingProps) {
   const [error, setError] = useState<string | null>(null);
   const [selectedIndustry, setSelectedIndustry] = useState('pharmaceutical');
   const [editingBenchmark, setEditingBenchmark] = useState<string | null>(null);
-  const [editingValues, setEditingValues] = useState<any>({});
-
-  useEffect(() => {
-    fetchBenchmarks();
-  }, [organizationId]);
-
-  const fetchBenchmarks = async () => {
+  const [editingValues, setEditingValues] = useState<Partial<Thresholds>>({});
+  
+  const fetchBenchmarks = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/kpis/benchmarks?organizationId=${organizationId}`);
       const result = await response.json();
-
       if (!response.ok) {
         throw new Error(result.error || 'Failed to fetch benchmarks');
       }
-
       setBenchmarks(result.data || []);
       setError(null);
     } catch (err) {
@@ -116,7 +108,11 @@ export function KPIBenchmarking({ organizationId }: KPIBenchmarkingProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId]);
+
+  useEffect(() => {
+    fetchBenchmarks();
+  }, [fetchBenchmarks]);
 
   const updateBenchmarks = async () => {
     try {
@@ -177,24 +173,12 @@ export function KPIBenchmarking({ organizationId }: KPIBenchmarkingProps) {
     setEditingValues(benchmark.thresholds);
   };
 
-  const getPerformanceTier = (value: number, thresholds: any) => {
-    if (value >= thresholds.excellent) return 'excellent';
-    if (value >= thresholds.good) return 'good';
-    if (value >= thresholds.average) return 'average';
-    return 'below_average';
-  };
-
   const formatValue = (value: number, kpiName: string) => {
     if (kpiName.includes('rate') || kpiName.includes('percentage') || kpiName.includes('attainment')) {
       return `${value}%`;
     }
     if (kpiName.includes('cost') || kpiName.includes('value') || kpiName.includes('size') || kpiName.includes('clv')) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(value);
+      return formatCurrencySafe(value)
     }
     if (kpiName.includes('cycle') || kpiName.includes('activities')) {
       return `${value} days`;
@@ -414,12 +398,12 @@ export function KPIBenchmarking({ organizationId }: KPIBenchmarkingProps) {
             <div className="p-4 bg-blue-50 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-2">Industry Standards</h4>
               <p className="text-sm text-blue-800">
-                These benchmarks are based on industry research and best practices. 
-                High-performing sales teams typically achieve metrics in the "excellent" 
-                or "good" ranges consistently.
+                These benchmarks are based on industry research and best practices.
+                High-performing sales teams typically achieve metrics in the &quot;excellent&quot;
+                or &quot;good&quot; ranges consistently.
               </p>
             </div>
-            
+
             <div className="p-4 bg-green-50 rounded-lg">
               <h4 className="font-medium text-green-900 mb-2">Performance Tiers</h4>
               <div className="grid grid-cols-2 gap-4 text-sm text-green-800">
@@ -441,8 +425,8 @@ export function KPIBenchmarking({ organizationId }: KPIBenchmarkingProps) {
             <div className="p-4 bg-yellow-50 rounded-lg">
               <h4 className="font-medium text-yellow-900 mb-2">Customization</h4>
               <p className="text-sm text-yellow-800">
-                You can customize these thresholds based on your organization's specific 
-                goals, market conditions, and historical performance data. Click the 
+                You can customize these thresholds based on your organization&apos;s specific
+                goals, market conditions, and historical performance data. Click the
                 settings icon on any KPI card to adjust the thresholds.
               </p>
             </div>

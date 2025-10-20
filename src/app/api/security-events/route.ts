@@ -265,7 +265,9 @@ function mapViolationTypeToSeverity(violationType: string): string {
   return mapping[violationType] || 'medium';
 }
 
-function getEventDescription(actionType: string, actionDetails: any): string {
+type ActionDetails = Record<string, string | number | boolean | null | undefined>
+
+function getEventDescription(actionType: string, actionDetails: ActionDetails): string {
   const descriptions: Record<string, string> = {
     'policy_created': 'Password policy created',
     'policy_updated': 'Password policy updated',

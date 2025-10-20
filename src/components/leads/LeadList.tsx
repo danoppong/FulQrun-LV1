@@ -1,5 +1,6 @@
 'use client'
 import React from 'react';
+import { parseCsv, rowsToObjects } from '@/lib/csv-parse'
 
 import { useState, useEffect } from 'react'
 import { leadAPI, LeadWithScore } from '@/lib/api/leads'
@@ -25,8 +26,11 @@ export default function LeadList({ searchQuery = '', statusFilter = '' }: LeadLi
   const [leads, setLeads] = useState<LeadWithScore[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState(searchQuery)
   const [selectedStatus, setSelectedStatus] = useState(statusFilter)
+  const [busy, setBusy] = useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 
   const loadLeads = async (query: string = '', status: string = '') => {
     setLoading(true)
@@ -57,6 +61,85 @@ export default function LeadList({ searchQuery = '', statusFilter = '' }: LeadLi
   useEffect(() => {
     loadLeads(searchTerm, selectedStatus)
   }, [searchTerm, selectedStatus])
+
+  const downloadBlob = (filename: string, blob: Blob) => {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleExport = async (format: 'csv' | 'json') => {
+    try {
+      setBusy(true)
+      const params = new URLSearchParams()
+      params.set('format', format)
+      if (selectedStatus) params.set('status', selectedStatus)
+      const res = await fetch(`/api/bulk/leads/export?${params.toString()}`)
+      if (!res.ok) throw new Error(`Export failed (${res.status})`)
+      const filename = format === 'csv' ? 'leads_export.csv' : 'leads_export.json'
+      if (format === 'csv') {
+        const text = await res.text()
+        downloadBlob(filename, new Blob([text], { type: 'text/csv;charset=utf-8' }))
+      } else {
+        const data = await res.json()
+        downloadBlob(filename, new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
+      }
+    } catch (e) {
+      setError((e as Error).message || 'Export failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onPickImportFile = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleImportFile = async (ev: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = ev.target.files && ev.target.files[0]
+      if (!file) return
+      setBusy(true)
+      const text = await file.text()
+      let body: Record<string, unknown>
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        const grid = parseCsv(text)
+        const objects = rowsToObjects(grid)
+        body = { rows: objects }
+      } else {
+        let payload: unknown
+        try {
+          payload = JSON.parse(text)
+        } catch {
+          throw new Error('Provide a JSON file ({ rows: [...] } or array) or a CSV file with a header row')
+        }
+        body = Array.isArray(payload) ? { rows: payload } : (payload as Record<string, unknown>)
+      }
+      const res = await fetch('/api/bulk/leads/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error(`Import failed (${res.status})`)
+      const result = await res.json() as { inserted?: number; failed?: number; errors?: unknown }
+      // Reload after import
+      await loadLeads(searchTerm, selectedStatus)
+      // Surface basic status
+      setError(null)
+      setSuccess(`Import completed. Inserted: ${result.inserted ?? 0}, Failed: ${result.failed ?? 0}`)
+    } catch (e) {
+      setError((e as Error).message || 'Import failed')
+    } finally {
+      // reset file input for subsequent imports
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setBusy(false)
+    }
+  }
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this lead?')) return
@@ -111,7 +194,47 @@ export default function LeadList({ searchQuery = '', statusFilter = '' }: LeadLi
             Manage your lead pipeline with automated scoring
           </p>
         </div>
-        <div className="mt-4 sm:mt-0">
+        <div className="mt-4 sm:mt-0 flex items-center gap-2">
+          <button
+            onClick={() => handleExport('csv')}
+            disabled={busy}
+            className="inline-flex items-center px-3 py-2 border rounded-md text-sm bg-white hover:bg-gray-50 disabled:opacity-50"
+            title="Export CSV"
+          >
+            Export CSV
+          </button>
+          <button
+            onClick={() => handleExport('json')}
+            disabled={busy}
+            className="inline-flex items-center px-3 py-2 border rounded-md text-sm bg-white hover:bg-gray-50 disabled:opacity-50"
+            title="Export JSON"
+          >
+            Export JSON
+          </button>
+          <button
+            onClick={onPickImportFile}
+            disabled={busy}
+            className="inline-flex items-center px-3 py-2 border rounded-md text-sm bg-white hover:bg-gray-50 disabled:opacity-50"
+            title="Import (JSON or CSV)"
+          >
+            Import
+          </button>
+          <a
+            href="/templates/leads-import-template.csv"
+            download
+            className="inline-flex items-center px-3 py-2 border rounded-md text-sm bg-white hover:bg-gray-50"
+            title="Download CSV template"
+          >
+            Template
+          </a>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,text/csv,.csv"
+            className="hidden"
+            onChange={handleImportFile}
+            aria-hidden
+          />
           <Link
             href="/leads/new"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
@@ -151,10 +274,17 @@ export default function LeadList({ searchQuery = '', statusFilter = '' }: LeadLi
         </div>
       </div>
 
-      {/* Error Message */}
+      {/* Feedback Messages */}
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-md bg-red-50 p-4 flex items-start justify-between">
           <div className="text-sm text-red-700">{error}</div>
+          <button onClick={() => setError(null)} className="text-sm text-red-700 hover:underline">Dismiss</button>
+        </div>
+      )}
+      {success && (
+        <div className="rounded-md bg-green-50 p-4 flex items-start justify-between">
+          <div className="text-sm text-green-700">{success}</div>
+          <button onClick={() => setSuccess(null)} className="text-sm text-green-700 hover:underline">Dismiss</button>
         </div>
       )}
 

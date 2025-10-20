@@ -8,7 +8,7 @@ interface QuotaPlanModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
-  quotaPlan?: any
+  quotaPlan?: unknown
   organizationId: string
   users: unknown[]
   territories: unknown[]

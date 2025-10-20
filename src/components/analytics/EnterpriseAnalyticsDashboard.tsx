@@ -26,6 +26,7 @@ import {
   KPIMetric,
   RealTimeMetric
 } from '@/lib/api/enterprise-analytics';
+import { formatCurrencySafe } from '@/lib/format'
 
 interface EnterpriseAnalyticsDashboardProps {
   organizationId: string;
@@ -37,6 +38,13 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
   const [dashboards, setDashboards] = useState<AnalyticsDashboard[]>([]);
   const [kpis, setKpis] = useState<KPIMetric[]>([]);
   const [realTimeMetrics, setRealTimeMetrics] = useState<RealTimeMetric[]>([]);
+  type Insight = {
+    type: 'positive' | 'warning' | 'negative' | string;
+    title: string;
+    impact: 'high' | 'medium' | 'low' | string;
+    description: string;
+    recommendations?: string[];
+  };
   const [insights, setInsights] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateDashboardModal, setShowCreateDashboardModal] = useState(false);
@@ -76,9 +84,10 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
   const handleCreateDashboard = async () => {
     try {
       setLoading(true);
+      type DashboardType = 'executive' | 'operational' | 'compliance' | 'custom' | 'real_time';
       const newDashboard = await createAnalyticsDashboard({
-        dashboardName: dashboardForm.name,
-        dashboardType: dashboardForm.type,
+        dashboardName: String(dashboardForm.name || ''),
+        dashboardType: (dashboardForm.type as DashboardType) || 'executive',
         config: {},
         kpis: kpis.filter(kpi => selectedKPIs.includes(kpi.id)),
         filters: {},
@@ -158,16 +167,19 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
     }
   };
 
-  const formatValue = (value: number, format: string) => {
+  const formatValue = (value: number | undefined | null, format: string) => {
+    // Handle undefined/null values safely
+    const safeValue = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+    
     switch (format) {
       case 'currency':
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+        return formatCurrencySafe(value);
       case 'percentage':
-        return `${value.toFixed(1)}%`;
+        return `${safeValue.toFixed(1)}%`;
       case 'number':
-        return value.toLocaleString();
+        return safeValue.toLocaleString();
       default:
-        return value.toString();
+        return safeValue.toString();
     }
   };
 
@@ -179,7 +191,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
     { id: 'realtime', name: 'Real-time', icon: EyeIcon },
     { id: 'queries', name: 'Queries', icon: TableCellsIcon },
     { id: 'reports', name: 'Reports', icon: DocumentTextIcon }
-  ];
+  ] as const;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -230,7 +242,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as string)}
+                  onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'
@@ -272,7 +284,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                     <div className="text-right">
                       <p className={`text-sm font-medium ${getTrendColor(kpi.trend)}`}>
                         {kpi.trend === 'up' ? '+' : kpi.trend === 'down' ? '-' : ''}
-                        {formatValue(Math.abs(kpi.currentValue - kpi.previousValue), kpi.format)}
+                        {formatValue(Math.abs((kpi.currentValue || 0) - (kpi.previousValue || 0)), kpi.format)}
                       </p>
                       <p className="text-xs text-gray-500">vs previous</p>
                     </div>
@@ -290,8 +302,8 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {realTimeMetrics.map((metric) => (
                     <div key={metric.id} className="text-center">
-                      <p className="text-2xl font-bold text-gray-900">{metric.value.toLocaleString()}</p>
-                      <p className="text-sm text-gray-500 capitalize">{metric.metricName.replace('_', ' ')}</p>
+                      <p className="text-2xl font-bold text-gray-900">{(metric.value || 0).toLocaleString()}</p>
+                      <p className="text-sm text-gray-500 capitalize">{(metric.metricName || '').replace('_', ' ')}</p>
                       <p className="text-xs text-gray-400">
                         {new Date(metric.timestamp).toLocaleTimeString()}
                       </p>
@@ -309,35 +321,37 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                 </div>
                 <div className="p-6">
                   <div className="space-y-4">
-                    {insights.map((insight, index) => (
+                    {insights.map((insight, index) => {
+                      const it = insight as Insight;
+                      return (
                       <div key={index} className={`border-l-4 p-4 rounded-r-lg ${
-                        insight.type === 'positive' ? 'border-green-400 bg-green-50' :
-                        insight.type === 'warning' ? 'border-yellow-400 bg-yellow-50' :
+                        it.type === 'positive' ? 'border-green-400 bg-green-50' :
+                        it.type === 'warning' ? 'border-yellow-400 bg-yellow-50' :
                         'border-red-400 bg-red-50'
                       }`}>
                         <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-gray-900">{insight.title}</h4>
+                          <h4 className="font-medium text-gray-900">{it.title}</h4>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            insight.impact === 'high' ? 'bg-red-100 text-red-800' :
-                            insight.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            it.impact === 'high' ? 'bg-red-100 text-red-800' :
+                            it.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-green-100 text-green-800'
                           }`}>
-                            {insight.impact} impact
+                            {it.impact} impact
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">{insight.description}</p>
-                        {insight.recommendations && (
+                        <p className="text-sm text-gray-600 mt-1">{it.description}</p>
+                        {it.recommendations && (
                           <div className="mt-2">
                             <p className="text-xs font-medium text-gray-500 mb-1">Recommendations:</p>
                             <ul className="text-xs text-gray-600 list-disc list-inside">
-                              {insight.recommendations.map((rec: string, i: number) => (
+                              {it.recommendations.map((rec: string, i: number) => (
                                 <li key={i}>{rec}</li>
                               ))}
                             </ul>
                           </div>
                         )}
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
               </div>
@@ -362,7 +376,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                         <div className="flex items-center justify-between mb-4">
                           <div>
                             <h4 className="font-medium text-gray-900">{dashboard.dashboardName}</h4>
-                            <p className="text-sm text-gray-500 capitalize">{dashboard.dashboardType.replace('_', ' ')}</p>
+                            <p className="text-sm text-gray-500 capitalize">{(dashboard.dashboardType || '').replace('_', ' ')}</p>
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -377,8 +391,8 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                         </div>
                         
                         <div className="mb-4">
-                          <p className="text-sm text-gray-500 mb-2">KPIs: {dashboard.kpis.length}</p>
-                          <p className="text-sm text-gray-500">Refresh: {dashboard.refreshFrequencyMinutes} min</p>
+                          <p className="text-sm text-gray-500 mb-2">KPIs: {(dashboard.kpis || []).length}</p>
+                          <p className="text-sm text-gray-500">Refresh: {dashboard.refreshFrequencyMinutes || 0} min</p>
                         </div>
                         
                         <div className="flex items-center justify-between">
@@ -493,8 +507,8 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {realTimeMetrics.map((metric) => (
                     <div key={metric.id} className="text-center p-4 bg-gray-50 rounded-lg">
-                      <p className="text-3xl font-bold text-gray-900">{metric.value.toLocaleString()}</p>
-                      <p className="text-sm text-gray-500 capitalize">{metric.metricName.replace('_', ' ')}</p>
+                      <p className="text-3xl font-bold text-gray-900">{(metric.value || 0).toLocaleString()}</p>
+                      <p className="text-sm text-gray-500 capitalize">{(metric.metricName || '').replace('_', ' ')}</p>
                       <p className="text-xs text-gray-400 mt-1">
                         Last updated: {new Date(metric.timestamp).toLocaleTimeString()}
                       </p>
@@ -619,7 +633,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                     </label>
                     <input
                       type="text"
-                      value={dashboardForm.name || ''}
+                      value={String(dashboardForm.name || '')}
                       onChange={(e) => setDashboardForm({...dashboardForm, name: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                       placeholder="Enter dashboard name"
@@ -631,7 +645,7 @@ export default function EnterpriseAnalyticsDashboard({ organizationId, userId }:
                       Dashboard Type
                     </label>
                     <select
-                      value={dashboardForm.type || ''}
+                      value={String(dashboardForm.type || '')}
                       onChange={(e) => setDashboardForm({...dashboardForm, type: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                     >

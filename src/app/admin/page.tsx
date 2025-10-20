@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ChartBarIcon, 
   UsersIcon, 
@@ -17,8 +17,8 @@ import {
   CloudIcon,
   BellIcon
 } from '@heroicons/react/24/outline';
-import { ConfigurationService } from '@/lib/admin/services/ConfigurationService'
 import { getSupabaseClient } from '@/lib/supabase-client';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const supabase = getSupabaseClient();
 
@@ -41,6 +41,17 @@ interface SystemMetrics {
   storageLimit: number;
   integrationsActive: number;
   integrationsTotal: number;
+}
+
+interface ActivityData {
+  id: string;
+  action_type: string;
+  action_description: string;
+  created_at: string;
+  risk_level: string;
+  users?: {
+    full_name: string;
+  };
 }
 
 interface RecentActivity {
@@ -377,9 +388,10 @@ export default function AdminDashboard() {
     const interval = setInterval(loadDashboardData, 30000); // 30 seconds
     
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -395,12 +407,12 @@ export default function AdminDashboard() {
       // Check system health
       await checkSystemHealth();
       
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
+    } catch (_error) {
+      console.error('Error loading dashboard data:', _error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const loadSystemMetrics = async () => {
     try {
@@ -491,13 +503,13 @@ export default function AdminDashboard() {
         throw error;
       }
 
-      const activities: RecentActivity[] = data.map(item => ({
+      const activities: RecentActivity[] = (data || []).map((item: ActivityData) => ({
         id: item.id,
         type: item.action_type,
         description: item.action_description,
         timestamp: new Date(item.created_at),
         user: item.users?.full_name || 'System',
-        riskLevel: item.risk_level
+        riskLevel: (item.risk_level as 'low' | 'medium' | 'high' | 'critical') || 'low'
       }));
 
       setRecentActivities(activities);
@@ -559,7 +571,7 @@ export default function AdminDashboard() {
           lastChecked: new Date()
         });
       }
-    } catch (error) {
+    } catch (_error) {
       setSystemHealth({
         status: 'critical',
         message: 'System health check failed',
@@ -584,6 +596,12 @@ export default function AdminDashboard() {
         <p className="mt-1 text-sm text-gray-500">
           Monitor system health and manage your FulQrun instance
         </p>
+      </div>
+
+      {/* Theme Testing */}
+      <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">🎨 Theme Testing</h2>
+        <ThemeToggle />
       </div>
 
       {/* System Health */}

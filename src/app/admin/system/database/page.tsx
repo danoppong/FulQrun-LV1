@@ -15,17 +15,11 @@ import {
   MagnifyingGlassIcon,
   ArrowUpIcon,
   EyeIcon,
-  EyeSlashIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
   LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
-  CloudIcon,
   ChartBarIcon,
   CogIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseBrowserClient } from '@/lib/supabase-singleton'
 import { z } from 'zod';
@@ -35,6 +29,9 @@ const supabase = getSupabaseBrowserClient();
 // =============================================================================
 // TYPES AND INTERFACES
 // =============================================================================
+
+// JSON-safe value for dynamic defaults and misc payloads
+type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
 
 interface DatabaseConfiguration {
   connections: DatabaseConnection[];
@@ -93,7 +90,7 @@ interface TableColumn {
   name: string;
   type: string;
   nullable: boolean;
-  defaultValue?: any;
+  defaultValue?: JSONValue;
   isPrimaryKey: boolean;
   isForeignKey: boolean;
   foreignKeyTable?: string;
@@ -167,7 +164,7 @@ interface DatabasePerformance {
   timestamp: Date;
 }
 
-interface DatabaseBackup {
+interface _DatabaseBackup {
   id: string;
   name: string;
   connectionId: string;
@@ -475,7 +472,7 @@ function DatabaseConnections({ config, onUpdate }: { config: DatabaseConfigurati
                   <h4 className="text-sm font-medium text-yellow-800 mb-2">Security Note</h4>
                   <p className="text-sm text-yellow-700">
                     Password will be stored securely and encrypted. After creating the connection, 
-                    you'll be able to test the connection and configure additional settings.
+                    you&apos;ll be able to test the connection and configure additional settings.
                   </p>
                 </div>
 
@@ -2094,12 +2091,23 @@ function DatabaseMigrations({ config, onUpdate }: { config: DatabaseConfiguratio
 
 function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfiguration; onUpdate: (config: DatabaseConfiguration) => void }) {
   const [selectedTimeRange, setSelectedTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
-  const [selectedMetric, setSelectedMetric] = useState<'overview' | 'queries' | 'connections' | 'storage'>('overview');
+  const [_selectedMetric, _setSelectedMetric] = useState<'overview' | 'queries' | 'connections' | 'storage'>('overview');
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [liveMetrics, setLiveMetrics] = useState<any>(null);
+  interface LiveMetrics {
+    activeConnections?: number
+    totalConnections?: number
+    databaseSize?: string
+    cacheHitRatio?: number
+    slowQueries?: { query: string; durationMs: number }[]
+    recordCounts?: Record<string, number>
+    tableSizes?: { table: string; size: string }[]
+    timestamp?: string | number
+  }
+
+  const [liveMetrics, setLiveMetrics] = useState<LiveMetrics | null>(null);
 
   const performance = config.performance || {
     connections: [],
@@ -2109,7 +2117,7 @@ function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfigura
   };
 
   // Fetch live performance data from Supabase
-  const fetchLivePerformanceData = async () => {
+  const fetchLivePerformanceData = React.useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -2136,13 +2144,11 @@ function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfigura
 
       // Process successful results
       const successfulResults = results
-        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
+        .filter((result): result is PromiseFulfilledResult<{ count?: number | null }> => result.status === 'fulfilled')
         .map(result => result.value);
 
       // Calculate estimated metrics based on table counts
-      const totalRecords = successfulResults.reduce((sum, result) => {
-        return sum + (result.count || 0);
-      }, 0);
+      const totalRecords = successfulResults.reduce((sum, result) => sum + (result.count || 0), 0);
 
       // Estimate database size based on record count (rough approximation)
       const estimatedSizeMB = Math.round(totalRecords * 0.001); // ~1KB per record average
@@ -2250,7 +2256,7 @@ function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfigura
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Auto-refresh effect
   useEffect(() => {
@@ -2263,7 +2269,7 @@ function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfigura
 
       return () => clearInterval(interval);
     }
-  }, [isAutoRefresh, refreshInterval]);
+  }, [isAutoRefresh, refreshInterval, fetchLivePerformanceData]);
 
   // Manual refresh
   const handleRefresh = () => {
@@ -2271,7 +2277,7 @@ function PerformanceMonitoring({ config, onUpdate }: { config: DatabaseConfigura
   };
 
   // Calculate metrics based on selected time range
-  const getTimeRangeData = (data: unknown[]) => {
+  const getTimeRangeData = (data: Array<{ timestamp?: string | number }>) => {
     const now = new Date();
     const timeRangeMs = {
       '1h': 60 * 60 * 1000,
@@ -2852,13 +2858,13 @@ export default function DatabaseManagement() {
     migrations: []
   });
 
-  const [performance, setPerformance] = useState<DatabasePerformance[]>([]);
+  const [_performance, setPerformance] = useState<DatabasePerformance[]>([]);
   const [activeTab, setActiveTab] = useState('connections');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {

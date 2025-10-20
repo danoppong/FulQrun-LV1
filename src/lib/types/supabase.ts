@@ -1,5 +1,3 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-
 // Define the database schema types
 export interface Database {
   public: {
@@ -569,6 +567,63 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+      }
+      // KPI Engine support tables (minimal stubs)
+      kpi_definitions: {
+        Row: { id: string; organization_id: string; kpi_name: string; display_name: string; description: string | null; formula: string | null; calculation_method: string | null; data_sources: string[] | null; dimensions: string[] | null; thresholds: Record<string, unknown> | null; industry_benchmarks: Record<string, unknown> | null }
+        Insert: { id?: string; organization_id: string; kpi_name: string; display_name: string; description?: string | null; formula?: string | null; calculation_method?: string | null; data_sources?: string[] | null; dimensions?: string[] | null; thresholds?: Record<string, unknown> | null; industry_benchmarks?: Record<string, unknown> | null }
+        Update: Partial<Omit<Database['public']['Tables']['kpi_definitions']['Row'],'id'>> & { id?: string }
+      }
+      kpi_calculated_values: {
+        Row: { id: string; organization_id: string; kpi_id: string; calculated_value: number; calculation_date: string; period_start: string; period_end: string; filters: Record<string, unknown> | null; metadata: Record<string, unknown> | null; confidence_score: number | null }
+        Insert: { id?: string; organization_id: string; kpi_id: string; calculated_value: number; calculation_date: string; period_start: string; period_end: string; filters?: Record<string, unknown> | null; metadata?: Record<string, unknown> | null; confidence_score?: number | null }
+        Update: Partial<Omit<Database['public']['Tables']['kpi_calculated_values']['Row'],'id'>> & { id?: string }
+      }
+      win_rate_metrics: {
+        Row: { id: string; organization_id: string; user_id: string | null; territory_id: string | null; period_start: string; period_end: string; total_opportunities: number; won_opportunities: number; win_rate: number; performance_tier: string | null }
+        Insert: { id?: string; organization_id: string; user_id?: string | null; territory_id?: string | null; period_start: string; period_end: string; total_opportunities: number; won_opportunities: number; win_rate: number; performance_tier?: string | null }
+        Update: Partial<Omit<Database['public']['Tables']['win_rate_metrics']['Row'],'id'>> & { id?: string }
+      }
+      revenue_growth_metrics: {
+        Row: { id: string; organization_id: string; user_id: string | null; territory_id: string | null; period_start: string; period_end: string; current_period_revenue: number; previous_period_revenue: number; growth_amount: number; growth_percentage: number; performance_tier: string | null }
+        Insert: { id?: string; organization_id: string; user_id?: string | null; territory_id?: string | null; period_start: string; period_end: string; current_period_revenue: number; previous_period_revenue: number; growth_amount: number; growth_percentage: number; performance_tier?: string | null }
+        Update: Partial<Omit<Database['public']['Tables']['revenue_growth_metrics']['Row'],'id'>> & { id?: string }
+      }
+      avg_deal_size_metrics: {
+        Row: { id: string; organization_id: string; user_id: string | null; territory_id: string | null; period_start: string; period_end: string; total_revenue: number; total_deals: number; avg_deal_size: number; median_deal_size: number; largest_deal: number; smallest_deal: number; performance_tier: string | null }
+        Insert: { id?: string; organization_id: string; user_id?: string | null; territory_id?: string | null; period_start: string; period_end: string; total_revenue: number; total_deals: number; avg_deal_size: number; median_deal_size: number; largest_deal: number; smallest_deal: number; performance_tier?: string | null }
+        Update: Partial<Omit<Database['public']['Tables']['avg_deal_size_metrics']['Row'],'id'>> & { id?: string }
+      }
+      sales_cycle_metrics: {
+        Row: { id: string; organization_id: string; user_id: string | null; territory_id: string | null; period_start: string; period_end: string; total_days: number; total_deals: number; avg_cycle_length: number; median_cycle_length: number; shortest_cycle: number; longest_cycle: number; performance_tier: string | null }
+        Insert: { id?: string; organization_id: string; user_id?: string | null; territory_id?: string | null; period_start: string; period_end: string; total_days: number; total_deals: number; avg_cycle_length: number; median_cycle_length: number; shortest_cycle: number; longest_cycle: number; performance_tier?: string | null }
+        Update: Partial<Omit<Database['public']['Tables']['sales_cycle_metrics']['Row'],'id'>> & { id?: string }
+      }
+      quota_attainment_metrics: {
+        Row: { id: string; organization_id: string; user_id: string | null; territory_id: string | null; period_start: string; period_end: string; quota_target: number; actual_achievement: number; attainment_percentage: number; performance_tier: string | null }
+        Insert: { id?: string; organization_id: string; user_id?: string | null; territory_id?: string | null; period_start: string; period_end: string; quota_target: number; actual_achievement: number; attainment_percentage: number; performance_tier?: string | null }
+        Update: Partial<Omit<Database['public']['Tables']['quota_attainment_metrics']['Row'],'id'>> & { id?: string }
+      }
+      activities_per_rep_metrics: {
+        Row: { id: string; organization_id: string; user_id: string | null; territory_id: string | null; period_start: string; period_end: string; total_activities: number; calls: number; emails: number; meetings: number; demos: number; presentations: number; activities_per_day: number; performance_tier: string | null }
+        Insert: { id?: string; organization_id: string; user_id?: string | null; territory_id?: string | null; period_start: string; period_end: string; total_activities: number; calls: number; emails: number; meetings: number; demos: number; presentations: number; activities_per_day: number; performance_tier?: string | null }
+        Update: Partial<Omit<Database['public']['Tables']['activities_per_rep_metrics']['Row'],'id'>> & { id?: string }
+      }
+      lead_conversion_metrics: {
+        Row: { id: string; organization_id: string; user_id: string | null; territory_id: string | null; period_start: string; period_end: string; total_leads: number; qualified_opportunities: number; conversion_rate: number; performance_tier: string | null }
+        Insert: { id?: string; organization_id: string; user_id?: string | null; territory_id?: string | null; period_start: string; period_end: string; total_leads: number; qualified_opportunities: number; conversion_rate: number; performance_tier?: string | null }
+        Update: Partial<Omit<Database['public']['Tables']['lead_conversion_metrics']['Row'],'id'>> & { id?: string }
+      }
+      // MEDDPICC configuration tables (minimal stubs)
+      meddpicc_configurations: {
+        Row: { id: string; organization_id: string; name: string; description: string | null; version: number; is_active: boolean; configuration_data: Record<string, unknown>; algorithm_settings: Record<string, unknown>; created_at: string; updated_at: string; created_by: string | null; modified_by: string | null }
+        Insert: { id?: string; organization_id: string; name: string; description?: string | null; version?: number; is_active?: boolean; configuration_data: Record<string, unknown>; algorithm_settings: Record<string, unknown>; created_at?: string; updated_at?: string; created_by?: string | null; modified_by?: string | null }
+        Update: Partial<Omit<Database['public']['Tables']['meddpicc_configurations']['Row'],'id'>> & { id?: string }
+      }
+      meddpicc_configuration_history: {
+        Row: { id: string; configuration_id: string; organization_id: string; change_type: 'CREATE' | 'UPDATE' | 'DELETE' | 'ACTIVATE' | 'DEACTIVATE'; previous_version: number | null; new_version: number | null; changes_summary: Record<string, unknown> | null; previous_configuration: Record<string, unknown> | null; new_configuration: Record<string, unknown> | null; changed_at: string; changed_by: string | null; change_reason: string | null }
+        Insert: { id?: string; configuration_id: string; organization_id: string; change_type: 'CREATE' | 'UPDATE' | 'DELETE' | 'ACTIVATE' | 'DEACTIVATE'; previous_version?: number | null; new_version?: number | null; changes_summary?: Record<string, unknown> | null; previous_configuration?: Record<string, unknown> | null; new_configuration?: Record<string, unknown> | null; changed_at?: string; changed_by?: string | null; change_reason?: string | null }
+        Update: Partial<Omit<Database['public']['Tables']['meddpicc_configuration_history']['Row'],'id'>> & { id?: string }
       }
       commission_calculations: {
         Row: {
@@ -1541,14 +1596,279 @@ export interface Database {
           deleted_at?: string | null
         }
       }
+      enterprise_workflows: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          workflow_type: 'approval' | 'notification' | 'data_sync' | 'ai_trigger' | 'compliance' | 'custom'
+          trigger_conditions: Record<string, unknown>
+          steps: Record<string, unknown>[]
+          approval_config: Record<string, unknown>
+          notification_config: Record<string, unknown>
+          is_active: boolean
+          priority: number
+          timeout_hours: number
+          retry_config: Record<string, unknown>
+          organization_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          workflow_type: 'approval' | 'notification' | 'data_sync' | 'ai_trigger' | 'compliance' | 'custom'
+          trigger_conditions?: Record<string, unknown>
+          steps?: Record<string, unknown>[]
+          approval_config?: Record<string, unknown>
+          notification_config?: Record<string, unknown>
+          is_active?: boolean
+          priority?: number
+          timeout_hours?: number
+          retry_config?: Record<string, unknown>
+          organization_id: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          workflow_type?: 'approval' | 'notification' | 'data_sync' | 'ai_trigger' | 'compliance' | 'custom'
+          trigger_conditions?: Record<string, unknown>
+          steps?: Record<string, unknown>[]
+          approval_config?: Record<string, unknown>
+          notification_config?: Record<string, unknown>
+          is_active?: boolean
+          priority?: number
+          timeout_hours?: number
+          retry_config?: Record<string, unknown>
+          organization_id?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      workflow_executions: {
+        Row: {
+          id: string
+          workflow_id: string
+          entity_type: string
+          entity_id: string
+          status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' | 'paused'
+          current_step_id: string | null
+          execution_data: Record<string, unknown>
+          started_at: string
+          completed_at: string | null
+          error_message: string | null
+          organization_id: string
+        }
+        Insert: {
+          id?: string
+          workflow_id: string
+          entity_type: string
+          entity_id: string
+          status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' | 'paused'
+          current_step_id?: string | null
+          execution_data?: Record<string, unknown>
+          started_at?: string
+          completed_at?: string | null
+          error_message?: string | null
+          organization_id: string
+        }
+        Update: {
+          id?: string
+          workflow_id?: string
+          entity_type?: string
+          entity_id?: string
+          status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' | 'paused'
+          current_step_id?: string | null
+          execution_data?: Record<string, unknown>
+          started_at?: string
+          completed_at?: string | null
+          error_message?: string | null
+          organization_id?: string
+        }
+      }
+      workflow_step_executions: {
+        Row: {
+          id: string
+          execution_id: string
+          step_id: string
+          status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+          started_at: string | null
+          completed_at: string | null
+          error_message: string | null
+          result: Record<string, unknown> | null
+        }
+        Insert: {
+          id?: string
+          execution_id: string
+          step_id: string
+          status?: 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+          started_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+          result?: Record<string, unknown> | null
+        }
+        Update: {
+          id?: string
+          execution_id?: string
+          step_id?: string
+          status?: 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+          started_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+          result?: Record<string, unknown> | null
+        }
+      }
+      error_reports: {
+        Row: {
+          id: string
+          error_id: string
+          report_type: string
+          description: string
+          impact: string
+          status: string
+          assigned_to: string | null
+          priority: string
+          tags: string[]
+          organization_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          error_id: string
+          report_type: string
+          description: string
+          impact: string
+          status?: string
+          assigned_to?: string | null
+          priority: string
+          tags?: string[]
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          error_id?: string
+          report_type?: string
+          description?: string
+          impact?: string
+          status?: string
+          assigned_to?: string | null
+          priority?: string
+          tags?: string[]
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      ai_models: {
+        Row: {
+          id: string
+          name: string
+          model_type: 'lead_scoring' | 'deal_prediction' | 'forecasting' | 'coaching' | 'content_generation' | 'sentiment_analysis'
+          provider: 'openai' | 'anthropic' | 'azure' | 'aws' | 'custom'
+          configuration: Record<string, unknown>
+          is_active: boolean
+          performance_metrics: Record<string, unknown>
+          organization_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          model_type: 'lead_scoring' | 'deal_prediction' | 'forecasting' | 'coaching' | 'content_generation' | 'sentiment_analysis'
+          provider: 'openai' | 'anthropic' | 'azure' | 'aws' | 'custom'
+          configuration?: Record<string, unknown>
+          is_active?: boolean
+          performance_metrics?: Record<string, unknown>
+          organization_id: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          model_type?: 'lead_scoring' | 'deal_prediction' | 'forecasting' | 'coaching' | 'content_generation' | 'sentiment_analysis'
+          provider?: 'openai' | 'anthropic' | 'azure' | 'aws' | 'custom'
+          configuration?: Record<string, unknown>
+          is_active?: boolean
+          performance_metrics?: Record<string, unknown>
+          organization_id?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      ai_insights: {
+        Row: {
+          id: string
+          type: string
+          entity_type: string
+          entity_id: string
+          insight_data: Record<string, unknown>
+          confidence_score: number
+          model_version: string
+          organization_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          type: string
+          entity_type: string
+          entity_id: string
+          insight_data: Record<string, unknown>
+          confidence_score: number
+          model_version: string
+          organization_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          type?: string
+          entity_type?: string
+          entity_id?: string
+          insight_data?: Record<string, unknown>
+          confidence_score?: number
+          model_version?: string
+          organization_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      // KPI calculation RPCs (minimal stubs)
+      calculate_all_kpis: {
+        Args: {
+          p_organization_id: string
+          p_user_id: string | null
+          p_territory_id: string | null
+          p_period_start: string
+          p_period_end: string
+        }
+        Returns: Record<string, unknown>
+      }
     }
     Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
       [_ in never]: never
     }
   }

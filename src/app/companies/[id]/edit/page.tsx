@@ -2,15 +2,17 @@ import CompanyForm from '@/components/companies/CompanyForm'
 import AuthWrapper from '@/components/auth/AuthWrapper';
 
 interface CompanyEditPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function CompanyEditPage({ params }: CompanyEditPageProps) {
+export default async function CompanyEditPage({ params }: CompanyEditPageProps) {
+  const { id } = await params
+  
   return (
     <AuthWrapper>
-      <CompanyForm mode="edit" companyId={params.id} />
+      <CompanyForm mode="edit" companyId={id} />
     </AuthWrapper>
   )
 }

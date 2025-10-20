@@ -75,7 +75,7 @@ interface QualificationResult {
 export function AutomatedQualificationSystem() {
   const [configs, setConfigs] = useState<AutomatedQualificationConfig[]>([])
   const [jobs, setJobs] = useState<QualificationJob[]>([])
-  const [templates, setTemplates] = useState<any[]>([])
+  const [templates, setTemplates] = useState<unknown[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedConfig, setSelectedConfig] = useState<AutomatedQualificationConfig | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)

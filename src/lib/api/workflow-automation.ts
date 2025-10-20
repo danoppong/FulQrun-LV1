@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { Database } from '@/lib/supabase';
+import { Database } from '@/lib/types/supabase';
 
 type WorkflowAutomation = Database['public']['Tables']['workflow_automations']['Row']
 type WorkflowAutomationInsert = Database['public']['Tables']['workflow_automations']['Insert']
@@ -230,7 +230,7 @@ export class WorkflowAutomationAPI {
 
     // Create execution record
     const execution: WorkflowExecution = {
-      id: `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       workflowId,
       entityType,
       entityId,

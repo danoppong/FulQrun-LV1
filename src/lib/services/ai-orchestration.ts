@@ -1,5 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js'
-import { Database, Tables, TablesInsert } from '@/lib/types/supabase';
+import { Database, Tables, TablesInsert as _TablesInsert } from '@/lib/types/supabase';
 
 export interface LeadGenerationRequest {
   lead_brief_id: string

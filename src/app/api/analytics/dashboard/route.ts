@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/validation'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(_request: NextRequest) {
+function getClientIp(req: NextRequest): string {
+  const xff = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const xri = req.headers.get('x-real-ip')?.trim()
+  return xff || xri || '127.0.0.1'
+}
+
+export async function GET(request: NextRequest) {
   try {
+    const ip = getClientIp(request)
+    if (!checkRateLimit(ip, 60, 60_000)) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+    }
+
+    // Small jitter to avoid thundering herd
+    await new Promise((r) => setTimeout(r, 50))
     // Return mock data for now to test the API
     const analyticsData = {
       revenue: {
@@ -39,7 +53,12 @@ export async function GET(_request: NextRequest) {
       }
     }
 
-    return NextResponse.json(analyticsData)
+    return NextResponse.json(analyticsData, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        'Content-Type': 'application/json'
+      }
+    })
   } catch (error) {
     console.error('Analytics API error:', error)
     

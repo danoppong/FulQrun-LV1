@@ -29,7 +29,7 @@ import {
   getWorkflowAnalytics,
   getWorkflowHealth
 } from '@/lib/api/enterprise-workflows';
-import type {;
+import type {
   EnterpriseWorkflow,
   WorkflowExecution,
   WorkflowStep,

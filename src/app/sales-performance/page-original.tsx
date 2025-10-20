@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { AuthService } from '@/lib/auth-unified'
 import { SalesPerformanceDashboard } from '@/components/sales-performance/SalesPerformanceDashboard'
 import { AuthWrapper } from '@/components/auth/AuthWrapper';
+import type { AuthUser } from '@/lib/auth-unified'
 
 export default function SalesPerformancePage() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

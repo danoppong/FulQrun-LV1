@@ -3,22 +3,15 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   BuildingOfficeIcon, 
-  GlobeAltIcon, 
-  CurrencyDollarIcon,
-  ClockIcon,
   ShieldCheckIcon,
   PaintBrushIcon,
-  CreditCardIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
   PencilIcon,
   CheckIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
-import { ConfigurationService } from '@/lib/admin/services/ConfigurationService'
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
@@ -89,7 +82,7 @@ interface SettingsSection {
 
 const BasicSettingsSchema = z.object({
   name: z.string().min(1, 'Organization name is required'),
-  domain: z.string().optional(),
+  domain: z.string(),
   timezone: z.string().min(1, 'Timezone is required'),
   currency: z.string().min(3, 'Currency code must be 3 characters'),
   dateFormat: z.string().min(1, 'Date format is required'),
@@ -110,12 +103,12 @@ const ComplianceSettingsSchema = z.object({
 });
 
 const BrandingSettingsSchema = z.object({
-  logoUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  faviconUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  logoUrl: z.union([z.string().url('Must be a valid URL'), z.literal('')]),
+  faviconUrl: z.union([z.string().url('Must be a valid URL'), z.literal('')]),
   primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Must be a valid hex color'),
   secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Must be a valid hex color'),
-  customCSS: z.string().optional(),
-  emailHeaderLogo: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  customCSS: z.string().default(''),
+  emailHeaderLogo: z.union([z.string().url('Must be a valid URL'), z.literal('')]),
   emailFooterText: z.string().max(500, 'Footer text must be less than 500 characters')
 });
 
@@ -124,7 +117,7 @@ const BrandingSettingsSchema = z.object({
 // =============================================================================
 
 function BasicSettings({ settings, onUpdate }: { settings: OrganizationSettings; onUpdate: (settings: OrganizationSettings) => void }) {
-  const [formData, setFormData] = useState(settings.basic);
+  const [formData, setFormData] = useState<OrganizationSettings['basic']>(settings.basic);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
 
@@ -148,9 +141,9 @@ function BasicSettings({ settings, onUpdate }: { settings: OrganizationSettings;
 
   const handleSave = async () => {
     try {
-      const validatedData = BasicSettingsSchema.parse(formData);
+      const validatedData = BasicSettingsSchema.parse(formData) as OrganizationSettings['basic'];
       
-      const updatedSettings = {
+      const updatedSettings: OrganizationSettings = {
         ...settings,
         basic: validatedData
       };
@@ -182,7 +175,7 @@ function BasicSettings({ settings, onUpdate }: { settings: OrganizationSettings;
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
-          <p className="text-sm text-gray-500">Configure your organization's basic settings</p>
+          <p className="text-sm text-gray-500">Configure your organization&apos;s basic settings</p>
         </div>
         {!isEditing && (
           <button
@@ -369,7 +362,7 @@ function BasicSettings({ settings, onUpdate }: { settings: OrganizationSettings;
 // =============================================================================
 
 function ComplianceSettings({ settings, onUpdate }: { settings: OrganizationSettings; onUpdate: (settings: OrganizationSettings) => void }) {
-  const [formData, setFormData] = useState(settings.compliance);
+  const [formData, setFormData] = useState<OrganizationSettings['compliance']>(settings.compliance);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
 
@@ -387,9 +380,9 @@ function ComplianceSettings({ settings, onUpdate }: { settings: OrganizationSett
 
   const handleSave = async () => {
     try {
-      const validatedData = ComplianceSettingsSchema.parse(formData);
+      const validatedData = ComplianceSettingsSchema.parse(formData) as OrganizationSettings['compliance'];
       
-      const updatedSettings = {
+      const updatedSettings: OrganizationSettings = {
         ...settings,
         compliance: validatedData
       };
@@ -439,7 +432,7 @@ function ComplianceSettings({ settings, onUpdate }: { settings: OrganizationSett
           <label className="block text-sm font-medium text-gray-700">Compliance Level</label>
           <select
             value={formData.complianceLevel}
-            onChange={(e) => setFormData({ ...formData, complianceLevel: e.target.value as unknown })}
+            onChange={(e) => setFormData({ ...formData, complianceLevel: e.target.value as 'standard' | 'soc2' | 'gdpr' | 'hipaa' | 'fedramp' })}
             disabled={!isEditing}
             className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
               !isEditing ? 'bg-gray-50' : ''
@@ -564,15 +557,15 @@ function ComplianceSettings({ settings, onUpdate }: { settings: OrganizationSett
 // =============================================================================
 
 function BrandingSettings({ settings, onUpdate }: { settings: OrganizationSettings; onUpdate: (settings: OrganizationSettings) => void }) {
-  const [formData, setFormData] = useState(settings.branding);
+  const [formData, setFormData] = useState<OrganizationSettings['branding']>(settings.branding);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
 
   const handleSave = async () => {
     try {
-      const validatedData = BrandingSettingsSchema.parse(formData);
+      const validatedData = BrandingSettingsSchema.parse(formData) as OrganizationSettings['branding'];
       
-      const updatedSettings = {
+      const updatedSettings: OrganizationSettings = {
         ...settings,
         branding: validatedData
       };
@@ -604,7 +597,7 @@ function BrandingSettings({ settings, onUpdate }: { settings: OrganizationSettin
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-medium text-gray-900">Branding & Appearance</h3>
-          <p className="text-sm text-gray-500">Customize your organization's visual identity</p>
+          <p className="text-sm text-gray-500">Customize your organization&apos;s visual identity</p>
         </div>
         {!isEditing && (
           <button
@@ -615,6 +608,12 @@ function BrandingSettings({ settings, onUpdate }: { settings: OrganizationSettin
             Edit
           </button>
         )}
+      </div>
+
+      {/* Notice: Direct users to the dedicated Branding page for file uploads */}
+      <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
+        Looking to upload a logo or favicon? Use the new Branding page with file uploads and automatic resizing.
+        <a href="/admin/organization/branding" className="ml-2 inline-flex items-center text-amber-900 underline hover:no-underline">Go to Branding uploads →</a>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -844,11 +843,7 @@ export default function OrganizationSettings() {
     }
   ];
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -862,9 +857,9 @@ export default function OrganizationSettings() {
         .from('users')
         .select('organization_id')
         .eq('id', user.id)
-        .single();
+        .single<{ organization_id: string }>();
 
-      if (!userData?.organization_id) {
+      if (!userData || !userData.organization_id) {
         throw new Error('Organization not found');
       }
 
@@ -873,21 +868,21 @@ export default function OrganizationSettings() {
         .from('organizations')
         .select('*')
         .eq('id', userData.organization_id)
-        .single();
+        .single<{ id: string; name: string }>();
 
-      if (orgError) throw orgError;
+      if (orgError || !orgData) throw orgError || new Error('Organization not found');
 
       // Load organization settings
-      const { data: settingsData, error: settingsError } = await supabase
+      const { data: settingsData } = await supabase
         .from('organization_settings')
         .select('settings')
         .eq('organization_id', userData.organization_id)
-        .maybeSingle();
+        .maybeSingle<{ settings: OrganizationSettings }>();
 
       // Merge organization data with settings, using defaults if not found
       const loadedSettings: OrganizationSettings = {
         basic: {
-          name: orgData?.name || 'Default Organization',
+          name: orgData.name || 'Default Organization',
           domain: settingsData?.settings?.basic?.domain || '',
           timezone: settingsData?.settings?.basic?.timezone || 'UTC',
           currency: settingsData?.settings?.basic?.currency || 'USD',
@@ -936,11 +931,15 @@ export default function OrganizationSettings() {
     } catch (error) {
       console.error('Error loading settings:', error);
       // Set default settings on error
-      setSettings(settings);
+      setSettings((prev) => prev);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const handleSettingsUpdate = async (updatedSettings: OrganizationSettings) => {
     try {
@@ -956,15 +955,15 @@ export default function OrganizationSettings() {
         .from('users')
         .select('organization_id')
         .eq('id', user.id)
-        .single();
+        .single<{ organization_id: string }>();
 
-      if (!userData?.organization_id) {
+      if (!userData || !userData.organization_id) {
         throw new Error('Organization not found');
       }
 
       // Update organization basic info
-      const { error: orgError } = await supabase
-        .from('organizations')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: orgError } = await (supabase.from('organizations') as any)
         .update({
           name: updatedSettings.basic.name,
           updated_at: new Date().toISOString()
@@ -974,8 +973,8 @@ export default function OrganizationSettings() {
       if (orgError) throw orgError;
 
       // Update organization settings JSON
-      const { error: settingsError } = await supabase
-        .from('organization_settings')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: settingsError } = await (supabase.from('organization_settings') as any)
         .upsert({
           organization_id: userData.organization_id,
           settings: {
@@ -1022,7 +1021,7 @@ export default function OrganizationSettings() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Organization Settings</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Manage your organization's configuration and preferences
+          Manage your organization&apos;s configuration and preferences
         </p>
       </div>
 

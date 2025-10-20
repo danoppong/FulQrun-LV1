@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
+import { requireApiAuth } from '@/lib/security/api-auth'
 import { z } from 'zod';
 
 // Validation schemas
@@ -41,6 +42,8 @@ const KPICreateSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerClient();
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const { searchParams } = new URL(request.url);
     
     // Parse and validate query parameters
@@ -59,24 +62,7 @@ export async function GET(request: NextRequest) {
     const periodStart = validatedParams.periodStart || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const periodEnd = validatedParams.periodEnd || new Date().toISOString().split('T')[0];
 
-    // For now, skip authentication to allow testing
-    // TODO: Re-enable authentication once user session is properly set up
-    /*
-    // Check if user has access to organization
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('organization_id, role')
-      .eq('id', (await supabase.auth.getUser()).data.user?.id)
-      .single();
-
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (user.organization_id !== validatedParams.organizationId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-    */
+    // TODO: Verify org access via RLS or by comparing auth user org to validatedParams.organizationId
 
     let result;
 
@@ -231,6 +217,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerClient();
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const body = await request.json();
     
     const validatedData = KPICreateSchema.parse(body);

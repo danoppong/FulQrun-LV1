@@ -473,9 +473,9 @@ export class ConversationalAnalyticsEngine {
     const kpis = dashboardData.kpis || {};
     
     // Analyze performance and generate recommendations
-    Object.entries(kpis).forEach(([kpi, data]: [string, any]) => {
-      const trend = data.trend;
-      const value = data.value;
+    Object.entries(kpis).forEach(([kpi, data]: [string, unknown]) => {
+      const trend = (data as { trend?: string })?.trend;
+      const value = (data as { value?: unknown })?.value;
 
       if (trend === 'down') {
         switch (kpi) {
@@ -531,8 +531,10 @@ export class ConversationalAnalyticsEngine {
     insights.push('Here\'s an overview of your pharmaceutical performance:');
     
     const kpis = dashboardData.kpis || {};
-    Object.entries(kpis).forEach(([kpi, data]: [string, any]) => {
-      insights.push(`${kpi.toUpperCase()}: ${data.value} (${data.trend} trend)`);
+    Object.entries(kpis).forEach(([kpi, data]: [string, unknown]) => {
+      const value = (data as { value?: unknown })?.value as string | number | undefined;
+      const trend = (data as { trend?: string })?.trend as string | undefined;
+      insights.push(`${kpi.toUpperCase()}: ${String(value)} (${trend ?? 'no'} trend)`);
     });
 
     recommendations.push('Use specific questions to get detailed insights about KPIs, trends, or territories');

@@ -92,7 +92,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         setStorageMethod('localStorage')
       }
     }
-  }, [userId, supabase])
+  }, [userId])
 
   const saveDashboardLayout = useCallback(async () => {
     try {
@@ -127,7 +127,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         return false
       }
     }
-  }, [userId, widgets, supabase])
+  }, [userId, widgets])
 
   const attemptSyncToDatabase = useCallback(async () => {
     if (isSyncing) return // Prevent concurrent sync attempts
@@ -171,7 +171,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
       // Sync attempt failed
       setIsSyncing(false)
     }
-  }, [isSyncing, userId, supabase])
+  }, [isSyncing, userId])
 
   useEffect(() => {
     loadDashboardLayout()

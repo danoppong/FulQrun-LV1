@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { ConfigurationService } from '@/lib/admin/services/ConfigurationService'
+import type { ConfigCategory, ModuleName } from '@/lib/admin/services/ConfigurationService'
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
@@ -35,7 +36,7 @@ const BulkConfigSchema = z.object({
   }))
 });
 
-const ModuleParameterSchema = z.object({
+const _ModuleParameterSchema = z.object({
   parameterKey: z.string(),
   value: z.unknown(),
   parameterName: z.string().optional(),
@@ -75,7 +76,7 @@ async function getOrganizationId(userId: string) {
     .from('users')
     .select('organization_id')
     .eq('id', userId)
-    .single();
+    .single<{ organization_id: string }>();
 
   if (error || !data) {
     throw new Error('User not found');
@@ -85,7 +86,7 @@ async function getOrganizationId(userId: string) {
 }
 
 async function checkAdminPermission(userId: string, permission: string) {
-  const { data, error } = await supabase.rpc('has_admin_permission', {
+  const { data, error } = await supabase.rpc<boolean>('has_admin_permission', {
     p_user_id: userId,
     p_permission_key: permission
   });
@@ -114,22 +115,22 @@ export async function GET(request: NextRequest) {
     }
 
     const url = new URL(request.url);
-    const category = url.searchParams.get('category');
-    const module = url.searchParams.get('module');
+  const category = url.searchParams.get('category');
+  const moduleKey = url.searchParams.get('module');
     const environment = url.searchParams.get('environment') || 'production';
 
     const configService = new ConfigurationService(organizationId, user.id);
 
     if (category) {
       const configs = await configService.getConfigurationsByCategory(
-        category as unknown,
-        environment as unknown
+        category as ConfigCategory,
+        environment as 'development' | 'staging' | 'production' | 'all'
       );
       return NextResponse.json({ configs });
     }
 
-    if (module) {
-      const parameters = await configService.getModuleParameters(module as unknown);
+    if (moduleKey) {
+      const parameters = await configService.getModuleParameters(moduleKey as ModuleName);
       return NextResponse.json({ parameters });
     }
 
@@ -360,7 +361,7 @@ export async function GET_MODULES(request: NextRequest) {
         acc[feature.moduleName].enabledFeatures++;
       }
       return acc;
-    }, {} as Record<string, unknown>);
+    }, {} as Record<string, { name: string; features: unknown[]; enabledFeatures: number; totalFeatures: number }>);
 
     return NextResponse.json({ modules: Object.values(modules) });
 
@@ -390,8 +391,8 @@ export async function GET_MODULE(
 
     const configService = new ConfigurationService(organizationId, user.id);
     const [features, parameters] = await Promise.all([
-      configService.getModuleFeatures(params.moduleName as unknown),
-      configService.getModuleParameters(params.moduleName as unknown)
+      configService.getModuleFeatures(params.moduleName as ModuleName),
+      configService.getModuleParameters(params.moduleName as ModuleName)
     ]);
 
     return NextResponse.json({ 
@@ -433,7 +434,7 @@ export async function PUT_MODULE(
     if (body.parameters) {
       for (const param of body.parameters) {
         await configService.setModuleParameter(
-          params.moduleName as unknown,
+          params.moduleName as ModuleName,
           param.parameterKey,
           param.value,
           {
@@ -452,7 +453,7 @@ export async function PUT_MODULE(
     if (body.features) {
       for (const feature of body.features) {
         await configService.toggleModuleFeature(
-          params.moduleName as unknown,
+          params.moduleName as ModuleName,
           feature.featureKey,
           feature.isEnabled,
           feature.reason
@@ -489,11 +490,11 @@ export async function POST_ENABLE_MODULE(
     const configService = new ConfigurationService(organizationId, user.id);
     
     // Enable all features for the module
-    const features = await configService.getModuleFeatures(params.moduleName as unknown);
+  const features = await configService.getModuleFeatures(params.moduleName as ModuleName);
     for (const feature of features) {
       if (!feature.isEnabled) {
         await configService.toggleModuleFeature(
-          params.moduleName as unknown,
+          params.moduleName as ModuleName,
           feature.featureKey,
           true,
           'Module enabled via API'
@@ -530,11 +531,11 @@ export async function POST_DISABLE_MODULE(
     const configService = new ConfigurationService(organizationId, user.id);
     
     // Disable all features for the module
-    const features = await configService.getModuleFeatures(params.moduleName as unknown);
+  const features = await configService.getModuleFeatures(params.moduleName as ModuleName);
     for (const feature of features) {
       if (feature.isEnabled) {
         await configService.toggleModuleFeature(
-          params.moduleName as unknown,
+          params.moduleName as ModuleName,
           feature.featureKey,
           false,
           'Module disabled via API'
@@ -578,8 +579,8 @@ export async function GET_AUDIT_LOGS(request: NextRequest) {
 
     const configService = new ConfigurationService(organizationId, user.id);
     const logs = await configService.getAdminActionLogs({
-      actionType: actionType as unknown,
-      riskLevel: riskLevel as unknown,
+      actionType: actionType as 'config_change' | 'user_create' | 'user_update' | 'user_delete' | 'role_change' | 'permission_change' | 'module_enable' | 'module_disable' | 'integration_setup' | 'security_change' | 'system_change' | undefined,
+      riskLevel: riskLevel as 'low' | 'medium' | 'high' | 'critical' | undefined,
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
       limit

@@ -41,6 +41,15 @@ export const defaultLeadScoringRules: LeadScoringRule[] = [
     description: 'Lead has an email address'
   },
   {
+    id: 'cold_call_penalty',
+    name: 'Cold Call Penalty',
+    field: 'source',
+    condition: 'equals',
+    value: 'cold_call',
+    weight: 5,
+    description: 'Cold-call sourced leads get minimal points'
+  },
+  {
     id: 'phone_present',
     name: 'Phone Present',
     field: 'phone',
@@ -53,7 +62,7 @@ export const defaultLeadScoringRules: LeadScoringRule[] = [
     name: 'Company Present',
     field: 'company',
     condition: 'is_not_empty',
-    weight: 25,
+    weight: 35,
     description: 'Lead has a company name'
   },
   {
@@ -62,7 +71,7 @@ export const defaultLeadScoringRules: LeadScoringRule[] = [
     field: 'source',
     condition: 'equals',
     value: 'website',
-    weight: 10,
+    weight: 15,
     description: 'Lead came from website'
   },
   {
@@ -80,7 +89,7 @@ export const defaultLeadScoringRules: LeadScoringRule[] = [
     field: 'source',
     condition: 'equals',
     value: 'referral',
-    weight: 30,
+    weight: 40,
     description: 'Lead came from referral'
   },
   {
@@ -106,8 +115,8 @@ export const defaultLeadScoringRules: LeadScoringRule[] = [
     name: 'Enterprise Company',
     field: 'company',
     condition: 'contains',
-    value: 'inc',
-    weight: 10,
+    value: 'company',
+    weight: 15,
     description: 'Company appears to be enterprise (contains "inc")'
   },
   {
@@ -148,9 +157,9 @@ export class LeadScoringEngine {
     const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0
 
     let category: 'hot' | 'warm' | 'cold'
-    if (percentage >= 70) {
+    if (percentage >= 65) {
       category = 'hot'
-    } else if (percentage >= 40) {
+    } else if (percentage >= 35) {
       category = 'warm'
     } else {
       category = 'cold'
@@ -197,6 +206,24 @@ export class LeadScoringEngine {
    */
   getRules(): LeadScoringRule[] {
     return [...this.rules]
+  }
+
+  /**
+   * Return the default rules shipped with the engine
+   */
+  getDefaultRules(): LeadScoringRule[] {
+    return [...defaultLeadScoringRules]
+  }
+
+  /**
+   * Validate a rule structure
+   */
+  validateRule(rule: LeadScoringRule): boolean {
+    if (!rule) return false
+    const hasRequired = !!(rule.id && rule.name && rule.field && rule.condition !== undefined)
+    const validCondition = ['equals','contains','starts_with','ends_with','is_empty','is_not_empty'].includes(rule.condition)
+    const hasWeight = typeof rule.weight === 'number'
+    return hasRequired && validCondition && hasWeight
   }
 
   /**

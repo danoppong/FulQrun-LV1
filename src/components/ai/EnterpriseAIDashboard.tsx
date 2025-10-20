@@ -208,7 +208,7 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-500">Forecasted Revenue</p>
                     <p className="text-2xl font-semibold text-gray-900">
-                      ${forecastData?.predictions.revenue.toLocaleString() || '0'}
+                      ${forecastData?.predictions?.revenue?.toLocaleString() || '0'}
                     </p>
                   </div>
                 </div>
@@ -429,19 +429,19 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-gray-900">
-                      ${forecastData.predictions.revenue.toLocaleString()}
+                      ${forecastData?.predictions?.revenue?.toLocaleString() || '0'}
                     </p>
                     <p className="text-sm text-gray-500">Forecasted Revenue</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-gray-900">
-                      {forecastData.predictions.deals}
+                      {forecastData?.predictions?.deals || '0'}
                     </p>
                     <p className="text-sm text-gray-500">Expected Deals</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-gray-900">
-                      {forecastData.predictions.conversionRate}%
+                      {forecastData?.predictions?.conversionRate || '0'}%
                     </p>
                     <p className="text-sm text-gray-500">Conversion Rate</p>
                   </div>
@@ -452,19 +452,19 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                       <p className="text-lg font-semibold text-green-800">
-                        ${forecastData.scenarios.optimistic.toLocaleString()}
+                        ${forecastData?.scenarios?.optimistic?.toLocaleString() || '0'}
                       </p>
                       <p className="text-sm text-green-600">Optimistic</p>
                     </div>
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
                       <p className="text-lg font-semibold text-blue-800">
-                        ${forecastData.scenarios.realistic.toLocaleString()}
+                        ${forecastData?.scenarios?.realistic?.toLocaleString() || '0'}
                       </p>
                       <p className="text-sm text-blue-600">Realistic</p>
                     </div>
                     <div className="text-center p-4 bg-red-50 rounded-lg">
                       <p className="text-lg font-semibold text-red-800">
-                        ${forecastData.scenarios.pessimistic.toLocaleString()}
+                        ${forecastData?.scenarios?.pessimistic?.toLocaleString() || '0'}
                       </p>
                       <p className="text-sm text-red-600">Pessimistic</p>
                     </div>
@@ -474,11 +474,11 @@ export default function EnterpriseAIDashboard({ organizationId, userId }: Enterp
                 <div className="border-t border-gray-200 pt-6 mt-6">
                   <h4 className="font-medium text-gray-900 mb-4">Key Factors</h4>
                   <div className="flex flex-wrap gap-2">
-                    {forecastData.factors.map((factor, index) => (
+                    {forecastData?.factors?.map((factor, index) => (
                       <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
                         {factor}
                       </span>
-                    ))}
+                    )) || []}
                   </div>
                 </div>
               </div>

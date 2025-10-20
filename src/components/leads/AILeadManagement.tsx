@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -29,7 +28,6 @@ import {
 import { DataSourceConfig } from './DataSourceConfig';
 
 export function AILeadManagement() {
-  const router = useRouter()
   const [activeTab, setActiveTab] = useState('overview')
   const [showBriefModal, setShowBriefModal] = useState(false)
   const [showGenerationModal, setShowGenerationModal] = useState(false)
@@ -105,6 +103,12 @@ export function AILeadManagement() {
         ? { ...brief, status: brief.status === 'draft' ? 'active' : 'draft' }
         : brief
     )
+    setCreatedBriefs(updatedBriefs)
+    saveBriefs(updatedBriefs)
+  }
+
+  const handleDeleteBrief = (briefId: string) => {
+    const updatedBriefs = createdBriefs.filter(brief => brief.id !== briefId)
     setCreatedBriefs(updatedBriefs)
     saveBriefs(updatedBriefs)
   }
@@ -410,6 +414,9 @@ export function AILeadManagement() {
           email: '', // AI-generated leads don't have email yet
           phone: '', // AI-generated leads don't have phone yet
           company: leadToAccept.company,
+          title: '',
+          ai_score: 0,
+          assigned_to: null,
           source: 'AI Generated',
           status: 'new',
           notes: `AI Generated Lead - ${leadToAccept.description}\nWebsite: ${leadToAccept.website}\nIndustry: ${leadToAccept.industry}\nLocation: ${leadToAccept.location}\nSize: ${leadToAccept.size}`
@@ -488,7 +495,7 @@ export function AILeadManagement() {
                       <p className="font-medium text-orange-800">⚠️ Currently Using Demo Data</p>
                       <p className="text-sm text-orange-700">
                         The AI Lead Management system is currently using <strong>fake demonstration data</strong> for testing purposes. 
-                        Companies like "MedTech Solutions" and websites like "medtechsolutions.com" are <strong>not real</strong>.
+                        Companies like &quot;MedTech Solutions&quot; and websites like &quot;medtechsolutions.com&quot; are <strong>not real</strong>.
                       </p>
                       <div className="flex space-x-2 mt-3">
                         <Button 
@@ -838,25 +845,27 @@ export function AILeadManagement() {
 }
 
 // Lead Brief Form Component
+interface LeadBrief {
+  id: string
+  lead_type: string
+  geography: string
+  industry: string
+  employee_band: string
+  entity_type: string
+  time_horizon: string
+  notes: string
+  status: string
+  created_at: string
+}
+
 function LeadBriefForm({ 
   editingBrief,
   onClose, 
   onBriefCreated 
 }: { 
-  editingBrief?: typeof createdBriefs[0] | null
+  editingBrief?: LeadBrief | null
   onClose: () => void
-  onBriefCreated: (brief: {
-    id: string
-    lead_type: string
-    geography: string
-    industry: string
-    employee_band: string
-    entity_type: string
-    time_horizon: string
-    notes: string
-    status: string
-    created_at: string
-  }) => void
+  onBriefCreated: (brief: LeadBrief) => void
 }) {
   const [formData, setFormData] = useState({
     lead_type: editingBrief?.lead_type || 'account',

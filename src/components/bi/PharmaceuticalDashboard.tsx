@@ -8,8 +8,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   ChartBarIcon,
   UserGroupIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -101,8 +99,8 @@ export default function PharmaceuticalDashboard({
   const [error, setError] = useState<string | null>(null);
   const [periodStart, setPeriodStart] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
   const [periodEnd, setPeriodEnd] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedTerritory, setSelectedTerritory] = useState<string>('');
-  const [selectedProduct, setSelectedProduct] = useState<string>('');
+  const [selectedTerritory, _setSelectedTerritory] = useState<string>('');
+  const [selectedProduct, _setSelectedProduct] = useState<string>('');
 
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
@@ -143,7 +141,7 @@ export default function PharmaceuticalDashboard({
     loadDashboardData();
   }, [loadDashboardData]);
 
-  const getKPITrend = (kpiId: string, currentValue: number): 'up' | 'down' | 'stable' => {
+  const getKPITrend = (_kpiId: string, _currentValue: number): 'up' | 'down' | 'stable' => {
     // This would typically compare with previous period
     // For now, return stable as placeholder
     return 'stable';

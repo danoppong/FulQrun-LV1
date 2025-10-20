@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { UserSelect } from '@/components/common/UserSelect'
 import { useRouter } from 'next/navigation'
 import { opportunityAPI, OpportunityWithDetails, MEDDPICCData } from '@/lib/api/opportunities'
 
@@ -53,22 +54,22 @@ export default function OpportunityFormEnhanced({
   
   // PEAK data state
   const [peakData, setPeakData] = useState<PEAKData>({
-    peak_stage: opportunity?.peak_stage || 'prospecting',
-    deal_value: opportunity?.deal_value || undefined,
-    probability: opportunity?.probability || undefined,
-    close_date: opportunity?.close_date || ''
+    peak_stage: (opportunity as Partial<PEAKData> | undefined)?.peak_stage || 'prospecting',
+    deal_value: (opportunity as Partial<PEAKData> | undefined)?.deal_value || undefined,
+    probability: (opportunity as Partial<PEAKData> | undefined)?.probability || undefined,
+    close_date: (opportunity as Partial<PEAKData> | undefined)?.close_date || ''
   })
   
   // MEDDPICC data state
   const [meddpiccData, setMeddpiccData] = useState<MEDDPICCData>({
-    metrics: opportunity?.metrics || '',
-    economic_buyer: opportunity?.economic_buyer || '',
-    decision_criteria: opportunity?.decision_criteria || '',
-    decision_process: opportunity?.decision_process || '',
-    paper_process: opportunity?.paper_process || '',
-    identify_pain: opportunity?.identify_pain || '',
-    champion: opportunity?.champion || '',
-    competition: opportunity?.competition || ''
+    metrics: (opportunity as Partial<MEDDPICCData> | undefined)?.metrics || '',
+    economic_buyer: (opportunity as Partial<MEDDPICCData> | undefined)?.economic_buyer || '',
+    decision_criteria: (opportunity as Partial<MEDDPICCData> | undefined)?.decision_criteria || '',
+    decision_process: (opportunity as Partial<MEDDPICCData> | undefined)?.decision_process || '',
+    paper_process: (opportunity as Partial<MEDDPICCData> | undefined)?.paper_process || '',
+    identify_pain: (opportunity as Partial<MEDDPICCData> | undefined)?.identify_pain || '',
+    champion: (opportunity as Partial<MEDDPICCData> | undefined)?.champion || '',
+    competition: (opportunity as Partial<MEDDPICCData> | undefined)?.competition || ''
   })
   
   const [showComprehensiveMEDDPICC, setShowComprehensiveMEDDPICC] = useState(false)
@@ -79,7 +80,7 @@ export default function OpportunityFormEnhanced({
     handleSubmit,
     formState: { errors },
     watch,
-    setValue: _setValue,
+    setValue,
     reset,
   } = useForm<LocalOpportunityFormData>({
     resolver: zodResolver(opportunitySchema),
@@ -169,16 +170,7 @@ export default function OpportunityFormEnhanced({
     }
   }, [mode, opportunityId, opportunity, loadOpportunity])
 
-  // Auto-save functionality (every 30 seconds if dirty)
-  useEffect(() => {
-    if (isDirty && mode === 'edit' && opportunityId) {
-      const autoSaveTimer = setTimeout(() => {
-        handleAutoSave()
-      }, 30000) // 30 seconds
-
-      return () => clearTimeout(autoSaveTimer)
-    }
-  }, [isDirty, mode, opportunityId, handleAutoSave])
+  // Auto-save effect moved below handleAutoSave
 
   const loadContacts = async () => {
     try {
@@ -225,7 +217,7 @@ export default function OpportunityFormEnhanced({
         ...meddpiccData
       }
 
-      const { error } = await opportunityAPI.updateOpportunity(opportunityId, opportunityData)
+  const { error } = await opportunityAPI.saveAll(opportunityId, opportunityData)
       
       if (!error) {
         setLastSaved(new Date())
@@ -236,6 +228,17 @@ export default function OpportunityFormEnhanced({
       console.error('Auto-save failed:', err)
     }
   }, [opportunityId, isDirty, peakData, meddpiccData, watch])
+
+  // Auto-save functionality (every 30 seconds if dirty) - declared after handleAutoSave
+  useEffect(() => {
+    if (isDirty && mode === 'edit' && opportunityId) {
+      const autoSaveTimer = setTimeout(() => {
+        handleAutoSave()
+      }, 30000) // 30 seconds
+
+      return () => clearTimeout(autoSaveTimer)
+    }
+  }, [isDirty, mode, opportunityId, handleAutoSave])
 
   const handlePeakSave = useCallback(async (data: PEAKData) => {
     // Only update if data has actually changed
@@ -288,8 +291,14 @@ export default function OpportunityFormEnhanced({
         return
       }
 
-      const opportunityData: LocalOpportunityFormData = {
-        ...data,
+      type OptionalMeta = { description?: string; assigned_to?: string }
+      const meta = data as OptionalMeta
+      const opportunityData = {
+        name: data.name,
+        contact_id: data.contact_id || null,
+        company_id: data.company_id || null,
+        description: meta.description || null,
+        assigned_to: meta.assigned_to || null,
         ...peakData,
         ...meddpiccData
       }
@@ -298,7 +307,7 @@ export default function OpportunityFormEnhanced({
       if (mode === 'create') {
         result = await opportunityAPI.createOpportunity(opportunityData)
       } else if (opportunityId) {
-        result = await opportunityAPI.updateOpportunity(opportunityId, opportunityData)
+  result = await opportunityAPI.saveAll(opportunityId, opportunityData)
       }
 
       if (result?.error) {
@@ -422,11 +431,15 @@ export default function OpportunityFormEnhanced({
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
                 >
                   <option value="">Select a contact</option>
-                  {contacts.map((contact) => (
-                    <option key={contact.id} value={contact.id}>
-                      {contact.first_name} {contact.last_name}
-                    </option>
-                  ))}
+                  {contacts.map((contact) => {
+                    type DisplayContact = { id: string; first_name: string; last_name: string }
+                    const c = contact as unknown as DisplayContact
+                    return (
+                      <option key={c.id} value={c.id}>
+                        {c.first_name} {c.last_name}
+                      </option>
+                    )
+                  })}
                 </select>
               </div>
 
@@ -439,11 +452,15 @@ export default function OpportunityFormEnhanced({
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
                 >
                   <option value="">Select a company</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name}
-                    </option>
-                  ))}
+                  {companies.map((company) => {
+                    type DisplayCompany = { id: string; name: string }
+                    const c = company as unknown as DisplayCompany
+                    return (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    )
+                  })}
                 </select>
               </div>
 
@@ -460,15 +477,14 @@ export default function OpportunityFormEnhanced({
               </div>
 
               <div>
-                <label htmlFor="assigned_to" className="block text-sm font-medium text-gray-700">
-                  Assigned To
-                </label>
-                <input
-                  {...register('assigned_to')}
-                  type="text"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  placeholder="Enter assigned user ID"
+                <UserSelect
+                  label="Assigned To"
+                  value={watch('assigned_to') || ''}
+                  onChange={(v) => setValue('assigned_to', v || '')}
+                  allowEmpty
+                  emptyLabel="Unassigned"
                 />
+                <input type="hidden" {...register('assigned_to')} />
               </div>
             </div>
           </div>
@@ -514,9 +530,9 @@ export default function OpportunityFormEnhanced({
                     assessment={meddpiccAssessment}
                     onStageAdvance={async (fromStage, toStage) => {
                       try {
-                        const { error } = await opportunityAPI.updatePeakStage(opportunityId!, toStage as string)
+                        const { error } = await opportunityAPI.saveAll(opportunityId!, { peak_stage: toStage as PEAKData['peak_stage'] })
                         if (!error) {
-                          setPeakData(prev => ({ ...prev, peak_stage: toStage as string }))
+                          setPeakData(prev => ({ ...prev, peak_stage: toStage as PEAKData['peak_stage'] }))
                           setIsDirty(true)
                         }
                       } catch (error) {

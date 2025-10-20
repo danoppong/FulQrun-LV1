@@ -2,6 +2,7 @@
 import React, { useState, useEffect, memo, useCallback } from 'react'
 import { usePerformanceTracking } from '@/hooks/usePerformanceTracking'
 import { supabase } from '@/lib/supabase';
+import { formatCurrencySafe } from '@/lib/format'
 import {
   SalesmanKPIs, 
   SAMPLE_SALESMAN_DATA, 
@@ -38,11 +39,13 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
   const loadDashboardLayout = useCallback(async () => {
     try {
       // Try to load from database first
-      const { data, error } = await supabase
+      const resp = await supabase
         .from('user_dashboard_layouts')
         .select('widgets')
         .eq('user_id', userId)
         .single()
+      const data = resp.data as { widgets?: PerformanceWidget[] } | null
+      const error = resp.error as { code?: string; message?: string } | null
 
       if (error && error.code !== 'PGRST116') {
         // PGRST116 is "not found" - ignore it, try localStorage
@@ -52,7 +55,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         }
       }
 
-      if (data?.widgets) {
+      if (data && data.widgets) {
         setWidgets(data.widgets)
         setStorageMethod('database')
         return
@@ -92,6 +95,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         setStorageMethod('localStorage')
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, supabase])
 
   const saveDashboardLayout = useCallback(async () => {
@@ -99,6 +103,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
       // Try to save to database first
       const { error: dbError } = await supabase
         .from('user_dashboard_layouts')
+  // @ts-expect-error - Supabase generics for this table aren't configured in this file
         .upsert({
           user_id: userId,
           widgets: widgets
@@ -127,6 +132,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
         return false
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, widgets, supabase])
 
   const attemptSyncToDatabase = useCallback(async () => {
@@ -148,6 +154,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
       // Try to save to database
       const { error: dbError } = await supabase
         .from('user_dashboard_layouts')
+  // @ts-expect-error - Supabase generics for this table aren't configured in this file
         .upsert({
           user_id: userId,
           widgets: parsedLayout
@@ -171,6 +178,7 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
       // Sync attempt failed
       setIsSyncing(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSyncing, userId, supabase])
 
   useEffect(() => {
@@ -257,15 +265,8 @@ const SalesmanDashboard = memo(function SalesmanDashboard({ userId, userName }: 
   const removeWidget = (widgetId: string) => {
     setWidgets(widgets.filter(w => w.id !== widgetId))
   }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount)
-  }
+  // Use shared NaN-safe currency formatter
+  const formatCurrency = (amount: unknown) => formatCurrencySafe(amount)
 
   const getPerformanceColor = (percentage: number) => {
     if (percentage >= 100) return 'text-green-600'

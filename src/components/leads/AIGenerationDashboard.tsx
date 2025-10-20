@@ -5,12 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Play, RefreshCw, Eye, Filter, Search, TrendingUp, Users, Building, Mail } from 'lucide-react';
+import { Loader2, RefreshCw, Eye, Search, TrendingUp, Users, Building, Mail } from 'lucide-react';
 
 interface GeneratedLead {
   id: string
@@ -51,7 +48,7 @@ export function AIGenerationDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [geographyFilter, setGeographyFilter] = useState<string>('all')
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generationProgress, setGenerationProgress] = useState(0)
+  const [generationProgress, _setGenerationProgress] = useState(0)
 
   useEffect(() => {
     fetchLeads()

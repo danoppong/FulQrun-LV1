@@ -4,44 +4,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  ChartBarIcon, 
-  CalculatorIcon, 
-  PlusIcon, 
-  PencilIcon, 
-  TrashIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
-  DocumentTextIcon,
-  ClockIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  MinusIcon,
-  Squares2X2Icon,
-  CogIcon,
-  PaintBrushIcon,
-  ShareIcon,
-  ArrowDownTrayIcon,
-  ArrowUpTrayIcon,
-  ArrowsPointingOutIcon,
-  ArrowsPointingInIcon,
-  AdjustmentsHorizontalIcon,
-  SparklesIcon,
-  LightBulbIcon,
-  PresentationChartLineIcon,
-  TableCellsIcon,
-  MapIcon,
-  CalendarIcon,
-  UserGroupIcon,
-  CurrencyDollarIcon,
-  GlobeAltIcon,
-  DevicePhoneMobileIcon,
-  ComputerDesktopIcon,
-  TvIcon
-} from '@heroicons/react/24/outline';
+import { ChartBarIcon, CalculatorIcon, EyeIcon, DocumentTextIcon, ArrowTrendingUpIcon, Squares2X2Icon, CogIcon, ShareIcon, ArrowDownTrayIcon, ArrowUpTrayIcon, TableCellsIcon, MapIcon, CalendarIcon, CheckCircleIcon, PaintBrushIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -179,7 +142,7 @@ type ChartType =
 // WIDGET LIBRARY COMPONENT
 // =============================================================================
 
-function WidgetLibrary({ onAddWidget }: { onAddWidget: (widgetType: WidgetType) => void }) {
+function WidgetLibrary({ onAddWidget: _onAddWidget }: { onAddWidget: (widgetType: WidgetType) => void }) {
   const widgetTypes = [
     { type: 'chart', label: 'Chart', icon: ChartBarIcon, description: 'Data visualization charts' },
     { type: 'metric', label: 'Metric', icon: CalculatorIcon, description: 'Key performance indicators' },
@@ -458,7 +421,7 @@ function WidgetComponent({
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: MouseEvent) => {
     if (!isResizing) return;
 
     const deltaX = e.clientX - resizeStart.x;
@@ -476,17 +439,17 @@ function WidgetComponent({
 
   useEffect(() => {
     if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
   }, [isResizing]);
 
   const getWidgetIcon = (type: WidgetType) => {
-    const icons: Record<WidgetType, any> = {
+  const icons: Record<WidgetType, React.ComponentType<{ className?: string }>> = {
       chart: ChartBarIcon,
       metric: CalculatorIcon,
       table: TableCellsIcon,
@@ -660,7 +623,7 @@ function PropertiesPanel({
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as unknown)}
+              onClick={() => setActiveTab(tab.id as 'dashboard' | 'widget' | 'theme')}
               className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium ${
                 activeTab === tab.id
                   ? 'text-blue-600 border-b-2 border-blue-600'
@@ -998,6 +961,100 @@ export default function DashboardBuilder() {
   });
 
   const [selectedWidget, setSelectedWidget] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<Array<{ id: string; name: string; role: string; layout_json: unknown; is_default?: boolean }>>([])
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
+  const [applyStatus, setApplyStatus] = useState<string>('')
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
+
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      try {
+        setIsLoadingTemplates(true)
+        const res = await fetch('/api/dashboard/templates', { cache: 'no-store' })
+        const json = (await res.json()) as { data?: unknown }
+        if (!active) return
+        const rows = Array.isArray(json?.data) ? json?.data as Array<Record<string, unknown>> : []
+        const mapped = rows.map(r => ({
+          id: String(r.id ?? ''),
+          name: String(r.name ?? 'Untitled'),
+          role: String(r.role ?? ''),
+          layout_json: r.layout_json,
+          is_default: Boolean(r.is_default)
+        }))
+        setTemplates(mapped)
+      } catch (_e) {
+        setTemplates([])
+      } finally {
+        setIsLoadingTemplates(false)
+      }
+    }
+    void load()
+    return () => { active = false }
+  }, [])
+
+  const handleApplyTemplate = useCallback((tplId: string) => {
+    const tpl = templates.find(t => t.id === tplId)
+    if (!tpl) return
+    try {
+      const layout = tpl.layout_json as unknown
+      // Expect builder-style layout: array of widgets or complete dashboard shape; support both
+      if (Array.isArray(layout)) {
+        // Interpret as simple widgets array on a 12x grid
+        const widgets: Widget[] = (layout as Array<unknown>).map((w, idx) => {
+          const rec = w as { id?: string; type?: string; title?: string; x?: number; y?: number; w?: number; h?: number }
+          return {
+            id: String(rec.id ?? `w_${idx}`),
+            type: (String(rec.type ?? 'metric') as WidgetType),
+            title: String(rec.title ?? 'Widget'),
+            position: { x: Number(rec.x ?? 0), y: Number(rec.y ?? 0) },
+            size: { width: Number(rec.w ?? 3), height: Number(rec.h ?? 2) },
+            config: {},
+            data: null,
+            style: { backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, borderRadius: 8, padding: 16, fontSize: 14, fontFamily: 'Inter', textColor: '#111827' },
+          }
+        })
+        setDashboard(prev => ({ ...prev, widgets, updatedAt: new Date() }))
+      } else if (layout && typeof layout === 'object') {
+        // If a full dashboard object shape was published, try to coerce
+        const obj = layout as Partial<Dashboard>
+        setDashboard(prev => ({
+          ...prev,
+          name: obj.name || prev.name,
+          description: obj.description || prev.description,
+          layout: obj.layout || prev.layout,
+          theme: obj.theme || prev.theme,
+          settings: obj.settings || prev.settings,
+          widgets: Array.isArray(obj.widgets) ? (obj.widgets as Widget[]) : prev.widgets,
+          updatedAt: new Date()
+        }))
+      }
+      setApplyStatus('Template applied')
+    } catch (_e) {
+      setApplyStatus('Failed to apply template')
+    } finally {
+      setTimeout(() => setApplyStatus(''), 2000)
+    }
+  }, [templates])
+
+  const handleSetDefault = useCallback(async (tplId: string) => {
+    if (!tplId) return
+    try {
+      const res = await fetch('/api/dashboard/templates', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: tplId, isDefault: true })
+      })
+      if (!res.ok) throw new Error('Failed to set default')
+      // Optimistically update local state: mark only this template as default
+      setTemplates(prev => prev.map(t => ({ ...t, is_default: t.id === tplId })))
+      setApplyStatus('Default set')
+    } catch (_e) {
+      setApplyStatus('Failed to set default')
+    } finally {
+      setTimeout(() => setApplyStatus(''), 2000)
+    }
+  }, [])
 
   const selectedWidgetData = dashboard.widgets.find(w => w.id === selectedWidget) || null;
 
@@ -1011,6 +1068,37 @@ export default function DashboardBuilder() {
             <p className="text-sm text-gray-500">Create and customize interactive dashboards</p>
           </div>
           <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">Templates</label>
+              <select
+                className="px-3 py-2 border rounded-md text-sm"
+                onChange={(e) => setSelectedTemplateId(e.target.value)}
+                value={selectedTemplateId}
+                disabled={isLoadingTemplates || templates.length === 0}
+              >
+                <option value="">{isLoadingTemplates ? 'Loading…' : 'Select template'}</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} ({t.role}){t.is_default ? ' ★' : ''}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="px-3 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                disabled={!selectedTemplateId}
+                onClick={() => selectedTemplateId && handleApplyTemplate(selectedTemplateId)}
+              >
+                Apply
+              </button>
+              <button
+                className="px-3 py-2 text-sm rounded-md bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
+                disabled={!selectedTemplateId}
+                onClick={() => selectedTemplateId && handleSetDefault(selectedTemplateId)}
+              >
+                Set Default
+              </button>
+              {applyStatus && <span className="text-sm text-green-600">{applyStatus}</span>}
+            </div>
             <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
               <ArrowUpTrayIcon className="h-4 w-4 mr-2" />
               Import

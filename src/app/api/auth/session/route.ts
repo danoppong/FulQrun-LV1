@@ -1,6 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseConfig } from '@/lib/config';
+import { supabaseConfig } from '@/lib/config'
+
+type CookieOptions = {
+  path?: string
+  domain?: string
+  maxAge?: number
+  secure?: boolean
+  httpOnly?: boolean
+  sameSite?: 'lax' | 'strict' | 'none'
+}
 
 /**
  * POST /api/auth/session
@@ -28,7 +37,7 @@ export async function POST(request: NextRequest) {
           get(name: string) {
             return request.cookies.get(name)?.value;
           },
-          set(name: string, value: string, options: any) {
+          set(name: string, value: string, options: CookieOptions) {
             response.cookies.set({
               name,
               value,
@@ -38,7 +47,7 @@ export async function POST(request: NextRequest) {
               sameSite: 'lax',
             });
           },
-          remove(name: string, options: any) {
+          remove(name: string, options: CookieOptions) {
             response.cookies.set({
               name,
               value: '',

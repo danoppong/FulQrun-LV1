@@ -15,6 +15,7 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
     setMounted(true)
     // Apply theme after component mounts to prevent hydration mismatches
     const theme = getStoredTheme()
+    console.log('🎨 ThemeProvider: Applying stored theme:', theme) // Debug log
     applyTheme(theme)
   }, [])
 

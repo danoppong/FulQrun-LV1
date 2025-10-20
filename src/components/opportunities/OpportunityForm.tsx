@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { opportunityAPI, OpportunityWithDetails, OpportunityFormData } from '@/lib/api/opportunities'
+import type { OpportunityWithDetails, OpportunityFormData } from '@/lib/api/opportunities'
 import { contactAPI, ContactWithCompany } from '@/lib/api/contacts'
 import { companyAPI, CompanyWithStats } from '@/lib/api/companies'
 import { useForm } from 'react-hook-form'
@@ -19,6 +19,10 @@ const MEDDPICCForm = dynamic(() => import('@/components/forms/MEDDPICCForm'), {
   loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
   ssr: false
 })
+const MEDDPICCQualification = dynamic(() => import('@/components/meddpicc/MEDDPICCQualification'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  ssr: false
+})
 const MEDDPICCDashboard = dynamic(() => import('@/components/meddpicc').then(mod => ({ default: mod.MEDDPICCDashboard })), {
   loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
   ssr: false
@@ -28,8 +32,14 @@ const MEDDPICCPEAKIntegration = dynamic(() => import('@/components/meddpicc').th
   ssr: false
 })
 
-import type { PEAKFormData } from '@/components/forms/PEAKForm'
-import type { MEDDPICCFormData } from '@/components/forms/MEDDPICCForm';
+// Local lightweight type aliases to avoid depending on component type exports
+type PEAKFormData = {
+  peak_stage?: 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
+  deal_value?: number | null
+  probability?: number | null
+  close_date?: string | null
+}
+type MEDDPICCFormData = Record<string, string>
 import { MEDDPICCAssessment, calculateMEDDPICCScore } from '@/lib/meddpicc'
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -43,6 +53,7 @@ const opportunitySchema = z.object({
 })
 
 type LocalOpportunityFormData = z.infer<typeof opportunitySchema>
+type PEAKStage = 'prospecting' | 'engaging' | 'advancing' | 'key_decision'
 
 interface OpportunityFormProps {
   opportunity?: OpportunityWithDetails
@@ -143,30 +154,40 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
   const router = useRouter()
   const { handleError: _handleError, handleLoadingError: _handleLoadingError, handleAsyncOperation } = useErrorHandler()
   
+  // Add refs to prevent multiple simultaneous saves
+  const isSavingRef = useRef(false)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
   // Debug logging removed to prevent infinite re-rendering
   const [contacts, setContacts] = useState<ContactWithCompany[]>([])
   const [companies, setCompanies] = useState<CompanyWithStats[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [_isDirty, setIsDirty] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  
+  // Stable error handler
+  const handleErrorStable = useCallback((errorMessage: string) => {
+    setError(errorMessage)
+  }, [])
   const [peakData, setPeakData] = useState({
-    peak_stage: opportunity?.peak_stage || 'prospecting' as const,
-    deal_value: opportunity?.deal_value || undefined,
-    probability: opportunity?.probability || undefined,
-    close_date: opportunity?.close_date || ''
+    peak_stage: ((opportunity as Partial<OpportunityFormData> | undefined)?.peak_stage as PEAKStage) || ('prospecting' as const),
+    deal_value: (opportunity as Partial<OpportunityFormData> | undefined)?.deal_value || undefined,
+    probability: (opportunity as Partial<OpportunityFormData> | undefined)?.probability || undefined,
+    close_date: (opportunity as Partial<OpportunityFormData> | undefined)?.close_date || ''
   })
   const [meddpiccData, setMeddpiccData] = useState({
-    metrics: opportunity?.metrics || '',
-    economic_buyer: opportunity?.economic_buyer || '',
-    decision_criteria: opportunity?.decision_criteria || '',
-    decision_process: opportunity?.decision_process || '',
-    paper_process: opportunity?.paper_process || '',
-    identify_pain: opportunity?.identify_pain || '',
-    implicate_pain: opportunity?.implicate_pain || '',
-    champion: opportunity?.champion || '',
-    competition: opportunity?.competition || ''
+    metrics: (opportunity as Partial<OpportunityFormData> | undefined)?.metrics || '',
+    economic_buyer: (opportunity as Partial<OpportunityFormData> | undefined)?.economic_buyer || '',
+    decision_criteria: (opportunity as Partial<OpportunityFormData> | undefined)?.decision_criteria || '',
+    decision_process: (opportunity as Partial<OpportunityFormData> | undefined)?.decision_process || '',
+    paper_process: (opportunity as Partial<OpportunityFormData> | undefined)?.paper_process || '',
+    identify_pain: (opportunity as Partial<OpportunityFormData> | undefined)?.identify_pain || '',
+    implicate_pain: (opportunity as Partial<OpportunityFormData> | undefined)?.implicate_pain || '',
+    champion: (opportunity as Partial<OpportunityFormData> | undefined)?.champion || '',
+    competition: (opportunity as Partial<OpportunityFormData> | undefined)?.competition || ''
   })
   const [showComprehensiveMEDDPICC, setShowComprehensiveMEDDPICC] = useState(false)
   const [meddpiccAssessment, _setMeddpiccAssessment] = useState<MEDDPICCAssessment | undefined>(undefined)
@@ -175,25 +196,23 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     setValue: _setValue,
     reset
   } = useForm<LocalOpportunityFormData>({
     resolver: zodResolver(opportunitySchema),
     defaultValues: opportunity ? {
-      name: opportunity.name,
-      contact_id: opportunity.contact_id || '',
-      company_id: opportunity.company_id || '',
+      name: (opportunity as Partial<OpportunityFormData>).name as string,
+      contact_id: (opportunity as Partial<OpportunityFormData>).contact_id || '',
+      company_id: (opportunity as Partial<OpportunityFormData>).company_id || '',
     } : {}
   })
-
-  const _watchedValues = watch()
 
   const loadOpportunity = useCallback(async () => {
     if (!opportunityId) return
     
     const _result = await handleAsyncOperation(
       async () => {
+        const { opportunityAPI } = await import('@/lib/api/opportunities')
         const { data, error } = await opportunityAPI.getOpportunity(opportunityId)
         
         if (error) {
@@ -205,31 +224,32 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
         }
         
         // Reset the main form with loaded data
+        const oppLoaded = data as Partial<OpportunityFormData>
         reset({
-          name: data.name,
-          contact_id: data.contact_id || '',
-          company_id: data.company_id || ''
+          name: (oppLoaded.name as string) || '',
+          contact_id: oppLoaded.contact_id || '',
+          company_id: oppLoaded.company_id || ''
         })
         
         // Update PEAK data
         setPeakData({
-          peak_stage: data.peak_stage || 'prospecting' as const,
-          deal_value: data.deal_value || undefined,
-          probability: data.probability || undefined,
-          close_date: data.close_date || ''
+          peak_stage: (oppLoaded.peak_stage as PEAKStage) || ('prospecting' as const),
+          deal_value: oppLoaded.deal_value || undefined,
+          probability: oppLoaded.probability || undefined,
+          close_date: (oppLoaded.close_date as string) || ''
         })
         
         // Update MEDDPICC data
         setMeddpiccData({
-          metrics: data.metrics || '',
-          economic_buyer: data.economic_buyer || '',
-          decision_criteria: data.decision_criteria || '',
-          decision_process: data.decision_process || '',
-          paper_process: data.paper_process || '',
-          identify_pain: data.identify_pain || '',
-          implicate_pain: data.implicate_pain || '',
-          champion: data.champion || '',
-          competition: data.competition || ''
+          metrics: (oppLoaded.metrics as string) || '',
+          economic_buyer: (oppLoaded.economic_buyer as string) || '',
+          decision_criteria: (oppLoaded.decision_criteria as string) || '',
+          decision_process: (oppLoaded.decision_process as string) || '',
+          paper_process: (oppLoaded.paper_process as string) || '',
+          identify_pain: (oppLoaded.identify_pain as string) || '',
+          implicate_pain: (oppLoaded.implicate_pain as string) || '',
+          champion: (oppLoaded.champion as string) || '',
+          competition: (oppLoaded.competition as string) || ''
         })
         
         return data
@@ -239,15 +259,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     )
   }, [opportunityId, handleAsyncOperation, setError, setLoading, reset])
 
-  useEffect(() => {
-    loadContacts()
-    loadCompanies()
-    if (mode === 'edit' && opportunityId && !opportunity) {
-      loadOpportunity()
-    }
-  }, [mode, opportunityId, opportunity, loadOpportunity])
-
-  const loadContacts = async () => {
+  const loadContacts = useCallback(async () => {
     try {
       const { data, error } = await contactAPI.getContacts()
       if (error) {
@@ -258,9 +270,9 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     } catch (_err) {
       console.warn('Error loading contacts:', _err)
     }
-  }
+  }, [])
 
-  const loadCompanies = async () => {
+  const loadCompanies = useCallback(async () => {
     try {
       const { data, error } = await companyAPI.getCompanies()
       if (error) {
@@ -271,99 +283,132 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
     } catch (_err) {
       console.warn('Error loading companies:', _err)
     }
-  }
+  }, [])
 
-  const handlePeakSave = async (data: PEAKFormData) => {
-    setPeakData(data)
-    setIsDirty(true)
-    
-    // If we're editing an existing opportunity, save PEAK data immediately
-    if (mode === 'edit' && opportunityId) {
-      try {
-        const { error } = await opportunityAPI.updateOpportunity(opportunityId, data)
-        if (error) {
-          // Handle specific error types for better test compatibility
-          if (error.message?.includes('Database connection failed')) {
-            setError('Database connection failed')
-          } else if (error.message?.includes('Network error')) {
-            setError('An unexpected error occurred')
-          } else {
-            setError(error.message || 'Failed to save PEAK data')
-          }
-        } else {
-          // Trigger a custom event to notify other components that PEAK data was updated
-          window.dispatchEvent(new CustomEvent('peakUpdated', { 
-            detail: { opportunityId, data } 
-          }))
-        }
-      } catch (err) {
-        // Handle specific error types for better test compatibility
-        if (err instanceof Error && err.message.includes('Network error')) {
-          setError('An unexpected error occurred')
-        } else {
-          setError('Failed to save PEAK data')
-        }
+  useEffect(() => {
+    loadContacts()
+    loadCompanies()
+  }, [loadContacts, loadCompanies])
+
+  useEffect(() => {
+    if (mode === 'edit' && opportunityId && !opportunity) {
+      loadOpportunity()
+    }
+  }, [mode, opportunityId, opportunity, loadOpportunity])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    const timeoutSnapshot = saveTimeoutRef.current
+    return () => {
+      if (timeoutSnapshot) {
+        clearTimeout(timeoutSnapshot)
       }
     }
-  }
+  }, [])
 
-  const handlePeakSuccess = () => {
-    // Clear any existing errors when save is successful
-    setError(null)
-  }
+  const handlePeakSave = useCallback(async (data: PEAKFormData) => {
+    // Prevent multiple simultaneous saves
+    if (isSavingRef.current) {
+      console.log('Save already in progress, skipping...')
+      return
+    }
 
-  const handleMeddpiccSave = async (data: MEDDPICCFormData) => {
-    setMeddpiccData(data)
+  setPeakData(prev => ({ ...prev, ...data }))
     setIsDirty(true)
     
-    // If we're editing an existing opportunity, save MEDDPICC data immediately
-    if (mode === 'edit' && opportunityId) {
-      try {
-        // Use the unified scoring service for consistency
-        const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, { ...opportunity, ...data })
-        const meddpiccScore = scoreResult.score
-        
-        // Save both MEDDPICC data and calculated score
-        const { error } = await opportunityAPI.updateMEDDPICC(opportunityId, {
-          ...data,
-          meddpicc_score: meddpiccScore
-        })
-        
-        if (error) {
-          // Handle specific error types for better test compatibility
-          if (error.message?.includes('Database connection failed')) {
-            setError('Database connection failed')
-          } else if (error.message?.includes('Network error')) {
-            setError('An unexpected error occurred')
-          } else {
-            setError(error.message || 'Failed to save MEDDPICC data')
-          }
-        } else {
-          // Trigger a custom event to notify other components that MEDDPICC data was updated
-          window.dispatchEvent(new CustomEvent('meddpiccUpdated', { 
-            detail: { opportunityId, data, score: meddpiccScore } 
-          }))
-          
-          // Also trigger score update event
-          window.dispatchEvent(new CustomEvent('meddpicc-score-updated', { 
-            detail: { opportunityId, score: meddpiccScore } 
-          }))
-        }
-      } catch (err) {
-        // Handle specific error types for better test compatibility
-        if (err instanceof Error && err.message.includes('Network error')) {
-          setError('An unexpected error occurred')
-        } else {
-          setError('Failed to save MEDDPICC data')
-        }
-      }
-    }
-  }
+    // Manual save only - no auto-save to prevent infinite loops
+    console.log('PEAK data updated', data)
+  }, [])
 
-  const handleMeddpiccSuccess = () => {
+  // Manual save function for PEAK data
+  const savePeakData = useCallback(async () => {
+    if (isSavingRef.current || !opportunityId) return
+
+    isSavingRef.current = true
+    try {
+      const { opportunityAPI } = await import('@/lib/api/opportunities')
+      // Use unified transactional save to reduce parallel writes
+      const { error } = await opportunityAPI.saveAll(opportunityId, {
+        peak_stage: peakData.peak_stage,
+        deal_value: peakData.deal_value ?? null,
+        probability: peakData.probability ?? null,
+        close_date: peakData.close_date || null,
+      })
+      if (error) {
+        handleErrorStable(error.message || 'Failed to save PEAK data')
+      } else {
+        setLastSaved(new Date())
+        setSuccessMessage('PEAK data saved successfully')
+        setTimeout(() => setSuccessMessage(null), 3000)
+      }
+    } catch (_err) {
+      handleErrorStable('Failed to save PEAK data')
+    } finally {
+      isSavingRef.current = false
+    }
+  }, [opportunityId, peakData, handleErrorStable])
+
+  const handlePeakSuccess = useCallback(() => {
     // Clear any existing errors when save is successful
     setError(null)
-  }
+  }, [])
+
+  const handleMeddpiccSave = useCallback(async (data: MEDDPICCFormData) => {
+    // Prevent multiple simultaneous saves
+    if (isSavingRef.current) {
+      console.log('Save already in progress, skipping...')
+      return
+    }
+
+  setMeddpiccData(prev => ({ ...prev, ...data }))
+    setIsDirty(true)
+    
+    // Manual save only - no auto-save to prevent infinite loops
+    console.log('MEDDPICC data updated', data)
+  }, [])
+
+  // Manual save function for MEDDPICC data
+  const saveMeddpiccData = useCallback(async () => {
+    if (isSavingRef.current || !opportunityId) return
+
+    isSavingRef.current = true
+    try {
+      const { opportunityAPI } = await import('@/lib/api/opportunities')
+      const scoreResult = await meddpiccScoringService.getOpportunityScore(opportunityId, { ...opportunity, ...meddpiccData })
+      const meddpiccScore = scoreResult.score
+      
+      // Use unified transactional save for MEDDPICC data + score
+      const { error } = await opportunityAPI.saveAll(opportunityId, {
+        metrics: meddpiccData.metrics || null,
+        economic_buyer: meddpiccData.economic_buyer || null,
+        decision_criteria: meddpiccData.decision_criteria || null,
+        decision_process: meddpiccData.decision_process || null,
+        paper_process: meddpiccData.paper_process || null,
+        identify_pain: meddpiccData.identify_pain || null,
+        implicate_pain: meddpiccData.implicate_pain || null,
+        champion: meddpiccData.champion || null,
+        competition: meddpiccData.competition || null,
+        meddpicc_score: meddpiccScore,
+      })
+      
+      if (error) {
+        handleErrorStable(error.message || 'Failed to save MEDDPICC data')
+      } else {
+        setLastSaved(new Date())
+        setSuccessMessage('MEDDPICC data saved successfully')
+        setTimeout(() => setSuccessMessage(null), 3000)
+      }
+    } catch (_err) {
+      handleErrorStable('Failed to save MEDDPICC data')
+    } finally {
+      isSavingRef.current = false
+    }
+  }, [opportunityId, meddpiccData, opportunity, handleErrorStable])
+
+  const handleMeddpiccSuccess = useCallback(() => {
+    // Clear any existing errors when save is successful
+    setError(null)
+  }, [])
 
   // Data validation function
   const validateOpportunityData = (data: OpportunityFormData) => {
@@ -415,7 +460,7 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
         
         // Prepare comprehensive opportunity data
         const opportunityData = {
-          ...data,
+          name: data.name, // Ensure name is always provided
           contact_id: data.contact_id || null,
           company_id: data.company_id || null,
           // Include PEAK data
@@ -446,12 +491,38 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
 
         console.log('Saving opportunity with data:', opportunityData)
 
-        let result
+        // Provide a local interface to avoid any-casts when probing optional methods
+        type OpportunityApiLike = {
+          createOpportunity: (data: Partial<OpportunityFormData>) => Promise<{ data: unknown; error: { message?: string } | null }>
+          updateOpportunity?: (id: string, data: Partial<OpportunityFormData>) => Promise<{ data: unknown; error: { message?: string } | null }>
+          saveAll?: (id: string, data: Partial<OpportunityFormData>) => Promise<{ data: unknown; error: { message?: string } | null }>
+        }
+  const { opportunityAPI } = await import('@/lib/api/opportunities')
+  const api: OpportunityApiLike = opportunityAPI as unknown as OpportunityApiLike
+
+        let result: { data: unknown; error: { message?: string } | null } | undefined
         if (mode === 'create') {
-          result = await opportunityAPI.createOpportunity(opportunityData)
+          result = await api.createOpportunity(opportunityData)
         } else if (opportunityId) {
-          // For updates, save all data in one call
-          result = await opportunityAPI.updateOpportunity(opportunityId, opportunityData)
+          // Explicitly call updateOpportunity in edit mode for deterministic behavior in tests
+          try {
+            result = await api.updateOpportunity?.(opportunityId, opportunityData)
+          } catch (e: unknown) {
+            if (
+              typeof e === 'object' &&
+              e &&
+              'message' in e &&
+              typeof (e as { message?: string }).message === 'string' &&
+              (e as { message: string }).message.includes('Network error')
+            ) {
+              throw new Error('An unexpected error occurred')
+            }
+            throw e
+          }
+          // Fallback if updateOpportunity is unavailable
+          if (!result && typeof api.saveAll === 'function') {
+            result = await api.saveAll(opportunityId, opportunityData)
+          }
         }
 
         if (result?.error) {
@@ -465,10 +536,20 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
           throw new Error(result.error.message || 'Failed to save opportunity')
         }
 
-        console.log('Opportunity saved successfully')
+  console.log('Opportunity saved successfully (minimal response)')
         setLastSaved(new Date())
         setIsDirty(false)
-        router.push('/opportunities')
+        
+        // For edit mode, stay on the page and show success message
+        // For create mode, redirect to the list
+        if (mode === 'create') {
+          router.push('/opportunities')
+        } else {
+          // Stay on edit page and show success feedback
+          setSuccessMessage('Opportunity updated successfully!')
+          setError(null) // Clear any previous errors
+          setTimeout(() => setSuccessMessage(null), 3000) // Clear success message after 3 seconds
+        }
         
         return result
       },
@@ -498,6 +579,23 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">Error</h3>
                   <p className="text-sm text-red-700 mt-1">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Success Message Display */}
+          {successMessage && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800">Success</h3>
+                  <p className="text-sm text-green-700 mt-1">{successMessage}</p>
                 </div>
               </div>
             </div>
@@ -550,11 +648,6 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-6">
-            {error && (
-              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-4">
-                <div className="text-sm text-destructive">{error}</div>
-              </div>
-            )}
 
             <div className="space-y-6">
               <div>
@@ -585,12 +678,16 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
                       className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-input bg-background text-foreground rounded-md px-3 py-2"
                     >
                       <option value="">Select a contact</option>
-                      {contacts.map((contact) => (
-                        <option key={contact.id} value={contact.id}>
-                          {contact.first_name} {contact.last_name}
-                          {contact.company && ` (${contact.company.name})`}
-                        </option>
-                      ))}
+                      {contacts.map((contact) => {
+                        type DisplayContact = { id: string; first_name: string; last_name: string; company?: { name: string } | null }
+                        const c = contact as unknown as DisplayContact
+                        return (
+                          <option key={c.id} value={c.id}>
+                            {c.first_name} {c.last_name}
+                            {c.company && ` (${c.company.name})`}
+                          </option>
+                        )
+                      })}
                     </select>
                   </div>
                 </div>
@@ -619,86 +716,164 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
 
             {/* PEAK Stage Management */}
             <ErrorBoundary>
-              <PEAKForm
-                initialData={peakData}
-                onSave={handlePeakSave}
-                onSuccess={handlePeakSuccess}
-                loading={loading}
-              />
+              <div className="space-y-4">
+                <PEAKForm
+                  initialData={peakData}
+                  onSave={handlePeakSave}
+                  onSuccess={handlePeakSuccess}
+                  loading={loading}
+                />
+                {mode === 'edit' && opportunityId && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={savePeakData}
+                      disabled={isSavingRef.current}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {isSavingRef.current ? 'Saving...' : 'Save PEAK Data'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </ErrorBoundary>
 
             {/* MEDDPICC Qualification */}
             <MEDDPICCErrorBoundary>
-              {showComprehensiveMEDDPICC ? (
-                <div className="space-y-6">
-                  {/* Toggle Button */}
-                  <div className="bg-white shadow rounded-lg p-6">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900">MEDDPICC Qualification - Comprehensive View</h3>
-                      <button
-                        type="button"
-                        onClick={() => setShowComprehensiveMEDDPICC(false)}
-                        className="text-sm text-primary hover:text-primary/80"
-                      >
-                        Switch to Simple View
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* MEDDPICC Dashboard */}
-                  <MEDDPICCDashboard
-                    opportunityId={opportunityId || ''}
-                    assessment={meddpiccAssessment}
-                  />
-                  
-                  {/* PEAK Integration */}
-                  <MEDDPICCPEAKIntegration
-                    opportunityId={opportunityId || ''}
-                    currentPEAKStage={peakData.peak_stage}
-                    assessment={meddpiccAssessment}
-                    onStageAdvance={async (fromStage, toStage) => {
-                      try {
-                        await opportunityAPI.updatePeakStage(opportunityId!, toStage as string)
-                        setPeakData(prev => ({ ...prev, peak_stage: toStage as string }))
-                      } catch (error) {
-                        console.error('Error advancing stage:', error)
+              <div className="bg-white shadow rounded-lg p-6">
+                {/* Header with Toggle */}
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      MEDDPICC Qualification
+                      {showComprehensiveMEDDPICC && (
+                        <span className="ml-2 text-sm text-gray-500">- Comprehensive View</span>
+                      )}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {showComprehensiveMEDDPICC 
+                        ? 'Complete questionnaire with detailed scoring' 
+                        : 'Simple text-based qualification form'
                       }
-                    }}
-                  />
-                  
-                  {/* Comprehensive MEDDPICC Form */}
-                  <MEDDPICCForm
-                    opportunityId={opportunityId}
-                    initialData={meddpiccData}
-                    onSave={handleMeddpiccSave}
-                    onSuccess={handleMeddpiccSuccess}
-                    loading={loading}
-                    useComprehensiveView={true}
-                  />
-                </div>
-              ) : (
-                <div className="bg-white shadow rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">MEDDPICC Qualification</h3>
-                    <div className="flex space-x-2">
+                    </p>
+                    {mode === 'edit' && lastSaved && (
+                      <p className="text-xs text-green-600 mt-1">
+                        Last saved: {lastSaved.toLocaleTimeString()}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        console.log('Toggling MEDDPICC view from', showComprehensiveMEDDPICC, 'to', !showComprehensiveMEDDPICC)
+                        setShowComprehensiveMEDDPICC(!showComprehensiveMEDDPICC)
+                      }}
+                      className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700 transition-colors"
+                    >
+                      {showComprehensiveMEDDPICC ? 'Switch to Simple' : 'Switch to Comprehensive'}
+                    </button>
+                    {mode === 'edit' && opportunityId && (
                       <button
                         type="button"
-                        onClick={() => setShowComprehensiveMEDDPICC(!showComprehensiveMEDDPICC)}
-                        className="text-sm text-primary hover:text-primary/80"
+                        onClick={saveMeddpiccData}
+                        disabled={isSavingRef.current}
+                        className="bg-green-600 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700 disabled:opacity-50 transition-colors"
                       >
-                        {showComprehensiveMEDDPICC ? 'Simple View' : 'Comprehensive View'}
+                        {isSavingRef.current ? 'Saving...' : 'Save MEDDPICC'}
                       </button>
-                    </div>
+                    )}
                   </div>
-                  
-                  <MEDDPICCForm
-                    initialData={meddpiccData}
-                    onSave={handleMeddpiccSave}
-                    onSuccess={handleMeddpiccSuccess}
-                    loading={loading}
-                  />
                 </div>
-              )}
+
+                {/* MEDDPICC Content */}
+                {showComprehensiveMEDDPICC ? (
+                  <div className="space-y-6">
+                    {/* Comprehensive View with Questionnaire */}
+                    <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 p-4 rounded-r-lg">
+                      <h4 className="font-medium text-blue-900">Comprehensive MEDDPICC Assessment</h4>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Complete the detailed questionnaire below for accurate scoring and insights.
+                      </p>
+                    </div>
+                    
+                    {opportunityId ? (
+                      <React.Suspense 
+                        fallback={
+                          <div className="flex items-center justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <span className="ml-2 text-gray-600">Loading comprehensive questionnaire...</span>
+                          </div>
+                        }
+                      >
+                        <MEDDPICCQualification
+                          opportunityId={opportunityId}
+                          initialData={[]} // Will load from database
+                          onSave={(assessment) => {
+                            console.log('MEDDPICC Assessment saved:', assessment)
+                            // Only update timestamp, don't trigger any saves
+                            setLastSaved(new Date())
+                          }}
+                          onStageGateReady={(gate, isReady) => {
+                            console.log(`Stage gate ${gate} is ${isReady ? 'ready' : 'not ready'}`)
+                          }}
+                          className="mt-4"
+                        />
+                      </React.Suspense>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>Save the opportunity first to use the comprehensive MEDDPICC questionnaire.</p>
+                      </div>
+                    )}
+                    
+                    {/* MEDDPICC Dashboard */}
+                    {opportunityId && (
+                      <MEDDPICCDashboard
+                        opportunityId={opportunityId}
+                        assessment={meddpiccAssessment}
+                      />
+                    )}
+                    
+                    {/* PEAK Integration */}
+                    {opportunityId && (
+                      <MEDDPICCPEAKIntegration
+                        opportunityId={opportunityId}
+                        currentPEAKStage={peakData.peak_stage}
+                        assessment={meddpiccAssessment}
+                        onStageAdvance={async (fromStage, toStage) => {
+                          try {
+                            // Use unified save for stage advance
+                            const { opportunityAPI } = await import('@/lib/api/opportunities')
+                            await opportunityAPI.saveAll(opportunityId, { peak_stage: toStage as PEAKStage })
+                            setPeakData(prev => ({ ...prev, peak_stage: toStage as PEAKStage }))
+                          } catch (error) {
+                            console.error('Error advancing stage:', error)
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Simple View */}
+                    <div className="border-l-4 border-gray-400 pl-4 bg-gray-50 p-4 rounded-r-lg">
+                      <h4 className="font-medium text-gray-900">Simple MEDDPICC Form</h4>
+                      <p className="text-sm text-gray-700 mt-1">
+                        Quick text-based fields for basic MEDDPICC qualification.
+                      </p>
+                    </div>
+                    
+                    <MEDDPICCForm
+                      opportunityId={opportunityId}
+                      initialData={meddpiccData}
+                      onSave={handleMeddpiccSave}
+                      onSuccess={handleMeddpiccSuccess}
+                      loading={loading}
+                      useComprehensiveView={false}
+                    />
+                  </div>
+                )}
+              </div>
             </MEDDPICCErrorBoundary>
 
             <div className="flex justify-end space-x-3">
@@ -709,6 +884,15 @@ export default function OpportunityForm({ opportunity, opportunityId, mode }: Op
               >
                 Cancel
               </button>
+              {mode === 'edit' && opportunityId && (
+                <button
+                  type="button"
+                  onClick={() => router.push(`/opportunities/${opportunityId}`)}
+                  className="bg-background py-2 px-4 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 hover:bg-blue-50"
+                >
+                  Back to View
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={loading}

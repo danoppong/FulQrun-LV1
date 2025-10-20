@@ -23,6 +23,7 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
   const [userRole, setUserRole] = useState<UserRole>(initialUserRole)
   const [widgets, setWidgets] = useState<DashboardWidget[]>(DEFAULT_WIDGETS)
   const [isEditMode, setIsEditMode] = useState(false)
+  const [_draggedWidget, _setDraggedWidget] = useState<string | null>(null)
   // Using singleton supabase client
 
   const permissions = getUserPermissions(userRole)
@@ -35,8 +36,10 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
         .eq('user_id', userId)
         .single()
 
-      if (data && !error) {
-        setWidgets(data.widgets || DEFAULT_WIDGETS)
+      // Safe boundary typing: treat response as unknown and extract widgets array if present
+      const layout = data as unknown as { widgets?: DashboardWidget[] } | null
+      if (layout && !error) {
+        setWidgets(layout.widgets || DEFAULT_WIDGETS)
       } else if (error && error.code !== 'PGRST116') {
         // PGRST116 is "not found" - ignore it, use default widgets
         console.warn('Dashboard layout loading error:', error)
@@ -47,7 +50,7 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
     }
   }
 
-  const loadDashboardLayoutCallback = useCallback(loadDashboardLayout, [userId, supabase])
+  const loadDashboardLayoutCallback = useCallback(loadDashboardLayout, [userId])
 
   useEffect(() => {
     // Load user's custom dashboard layout
@@ -58,11 +61,12 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
     try {
       const { error } = await supabase
         .from('user_dashboard_layouts')
+        // Boundary cast to satisfy generics in this module
         .upsert({
           user_id: userId,
           widgets: newWidgets,
           updated_at: new Date().toISOString()
-        })
+        } as never)
 
       if (error) {
         console.warn('Dashboard layout saving error:', error)
@@ -98,7 +102,12 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
   }
 
   const getRoleSpecificWidgets = () => {
-    // Filter widgets based on user role and permissions
+    // Admin users have access to ALL widgets
+    if (userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN) {
+      return widgets; // All widgets available for admin users
+    }
+    
+    // Filter widgets based on user role and permissions for non-admin users
     return widgets.filter(widget => {
       switch (userRole) {
         case UserRole.SALESMAN:
@@ -121,7 +130,7 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
       case WidgetType.KPI_CARD:
         return <KPICardWidget widget={widget} />
       case WidgetType.SALES_CHART:
-        return <SalesChartWidget widget={widget} />
+        return <SalesChartWidget />
       case WidgetType.TEAM_PERFORMANCE:
         return <TeamPerformanceWidget widget={widget} />
       case WidgetType.PIPELINE_OVERVIEW:
@@ -217,8 +226,8 @@ const RoleBasedDashboard = ({ userRole: initialUserRole, userId }: RoleBasedDash
                 } animate-fade-in`}
                 style={{ animationDelay: `${index * 100}ms` }}
                 draggable={isEditMode}
-                onDragStart={() => setDraggedWidget(widget.id)}
-                onDragEnd={() => setDraggedWidget(null)}
+                onDragStart={() => _setDraggedWidget(widget.id)}
+                onDragEnd={() => _setDraggedWidget(null)}
               >
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-gray-200/50 p-6 h-full transition-all duration-300 group">
                   <div className="flex justify-between items-center mb-6">

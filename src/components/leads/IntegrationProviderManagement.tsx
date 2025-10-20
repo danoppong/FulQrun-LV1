@@ -37,7 +37,7 @@ interface ProviderTestResult {
     message: string
     response_time?: number
     rate_limit_remaining?: number
-    test_data?: any
+  test_data?: unknown
     error?: string
   }
   tested_at: string

@@ -11,24 +11,15 @@ import {
   PencilIcon, 
   TrashIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon,
   LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
   CircleStackIcon,
-  CloudIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -186,7 +177,7 @@ interface DataGovernanceEvent {
   ipAddress: string;
   userAgent: string;
   timestamp: Date;
-  details?: any;
+  details?: unknown;
 }
 
 // =============================================================================
@@ -208,7 +199,7 @@ const DataClassificationSchema = z.object({
   isActive: z.boolean()
 });
 
-const RetentionRuleSchema = z.object({
+const _RetentionRuleSchema = z.object({
   name: z.string().min(1, 'Rule name is required'),
   description: z.string().optional(),
   retentionPeriod: z.number().min(1, 'Retention period must be at least 1 day'),
@@ -725,7 +716,7 @@ export default function DataGovernanceManagement() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {
@@ -877,7 +868,7 @@ export default function DataGovernanceManagement() {
   ];
 
   const activePolicies = config.policies.filter(p => p.isActive).length;
-  const totalPolicies = config.policies.length;
+  const _totalPolicies = config.policies.length;
   const activeClassifications = config.classifications.filter(c => c.isActive).length;
   const policyViolations = events.filter(e => e.eventType === 'policy_violation').length;
 

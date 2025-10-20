@@ -221,7 +221,7 @@ export function MEDDPICCIntegration() {
     }
   }
 
-  const handleUpdateMeddpicc = async (meddpiccId: string, updates: any) => {
+  const handleUpdateMeddpicc = async (meddpiccId: string, updates: unknown) => {
     try {
       const response = await fetch(`/api/meddpicc/${meddpiccId}`, {
         method: 'PUT',
@@ -529,13 +529,13 @@ export function MEDDPICCIntegration() {
 interface MEDDPICCDetailViewProps {
   meddpicc: MEDDPICCData
   lead: Lead | null
-  onUpdate: (id: string, updates: any) => void
+  onUpdate: (id: string, updates: unknown) => void
 }
 
 function MEDDPICCDetailView({ meddpicc, lead, onUpdate }: MEDDPICCDetailViewProps) {
   const [editingCriterion, setEditingCriterion] = useState<string | null>(null)
 
-  const handleUpdateCriterion = (criterionKey: string, value: any) => {
+  const handleUpdateCriterion = (criterionKey: string, value: unknown) => {
     onUpdate(meddpicc.id, {
       criteria: {
         ...meddpicc.criteria,

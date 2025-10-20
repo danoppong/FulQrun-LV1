@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ChartBarIcon, 
   CalculatorIcon, 
@@ -12,7 +12,6 @@ import {
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
   ArrowPathIcon,
   EyeIcon,
   DocumentTextIcon,
@@ -24,7 +23,7 @@ import {
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -70,7 +69,7 @@ interface KPICalculation {
   change?: number;
   changePercentage?: number;
   calculatedAt: Date;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 interface KPIThreshold {
@@ -101,7 +100,7 @@ interface DashboardKPI {
   position: { x: number; y: number; width: number; height: number };
   chartType: 'line' | 'bar' | 'pie' | 'number' | 'gauge';
   timeRange: string;
-  filters?: any;
+  filters?: Record<string, unknown>;
 }
 
 interface DashboardLayout {
@@ -929,7 +928,7 @@ function DashboardConfiguration({ config, onUpdate }: { config: KPIConfiguration
   const [dashboards, setDashboards] = useState<KPIDashboard[]>(config.dashboards);
   const [showForm, setShowForm] = useState(false);
   const [editingDashboard, setEditingDashboard] = useState<KPIDashboard | undefined>();
-  const [draggedKPI, setDraggedKPI] = useState<string | null>(null);
+  const [_draggedKPI, _setDraggedKPI] = useState<string | null>(null);
 
   const chartTypes = [
     { value: 'line', label: 'Line Chart', icon: ArrowTrendingUpIcon },
@@ -939,7 +938,7 @@ function DashboardConfiguration({ config, onUpdate }: { config: KPIConfiguration
     { value: 'gauge', label: 'Gauge Chart', icon: ChartBarIcon }
   ];
 
-  const timeRanges = [
+  const _timeRanges = [
     { value: '1h', label: 'Last Hour' },
     { value: '24h', label: 'Last 24 Hours' },
     { value: '7d', label: 'Last 7 Days' },
@@ -1063,7 +1062,7 @@ function DashboardConfiguration({ config, onUpdate }: { config: KPIConfiguration
     });
   };
 
-  const handleUpdateKPIConfig = (dashboardId: string, kpiId: string, updates: Partial<DashboardKPI>) => {
+  const _handleUpdateKPIConfig = (dashboardId: string, kpiId: string, updates: Partial<DashboardKPI>) => {
     const dashboard = dashboards.find(d => d.id === dashboardId);
     if (!dashboard) return;
 
@@ -1143,7 +1142,7 @@ function DashboardConfiguration({ config, onUpdate }: { config: KPIConfiguration
                   height: '200px'
                 }}
               >
-                {dashboard.kpis.map((kpiConfig, index) => {
+                {dashboard.kpis.map((kpiConfig, _index) => {
                   const kpi = config.definitions.find(k => k.id === kpiConfig.kpiId);
                   const chartType = chartTypes.find(ct => ct.value === kpiConfig.chartType);
                   const ChartIcon = chartType?.icon || ChartBarIcon;
@@ -1343,7 +1342,7 @@ export default function KPIConfiguration() {
 
   useEffect(() => {
     loadConfiguration();
-  }, []);
+  }, [loadConfiguration]);
 
   const loadMockConfig = () => {
     console.log('Loading mock KPI configuration...');
@@ -1508,7 +1507,7 @@ export default function KPIConfiguration() {
     return 'value';
   };
 
-  const loadConfiguration = async () => {
+  const loadConfiguration = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -1571,7 +1570,7 @@ export default function KPIConfiguration() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleConfigUpdate = (updatedConfig: KPIConfiguration) => {
     setConfig(updatedConfig);

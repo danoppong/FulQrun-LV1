@@ -5,42 +5,32 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  PlusIcon, 
-  PencilIcon, 
-  TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
-  CloudIcon,
-  CircleStackIcon,
-  CogIcon,
-  ArrowPathIcon,
-  DocumentTextIcon,
-  ServerIcon,
-  ShieldCheckIcon,
-  BellIcon,
-  UserIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
   TagIcon,
+  DocumentTextIcon,
+  Squares2X2Icon,
+  ShieldCheckIcon,
+  ArrowPathIcon,
   AdjustmentsHorizontalIcon,
-  Squares2X2Icon
-} from '@heroicons/react/24/outline';
+  UserIcon,
+  CloudIcon,
+} from '@heroicons/react/24/outline'
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
 // =============================================================================
+
+// Generic JSON-safe value type used for default values and dynamic rule payloads
+type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
 
 interface CustomFieldsConfiguration {
   fields: CustomField[];
@@ -61,7 +51,7 @@ interface CustomField {
   isUnique: boolean;
   isSearchable: boolean;
   isVisible: boolean;
-  defaultValue?: any;
+  defaultValue?: JSONValue;
   options?: FieldOption[];
   validation: FieldValidationRule[];
   displayOrder: number;
@@ -104,7 +94,7 @@ interface FieldOption {
 
 interface FieldValidationRule {
   type: 'required' | 'min_length' | 'max_length' | 'min_value' | 'max_value' | 'pattern' | 'custom';
-  value?: any;
+  value?: JSONValue;
   message: string;
   isActive: boolean;
 }
@@ -127,12 +117,12 @@ interface FieldDependency {
 
 interface DependencyCondition {
   operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'is_empty' | 'is_not_empty';
-  value?: any;
+  value?: JSONValue;
 }
 
 interface DependencyAction {
   type: 'show' | 'hide' | 'enable' | 'disable' | 'require' | 'optional' | 'set_value' | 'clear_value';
-  value?: any;
+  value?: JSONValue;
 }
 
 // =============================================================================
@@ -792,7 +782,7 @@ export default function CustomFieldsManagement() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const loadData = async () => {
     try {
@@ -927,7 +917,7 @@ export default function CustomFieldsManagement() {
   const activeFields = config.fields.filter(f => f.isActive).length;
   const totalFields = config.fields.length;
   const activeGroups = config.fieldGroups.filter(g => g.isActive).length;
-  const totalGroups = config.fieldGroups.length;
+  const _totalGroups = config.fieldGroups.length;
 
   return (
     <div className="space-y-6">

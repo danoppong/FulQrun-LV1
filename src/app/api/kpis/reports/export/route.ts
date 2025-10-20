@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
+import { requireApiAuth } from '@/lib/security/api-auth'
+import { AuthService } from '@/lib/auth-unified'
 import { z } from 'zod';
 
 // Validation schema
-const ExportQuerySchema = z.object({
+const _ExportQuerySchema = z.object({
   organizationId: z.string().uuid(),
   userId: z.string().uuid().optional(),
   territoryId: z.string().uuid().optional(),
@@ -16,6 +18,8 @@ const ExportQuerySchema = z.object({
 // GET /api/kpis/reports/export - Export reports in various formats
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireApiAuth();
+    if (!auth.ok) return auth.response
     const supabase = createServerClient();
     const { searchParams } = new URL(request.url);
     
@@ -30,24 +34,17 @@ export async function GET(request: NextRequest) {
       format: searchParams.get('format')
     };
 
-    const validatedParams = ExportQuerySchema.parse(queryParams);
+  const validatedParams = _ExportQuerySchema.parse(queryParams);
     
     // Set default date range if not provided
     const periodStart = validatedParams.periodStart || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const periodEnd = validatedParams.periodEnd || new Date().toISOString().split('T')[0];
 
     // Check if user has access to organization
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('organization_id, role')
-      .eq('id', (await supabase.auth.getUser()).data.user?.id)
-      .single();
+    const user = await AuthService.getCurrentUserServer()
+    if (!user?.profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (user.organization_id !== validatedParams.organizationId) {
+    if (user.profile.organization_id !== validatedParams.organizationId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

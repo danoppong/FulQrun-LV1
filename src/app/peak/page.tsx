@@ -1,13 +1,15 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link';
 import { PEAKWorkflow } from '@/components/peak/PEAKWorkflow'
 import { SharePointRepository } from '@/components/peak/SharePointRepository'
 import { SharePointDocument } from '@/lib/integrations/sharepoint';
+import { AuthService } from '@/lib/auth-unified'
 
 const PEAKProcessContent = () => {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const opportunityId = searchParams.get('opportunityId') || ''
   const opportunityName = searchParams.get('opportunityName') || 'Sample Opportunity'
@@ -37,6 +39,40 @@ const PEAKProcessContent = () => {
       loadOpportunityDataCallback()
     }
   }, [opportunityId, loadOpportunityDataCallback])
+
+  // Auto-select most recent opportunity if none specified, so the workflow shows up on /peak
+  useEffect(() => {
+    const autoSelectLatest = async () => {
+      if (opportunityId) return
+      try {
+        const supabase = AuthService.getClient()
+        const user = await AuthService.getCurrentUser()
+        const orgId = user?.profile?.organization_id
+        if (!orgId) return
+        const { data, error } = await supabase
+          .from('opportunities')
+          .select('id,name,peak_stage')
+          .eq('organization_id', orgId)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+
+        if (!error && data && data.length > 0) {
+          const opp = data[0] as { id: string; name: string; peak_stage?: string | null }
+          setCurrentStage((opp.peak_stage as string) || 'prospecting')
+          // Update the URL with selected opportunity to make state shareable
+          const params = new URLSearchParams(searchParams.toString())
+          params.set('opportunityId', opp.id)
+          params.set('opportunityName', opp.name || 'Opportunity')
+          router.replace(`/peak?${params.toString()}`)
+        }
+      } catch {
+        // silent fail; page will show the picker/CTA
+      }
+    }
+    void autoSelectLatest()
+    // We intentionally exclude router from deps to avoid needless route churn
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opportunityId, searchParams])
 
   const handleStageChange = async (newStage: string) => {
     try {
@@ -94,7 +130,11 @@ const PEAKProcessContent = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">PEAK Process</h1>
-          <p className="text-gray-600 mb-8">Please select an opportunity to view the PEAK process workflow.</p>
+          <p className="text-gray-600 mb-8">
+            Please select an opportunity to view the PEAK process workflow.
+            <br />
+            We’ll try to load your most recent opportunity automatically.
+          </p>
           <Link
             href="/opportunities"
             className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"

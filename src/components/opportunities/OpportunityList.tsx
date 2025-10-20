@@ -1,11 +1,16 @@
 'use client'
 import React from 'react';
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { opportunityAPI, OpportunityWithDetails } from '@/lib/api/opportunities'
+import { AuthService } from '@/lib/auth-unified'
 import { meddpiccScoringService } from '@/lib/services/meddpicc-scoring'
 import Link from 'next/link';
 import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { formatCurrencySafe } from '@/lib/format'
+import { UserSelect } from '@/components/common/UserSelect'
+import { useSearchParams } from 'next/navigation'
+import { parseCsv, rowsToObjects } from '@/lib/csv-parse'
 
 interface OpportunityListProps {
   searchQuery?: string
@@ -22,11 +27,63 @@ const peakStages = [
 
 export default function OpportunityList({ searchQuery = '', stageFilter = '' }: OpportunityListProps) {
   const [opportunities, setOpportunities] = useState<OpportunityWithDetails[]>([])
+  const opportunitiesRef = React.useRef<OpportunityWithDetails[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState(searchQuery)
   const [selectedStage, setSelectedStage] = useState(stageFilter)
   const [meddpiccScores, setMeddpiccScores] = useState<Record<string, number>>({})
+  const [ownersMap, setOwnersMap] = useState<Record<string, string>>({})
+  const [ownerRegionsMap, setOwnerRegionsMap] = useState<Record<string, string>>({})
+  const [ownerFilter, setOwnerFilter] = useState<string>('')
+  const [regionFilter, setRegionFilter] = useState<string>('')
+  const [busy, setBusy] = useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
+  // Owner options now provided by shared UserSelect; keep only selected owner id
+  const [regionOptions, setRegionOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [offset, setOffset] = useState(0)
+  const [orgId, setOrgId] = useState<string | null>(null)
+  const pageSize = 50
+  const [hasMore, setHasMore] = useState(true)
+  const searchParams = useSearchParams()
+  const initializedFromURL = useRef(false)
+
+  // Debounced search term to avoid firing queries on each keystroke
+  const debouncedSearch = useDebouncedValue(searchTerm, 300)
+
+  function useDebouncedValue<T>(value: T, delay: number) {
+    const [debounced, setDebounced] = useState(value)
+    useEffect(() => {
+      const id = setTimeout(() => setDebounced(value), delay)
+      return () => clearTimeout(id)
+    }, [value, delay])
+    return debounced
+  }
+
+  // Load current org id once for RLS-safe queries
+  useEffect(() => {
+    let mounted = true
+    AuthService.getCurrentUser()
+      .then(u => { if (mounted) setOrgId(u?.profile?.organization_id || null) })
+      .catch(() => { if (mounted) setOrgId(null) })
+    return () => { mounted = false }
+  }, [])
+
+  // Initialize filters from URL search params (deep-link support) once
+  useEffect(() => {
+    if (initializedFromURL.current) return
+    const ownerId = searchParams.get('ownerId')
+    const region = searchParams.get('region')
+    const stage = searchParams.get('stage')
+    const q = searchParams.get('q')
+    if (ownerId) setOwnerFilter(ownerId)
+    if (region) setRegionFilter(region)
+    if (stage) setSelectedStage(stage)
+    if (q) setSearchTerm(q)
+    initializedFromURL.current = true
+  }, [searchParams])
 
   // Function to get MEDDPICC score for an opportunity using the unified service
   const getOpportunityMEDDPICCScore = async (opportunity: OpportunityWithDetails): Promise<number> => {
@@ -41,57 +98,8 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
     }
   }
 
-  const loadOpportunities = useCallback(async (query: string = '', stage: string = '') => {
-    setLoading(true)
-    setError(null)
-    
-    try {
-      let result
-      if (stage) {
-        result = await opportunityAPI.getOpportunitiesByStage(stage)
-      } else if (query) {
-        result = await opportunityAPI.searchOpportunities(query)
-      } else {
-        result = await opportunityAPI.getOpportunities()
-      }
-      
-      if (result.error) {
-        setError(result.error.message || 'Failed to load opportunities')
-      } else {
-        const opportunitiesData = result.data || []
-        setOpportunities(opportunitiesData)
-        
-        // Calculate MEDDPICC scores for all opportunities (optimized)
-        const scores: Record<string, number> = {}
-        
-        // Use Promise.all for parallel processing instead of sequential
-        const scorePromises = opportunitiesData.map(async (opportunity) => {
-          try {
-            const score = await getOpportunityMEDDPICCScore(opportunity)
-            return { id: opportunity.id, score }
-          } catch (error) {
-            console.error(`Error calculating score for ${opportunity.id}:`, error)
-            return { id: opportunity.id, score: opportunity.meddpicc_score || 0 }
-          }
-        })
-        
-        const scoreResults = await Promise.all(scorePromises)
-        scoreResults.forEach(({ id, score }) => {
-          scores[id] = score
-        })
-        
-        setMeddpiccScores(scores)
-      }
-    } catch (_err) {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadOpportunities(searchTerm, selectedStage)
-  }, [searchTerm, selectedStage, loadOpportunities])
+  
+  
 
   // Listen for MEDDPICC score updates to refresh the list
   useEffect(() => {
@@ -114,21 +122,141 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
     }
   }, [])
 
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this opportunity?')) return
-
-    try {
-      const { error } = await opportunityAPI.deleteOpportunity(id)
-      if (error) {
-        setError(error.message || 'Failed to delete opportunity')
-      } else {
-        setOpportunities(opportunities.filter(opp => opp.id !== id))
-      }
-    } catch (_err) {
-      setError('Failed to delete opportunity')
-    }
+  // Helper: get region from user data instead of territory mapping
+  const getRegion = (opp: OpportunityWithDetails): string | null => {
+    const ownerId = (opp as Partial<OpportunityWithDetails> & { assigned_to?: string | null }).assigned_to || ''
+    return (ownerId && ownerRegionsMap[ownerId]) || null
   }
+
+  // Load owner display names and derive filter options
+  const loadOwnersAndRegions = useCallback(async (opps: OpportunityWithDetails[]) => {
+    if (!orgId) return
+    try {
+      const ownerIds = Array.from(
+        new Set(
+          (opps || []).map(o => (o as Partial<OpportunityWithDetails> & { assigned_to?: string | null }).assigned_to).filter(Boolean)
+        )
+      ) as string[]
+
+      const map: Record<string, string> = {}
+      const regionMap: Record<string, string> = {}
+      if (ownerIds.length > 0) {
+        // Fetch user data from admin users API (reads from users table with regions included)
+        try {
+          const response = await fetch('/api/admin/users?limit=1000&includeRegions=true')
+          if (response.ok) {
+            const result = await response.json()
+            const users = result.users || []
+            for (const user of users) {
+              if (user.id && ownerIds.includes(user.id)) {
+                map[user.id] = user.fullName || user.email || user.id
+                if (user.region) {
+                  regionMap[user.id] = user.region
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch user names:', error)
+          // Fallback: use user IDs as display names
+          for (const id of ownerIds) {
+            map[id] = id
+          }
+        }
+      }
+      setOwnersMap(map)
+      setOwnerRegionsMap(regionMap)
+
+      // Fetch regions from organization data API
+      let regions: string[] = []
+      try {
+        const response = await fetch('/api/admin/organization/data?type=region&isActive=true')
+        if (response.ok) {
+          const result = await response.json()
+          const regionData = result.data || []
+          regions = regionData
+            .filter((item: { type: string; name: string }) => item.type === 'region' && item.name)
+            .map((item: { name: string }) => item.name)
+            .sort()
+        }
+      } catch (error) {
+        console.error('Failed to fetch regions from organization data:', error)
+        // No fallback - organization data is the primary source for regions
+      }
+
+      setRegionOptions([{ value: '', label: 'All Regions' }, ...regions.map(r => ({ value: r, label: r }))])
+    } catch (e) {
+      // Non-fatal; leave filters minimal
+      console.warn('Failed loading owner/region metadata', e)
+      setRegionOptions([{ value: '', label: 'All Regions' }])
+    }
+  }, [orgId])
+
+  const loadOpportunities = useCallback(async (query: string = '', stage: string = '', resetList = true, explicitOffset?: number) => {
+    if (resetList) setLoading(true)
+    setError(null)
+    try {
+      const { data, error } = await opportunityAPI.getOpportunitiesList({
+        search: query,
+        stage: (stage || '') as 'prospecting' | 'engaging' | 'advancing' | 'key_decision' | '',
+        limit: pageSize,
+        offset: resetList ? 0 : (explicitOffset ?? 0),
+      })
+
+      if (error) {
+        setError(error.message || 'Failed to load opportunities')
+        return
+      }
+
+  const list = data || []
+  const merged = resetList ? list : [...opportunitiesRef.current, ...list]
+  setOpportunities(merged)
+  setHasMore(list.length === pageSize)
+  opportunitiesRef.current = merged
+
+      // Compute MEDDPICC scores only for the first page to avoid heavy bursts
+      if (resetList) {
+        const scores: Record<string, number> = {}
+        const scoreResults = await Promise.all(list.map(async (opportunity) => {
+          try {
+            const score = await getOpportunityMEDDPICCScore(opportunity)
+            return { id: opportunity.id, score }
+          } catch (error) {
+            console.error(`Error calculating score for ${opportunity.id}:`, error)
+            return { id: opportunity.id, score: opportunity.meddpicc_score || 0 }
+          }
+        }))
+        scoreResults.forEach(({ id, score }) => { scores[id] = score })
+        setMeddpiccScores(scores)
+      }
+
+      await loadOwnersAndRegions(merged)
+    } catch (_err) {
+      setError('An unexpected error occurred')
+    } finally {
+      if (resetList) setLoading(false)
+    }
+  }, [pageSize, loadOwnersAndRegions])
+
+  // Trigger initial and subsequent loads when filters change
+  useEffect(() => {
+    setOffset(0)
+    // Call and include loadOpportunities in deps to satisfy lint; it's stable via useCallback
+    void (async () => {
+      await loadOpportunities(debouncedSearch, selectedStage, true, 0)
+    })()
+  }, [debouncedSearch, selectedStage, loadOpportunities])
+
+  const loadMore = useCallback(async () => {
+    try {
+      setLoadingMore(true)
+      const nextOffset = offset + pageSize
+      setOffset(nextOffset)
+      await loadOpportunities(debouncedSearch, selectedStage, false, nextOffset)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [offset, pageSize, debouncedSearch, selectedStage, loadOpportunities])
 
   const getStageColor = (stage: string) => {
     switch (stage) {
@@ -145,6 +273,20 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
     }
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this opportunity?')) return
+
+    try {
+      const { error } = await opportunityAPI.deleteOpportunity(id)
+      if (error) {
+        setError(error.message || 'Failed to delete opportunity')
+      } else {
+        setOpportunities(prev => prev.filter(opp => opp.id !== id))
+      }
+    } catch (_err) {
+      setError('Failed to delete opportunity')
+    }
+  }
   const getStageIcon = (stage: string) => {
     switch (stage) {
       case 'prospecting':
@@ -161,13 +303,9 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
   }
 
   const formatCurrency = (amount: number | null) => {
+    // Preserve existing display for falsy values (including 0) as 'N/A' to avoid UI regression
     if (!amount) return 'N/A'
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
+    return formatCurrencySafe(amount)
   }
 
   if (loading) {
@@ -177,6 +315,98 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
       </div>
     )
   }
+
+  const downloadBlob = (filename: string, blob: Blob) => {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleExport = async (format: 'csv' | 'json') => {
+    try {
+      setBusy(true)
+      const params = new URLSearchParams()
+      params.set('format', format)
+      if (selectedStage) params.set('stage', selectedStage)
+      const res = await fetch(`/api/bulk/opportunities/export?${params.toString()}`)
+      if (!res.ok) throw new Error(`Export failed (${res.status})`)
+      const filename = format === 'csv' ? 'opportunities_export.csv' : 'opportunities_export.json'
+      if (format === 'csv') {
+        const text = await res.text()
+        downloadBlob(filename, new Blob([text], { type: 'text/csv;charset=utf-8' }))
+      } else {
+        const data = await res.json()
+        downloadBlob(filename, new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
+      }
+    } catch (e) {
+      setError((e as Error).message || 'Export failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onPickImportFile = () => fileInputRef.current?.click()
+  const handleImportFile = async (ev: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = ev.target.files && ev.target.files[0]
+      if (!file) return
+      setBusy(true)
+      const text = await file.text()
+      let body: Record<string, unknown>
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        const grid = parseCsv(text)
+        const objects = rowsToObjects(grid)
+        // Coerce numeric fields to numbers when possible
+        const coerced = objects.map((r) => {
+          const out: Record<string, unknown> = { ...r }
+          const num = (s: string | undefined) => (s?.trim() ? Number(s) : undefined)
+          const nVal = num(r.value)
+          const nDeal = num((r as Record<string, string>).deal_value)
+          const nProb = num(r.probability)
+          if (nVal !== undefined && !Number.isNaN(nVal)) out.value = nVal
+          if (nDeal !== undefined && !Number.isNaN(nDeal)) (out as Record<string, unknown>).deal_value = nDeal
+          if (nProb !== undefined && !Number.isNaN(nProb)) out.probability = nProb
+          return out
+        })
+        body = { rows: coerced }
+      } else {
+        let payload: unknown
+        try {
+          payload = JSON.parse(text)
+        } catch {
+          throw new Error('Provide a JSON file ({ rows: [...] } or array) or a CSV file with a header row')
+        }
+        body = Array.isArray(payload) ? { rows: payload } : (payload as Record<string, unknown>)
+      }
+      const res = await fetch('/api/bulk/opportunities/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error(`Import failed (${res.status})`)
+      const result = await res.json() as { inserted?: number; failed?: number; errors?: unknown }
+      await loadOpportunities(debouncedSearch, selectedStage, true, 0)
+      setError(null)
+      setSuccess(`Import completed. Inserted: ${result.inserted ?? 0}, Failed: ${result.failed ?? 0}`)
+    } catch (e) {
+      setError((e as Error).message || 'Import failed')
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setBusy(false)
+    }
+  }
+
+  // Apply client-side Owner/Region quick filters (no hook to avoid conditional hook order issues)
+  const filteredOpportunities = opportunities.filter(o => {
+    const matchesOwner = ownerFilter ? ((o as { assigned_to?: string | null }).assigned_to === ownerFilter) : true
+    const matchesRegion = regionFilter ? (getRegion(o) === regionFilter) : true
+    return matchesOwner && matchesRegion
+  })
 
   return (
     <div className="space-y-6">
@@ -188,7 +418,47 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
             Manage your sales pipeline with PEAK stages and MEDDPICC qualification
           </p>
         </div>
-        <div className="mt-4 sm:mt-0">
+        <div className="mt-4 sm:mt-0 flex items-center gap-2">
+          <button
+            onClick={() => handleExport('csv')}
+            disabled={busy}
+            className="inline-flex items-center px-3 py-2 border rounded-md text-sm bg-white hover:bg-gray-50 disabled:opacity-50"
+            title="Export CSV"
+          >
+            Export CSV
+          </button>
+          <button
+            onClick={() => handleExport('json')}
+            disabled={busy}
+            className="inline-flex items-center px-3 py-2 border rounded-md text-sm bg-white hover:bg-gray-50 disabled:opacity-50"
+            title="Export JSON"
+          >
+            Export JSON
+          </button>
+          <button
+            onClick={onPickImportFile}
+            disabled={busy}
+            className="inline-flex items-center px-3 py-2 border rounded-md text-sm bg-white hover:bg-gray-50 disabled:opacity-50"
+            title="Import (JSON or CSV)"
+          >
+            Import
+          </button>
+          <a
+            href="/templates/opportunities-import-template.csv"
+            download
+            className="inline-flex items-center px-3 py-2 border rounded-md text-sm bg-white hover:bg-gray-50"
+            title="Download CSV template"
+          >
+            Template
+          </a>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,text/csv,.csv"
+            className="hidden"
+            onChange={handleImportFile}
+            aria-hidden
+          />
           <Link
             href="/opportunities/new"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
@@ -200,7 +470,7 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
@@ -226,17 +496,57 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
             ))}
           </select>
         </div>
+        <div className="sm:w-48">
+          <UserSelect
+            value={ownerFilter}
+            onChange={setOwnerFilter}
+            allowEmpty
+            emptyLabel="All Owners"
+            placeholder="Owner"
+            variant="combo"
+          />
+        </div>
+        <div className="sm:w-48">
+          <select
+            value={regionFilter}
+            onChange={(e) => setRegionFilter(e.target.value)}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            {regionOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Error Message */}
+      {/* Feedback Messages */}
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-md bg-red-50 p-4 flex items-start justify-between">
           <div className="text-sm text-red-700">{error}</div>
+          <button onClick={() => setError(null)} className="text-sm text-red-700 hover:underline">Dismiss</button>
+        </div>
+      )}
+      {success && (
+        <div className="rounded-md bg-green-50 p-4 flex items-start justify-between">
+          <div className="text-sm text-green-700">{success}</div>
+          <button onClick={() => setSuccess(null)} className="text-sm text-green-700 hover:underline">Dismiss</button>
         </div>
       )}
 
+      {/* Column Headings (desktop) */}
+      <div className="hidden sm:grid grid-cols-12 gap-4 px-4 text-xs font-semibold text-gray-500 sticky top-0 z-10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b">
+        <div className="col-span-3 uppercase">Opportunity</div>
+        <div className="col-span-2 uppercase">Account</div>
+        <div className="col-span-2 uppercase">Owner</div>
+        <div className="col-span-1 uppercase">Region</div>
+        <div className="col-span-1 uppercase">PEAK Stage</div>
+        <div className="col-span-1 uppercase text-right">MEDDPICC</div>
+        <div className="col-span-1 uppercase text-right">Amount</div>
+        <div className="col-span-1 uppercase text-right">Actions</div>
+      </div>
+
       {/* Opportunities Table */}
-      {opportunities.length === 0 ? (
+      {filteredOpportunities.length === 0 ? (
         <div className="text-center py-12">
           <div className="mx-auto h-12 w-12 text-gray-400">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -245,9 +555,9 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
           </div>
           <h3 className="mt-2 text-sm font-medium text-gray-900">No opportunities</h3>
           <p className="mt-1 text-sm text-gray-500">
-            {searchTerm || selectedStage ? 'No opportunities match your filters.' : 'Get started by creating a new opportunity.'}
+            {searchTerm || selectedStage || ownerFilter || regionFilter ? 'No opportunities match your filters.' : 'Get started by creating a new opportunity.'}
           </p>
-          {!searchTerm && !selectedStage && (
+          {!searchTerm && !selectedStage && !ownerFilter && !regionFilter && (
             <div className="mt-6">
               <Link
                 href="/opportunities/new"
@@ -262,10 +572,11 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <ul className="divide-y divide-gray-200">
-            {opportunities.map((opportunity) => (
+            {filteredOpportunities.map((opportunity) => (
               <li key={opportunity.id}>
-                <div className="px-4 py-4 flex items-center justify-between">
-                  <div className="flex items-center flex-1">
+                <div className="px-4 py-4 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                  {/* Opportunity */}
+                  <div className="sm:col-span-3 flex items-center min-w-0">
                     <div className="flex-shrink-0 h-10 w-10">
                       <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
                         <span className="text-sm font-medium text-indigo-600">
@@ -273,78 +584,88 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
                         </span>
                       </div>
                     </div>
-                    <div className="ml-4 flex-1">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {opportunity.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {opportunity.contact && (
-                              <span>{opportunity.contact.first_name} {opportunity.contact.last_name}</span>
-                            )}
-                            {opportunity.company && (
-                              <span className={opportunity.contact ? 'ml-2' : ''}>
-                                at {opportunity.company.name}
-                              </span>
-                            )}
-                          </div>
-                          {opportunity.close_date && (
-                            <div className="text-sm text-gray-500">
-                              Close Date: {new Date(opportunity.close_date).toLocaleDateString()}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          {/* Deal Value */}
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-gray-900">
-                              {formatCurrency(opportunity.deal_value)}
-                            </div>
-                            {opportunity.probability && (
-                              <div className="text-xs text-gray-500">
-                                {opportunity.probability}% probability
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* MEDDPICC Score */}
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-gray-900">
-                              MEDDPICC: {meddpiccScores[opportunity.id] || opportunity.meddpicc_score || 0}%
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              Qualification
-                            </div>
-                          </div>
-                          
-                          {/* PEAK Stage */}
-                          <div className="text-right">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(opportunity.peak_stage)}`}>
-                              {getStageIcon(opportunity.peak_stage)} {opportunity.peak_stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                            </span>
-                          </div>
-                        </div>
+                    <div className="ml-4 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate" title={opportunity.name}>
+                        <Link href={`/opportunities/${opportunity.id}`} className="hover:underline" title={opportunity.name}>
+                          {opportunity.name}
+                        </Link>
+                      </div>
+                      {/* Mobile-only: show account under name */}
+                      <div className="text-xs text-gray-500 sm:hidden truncate" title={opportunity.company?.name || '—'}>
+                        {opportunity.company?.name || '—'}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+
+                  {/* Account */}
+                  <div className="hidden sm:block sm:col-span-2 text-sm text-gray-700 min-w-0">
+                    <div className="truncate" title={opportunity.company?.name || '—'}>
+                      {opportunity.company?.name || '—'}
+                    </div>
+                  </div>
+
+                  {/* Owner */}
+                  <div className="sm:col-span-2 text-sm text-gray-700 whitespace-nowrap truncate" title={(() => {
+                    const ownerId = (opportunity as Partial<OpportunityWithDetails> & { assigned_to?: string | null }).assigned_to || ''
+                    return ownerId ? (ownersMap[ownerId] || ownerId) : '—'
+                  })()}>
+                    {(() => {
+                      const ownerId = (opportunity as Partial<OpportunityWithDetails> & { assigned_to?: string | null }).assigned_to || ''
+                      return ownerId ? (ownersMap[ownerId] || ownerId) : '—'
+                    })()}
+                  </div>
+
+                  {/* Region */}
+                  <div className="sm:col-span-1 text-sm text-gray-700 whitespace-nowrap truncate" title={getRegion(opportunity) || '—'}>
+                    {getRegion(opportunity) || '—'}
+                  </div>
+
+                  {/* PEAK Stage */}
+                  <div className="sm:col-span-1 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(opportunity.peak_stage)}`}>
+                      {getStageIcon(opportunity.peak_stage)} {opportunity.peak_stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                  </div>
+
+                  {/* MEDDPICC */}
+                  <div className="sm:col-span-1 text-right">
+                    <div className="text-sm font-medium text-gray-900">
+                      {(meddpiccScores[opportunity.id] ?? opportunity.meddpicc_score ?? 0)}%
+                    </div>
+                    <div className="text-xs text-gray-500">Qualification</div>
+                  </div>
+
+                  {/* Amount and probability */}
+                  <div className="sm:col-span-1 text-right whitespace-nowrap" title={formatCurrency(opportunity.deal_value)}>
+                    <div className="text-sm font-medium text-gray-900">
+                      {formatCurrency(opportunity.deal_value)}
+                    </div>
+                    {opportunity.probability && (
+                      <div className="text-xs text-gray-500">{opportunity.probability}% prob.</div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="sm:col-span-1 flex items-center justify-end space-x-2 whitespace-nowrap">
                     <Link
                       href={`/opportunities/${opportunity.id}`}
                       className="text-indigo-600 hover:text-indigo-900"
                       title="View Details"
+                      aria-label={`View details for ${opportunity.name}`}
                     >
                       <EyeIcon className="h-4 w-4" />
                     </Link>
                     <Link
                       href={`/opportunities/${opportunity.id}/edit`}
                       className="text-indigo-600 hover:text-indigo-900"
+                      aria-label={`Edit ${opportunity.name}`}
                     >
                       <PencilIcon className="h-4 w-4" />
                     </Link>
                     <button
                       onClick={() => handleDelete(opportunity.id)}
                       className="text-red-600 hover:text-red-900"
+                      aria-label={`Delete ${opportunity.name}`}
                     >
                       <TrashIcon className="h-4 w-4" />
                     </button>
@@ -353,6 +674,17 @@ export default function OpportunityList({ searchQuery = '', stageFilter = '' }: 
               </li>
             ))}
           </ul>
+          {hasMore && (
+            <div className="p-4 flex justify-center">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-4 py-2 text-sm rounded-md border bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

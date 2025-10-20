@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { opportunityAPI } from '@/lib/api/opportunities'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { formatCurrencySafe } from '@/lib/format'
 
 interface PipelineData {
   stage: string
@@ -82,14 +83,8 @@ export default function PipelineChart() {
     }
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value)
-  }
+  // Shared, NaN-safe currency formatter
+  const fmt = (value: unknown) => formatCurrencySafe(value)
 
   if (loading) {
     return (
@@ -146,7 +141,7 @@ export default function PipelineChart() {
                       Total Pipeline Value
                     </dt>
                     <dd className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatCurrency(summary.totalValue)}
+                      {fmt(summary.totalValue)}
                     </dd>
                     <dd className="text-xs text-blue-600 font-medium">
                       All stages combined
@@ -180,7 +175,7 @@ export default function PipelineChart() {
                       Weighted Pipeline Value
                     </dt>
                     <dd className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatCurrency(summary.weightedValue)}
+                      {fmt(summary.weightedValue)}
                     </dd>
                     <dd className="text-xs text-emerald-600 font-medium">
                       Probability adjusted
@@ -253,10 +248,10 @@ export default function PipelineChart() {
             <div>
               <p className="text-sm font-medium text-emerald-600">Avg Deal Size</p>
               <p className="text-2xl font-bold text-emerald-900">
-                {data.reduce((sum, item) => sum + (typeof item.count === 'number' ? item.count : 0), 0) > 0 
-                  ? formatCurrency(summary.totalValue / data.reduce((sum, item) => sum + (typeof item.count === 'number' ? item.count : 0), 0))
-                  : '$0'
-                }
+                {(() => {
+                  const totalCount = data.reduce((sum, item) => sum + (typeof item.count === 'number' ? item.count : 0), 0)
+                  return fmt(totalCount > 0 ? summary.totalValue / totalCount : 0)
+                })()}
               </p>
             </div>
             <div className="w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center">
@@ -289,7 +284,11 @@ export default function PipelineChart() {
             <div>
               <p className="text-sm font-medium text-amber-600">Top Stage</p>
               <p className="text-2xl font-bold text-amber-900">
-                {data.reduce((max, item) => item.value > max.value ? item : max, data[0] || { stage: 'N/A' }).stage}
+                {(
+                  data.length > 0
+                    ? data.reduce((max, item) => (item.value > max.value ? item : max), data[0])
+                    : { stage: 'N/A' }
+                ).stage}
               </p>
             </div>
             <div className="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center">
@@ -336,13 +335,13 @@ export default function PipelineChart() {
                 height={60}
               />
               <YAxis 
-                tickFormatter={formatCurrency} 
+                tickFormatter={(v: number) => fmt(v)} 
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#6B7280' }}
               />
               <Tooltip 
-                formatter={(value) => [formatCurrency(Number(value)), 'Value']}
+                formatter={(value) => [fmt(Number(value)), 'Value']}
                 labelStyle={{ color: '#374151', fontWeight: '600' }}
                 contentStyle={{
                   backgroundColor: 'white',
@@ -381,13 +380,17 @@ export default function PipelineChart() {
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Pie
-                data={data}
+                // Provide a minimal compatible type for Recharts while preserving our shape
+                data={data as Array<{ stage: string; count: number; value: number; weightedValue: number }>}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ stage, count, percent }: { stage: string; count: number; percent: number }) => 
-                  count > 0 ? `${stage}: ${count} (${(percent * 100).toFixed(0)}%)` : ''
-                }
+                label={(props) => {
+                  const stage = (props?.payload as { stage?: string })?.stage || ''
+                  const count = Number((props?.payload as { count?: number })?.count || 0)
+                  const percent = Number(props?.percent || 0)
+                  return count > 0 ? `${stage}: ${count} (${(percent * 100).toFixed(0)}%)` : ''
+                }}
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="count"
@@ -502,17 +505,17 @@ export default function PipelineChart() {
                     </td>
                     <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                       <span className="text-sm font-semibold text-gray-900">
-                        {formatCurrency(item.value)}
+                        {fmt(item.value)}
                       </span>
                     </td>
                     <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                       <span className="text-sm font-semibold text-emerald-600">
-                        {formatCurrency(item.weightedValue)}
+                        {fmt(item.weightedValue)}
                       </span>
                     </td>
                     <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                       <span className="text-sm font-semibold text-gray-900">
-                        {typeof item.count === 'number' && item.count > 0 ? formatCurrency(item.value / item.count) : '$0'}
+                        {fmt(typeof item.count === 'number' && item.count > 0 ? item.value / item.count : 0)}
                       </span>
                     </td>
                     <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
@@ -520,7 +523,7 @@ export default function PipelineChart() {
                         <div className="w-12 bg-gray-200 rounded-full h-2 mr-2">
                           <div 
                             className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
-                            style={{ width: `${Math.min((item.weightedValue / item.value) * 100, 100)}%` }}
+                            style={{ width: `${item.value > 0 ? Math.min((item.weightedValue / item.value) * 100, 100) : 0}%` }}
                           ></div>
                         </div>
                         <span className="text-xs text-gray-500">

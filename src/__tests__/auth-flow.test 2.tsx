@@ -8,19 +8,21 @@ jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
 }))
 
-// Mock Supabase client
+// Mock Supabase client (shared singleton across calls)
+const mockClient = {
+  auth: {
+    getUser: jest.fn().mockResolvedValue({ 
+      data: { user: { id: 'test-user', email: 'test@example.com' } }, 
+      error: null 
+    }),
+    onAuthStateChange: jest.fn(() => ({
+      data: { subscription: { unsubscribe: jest.fn() } }
+    }))
+  }
+}
+
 jest.mock('@/lib/auth', () => ({
-  createClientComponentClient: () => ({
-    auth: {
-      getUser: jest.fn().mockResolvedValue({ 
-        data: { user: { id: 'test-user', email: 'test@example.com' } }, 
-        error: null 
-      }),
-      onAuthStateChange: jest.fn(() => ({
-        data: { subscription: { unsubscribe: jest.fn() } }
-      }))
-    }
-  })
+  createClientComponentClient: () => mockClient
 }))
 
 describe('AuthWrapper', () => {
@@ -57,11 +59,9 @@ describe('AuthWrapper', () => {
 
   it('redirects to login when user is not authenticated', async () => {
     // Mock unauthenticated user
-    const mockSupabase = (await import('@/lib/auth')).createClientComponentClient()
-    mockSupabase.auth.getUser.mockResolvedValueOnce({
-      data: { user: null },
-      error: null
-    })
+    const { createClientComponentClient } = await import('@/lib/auth')
+    const client = createClientComponentClient() as unknown as { auth: { getUser: jest.Mock } }
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: null }, error: null })
 
     render(
       <AuthWrapper>
@@ -76,11 +76,9 @@ describe('AuthWrapper', () => {
 
   it('redirects to custom route when specified', async () => {
     // Mock unauthenticated user
-    const mockSupabase = (await import('@/lib/auth')).createClientComponentClient()
-    mockSupabase.auth.getUser.mockResolvedValueOnce({
-      data: { user: null },
-      error: null
-    })
+    const { createClientComponentClient } = await import('@/lib/auth')
+    const client = createClientComponentClient() as unknown as { auth: { getUser: jest.Mock } }
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: null }, error: null })
 
     render(
       <AuthWrapper redirectTo="/custom-login">
@@ -95,11 +93,9 @@ describe('AuthWrapper', () => {
 
   it('does not require auth when requireAuth is false', async () => {
     // Mock unauthenticated user
-    const mockSupabase = (await import('@/lib/auth')).createClientComponentClient()
-    mockSupabase.auth.getUser.mockResolvedValueOnce({
-      data: { user: null },
-      error: null
-    })
+    const { createClientComponentClient } = await import('@/lib/auth')
+    const client = createClientComponentClient() as unknown as { auth: { getUser: jest.Mock } }
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: null }, error: null })
 
     render(
       <AuthWrapper requireAuth={false}>

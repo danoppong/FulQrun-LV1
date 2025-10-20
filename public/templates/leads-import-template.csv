@@ -1,0 +1,2 @@
+first_name,last_name,email,phone,company,source,status,external_id
+Jane,Doe,jane@example.com,+1-555-1234,Acme Corp,event,new,L-001

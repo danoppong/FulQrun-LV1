@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { formatCurrencySafe } from '@/lib/format'
 
 interface AnalyticsData {
   revenue: {
@@ -92,14 +93,14 @@ export function EnhancedAnalyticsDashboard({
           {
             period: 'Q1 2025',
             revenue: 250000,
-            deals: 12,
-            confidence: 0.85
+            opportunities: 12,
+            leads: 40
           },
           {
             period: 'Q2 2025',
             revenue: 300000,
-            deals: 15,
-            confidence: 0.78
+            opportunities: 15,
+            leads: 45
           }
         ])
       }
@@ -117,14 +118,7 @@ export function EnhancedAnalyticsDashboard({
     loadAnalyticsDataCallback()
   }, [loadAnalyticsDataCallback])
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number) => formatCurrencySafe(amount)
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`

@@ -539,7 +539,7 @@ export class ApprovalProcessManager {
 
   private async handleExpiredApproval(approval: ApprovalRequest): Promise<void> {
     // Handle expired approval based on escalation config
-    if (approval.escalation_config?.enabled) {
+    if (approval.escalationConfig?.enabled) {
       await this.escalateApproval(approval);
     } else {
       // Mark as expired

@@ -5,28 +5,23 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  AcademicCapIcon, 
   BookOpenIcon, 
+  AcademicCapIcon, 
   TrophyIcon, 
   PlusIcon, 
   PencilIcon, 
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
   DocumentTextIcon,
-  ClockIcon,
   UserGroupIcon,
-  StarIcon,
   PlayIcon,
   DocumentIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -61,7 +56,7 @@ interface ModuleContent {
   videoUrl?: string;
   documentUrl?: string;
   externalUrl?: string;
-  interactiveContent?: any;
+  interactiveContent?: Record<string, unknown>;
   transcript?: string;
   resources: ContentResource[];
 }
@@ -211,7 +206,7 @@ const CourseSchema = z.object({
   isActive: z.boolean()
 });
 
-const AssessmentSchema = z.object({
+const _AssessmentSchema = z.object({
   title: z.string().min(1, 'Assessment title is required'),
   description: z.string().optional(),
   type: z.enum(['quiz', 'exam', 'practical', 'peer_review']),

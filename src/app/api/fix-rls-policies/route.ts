@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/auth-unified';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Get authenticated user
     const user = await AuthService.getCurrentUserServer()
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    const supabase = AuthService.getServerClient()
+  const supabase = await AuthService.getServerClient()
     if (!supabase) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
     }
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     for (const policy of policies) {
       try {
         // Use a direct SQL execution approach
-        const { error } = await supabase.rpc('exec', { sql: policy })
+  const { error } = await (supabase as unknown as { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> }).rpc('exec', { sql: policy })
         if (error) {
           console.error('Policy error:', policy, error)
         }

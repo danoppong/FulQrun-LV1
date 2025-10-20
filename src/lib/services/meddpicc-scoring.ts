@@ -33,16 +33,16 @@ export class MEDDPICCScoringService {
         return cached
       }
 
-      let opportunityData = opportunity
+  let opportunityData = opportunity
 
       // Only fetch opportunity data if not provided
       if (!opportunityData) {
-        const opportunityResult = await opportunityAPI.getOpportunity(opportunityId)
+  const opportunityResult = await opportunityAPI.getOpportunity(opportunityId)
         
         if (!opportunityResult.data) {
           throw new Error('Opportunity not found')
         }
-        opportunityData = opportunityResult.data
+  opportunityData = opportunityResult.data as unknown as Record<string, unknown>
       }
 
       // Calculate the score using our unified algorithm
@@ -136,7 +136,7 @@ export class MEDDPICCScoringService {
   async updateOpportunityScore(opportunityId: string, assessment: MEDDPICCAssessment): Promise<void> {
     try {
       // Update the database with the calculated score
-      await opportunityAPI.updateOpportunity(opportunityId, {
+      await opportunityAPI.saveAll(opportunityId, {
         meddpicc_score: assessment.overallScore
       })
 
@@ -181,10 +181,12 @@ export class MEDDPICCScoringService {
   async getScoreWithFallback(opportunityId: string, opportunity?: Record<string, unknown>): Promise<MEDDPICCScoreResult> {
     try {
       // If we have opportunity data, try to get the stored score first
-      if (opportunity && opportunity.meddpicc_score !== null && opportunity.meddpicc_score !== undefined) {
+      type OpportunityScoreView = { meddpicc_score?: number | null }
+      const oppScore = opportunity as OpportunityScoreView | undefined
+      if (oppScore && oppScore.meddpicc_score !== null && oppScore.meddpicc_score !== undefined) {
         return {
-          score: opportunity.meddpicc_score,
-          qualificationLevel: this.getQualificationLevel(opportunity.meddpicc_score),
+          score: oppScore.meddpicc_score as number,
+          qualificationLevel: this.getQualificationLevel(oppScore.meddpicc_score as number),
           pillarScores: {}, // We don't store pillar scores in the database
           lastCalculated: new Date(),
           source: 'database'

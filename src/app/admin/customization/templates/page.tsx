@@ -10,48 +10,31 @@ import {
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpIcon,
   EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
-  CloudIcon,
   CircleStackIcon,
-  CogIcon,
-  ArrowPathIcon,
   DocumentTextIcon,
-  ServerIcon,
-  ShieldCheckIcon,
   BellIcon,
-  UserIcon,
-  TagIcon,
-  AdjustmentsHorizontalIcon,
-  Squares2X2Icon,
-  RectangleStackIcon,
-  CursorArrowRaysIcon,
-  PaintBrushIcon,
+  CloudIcon,
   PlayIcon,
   PauseIcon,
-  StopIcon,
-  ArrowRightIcon,
-  ArrowDownIcon,
   EnvelopeIcon,
+  TagIcon,
   PaperAirplaneIcon,
-  DocumentDuplicateIcon
+  MagnifyingGlassIcon,
+  ArrowUpIcon,
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
 // =============================================================================
+
+// JSON-safe value used for defaults and dynamic template variables
+type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
 
 interface EmailTemplatesConfiguration {
   templates: EmailTemplate[];
@@ -94,7 +77,7 @@ interface EmailVariable {
   label: string;
   description?: string;
   type: 'text' | 'number' | 'date' | 'boolean' | 'url' | 'email' | 'phone';
-  defaultValue?: any;
+  defaultValue?: JSONValue;
   isRequired: boolean;
   isActive: boolean;
   createdAt: Date;
@@ -1526,9 +1509,9 @@ function EmailLayouts({ config, onUpdate }: { config: EmailTemplatesConfiguratio
                           </div>
                         `}
                         className="w-full h-64 border-0"
-                        title=&quot;Layout Preview&quot;
+                        title="Layout Preview"
                       />
-                    </
+                    </div>
                   </div>
                 </div>
 
@@ -1536,7 +1519,7 @@ function EmailLayouts({ config, onUpdate }: { config: EmailTemplatesConfiguratio
                   <h4 className="text-sm font-medium text-blue-800 mb-2">Layout Usage</h4>
                   <p className="text-sm text-blue-700">
                     This layout can be selected when creating or editing email templates. 
-                    The <code className="bg-blue-200 px-1 rounded">{`{{content}}`}</code> placeholder will be replaced with the template's HTML content.
+                    The <code className="bg-blue-200 px-1 rounded">{`{{content}}`}</code> placeholder will be replaced with the template&apos;s HTML content.
                   </p>
                 </div>
 
@@ -2058,6 +2041,7 @@ export default function EmailTemplatesManagement() {
 
   useEffect(() => {
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -2849,7 +2833,7 @@ export default function EmailTemplatesManagement() {
   const activeTemplates = config.templates.filter(t => t.isActive).length;
   const totalTemplates = config.templates.length;
   const activeCategories = config.categories.filter(c => c.isActive).length;
-  const totalCategories = config.categories.length;
+  const _totalCategories = config.categories.length;
 
   return (
     <div className="space-y-6">

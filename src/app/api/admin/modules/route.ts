@@ -45,7 +45,7 @@ async function getOrganizationId(supabase: unknown, userId: string) {
   return data.organization_id;
 }
 
-async function checkAdminPermission(supabase: unknown, userId: string, permission: string) {
+async function checkAdminPermission(_supabase: unknown, _userId: string, _permission: string) {
   // For now, return true to allow access - implement proper RBAC later
   // const { data, error } = await supabase.rpc('has_admin_permission', {
   //   p_user_id: userId,

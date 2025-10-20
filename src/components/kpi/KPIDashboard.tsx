@@ -1,27 +1,30 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { formatCurrencySafe } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  TrendingUp, 
-  TrendingDown, 
-  Target, 
-  DollarSign, 
-  Clock, 
-  Users, 
+  TrendingUp,
+  TrendingDown,
+  XCircle,
+  Target,
+  DollarSign,
+  Clock,
+  Users,
   Activity,
   BarChart3,
   PieChart,
   LineChart,
-  AlertTriangle,
   CheckCircle,
-  XCircle
+  AlertTriangle,
 } from 'lucide-react';
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
+
+type KPIThresholds = { thresholds?: { excellent: number; good: number; average: number } };
 
 interface KPIData {
   win_rate?: {
@@ -86,8 +89,19 @@ interface KPIData {
     presentations: number;
     activities_per_day: number;
   };
-  trends?: unknown[];
-  benchmarks?: any;
+  trends?: Array<Record<string, unknown>>;
+  benchmarks?: {
+    win_rate?: KPIThresholds;
+    revenue_growth?: KPIThresholds;
+    avg_deal_size?: KPIThresholds;
+    sales_cycle_length?: KPIThresholds;
+    lead_conversion_rate?: KPIThresholds;
+    cac?: KPIThresholds;
+    quota_attainment?: KPIThresholds;
+    clv?: KPIThresholds;
+    pipeline_coverage?: KPIThresholds;
+    activities_per_rep?: KPIThresholds;
+  };
 }
 
 interface KPIDashboardProps {
@@ -113,11 +127,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
   const [selectedKPI, setSelectedKPI] = useState('all');
   const [viewMode, setViewMode] = useState<'overview' | 'detailed' | 'trends'>('overview');
 
-  useEffect(() => {
-    fetchKPIData();
-  }, [organizationId, userId, territoryId, selectedPeriod, selectedKPI]);
-
-  const fetchKPIData = async () => {
+  const fetchKPIData = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -146,9 +156,14 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId, userId, territoryId, selectedPeriod, selectedKPI]);
 
-  const getPerformanceTier = (value: number, thresholds: any) => {
+  useEffect(() => {
+    fetchKPIData();
+  }, [fetchKPIData]);
+
+  type TierThresholds = { excellent: number; good: number; average: number } | undefined;
+  const getPerformanceTier = (value: number, thresholds: TierThresholds) => {
     if (!thresholds) return 'average';
     
     if (value >= thresholds.excellent) return 'excellent';
@@ -157,22 +172,9 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
     return 'below_average';
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
-  };
-
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
-  };
-
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('en-US').format(value);
-  };
+  const formatCurrency = (value: number) => formatCurrencySafe(value);
+  const percentageFmt = (value: number) => `${value.toFixed(1)}%`;
+  const numberFmt = (value: number) => new Intl.NumberFormat('en-US').format(value);
 
   if (loading) {
     return (
@@ -245,7 +247,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             </SelectContent>
           </Select>
 
-          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as unknown)}>
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'overview' | 'detailed' | 'trends')}>
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="detailed">Detailed</TabsTrigger>
@@ -262,7 +264,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
           {kpiData.win_rate && (
             <KPICard
               title="Win Rate"
-              value={formatPercentage(kpiData.win_rate.win_rate)}
+              value={percentageFmt(kpiData.win_rate.win_rate)}
               subtitle={`${kpiData.win_rate.won_opportunities}/${kpiData.win_rate.total_opportunities} deals`}
               icon={<Target className="h-5 w-5" />}
               trend={kpiData.win_rate.win_rate > 25 ? 'up' : kpiData.win_rate.win_rate < 15 ? 'down' : 'neutral'}
@@ -274,7 +276,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
           {kpiData.revenue_growth && (
             <KPICard
               title="Revenue Growth"
-              value={formatPercentage(kpiData.revenue_growth.growth_percentage)}
+              value={percentageFmt(kpiData.revenue_growth.growth_percentage)}
               subtitle={formatCurrency(kpiData.revenue_growth.growth_amount)}
               icon={<TrendingUp className="h-5 w-5" />}
               trend={kpiData.revenue_growth.growth_percentage > 0 ? 'up' : 'down'}
@@ -287,7 +289,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             <KPICard
               title="Avg Deal Size"
               value={formatCurrency(kpiData.avg_deal_size.avg_deal_size)}
-              subtitle={`${formatNumber(kpiData.avg_deal_size.total_deals)} deals`}
+              subtitle={`${numberFmt(kpiData.avg_deal_size.total_deals)} deals`}
               icon={<DollarSign className="h-5 w-5" />}
               trend="neutral"
               performanceTier={getPerformanceTier(kpiData.avg_deal_size.avg_deal_size, kpiData.benchmarks?.avg_deal_size?.thresholds)}
@@ -299,7 +301,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             <KPICard
               title="Sales Cycle"
               value={`${kpiData.sales_cycle_length.avg_cycle_length.toFixed(0)} days`}
-              subtitle={`${formatNumber(kpiData.sales_cycle_length.total_deals)} deals`}
+              subtitle={`${numberFmt(kpiData.sales_cycle_length.total_deals)} deals`}
               icon={<Clock className="h-5 w-5" />}
               trend={kpiData.sales_cycle_length.avg_cycle_length < 30 ? 'up' : 'down'}
               performanceTier={getPerformanceTier(kpiData.sales_cycle_length.avg_cycle_length, kpiData.benchmarks?.sales_cycle_length?.thresholds)}
@@ -310,7 +312,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
           {kpiData.lead_conversion_rate && (
             <KPICard
               title="Lead Conversion"
-              value={formatPercentage(kpiData.lead_conversion_rate.conversion_rate)}
+              value={percentageFmt(kpiData.lead_conversion_rate.conversion_rate)}
               subtitle={`${kpiData.lead_conversion_rate.qualified_opportunities}/${kpiData.lead_conversion_rate.total_leads} leads`}
               icon={<Users className="h-5 w-5" />}
               trend={kpiData.lead_conversion_rate.conversion_rate > 3 ? 'up' : 'down'}
@@ -323,7 +325,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             <KPICard
               title="Customer Acquisition Cost"
               value={formatCurrency(kpiData.cac.cac)}
-              subtitle={`${formatNumber(kpiData.cac.new_customers)} customers`}
+              subtitle={`${numberFmt(kpiData.cac.new_customers)} customers`}
               icon={<Activity className="h-5 w-5" />}
               trend="neutral"
               performanceTier={getPerformanceTier(kpiData.cac.cac, kpiData.benchmarks?.cac?.thresholds)}
@@ -334,7 +336,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
           {kpiData.quota_attainment && (
             <KPICard
               title="Quota Attainment"
-              value={formatPercentage(kpiData.quota_attainment.attainment_percentage)}
+              value={percentageFmt(kpiData.quota_attainment.attainment_percentage)}
               subtitle={formatCurrency(kpiData.quota_attainment.actual_achievement)}
               icon={<BarChart3 className="h-5 w-5" />}
               trend={kpiData.quota_attainment.attainment_percentage >= 100 ? 'up' : 'down'}
@@ -371,7 +373,7 @@ export function KPIDashboard({ organizationId, userId, territoryId }: KPIDashboa
             <KPICard
               title="Activities per Rep"
               value={`${kpiData.activities_per_rep.activities_per_day.toFixed(1)}/day`}
-              subtitle={`${formatNumber(kpiData.activities_per_rep.total_activities)} total`}
+              subtitle={`${numberFmt(kpiData.activities_per_rep.total_activities)} total`}
               icon={<Activity className="h-5 w-5" />}
               trend={kpiData.activities_per_rep.activities_per_day > 15 ? 'up' : 'down'}
               performanceTier={getPerformanceTier(kpiData.activities_per_rep.activities_per_day, kpiData.benchmarks?.activities_per_rep?.thresholds)}
@@ -520,21 +522,26 @@ interface DetailedKPICardProps {
 }
 
 function DetailedKPICard({ title, data, type }: DetailedKPICardProps) {
+  interface ActivitiesDetails { calls?: number; emails?: number; meetings?: number; demos?: number; presentations?: number }
+  interface DealSizeDetails { avg_deal_size: number; median_deal_size: number; largest_deal: number; smallest_deal: number }
+  const pct = (value: number) => `${value.toFixed(1)}%`
+  const num = (value: number) => new Intl.NumberFormat('en-US').format(value)
   const renderChart = () => {
     switch (type) {
       case 'activities_per_rep':
+        const a = data as ActivitiesDetails;
         const activityData = [
-          { name: 'Calls', value: data.calls, color: CHART_COLORS[0] },
-          { name: 'Emails', value: data.emails, color: CHART_COLORS[1] },
-          { name: 'Meetings', value: data.meetings, color: CHART_COLORS[2] },
-          { name: 'Demos', value: data.demos, color: CHART_COLORS[3] },
-          { name: 'Presentations', value: data.presentations, color: CHART_COLORS[4] }
+          { name: 'Calls', value: a.calls ?? 0, color: CHART_COLORS[0] },
+          { name: 'Emails', value: a.emails ?? 0, color: CHART_COLORS[1] },
+          { name: 'Meetings', value: a.meetings ?? 0, color: CHART_COLORS[2] },
+          { name: 'Demos', value: a.demos ?? 0, color: CHART_COLORS[3] },
+          { name: 'Presentations', value: a.presentations ?? 0, color: CHART_COLORS[4] }
         ];
 
         return (
           <ResponsiveContainer width="100%" height={200}>
             <RechartsPieChart>
-              <RechartsPieChart
+              <Pie
                 data={activityData}
                 cx="50%"
                 cy="50%"
@@ -546,18 +553,19 @@ function DetailedKPICard({ title, data, type }: DetailedKPICardProps) {
                 {activityData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
-              </RechartsPieChart>
+              </Pie>
               <Tooltip />
             </RechartsPieChart>
           </ResponsiveContainer>
         );
 
       case 'avg_deal_size':
+        const d = data as DealSizeDetails;
         const dealData = [
-          { name: 'Average', value: data.avg_deal_size },
-          { name: 'Median', value: data.median_deal_size },
-          { name: 'Largest', value: data.largest_deal },
-          { name: 'Smallest', value: data.smallest_deal }
+          { name: 'Average', value: d.avg_deal_size },
+          { name: 'Median', value: d.median_deal_size },
+          { name: 'Largest', value: d.largest_deal },
+          { name: 'Smallest', value: d.smallest_deal }
         ];
 
         return (
@@ -566,7 +574,7 @@ function DetailedKPICard({ title, data, type }: DetailedKPICardProps) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+              <Tooltip formatter={(value) => formatCurrencySafe(Number(value))} />
               <Bar dataKey="value" fill="#3B82F6" />
             </BarChart>
           </ResponsiveContainer>
@@ -598,11 +606,11 @@ function DetailedKPICard({ title, data, type }: DetailedKPICardProps) {
                 </span>
                 <span className="font-medium">
                   {typeof value === 'number' 
-                    ? (key.includes('rate') || key.includes('percentage') 
-                        ? formatPercentage(value) 
-                        : key.includes('cost') || key.includes('value') || key.includes('size')
-                        ? formatCurrency(value)
-                        : formatNumber(value))
+          ? (key.includes('rate') || key.includes('percentage') 
+                        ? pct(value) 
+            : key.includes('cost') || key.includes('value') || key.includes('size')
+            ? formatCurrencySafe(value)
+                        : num(value))
                     : String(value)
                   }
                 </span>

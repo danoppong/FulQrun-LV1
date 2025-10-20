@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card } from '@/components/ui/card';
 
 interface PerformanceTrackingProps {
@@ -81,20 +81,23 @@ interface KPIData {
   }
 }
 
-export function PerformanceTracking({ organizationId, user }: PerformanceTrackingProps) {
+export function PerformanceTracking({ organizationId, user: _user }: PerformanceTrackingProps) {
   const [kpiData, setKpiData] = useState<KPIData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedPeriod, setSelectedPeriod] = useState('30')
   const [viewMode, setViewMode] = useState<'overview' | 'detailed'>('overview')
 
-  useEffect(() => {
-    if (organizationId) {
-      fetchKPIData()
-    }
-  }, [organizationId, selectedPeriod])
+  const getPeriodStart = useCallback(() => {
+    const days = parseInt(selectedPeriod)
+    return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  }, [selectedPeriod])
 
-  const fetchKPIData = async () => {
+  const getPeriodEnd = useCallback(() => {
+    return new Date().toISOString().split('T')[0]
+  }, [])
+
+  const fetchKPIData = useCallback(async () => {
     if (!organizationId) {
       setError('Organization ID is required')
       setLoading(false)
@@ -128,31 +131,33 @@ export function PerformanceTracking({ organizationId, user }: PerformanceTrackin
     } finally {
       setLoading(false)
     }
-  }
+  }, [organizationId, getPeriodStart, getPeriodEnd])
 
-  const getPeriodStart = () => {
-    const days = parseInt(selectedPeriod)
-    return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  }
+  useEffect(() => {
+    if (organizationId) {
+      fetchKPIData()
+    }
+  }, [organizationId, selectedPeriod, fetchKPIData])
 
-  const getPeriodEnd = () => {
-    return new Date().toISOString().split('T')[0]
-  }
+  // fetchKPIData defined above with useCallback
 
   const formatCurrency = (value: number) => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`
+    // Coerce to a finite number to avoid rendering "$NaNK" when value is undefined/NaN
+    const n = typeof value === 'number' ? value : Number(value)
+    const v = Number.isFinite(n) ? n : 0
+    if (v >= 1_000_000) {
+      return `$${(v / 1_000_000).toFixed(1)}M`
+    } else if (v >= 1_000) {
+      return `$${(v / 1_000).toFixed(1)}K`
     }
-    return `$${value.toFixed(0)}`
+    return `$${v.toFixed(0)}`
   }
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`
   }
 
-  const formatNumber = (value: number) => {
+  const _formatNumber = (value: number) => {
     if (value >= 1000000) {
       return `${(value / 1000000).toFixed(1)}M`
     } else if (value >= 1000) {
@@ -161,7 +166,7 @@ export function PerformanceTracking({ organizationId, user }: PerformanceTrackin
     return value.toString()
   }
 
-  const getPerformanceColor = (value: number, thresholds?: { excellent: number; good: number; average: number }) => {
+  const _getPerformanceColor = (value: number, thresholds?: { excellent: number; good: number; average: number }) => {
     if (!thresholds) return 'text-gray-600'
     if (value >= thresholds.excellent) return 'text-green-600'
     if (value >= thresholds.good) return 'text-blue-600'

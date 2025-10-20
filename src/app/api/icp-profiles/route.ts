@@ -9,14 +9,14 @@ const ICPProfileSchema = z.object({
   criteria: z.record(z.any()).optional()
 })
 
-const ICPProfileUpdateSchema = z.object({
+const _ICPProfileUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
   criteria: z.record(z.any()).optional()
 })
 
 // GET /api/icp-profiles - Get all ICP profiles
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = createServerClient()
     
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     }
     
     return NextResponse.json({ data })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

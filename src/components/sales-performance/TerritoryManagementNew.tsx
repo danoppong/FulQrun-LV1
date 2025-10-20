@@ -43,7 +43,7 @@ interface Territory {
 
 export function TerritoryManagementNew({ organizationId, user }: TerritoryManagementNewProps) {
   const [territories, setTerritories] = useState<Territory[]>([])
-  const [users, setUsers] = useState<any[]>([])
+  const [users, setUsers] = useState<unknown[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [selectedTerritory, setSelectedTerritory] = useState<Territory | undefined>()

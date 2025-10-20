@@ -5,6 +5,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import type { AnalyticalInsight } from '@/lib/types/analytics'
 import {
   ChatBubbleLeftRightIcon,
   PaperAirplaneIcon,
@@ -12,7 +13,6 @@ import {
   LightBulbIcon,
   ChartBarIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
 
@@ -21,8 +21,8 @@ interface Message {
   type: 'user' | 'assistant';
   content: string;
   timestamp: string;
-  intent?: any;
-  analytics?: any;
+  intent?: { type: string; confidence: number };
+  analytics?: { visualizations?: unknown[]; insights?: AnalyticalInsight[] };
   visualizations?: unknown[];
 }
 
@@ -118,7 +118,7 @@ export function ConversationalAnalytics({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -192,7 +192,7 @@ export function ConversationalAnalytics({
                 )}
                 <div className="flex-1">
                   <div className="whitespace-pre-wrap">{message.content}</div>
-                  {message.type === 'assistant' && message.intent && (
+                  {message.type === 'assistant' && message.intent && typeof message.intent.confidence === 'number' && (
                     <div className="mt-2 text-xs opacity-75">
                       Intent: {message.intent.type} • Confidence: {(message.intent.confidence * 100).toFixed(1)}%
                     </div>

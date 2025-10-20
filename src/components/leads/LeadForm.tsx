@@ -141,7 +141,7 @@ export default function LeadForm({ lead, leadId, mode }: LeadFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [qualifications, setQualifications] = useState<any[]>([])
+  const [qualifications, setQualifications] = useState<unknown[]>([])
   const [qualifyingFramework, setQualifyingFramework] = useState<string | null>(null)
   const [qualificationLoading, setQualificationLoading] = useState(false)
 

@@ -12,14 +12,10 @@ import {
   EyeIcon,
   EyeSlashIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
   ArrowsUpDownIcon,
   CheckCircleIcon,
-  XCircleIcon,
   ClockIcon,
-  UserGroupIcon,
-  KeyIcon,
-  ExclamationTriangleIcon
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 
 // =============================================================================

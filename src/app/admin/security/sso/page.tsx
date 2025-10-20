@@ -12,23 +12,15 @@ import {
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon,
   LockClosedIcon,
-  FingerPrintIcon,
-  DevicePhoneMobileIcon,
-  CloudIcon,
   ServerIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -392,7 +384,7 @@ function SSOProviders({ config, onUpdate }: { config: SSOConfiguration; onUpdate
                 <div className="bg-yellow-50 p-4 rounded-md">
                   <h4 className="text-sm font-medium text-yellow-800 mb-2">Configuration Required</h4>
                   <p className="text-sm text-yellow-700">
-                    After creating the provider, you'll need to configure authentication endpoints, 
+                    After creating the provider, you&apos;ll need to configure authentication endpoints, 
                     certificates, and other provider-specific settings.
                   </p>
                 </div>
@@ -644,7 +636,7 @@ export default function SSOConfiguration() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {

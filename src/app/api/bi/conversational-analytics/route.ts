@@ -3,7 +3,8 @@
 // Handles natural language queries and returns AI-powered insights
 
 import { NextRequest, NextResponse } from 'next/server'
-import { conversationalAnalytics, ConversationContext, AnalyticsResponse } from '@/lib/bi/conversational-analytics';
+import { AuthService } from '@/lib/auth-unified'
+import { ConversationalAnalyticsEngine } from '@/lib/bi/conversational-analytics'
 
 export const dynamic = 'force-dynamic';
 

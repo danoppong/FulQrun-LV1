@@ -12,28 +12,17 @@ import {
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
   EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  LockClosedIcon,
-  KeyIcon,
-  UserGroupIcon,
   CloudIcon,
-  DatabaseIcon,
-  CogIcon,
   ArrowPathIcon,
-  DocumentTextIcon,
-  ServerIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  ServerIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -131,7 +120,7 @@ interface RestoreJob {
   restorePath?: string;
 }
 
-interface BackupMetadata {
+interface _BackupMetadata {
   id: string;
   name: string;
   type: 'full' | 'incremental' | 'differential';
@@ -698,7 +687,7 @@ function BackupDestinations({ config, onUpdate }: { config: BackupConfiguration;
                 <div className="bg-yellow-50 p-4 rounded-md">
                   <h4 className="text-sm font-medium text-yellow-800 mb-2">Configuration Required</h4>
                   <p className="text-sm text-yellow-700">
-                    After creating the destination, you'll need to configure connection details, 
+                    After creating the destination, you&apos;ll need to configure connection details, 
                     credentials, and other destination-specific settings.
                   </p>
                 </div>
@@ -748,7 +737,7 @@ export default function BackupRestoreManagement() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {
@@ -871,9 +860,9 @@ export default function BackupRestoreManagement() {
   ];
 
   const activeSchedules = config.schedules.filter(s => s.enabled).length;
-  const totalSchedules = config.schedules.length;
+  const _totalSchedules = config.schedules.length;
   const activeDestinations = config.destinations.filter(d => d.isActive).length;
-  const totalDestinations = config.destinations.length;
+  const _totalDestinations = config.destinations.length;
   const runningJobs = config.jobs.filter(j => j.status === 'running').length;
   const completedJobs = config.jobs.filter(j => j.status === 'completed').length;
 

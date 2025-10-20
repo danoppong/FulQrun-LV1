@@ -47,8 +47,8 @@ interface QuotaPlan {
 
 export function QuotaPlanningNew({ organizationId, user }: QuotaPlanningNewProps) {
   const [quotaPlans, setQuotaPlans] = useState<QuotaPlan[]>([])
-  const [users, setUsers] = useState<any[]>([])
-  const [territories, setTerritories] = useState<any[]>([])
+  const [users, setUsers] = useState<unknown[]>([])
+  const [territories, setTerritories] = useState<unknown[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<QuotaPlan | undefined>()

@@ -24,8 +24,8 @@ export interface AuthCredentials {
 
 export interface AuthResult {
   success: boolean
-  user?: any
-  session?: any
+  user?: { id: string; email?: string | null } | null
+  session?: { access_token?: string; refresh_token?: string } | null
   accessToken?: string
   refreshToken?: string
   requireMFA?: boolean
@@ -48,7 +48,7 @@ export type FactorType = 'password' | 'totp' | 'sms' | 'email' | 'webauthn' | 'b
 
 export interface FactorVerification {
   code?: string
-  response?: any
+  response?: unknown
 }
 
 export interface MFARequirement {

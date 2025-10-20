@@ -6,29 +6,21 @@
 import React, { useState, useEffect } from 'react';
 import {
   FingerPrintIcon, 
-  DevicePhoneMobileIcon, 
   KeyIcon, 
   PlusIcon, 
   PencilIcon, 
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowUpDownIcon,
-  EyeIcon,
-  EyeSlashIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
   ShieldCheckIcon,
-  QrCodeIcon,
   CogIcon,
   UserGroupIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase-client'
 import { z } from 'zod';
 
-const supabase = getSupabaseClient();
+const _supabase = getSupabaseClient();
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -133,7 +125,7 @@ interface MFAEnforcement {
   lockoutAfterGracePeriod: boolean;
 }
 
-interface MFAEvent {
+interface _MFAEvent {
   id: string;
   userId: string;
   userName: string;
@@ -144,7 +136,7 @@ interface MFAEvent {
   ipAddress: string;
   userAgent: string;
   timestamp: Date;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 interface MFAUser {
@@ -172,7 +164,7 @@ interface UserMFAMethod {
 // VALIDATION SCHEMAS
 // =============================================================================
 
-const MFAGlobalSettingsSchema = z.object({
+const _MFAGlobalSettingsSchema = z.object({
   enabled: z.boolean(),
   requiredForAllUsers: z.boolean(),
   requiredForAdmins: z.boolean(),
@@ -899,7 +891,7 @@ export default function MFAConfiguration() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {

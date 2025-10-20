@@ -1,29 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  TrendingUp, 
-  TrendingDown, 
-  Target, 
-  DollarSign, 
-  Clock, 
-  Users, 
-  Activity,
-  BarChart3,
-  PieChart,
-  LineChart,
-  AlertTriangle,
-  CheckCircle,
   XCircle,
   Menu,
-  Filter
+  Target,
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  Activity,
+  CheckCircle,
+  AlertTriangle,
 } from 'lucide-react';
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 
 interface MobileKPIData {
   win_rate?: {
@@ -87,11 +81,7 @@ export function MobileKPIDashboard({ organizationId, userId, territoryId }: Mobi
   const [viewMode, setViewMode] = useState<'overview' | 'detailed' | 'trends'>('overview');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  useEffect(() => {
-    fetchKPIData();
-  }, [organizationId, userId, territoryId, selectedPeriod, selectedKPI]);
-
-  const fetchKPIData = async () => {
+  const fetchKPIData = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -121,9 +111,14 @@ export function MobileKPIDashboard({ organizationId, userId, territoryId }: Mobi
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId, userId, territoryId, selectedPeriod, selectedKPI]);
 
-  const getPerformanceTier = (value: number, thresholds?: any) => {
+  useEffect(() => {
+    fetchKPIData();
+  }, [fetchKPIData]);
+
+  type TierThresholds = { excellent: number; good: number; average: number };
+  const getPerformanceTier = (value: number, thresholds?: TierThresholds) => {
     if (!thresholds) return 'average';
     
     if (value >= thresholds.excellent) return 'excellent';
@@ -133,12 +128,15 @@ export function MobileKPIDashboard({ organizationId, userId, territoryId }: Mobi
   };
 
   const formatCurrency = (value: number) => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`;
+    // Normalize to a finite number; default to 0 to avoid rendering "$NaNK"
+    const n = typeof value === 'number' ? value : Number(value);
+    const v = Number.isFinite(n) ? n : 0;
+    if (v >= 1_000_000) {
+      return `$${(v / 1_000_000).toFixed(1)}M`;
+    } else if (v >= 1_000) {
+      return `$${(v / 1_000).toFixed(1)}K`;
     }
-    return `$${value.toFixed(0)}`;
+    return `$${v.toFixed(0)}`;
   };
 
   const formatPercentage = (value: number) => {
@@ -238,7 +236,7 @@ export function MobileKPIDashboard({ organizationId, userId, territoryId }: Mobi
               </Select>
             </div>
 
-            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as unknown)}>
+            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'overview' | 'detailed' | 'trends')}>
               <TabsList className="w-full">
                 <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
                 <TabsTrigger value="detailed" className="flex-1">Details</TabsTrigger>
@@ -436,17 +434,20 @@ function MobileDetailedCard({ title, data, type }: MobileDetailedCardProps) {
   const renderChart = () => {
     switch (type) {
       case 'activities_per_rep':
+        const a = (data || {}) as Partial<{
+          calls: number; emails: number; meetings: number; demos: number
+        }>
         const activityData = [
-          { name: 'Calls', value: data.calls || 0, color: CHART_COLORS[0] },
-          { name: 'Emails', value: data.emails || 0, color: CHART_COLORS[1] },
-          { name: 'Meetings', value: data.meetings || 0, color: CHART_COLORS[2] },
-          { name: 'Demos', value: data.demos || 0, color: CHART_COLORS[3] }
+          { name: 'Calls', value: a.calls || 0, color: CHART_COLORS[0] },
+          { name: 'Emails', value: a.emails || 0, color: CHART_COLORS[1] },
+          { name: 'Meetings', value: a.meetings || 0, color: CHART_COLORS[2] },
+          { name: 'Demos', value: a.demos || 0, color: CHART_COLORS[3] }
         ];
 
         return (
           <ResponsiveContainer width="100%" height={150}>
             <RechartsPieChart>
-              <RechartsPieChart
+              <Pie
                 data={activityData}
                 cx="50%"
                 cy="50%"
@@ -458,7 +459,7 @@ function MobileDetailedCard({ title, data, type }: MobileDetailedCardProps) {
                 {activityData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
-              </RechartsPieChart>
+              </Pie>
               <Tooltip />
             </RechartsPieChart>
           </ResponsiveContainer>
