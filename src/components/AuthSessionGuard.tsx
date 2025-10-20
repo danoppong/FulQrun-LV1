@@ -32,7 +32,14 @@ export default function AuthSessionGuard() {
           setHandled(true)
         }
       } catch {}
-      return originalError(...args)
+      // Call original error handler if it's still a function
+      if (typeof originalError === 'function') {
+        try {
+          originalError(...args)
+        } catch {
+          // Suppress errors from calling originalError
+        }
+      }
     }
 
     return () => {

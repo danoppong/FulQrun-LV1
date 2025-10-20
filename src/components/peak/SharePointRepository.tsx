@@ -41,10 +41,6 @@ export function SharePointRepository({
   const [showUpload, setShowUpload] = useState(false)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
 
-  useEffect(() => {
-    initializeSharePoint()
-  }, [initializeSharePoint])
-
   const initializeSharePoint = useCallback(async () => {
     try {
       // Get SharePoint connection from integrations
@@ -93,6 +89,10 @@ export function SharePointRepository({
       setError(err instanceof Error ? err.message : 'Failed to initialize SharePoint')
     }
   }, [organizationId])
+
+  useEffect(() => {
+    initializeSharePoint()
+  }, [initializeSharePoint])
 
   const loadFolderContents = useCallback(async (siteId: string, path: string) => {
     if (!sharepoint) return

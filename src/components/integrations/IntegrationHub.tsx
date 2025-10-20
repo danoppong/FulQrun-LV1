@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import Link from 'next/link'
 import { SlackIntegration as _SlackIntegration } from '@/lib/integrations/slack'
 import { DocuSignIntegration as _DocuSignIntegration } from '@/lib/integrations/docusign'
 import { StripeIntegration as _StripeIntegration } from '@/lib/integrations/stripe'
@@ -9,11 +10,12 @@ import { GongIntegration as _GongIntegration } from '@/lib/integrations/gong';
 interface Integration {
   id: string
   name: string
-  type: 'slack' | 'docusign' | 'stripe' | 'gong'
+  type: 'slack' | 'docusign' | 'stripe' | 'gong' | 'monday'
   status: 'connected' | 'disconnected' | 'error'
   description: string
   icon: string
   color: string
+  dedicatedPage?: string
 }
 
 interface IntegrationHubProps {
@@ -67,6 +69,16 @@ export function IntegrationHub({
       description: 'Analyze sales calls and conversations',
       icon: '🎯',
       color: 'bg-orange-500'
+    },
+    {
+      id: 'monday',
+      name: 'Monday.com',
+      type: 'monday',
+      status: 'disconnected',
+      description: 'Sync boards, items, and workflows with Monday.com',
+      icon: '📋',
+      color: 'bg-pink-500',
+      dedicatedPage: '/integrations/monday'
     }
   ], [])
 
@@ -231,7 +243,18 @@ export function IntegrationHub({
                 </div>
               </div>
 
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex justify-end gap-2">
+                {integration.dedicatedPage && (
+                  <Link
+                    href={integration.dedicatedPage}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <span>Manage</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </Link>
+                )}
                 {integration.status === 'connected' ? (
                   <button
                     onClick={() => handleDisconnect(integration)}
